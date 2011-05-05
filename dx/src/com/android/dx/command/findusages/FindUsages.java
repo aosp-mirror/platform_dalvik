@@ -28,7 +28,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public final class FindUsages {
     private final DexBuffer dex;
@@ -40,46 +42,57 @@ public final class FindUsages {
     private ClassDef currentClass;
     private ClassData.Method currentMethod;
 
-    public FindUsages(DexBuffer dex, String declaredBy, String memberName, final PrintWriter out) {
+    public FindUsages(final DexBuffer dex, String declaredBy, String memberName, final PrintWriter out) {
         this.dex = dex;
         this.out = out;
 
-        int typeStringIndex = Collections.binarySearch(dex.strings(), declaredBy);
-        int memberNameIndex = Collections.binarySearch(dex.strings(), memberName);
-        if (typeStringIndex < 0 || memberNameIndex < 0) {
-            methodIds = null;
-            fieldIds = null;
+        Set<Integer> typeStringIndexes = new HashSet<Integer>();
+        Set<Integer> memberNameIndexes = new HashSet<Integer>();
+        Pattern declaredByPattern = Pattern.compile(declaredBy);
+        Pattern memberNamePattern = Pattern.compile(memberName);
+        List<String> strings = dex.strings();
+        for (int i = 0; i < strings.size(); ++i) {
+            String string = strings.get(i);
+            if (declaredByPattern.matcher(string).matches()) {
+                typeStringIndexes.add(i);
+            }
+            if (memberNamePattern.matcher(string).matches()) {
+                memberNameIndexes.add(i);
+            }
+        }
+        if (typeStringIndexes.isEmpty() || memberNameIndexes.isEmpty()) {
+            methodIds = fieldIds = null;
             return; // these symbols are not mentioned in this dex
         }
 
-        int typeIndex = Collections.binarySearch(dex.typeIds(), typeStringIndex);
-        if (typeIndex < 0) {
-            methodIds = null;
-            fieldIds = null;
-            return; // this type name isn't used as a type in this dex
+        methodIds = new HashSet<Integer>();
+        fieldIds = new HashSet<Integer>();
+        for (int typeStringIndex : typeStringIndexes) {
+            int typeIndex = Collections.binarySearch(dex.typeIds(), typeStringIndex);
+            if (typeIndex < 0) {
+                continue; // this type name isn't used as a type in this dex
+            }
+            methodIds.addAll(getMethodIds(dex, memberNameIndexes, typeIndex));
+            fieldIds.addAll(getFieldIds(dex, memberNameIndexes, typeIndex));
         }
-
-        methodIds = getMethodIds(dex, memberNameIndex, typeIndex);
-        fieldIds = getFieldIds(dex, memberNameIndex, typeIndex);
 
         codeReader.setFieldVisitor(new CodeReader.Visitor() {
             public void visit(DecodedInstruction[] all,
                     DecodedInstruction one) {
                 int fieldId = one.getIndex();
                 if (fieldIds.contains(fieldId)) {
-                    out.println(location() + ": field reference ("
-                            + OpcodeInfo.getName(one.getOpcode()) + ")");
+                    out.println(location() + ": field reference " + dex.fieldIds().get(fieldId)
+                            + " (" + OpcodeInfo.getName(one.getOpcode()) + ")");
                 }
             }
         });
 
         codeReader.setMethodVisitor(new CodeReader.Visitor() {
-            public void visit(DecodedInstruction[] all,
-                    DecodedInstruction one) {
+            public void visit(DecodedInstruction[] all, DecodedInstruction one) {
                 int methodId = one.getIndex();
                 if (methodIds.contains(methodId)) {
-                    out.println(location() + ": method reference ("
-                            + OpcodeInfo.getName(one.getOpcode()) + ")");
+                    out.println(location() + ": method reference " + dex.methodIds().get(methodId)
+                            + " (" + OpcodeInfo.getName(one.getOpcode()) + ")");
                 }
             }
         });
@@ -113,15 +126,17 @@ public final class FindUsages {
 
             ClassData classData = dex.readClassData(classDef);
             for (ClassData.Field field : classData.allFields()) {
-                if (fieldIds.contains(field.getFieldIndex())) {
-                    out.println(location() + " field declared");
+                int fieldIndex = field.getFieldIndex();
+                if (fieldIds.contains(fieldIndex)) {
+                    out.println(location() + " field declared " + dex.fieldIds().get(fieldIndex));
                 }
             }
 
             for (ClassData.Method method : classData.allMethods()) {
                 currentMethod = method;
-                if (methodIds.contains(method.getMethodIndex())) {
-                    out.println(location() + " method declared");
+                int methodIndex = method.getMethodIndex();
+                if (methodIds.contains(methodIndex)) {
+                    out.println(location() + " method declared " + dex.methodIds().get(methodIndex));
                 }
                 if (method.getCodeOffset() != 0) {
                     codeReader.visitAll(dex.readCode(method).getInstructions());
@@ -137,11 +152,11 @@ public final class FindUsages {
      * Returns the fields with {@code memberNameIndex} declared by {@code
      * declaringType}.
      */
-    private Set<Integer> getFieldIds(DexBuffer dex, int memberNameIndex, int declaringType) {
+    private Set<Integer> getFieldIds(DexBuffer dex, Set<Integer> memberNameIndexes, int declaringType) {
         Set<Integer> fields = new HashSet<Integer>();
         int fieldIndex = 0;
         for (FieldId fieldId : dex.fieldIds()) {
-            if (fieldId.getNameIndex() == memberNameIndex
+            if (memberNameIndexes.contains(fieldId.getNameIndex())
                     && declaringType == fieldId.getDeclaringClassIndex()) {
                 fields.add(fieldIndex);
             }
@@ -154,13 +169,13 @@ public final class FindUsages {
      * Returns the methods with {@code memberNameIndex} declared by {@code
      * declaringType} and its subtypes.
      */
-    private Set<Integer> getMethodIds(DexBuffer dex, int memberNameIndex, int declaringType) {
+    private Set<Integer> getMethodIds(DexBuffer dex, Set<Integer> memberNameIndexes, int declaringType) {
         Set<Integer> subtypes = findAssignableTypes(dex, declaringType);
 
         Set<Integer> methods = new HashSet<Integer>();
         int methodIndex = 0;
         for (MethodId method : dex.methodIds()) {
-            if (method.getNameIndex() == memberNameIndex
+            if (memberNameIndexes.contains(method.getNameIndex())
                     && subtypes.contains(method.getDeclaringClassIndex())) {
                 methods.add(methodIndex);
             }

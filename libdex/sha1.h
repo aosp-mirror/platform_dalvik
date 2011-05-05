@@ -1,14 +1,14 @@
 /*
- * See "sha1.c" for author info.
+ * See "sha1.cpp" for author info.
  */
 #ifndef _DALVIK_SHA1
 #define _DALVIK_SHA1
 
-typedef struct {
+struct SHA1_CTX {
     unsigned long state[5];
     unsigned long count[2];
     unsigned char buffer[64];
-} SHA1_CTX;
+};
 
 #define HASHSIZE 20
 

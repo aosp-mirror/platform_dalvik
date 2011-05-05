@@ -42,7 +42,7 @@ typedef struct RegLocation {
 } RegLocation;
 
 #define INVALID_SREG (-1)
-#define INVALID_REG (-1)
+#define INVALID_REG (0x3F)
 
 typedef enum BBType {
     /* For coding convenience reasons chaining cell types should appear first */

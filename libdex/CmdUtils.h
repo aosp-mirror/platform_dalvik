@@ -32,7 +32,7 @@
 #define _LIBDEX_CMDUTILS
 
 /* encode the result of unzipping to a file */
-typedef enum UnzipToFileResult {
+enum UnzipToFileResult {
     kUTFRSuccess = 0,
     kUTFRGenericFailure,
     kUTFRBadArgs,
@@ -40,7 +40,7 @@ typedef enum UnzipToFileResult {
     kUTFRNoClassesDex,
     kUTFROutputFileProblem,
     kUTFRBadZip,
-} UnzipToFileResult;
+};
 
 /*
  * Map the specified DEX file read-only (possibly after expanding it into a

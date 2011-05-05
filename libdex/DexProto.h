@@ -30,11 +30,11 @@
  * generally return a string that is valid until the next
  * time the same DexStringCache is used.
  */
-typedef struct DexStringCache {
+struct DexStringCache {
     char* value;          /* the latest value */
     size_t allocatedSize; /* size of the allocated buffer, if allocated */
     char buffer[120];     /* buffer used to hold small-enough results */
-} DexStringCache;
+};
 
 /*
  * Make sure that the given cache can hold a string of the given length,
@@ -76,10 +76,10 @@ char* dexStringCacheAbandon(DexStringCache* pCache, const char* value);
  * Method prototype structure, which refers to a protoIdx in a
  * particular DexFile.
  */
-typedef struct DexProto {
+struct DexProto {
     const DexFile* dexFile;     /* file the idx refers to */
     u4 protoIdx;                /* index into proto_ids table of dexFile */
-} DexProto;
+};
 
 /*
  * Set the given DexProto to refer to the prototype of the given MethodId.
@@ -199,12 +199,12 @@ int dexProtoCompareToParameterDescriptors(const DexProto* proto,
  * Single-thread prototype parameter iterator. This structure holds a
  * pointer to a prototype and its parts, along with a cursor.
  */
-typedef struct DexParameterIterator {
+struct DexParameterIterator {
     const DexProto* proto;
     const DexTypeList* parameters;
     int parameterCount;
     int cursor;
-} DexParameterIterator;
+};
 
 /*
  * Initialize the given DexParameterIterator to be at the start of the
@@ -225,7 +225,5 @@ u4 dexParameterIteratorNextIndex(DexParameterIterator* pIterator);
  */
 const char* dexParameterIteratorNextDescriptor(
         DexParameterIterator* pIterator);
-
-
 
 #endif /*_LIBDEX_DEXPROTO*/

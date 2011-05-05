@@ -212,23 +212,23 @@ ArrayObject* dvmGetDeclaredClasses(const ClassObject* clazz);
  * Used to pass values out of annotation (and encoded array) processing
  * functions.
  */
-typedef struct AnnotationValue {
+struct AnnotationValue {
     JValue  value;
     u1      type;
-} AnnotationValue;
+};
 
 
 /**
  * Iterator structure for iterating over DexEncodedArray instances. The
  * structure should be treated as opaque.
  */
-typedef struct {
+struct EncodedArrayIterator {
     const u1* cursor;                    /* current cursor */
     u4 elementsLeft;                     /* number of elements left to read */
     const DexEncodedArray* encodedArray; /* instance being iterated over */
     u4 size;                             /* number of elements in instance */
     const ClassObject* clazz;            /* class to resolve with respect to */
-} EncodedArrayIterator;
+};
 
 /**
  * Initializes an encoded array iterator.

@@ -315,7 +315,7 @@ uint NO_INDEX = 0xffffffff;    // == -1 if treated as a signed int
 
 <h2><code>access_flags</code> Definitions</h2>
 <h4>embedded in <code>class_def_item</code>,
-<code>field_item</code>, <code>method_item</code>, and
+<code>encoded_field</code>, <code>encoded_method</code>, and
 <code>InnerClass</code></h4>
 
 <p>Bitfields of these flags are used to indicate the accessibility and
@@ -2017,7 +2017,7 @@ be ordered by initial offset and must not overlap.</p>
 </table>
 
 <h2><code>code_item</code></h2>
-<h4>referenced from <code>method_item</code></h4>
+<h4>referenced from <code>encoded_method</code></h4>
 <h4>appears in the <code>data</code> section</h4>
 <h4>alignment: 4 bytes</h4>
 

@@ -46,7 +46,8 @@ void dvmInterpret(Thread* thread, const Method* method, JValue* pResult);
  * This is called from the handler for the throw-verification-error
  * instruction.  "method" is the method currently being executed.
  */
-void dvmThrowVerificationError(const Method* method, int kind, int ref);
+extern "C" void dvmThrowVerificationError(const Method* method,
+                                          int kind, int ref);
 
 /*
  * One-time initialization and shutdown.
@@ -67,7 +68,7 @@ void dvmClearSingleStep(Thread* thread);
 /*
  * Recover the opcode that was replaced by a breakpoint.
  */
-u1 dvmGetOriginalOpcode(const u2* addr);
+extern "C" u1 dvmGetOriginalOpcode(const u2* addr);
 
 /*
  * Flush any breakpoints associated with methods in "clazz".
@@ -77,26 +78,23 @@ void dvmFlushBreakpoints(ClassObject* clazz);
 /*
  * Debugger support
  */
-void dvmCheckBefore(const u2 *dPC, u4 *fp, Thread* self);
-void dvmReportExceptionThrow(Thread* self, Object* exception);
-void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self);
-void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self);
-void dvmReportInvoke(Thread* self, const Method* methodToCall);
-void dvmReportReturn(Thread* self);
+extern "C" void dvmCheckBefore(const u2 *dPC, u4 *fp, Thread* self);
+extern "C" void dvmReportExceptionThrow(Thread* self, Object* exception);
+extern "C" void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self, u4* fp);
+extern "C" void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self, u4* fp);
+extern "C" void dvmReportInvoke(Thread* self, const Method* methodToCall);
+extern "C" void dvmReportReturn(Thread* self);
 
 /*
- * Update interpBreak
+ * InterpBreak & subMode control
  */
-void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
-                          bool enable);
+void dvmDisableSubMode(Thread* thread, ExecutionSubModes subMode);
+extern "C" void dvmEnableSubMode(Thread* thread, ExecutionSubModes subMode);
+void dvmDisableAllSubMode(ExecutionSubModes subMode);
+void dvmEnableAllSubMode(ExecutionSubModes subMode);
 void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta);
 void dvmCheckInterpStateConsistency();
 void dvmInitializeInterpBreak(Thread* thread);
-
-/*
- * Update interpBreak for all threads
- */
-void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable);
 
 /*
  * Register a callback to occur at the next safe point for a single thread.

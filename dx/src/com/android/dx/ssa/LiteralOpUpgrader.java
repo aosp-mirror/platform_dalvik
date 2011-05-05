@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Upgrades insn to their literal (constant-immediate) equivilent if possible.
+ * Upgrades insn to their literal (constant-immediate) equivalent if possible.
  * Also switches IF instructions that compare with a constant zero or null
  * to be their IF_*Z equivalents.
  */

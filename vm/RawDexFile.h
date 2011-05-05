@@ -25,10 +25,10 @@
  * Structure representing a "raw" DEX file, in its unswapped unoptimized
  * state.
  */
-typedef struct RawDexFile {
+struct RawDexFile {
     char*       cacheFileName;
     DvmDex*     pDvmDex;
-} RawDexFile;
+};
 
 /*
  * Open a raw ".dex" file, optimize it, and load it.

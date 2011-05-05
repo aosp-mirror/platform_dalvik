@@ -12,7 +12,7 @@
      * us if an exception was thrown.
      */
     /* [opt] execute-inline/range {vCCCC..v(CCCC+AA-1)}, inline@BBBB */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     FETCH(r10, 1)                       @ r10<- BBBB
     EXPORT_PC()                         @ can throw
     ands    r2, #kSubModeDebugProfile   @ Any going on?

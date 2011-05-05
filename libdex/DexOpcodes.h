@@ -66,7 +66,7 @@
  * can find the next instruction" aren't possible. (This is
  * correctable, but probably not useful.)
  */
-typedef enum Opcode {
+enum Opcode {
     // BEGIN(libdex-opcode-enum); GENERATED AUTOMATICALLY BY opcode-gen
     OP_NOP                          = 0x00,
     OP_MOVE                         = 0x01,
@@ -581,7 +581,7 @@ typedef enum Opcode {
     OP_SPUT_OBJECT_VOLATILE_JUMBO   = 0x1fe,
     OP_THROW_VERIFICATION_ERROR_JUMBO = 0x1ff,
     // END(libdex-opcode-enum)
-} Opcode;
+};
 
 /*
  * Macro used to generate a computed goto table for use in implementing

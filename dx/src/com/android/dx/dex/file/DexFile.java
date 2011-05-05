@@ -22,7 +22,6 @@ import com.android.dx.rop.cst.CstEnumRef;
 import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Type;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.ExceptionWithContext;
@@ -430,8 +429,6 @@ public final class DexFile {
     /*package*/ void internIfAppropriate(Constant cst) {
         if (cst instanceof CstString) {
             stringIds.intern((CstString) cst);
-        } else if (cst instanceof CstUtf8) {
-            stringIds.intern((CstUtf8) cst);
         } else if (cst instanceof CstType) {
             typeIds.intern((CstType) cst);
         } else if (cst instanceof CstBaseMethodRef) {

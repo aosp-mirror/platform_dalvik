@@ -13,7 +13,7 @@ Items requiring attention:
      elminiates a separate debug interpreter.  Needs a dedicated
      rIBASE register (or alternate switching model with variable
      handler base).
-(hi) Add dvmReportXXXX()" calls in footer.c to support profilers &
+(hi) Add dvmReportXXXX()" calls in footer.cpp to support profilers &
      debuggers.
 (hi) Set self->debugIsMethodEntry in invoke code.
 

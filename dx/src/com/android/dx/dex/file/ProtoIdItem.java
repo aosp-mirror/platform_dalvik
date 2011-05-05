@@ -17,7 +17,7 @@
 package com.android.dx.dex.file;
 
 import com.android.dx.dex.SizeOf;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
@@ -32,7 +32,7 @@ public final class ProtoIdItem extends IndexedItem {
     private final Prototype prototype;
 
     /** {@code non-null;} the short-form of the prototype */
-    private final CstUtf8 shortForm;
+    private final CstString shortForm;
 
     /**
      * {@code null-ok;} the list of parameter types or {@code null} if this
@@ -64,7 +64,7 @@ public final class ProtoIdItem extends IndexedItem {
      * @param prototype {@code non-null;} the prototype
      * @return {@code non-null;} the short form
      */
-    private static CstUtf8 makeShortForm(Prototype prototype) {
+    private static CstString makeShortForm(Prototype prototype) {
         StdTypeList parameters = prototype.getParameterTypes();
         int size = parameters.size();
         StringBuilder sb = new StringBuilder(size + 1);
@@ -75,7 +75,7 @@ public final class ProtoIdItem extends IndexedItem {
             sb.append(shortFormCharFor(parameters.getType(i)));
         }
 
-        return new CstUtf8(sb.toString());
+        return new CstString(sb.toString());
     }
 
     /**

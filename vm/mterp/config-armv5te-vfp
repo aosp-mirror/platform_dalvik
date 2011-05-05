@@ -30,17 +30,17 @@ asm-stub armv5te/stub.S
 asm-alt-stub armv5te/alt_stub.S
 
 # file header and basic definitions
-import c/header.c
+import c/header.cpp
 import armv5te/header.S
 
 # C pre-processor defines for stub C instructions
-import cstubs/stubdefs.c
+import cstubs/stubdefs.cpp
 
 # highly-platform-specific defs
 import armv5te/platform.S
 
 # common defs for the C helpers; include this before the instruction handlers
-import c/opcommon.c
+import c/opcommon.cpp
 
 # arch-specific entry point to interpreter
 import armv5te/entry.S
@@ -98,11 +98,11 @@ op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
 # object code, so it's normally excluded)
-##import c/gotoTargets.c
+##import c/gotoTargets.cpp
 
-# end of defs; include this when cstubs/stubdefs.c is included
-import cstubs/enddefs.c
+# end of defs; include this when cstubs/stubdefs.cpp is included
+import cstubs/enddefs.cpp
 
 # common subroutines for asm
 import armv5te/footer.S
-import armv5te/debug.c
+import armv5te/debug.cpp

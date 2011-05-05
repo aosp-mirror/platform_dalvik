@@ -30,7 +30,7 @@
  * Call this during initialization to verify that the values in asm-constants.h
  * are still correct.
  */
-bool dvmCheckAsmConstants(void);
+extern "C" bool dvmCheckAsmConstants(void);
 
 /*
  * Local entry and exit points.  The platform-specific implementation must
@@ -42,7 +42,13 @@ bool dvmCheckAsmConstants(void);
  *
  * The "mterp" interpreter is always "standard".
  */
-bool dvmMterpStdRun(Thread* self);
-void dvmMterpStdBail(Thread* self, bool changeInterp);
+extern "C" bool dvmMterpStdRun(Thread* self);
+extern "C" void dvmMterpStdBail(Thread* self, bool changeInterp);
+
+/*
+ * Helper for common_printMethod(), invoked from the assembly
+ * interpreter.
+ */
+extern "C" void dvmMterpPrintMethod(Method* method);
 
 #endif /*_DALVIK_MTERP_MTERP*/

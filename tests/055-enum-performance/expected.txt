@@ -5,7 +5,7 @@ NINE
 FIVE
 TWELVE
 SamePackagePublicEnum
-basis: performed 40000 iterations
+basis: performed 10000 iterations
 test1: performed 10000 iterations
 test2: performed 10000 iterations
 test3: performed 10000 iterations

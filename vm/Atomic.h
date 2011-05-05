@@ -38,12 +38,12 @@
  * Swap the 64-bit value at "addr" with "value".  Returns the previous
  * value.
  */
-int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr);
+extern "C" int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr);
 
 /*
  * Read the 64-bit value at "addr".
  */
-int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr);
+extern "C" int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr);
 
 /*
  * If the value at "addr" is equal to "oldvalue", replace it with "newvalue"

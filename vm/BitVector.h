@@ -26,18 +26,18 @@
  *
  * All operations on a BitVector are unsynchronized.
  */
-typedef struct BitVector {
+struct BitVector {
     bool    expandable;     /* expand bitmap if we run out? */
     u4      storageSize;    /* current size, in 32-bit words */
     u4*     storage;
-} BitVector;
+};
 
 /* Handy iterator to walk through the bit positions set to 1 */
-typedef struct BitVectorIterator {
+struct BitVectorIterator {
     BitVector *pBits;
     u4 idx;
     u4 bitSize;
-} BitVectorIterator;
+};
 
 /* allocate a bit vector with enough space to hold "startBits" bits */
 BitVector* dvmAllocBitVector(unsigned int startBits, bool expandable);

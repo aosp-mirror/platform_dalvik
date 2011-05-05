@@ -1720,6 +1720,7 @@ public final class Rops {
                     case Type.BT_LONG:   return CONV_I2L;
                     case Type.BT_FLOAT:  return CONV_I2F;
                     case Type.BT_DOUBLE: return CONV_I2D;
+                    default:             break;
                 }
             }
             case Type.BT_LONG: {
@@ -1727,6 +1728,7 @@ public final class Rops {
                     case Type.BT_INT:    return CONV_L2I;
                     case Type.BT_FLOAT:  return CONV_L2F;
                     case Type.BT_DOUBLE: return CONV_L2D;
+                    default:             break;
                 }
             }
             case Type.BT_FLOAT: {
@@ -1734,13 +1736,15 @@ public final class Rops {
                     case Type.BT_INT:    return CONV_F2I;
                     case Type.BT_LONG:   return CONV_F2L;
                     case Type.BT_DOUBLE: return CONV_F2D;
+                    default:             break;
                 }
             }
             case Type.BT_DOUBLE: {
                 switch (dbt) {
-                    case Type.BT_INT:   return CONV_D2I;
-                    case Type.BT_LONG:  return CONV_D2L;
-                    case Type.BT_FLOAT: return CONV_D2F;
+                    case Type.BT_INT:    return CONV_D2I;
+                    case Type.BT_LONG:   return CONV_D2L;
+                    case Type.BT_FLOAT:  return CONV_D2F;
+                    default:             break;
                 }
             }
         }

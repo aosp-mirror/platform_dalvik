@@ -20,11 +20,10 @@
 #ifndef _DALVIK_MISC
 #define _DALVIK_MISC
 
-#include "Inlines.h"
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include "Inlines.h"
 
 /*
  * Used to shut up the compiler when a parameter isn't used.
@@ -64,7 +63,7 @@ INLINE u4 dvmFloatToU4(float val) {
  *
  * If "tag" is NULL the default tag ("dalvikvm") will be used.
  */
-typedef enum { kHexDumpLocal, kHexDumpMem } HexDumpMode;
+enum HexDumpMode { kHexDumpLocal, kHexDumpMem };
 void dvmPrintHexDumpEx(int priority, const char* tag, const void* vaddr,
     size_t length, HexDumpMode mode);
 
@@ -87,17 +86,19 @@ INLINE void dvmPrintHexDumpDbg(const void* vaddr, size_t length,const char* tag)
 #endif
 }
 
+enum DebugTargetKind {
+    kDebugTargetUnknown = 0,
+    kDebugTargetLog,
+    kDebugTargetFile,
+};
+
 /*
  * We pass one of these around when we want code to be able to write debug
  * info to either the log or to a file (or stdout/stderr).
  */
-typedef struct DebugOutputTarget {
+struct DebugOutputTarget {
     /* where to? */
-    enum {
-        kDebugTargetUnknown = 0,
-        kDebugTargetLog,
-        kDebugTargetFile,
-    } which;
+    DebugTargetKind which;
 
     /* additional bits */
     union {
@@ -109,7 +110,7 @@ typedef struct DebugOutputTarget {
             FILE* fp;
         } file;
     } data;
-} DebugOutputTarget;
+};
 
 /*
  * Fill in a DebugOutputTarget struct.
@@ -140,7 +141,7 @@ char* dvmDotToSlash(const char* str);
  * of 'descriptor'. So "I" would be "int", "[[I" would be "int[][]",
  * "[Ljava/lang/String;" would be "java.lang.String[]", and so forth.
  */
-char* dvmHumanReadableDescriptor(const char* descriptor);
+extern "C" char* dvmHumanReadableDescriptor(const char* descriptor);
 
 /*
  * Return a newly-allocated string for the "dot version" of the class
@@ -255,12 +256,12 @@ bool dvmSetCloseOnExec(int fd);
  * get from the abort may point at the wrong call site.  Best to leave
  * it undecorated.
  */
-void dvmAbort(void);
+extern "C" void dvmAbort(void);
 void dvmPrintNativeBackTrace(void);
 
 #if (!HAVE_STRLCPY)
 /* Implementation of strlcpy() for platforms that don't already have it. */
-size_t strlcpy(char *dst, const char *src, size_t size);
+extern "C" size_t strlcpy(char *dst, const char *src, size_t size);
 #endif
 
 /*
@@ -273,11 +274,11 @@ void *dvmAllocRegion(size_t size, int prot, const char *name);
 /*
  * Get some per-thread stats from /proc/self/task/N/stat.
  */
-typedef struct {
+struct ProcStatData {
     unsigned long utime;    /* number of jiffies scheduled in user mode */
     unsigned long stime;    /* number of jiffies scheduled in kernel mode */
     int processor;          /* number of CPU that last executed thread */
-} ProcStatData;
+};
 bool dvmGetThreadStats(ProcStatData* pData, pid_t tid);
 
 /*

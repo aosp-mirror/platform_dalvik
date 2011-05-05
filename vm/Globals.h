@@ -33,22 +33,20 @@
 #include <stdarg.h>
 #include <pthread.h>
 
-#define MAX_BREAKPOINTS 20      /* used for a debugger optimization */
-
 /* private structures */
-typedef struct GcHeap GcHeap;
-typedef struct BreakpointSet BreakpointSet;
-typedef struct InlineSub InlineSub;
+struct GcHeap;
+struct BreakpointSet;
+struct InlineSub;
 
 /*
  * One of these for each -ea/-da/-esa/-dsa on the command line.
  */
-typedef struct AssertionControl {
+struct AssertionControl {
     char*   pkgOrClass;         /* package/class string, or NULL for esa/dsa */
     int     pkgOrClassLen;      /* string length, for quick compare */
     bool    enable;             /* enable or disable */
     bool    isPackage;          /* string ended with "..."? */
-} AssertionControl;
+};
 
 /*
  * Register map generation mode.  Only applicable when generateRegisterMaps
@@ -60,11 +58,11 @@ typedef struct AssertionControl {
  * maps, but allows type-precise GC.  "LivePrecise" is even slower and
  * requires additional heap during processing, but allows live-precise GC.
  */
-typedef enum {
+enum RegisterMapMode {
     kRegisterMapModeUnknown = 0,
     kRegisterMapModeTypePrecise,
     kRegisterMapModeLivePrecise
-} RegisterMapMode;
+};
 
 /*
  * All fields are initialized to zero.
@@ -91,7 +89,7 @@ struct DvmGlobals {
 
     bool        jdwpAllowed;        // debugging allowed for this process?
     bool        jdwpConfigured;     // has debugging info been provided?
-    int         jdwpTransport;
+    JdwpTransportType jdwpTransport;
     bool        jdwpServer;
     char*       jdwpHost;
     int         jdwpPort;
@@ -452,7 +450,7 @@ struct DvmGlobals {
     pthread_mutex_t _threadSuspendLock;
 
     /*
-     * Guards Thread->interpBreak.ctl.suspendCount for all threads, and
+     * Guards Thread->suspendCount for all threads, and
      * provides the lock for the condition variable that all suspended threads
      * sleep on (threadSuspendCountCond).
      *
@@ -564,12 +562,6 @@ struct DvmGlobals {
      * TLS keys.
      */
     pthread_key_t pthreadKeySelf;       /* Thread*, for dvmThreadSelf */
-
-    /*
-     * JNI allows you to have multiple VMs, but we limit ourselves to 1,
-     * so "vmList" is really just a pointer to the one and only VM.
-     */
-    JavaVM*     vmList;
 
     /*
      * Cache results of "A instanceof B".
@@ -727,25 +719,25 @@ extern struct DvmGlobals gDvm;
 #if defined(WITH_JIT)
 
 /* Trace profiling modes.  Ordering matters - off states before on states */
-typedef enum TraceProfilingModes {
+enum TraceProfilingModes {
     kTraceProfilingDisabled = 0,      // Not profiling
     kTraceProfilingPeriodicOff = 1,   // Periodic profiling, off phase
     kTraceProfilingContinuous = 2,    // Always profiling
     kTraceProfilingPeriodicOn = 3     // Periodic profiling, on phase
-} TraceProfilingModes;
+};
 
 /*
  * Exiting the compiled code w/o chaining will incur overhead to look up the
  * target in the code cache which is extra work only when JIT is enabled. So
  * we want to monitor it closely to make sure we don't have performance bugs.
  */
-typedef enum NoChainExits {
+enum NoChainExits {
     kInlineCacheMiss = 0,
     kCallsiteInterpreted,
     kSwitchOverflow,
     kHeavyweightMonitor,
     kNoChainExitLast,
-} NoChainExits;
+};
 
 /*
  * JIT-specific global state
@@ -958,5 +950,18 @@ extern int gDvmICHitCount;
 #endif
 
 #endif
+
+struct DvmJniGlobals {
+    bool useCheckJni;
+    bool warnOnly;
+    bool forceCopy;
+
+    /**
+     * The JNI JavaVM object. Dalvik only supports a single VM per process.
+     */
+    JavaVM*     jniVm;
+};
+
+extern struct DvmJniGlobals gDvmJni;
 
 #endif /*_DALVIK_GLOBALS*/

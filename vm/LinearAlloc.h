@@ -30,7 +30,7 @@
  * allocated region, but that would prevent us from sharing the rest of
  * that first page.
  */
-typedef struct LinearAllocHdr {
+struct LinearAllocHdr {
     int     curOffset;          /* offset where next data goes */
     pthread_mutex_t lock;       /* controls updates to this struct */
 
@@ -39,7 +39,7 @@ typedef struct LinearAllocHdr {
     int     firstOffset;        /* for chasing through */
 
     short*  writeRefCount;      /* for ENFORCE_READ_ONLY */
-} LinearAllocHdr;
+};
 
 
 /*

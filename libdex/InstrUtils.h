@@ -29,7 +29,7 @@
  * See the file opcode-gen/README.txt for information about updating
  * opcodes and instruction formats.
  */
-typedef enum {
+enum InstructionFormat {
     kFmt00x = 0,    // unknown format (also used for "breakpoint" opcode)
     kFmt10x,        // op
     kFmt12x,        // op vA, vB
@@ -67,13 +67,13 @@ typedef enum {
     kFmt41c,        // exop vAAAA, thing@BBBBBBBB
     kFmt52c,        // exop vAAAA, vBBBB, thing@CCCCCCCC
     kFmt5rc,        // exop {vCCCC .. v(CCCC+AAAA-1)}, thing@BBBBBBBB
-} InstructionFormat;
+};
 
 /*
  * Types of indexed reference that are associated with opcodes whose
  * formats include such an indexed reference (e.g., 21c and 35c).
  */
-typedef enum {
+enum InstructionIndexType {
     kIndexUnknown = 0,
     kIndexNone,         // has no index
     kIndexVaries,       // "It depends." Used for throw-verification-error
@@ -84,7 +84,7 @@ typedef enum {
     kIndexInlineMethod, // inline method index (for inline linked methods)
     kIndexVtableOffset, // vtable offset (for static linked methods)
     kIndexFieldOffset   // field offset (for static linked fields)
-} InstructionIndexType;
+};
 
 /*
  * Instruction width implied by an opcode's format; a value in the
@@ -117,12 +117,12 @@ enum OpcodeFlagsBits {
  * that works for both C and C++, but in the mean time, this will
  * suffice.
  */
-typedef struct InstructionInfoTables {
+struct InstructionInfoTables {
     u1*                formats;    /* InstructionFormat elements */
     u1*                indexTypes; /* InstructionIndexType elements */
     OpcodeFlags*       flags;
     InstructionWidth*  widths;
-} InstructionInfoTables;
+};
 
 /*
  * Global InstructionInfoTables struct.
@@ -132,7 +132,7 @@ extern InstructionInfoTables gDexOpcodeInfo;
 /*
  * Holds the contents of a decoded instruction.
  */
-typedef struct DecodedInstruction {
+struct DecodedInstruction {
     u4      vA;
     u4      vB;
     u8      vB_wide;        /* for kFmt51l */
@@ -140,7 +140,7 @@ typedef struct DecodedInstruction {
     u4      arg[5];         /* vC/D/E/F/G in invoke or filled-new-array */
     Opcode  opcode;
     InstructionIndexType indexType;
-} DecodedInstruction;
+};
 
 /*
  * Return the instruction width of the specified opcode, or 0 if not defined.

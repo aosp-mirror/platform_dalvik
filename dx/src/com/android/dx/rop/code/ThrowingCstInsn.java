@@ -17,6 +17,7 @@
 package com.android.dx.rop.code;
 
 import com.android.dx.rop.cst.Constant;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 
@@ -57,8 +58,12 @@ public final class ThrowingCstInsn
     /** {@inheritDoc} */
     @Override
     public String getInlineString() {
-        return getConstant().toHuman() + " " +
-                                 ThrowingInsn.toCatchString(catches);
+        Constant cst = getConstant();
+        String constantString = cst.toHuman();
+        if (cst instanceof CstString) {
+            constantString = ((CstString) cst).toQuoted();
+        }
+        return constantString + " " + ThrowingInsn.toCatchString(catches);
     }
 
     /** {@inheritDoc} */

@@ -24,6 +24,6 @@ attributes_count: 0001
 attributes[0]:
   name: SourceFile
   length: 00000002
-  source: utf8{"Blort.java"}
+  source: string{"Blort.java"}
 end attributes[0]
 end classfile

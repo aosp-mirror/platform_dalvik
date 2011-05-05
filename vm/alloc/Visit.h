@@ -19,7 +19,7 @@
 
 #include "Dalvik.h"
 
-typedef enum {
+enum RootType {
   ROOT_UNKNOWN = 0,
   ROOT_JNI_GLOBAL,
   ROOT_JNI_LOCAL,
@@ -33,7 +33,7 @@ typedef enum {
   ROOT_DEBUGGER,
   ROOT_VM_INTERNAL,
   ROOT_JNI_MONITOR,
-} RootType;
+};
 
 /*
  * Callback invoked with the address of a reference and a user

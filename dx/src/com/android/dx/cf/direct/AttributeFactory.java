@@ -21,7 +21,7 @@ import com.android.dx.cf.iface.Attribute;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.cf.iface.ParseObserver;
 import com.android.dx.rop.cst.ConstantPool;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
 
@@ -76,7 +76,7 @@ public class AttributeFactory {
             throw new IllegalArgumentException("bad context");
         }
 
-        CstUtf8 name = null;
+        CstString name = null;
 
         try {
             ByteArray bytes = cf.getBytes();
@@ -84,7 +84,7 @@ public class AttributeFactory {
             int nameIdx = bytes.getUnsignedShort(offset);
             int length = bytes.getInt(offset + 2);
 
-            name = (CstUtf8) pool.get(nameIdx);
+            name = (CstString) pool.get(nameIdx);
 
             if (observer != null) {
                 observer.parsed(bytes, offset, 2,

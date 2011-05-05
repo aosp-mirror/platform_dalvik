@@ -21,10 +21,10 @@
 #ifndef _DALVIK_DEBUGGER
 #define _DALVIK_DEBUGGER
 
+#include <pthread.h>
 #include "Common.h"
 #include "Misc.h"
 #include "jdwp/Jdwp.h"
-#include <pthread.h>
 
 /* fwd decl */
 struct Object;
@@ -36,10 +36,10 @@ struct Thread;
  * Used by StepControl to track a set of addresses associated with
  * a single line.
  */
-typedef struct AddressSet {
+struct AddressSet {
     u4 setSize;
     u1 set[1];
-} AddressSet;
+};
 
 INLINE void dvmAddressSetSet(AddressSet *pSet, u4 toSet)
 {
@@ -60,24 +60,24 @@ INLINE bool dvmAddressSetGet(const AddressSet *pSet, u4 toGet)
 /*
  * Single-step management.
  */
-typedef struct StepControl {
+struct StepControl {
     /* request */
-    enum JdwpStepSize   size;
-    enum JdwpStepDepth  depth;
-    struct Thread*      thread;         /* don't deref; for comparison only */
+    JdwpStepSize size;
+    JdwpStepDepth depth;
+    Thread* thread;         /* don't deref; for comparison only */
 
     /* current state */
-    bool                active;
-    const struct Method* method;
-    int                 line;           /* line #; could be -1 */
-    const AddressSet*   pAddressSet;    /* if non-null, address set for line */
-    int                 frameDepth;
-} StepControl;
+    bool active;
+    const Method* method;
+    int line;           /* line #; could be -1 */
+    const AddressSet* pAddressSet;    /* if non-null, address set for line */
+    int frameDepth;
+};
 
 /*
  * Invoke-during-breakpoint support.
  */
-typedef struct DebugInvokeReq {
+struct DebugInvokeReq {
     /* boolean; only set when we're in the tail end of an event handler */
     bool ready;
 
@@ -85,24 +85,24 @@ typedef struct DebugInvokeReq {
     bool invokeNeeded;
 
     /* request */
-    struct Object*      obj;        /* not used for ClassType.InvokeMethod */
-    struct Object*      thread;
-    struct ClassObject* clazz;
-    struct Method*      method;
-    u4                  numArgs;
-    u8*                 argArray;   /* will be NULL if numArgs==0 */
-    u4                  options;
+    Object* obj;        /* not used for ClassType.InvokeMethod */
+    Object* thread;
+    ClassObject* clazz;
+    Method* method;
+    u4 numArgs;
+    u8* argArray;   /* will be NULL if numArgs==0 */
+    u4 options;
 
     /* result */
-    JdwpError           err;
-    u1                  resultTag;
-    JValue              resultValue;
-    ObjectId            exceptObj;
+    JdwpError err;
+    u1 resultTag;
+    JValue resultValue;
+    ObjectId exceptObj;
 
     /* condition variable to wait on while the method executes */
-    pthread_mutex_t     lock;
-    pthread_cond_t      cv;
-} DebugInvokeReq;
+    pthread_mutex_t lock;
+    pthread_cond_t cv;
+};
 
 /* system init/shutdown */
 bool dvmDebuggerStartup(void);
@@ -260,14 +260,13 @@ void dvmDbgSetLocalValue(ObjectId threadId, FrameId frameId, int slot,
 /*
  * Debugger notification
  */
-void dvmDbgPostLocationEvent(const struct Method* method, int pcOffset,
-    struct Object* thisPtr, int eventFlags);
+void dvmDbgPostLocationEvent(const Method* method, int pcOffset,
+    Object* thisPtr, int eventFlags);
 void dvmDbgPostException(void* throwFp, int throwRelPc, void* catchFp,
-    int catchRelPc, struct Object* exception);
-void dvmDbgPostThreadStart(struct Thread* thread);
-void dvmDbgPostThreadDeath(struct Thread* thread);
-void dvmDbgPostClassPrepare(struct ClassObject* clazz);
-// FieldAccess, FieldModification
+    int catchRelPc, Object* exception);
+void dvmDbgPostThreadStart(Thread* thread);
+void dvmDbgPostThreadDeath(Thread* thread);
+void dvmDbgPostClassPrepare(ClassObject* clazz);
 
 /* for "eventFlags" */
 enum {
@@ -279,8 +278,8 @@ enum {
 
 bool dvmDbgWatchLocation(const JdwpLocation* pLoc);
 void dvmDbgUnwatchLocation(const JdwpLocation* pLoc);
-bool dvmDbgConfigureStep(ObjectId threadId, enum JdwpStepSize size,
-    enum JdwpStepDepth depth);
+bool dvmDbgConfigureStep(ObjectId threadId, JdwpStepSize size,
+    JdwpStepDepth depth);
 void dvmDbgUnconfigureStep(ObjectId threadId);
 
 JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
@@ -289,7 +288,7 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
 void dvmDbgExecuteMethod(DebugInvokeReq* pReq);
 
 /* Make an AddressSet for a line, for single stepping */
-const AddressSet *dvmAddressSetForLine(const struct Method* method, int line);
+const AddressSet *dvmAddressSetForLine(const Method* method, int line);
 
 /* perform "late registration" of an object ID */
 void dvmDbgRegisterObjectId(ObjectId id);

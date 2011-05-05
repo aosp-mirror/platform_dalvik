@@ -25,20 +25,20 @@
 /*
  * Method description; equivalent to a JNI struct.
  */
-typedef struct DalvikNativeMethod {
+struct DalvikNativeMethod {
     const char* name;
     const char* signature;
     DalvikNativeFunc  fnPtr;
-} DalvikNativeMethod;
+};
 
 /*
  * All methods for one class.  The last "methodInfo" has a NULL "name".
  */
-typedef struct DalvikNativeClass {
+struct DalvikNativeClass {
     const char* classDescriptor;
     const DalvikNativeMethod* methodInfo;
     u4          classDescriptorHash;          /* initialized at runtime */
-} DalvikNativeClass;
+};
 
 
 /* init/shutdown */
@@ -49,8 +49,8 @@ void dvmNativeShutdown(void);
 /*
  * Convert argc/argv into a function call.  This is platform-specific.
  */
-void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo, int argc,
-    const u4* argv, const char* signature, void* func, JValue* pResult);
+extern "C" void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo,
+    int argc, const u4* argv, const char* signature, void* func, JValue* pResult);
 
 /*
  * Generate hints to speed native calls.  This is platform specific.

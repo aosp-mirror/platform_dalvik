@@ -35,7 +35,7 @@ void dvmProfilingShutdown(void);
  * Method trace state.  This is currently global.  In theory we could make
  * most of this per-thread.
  */
-typedef struct MethodTraceState {
+struct MethodTraceState {
     /* active state */
     pthread_mutex_t startStopLock;
     pthread_cond_t  threadExitCond;
@@ -49,7 +49,7 @@ typedef struct MethodTraceState {
     volatile int curOffset;
     u8      startWhen;
     int     overflow;
-} MethodTraceState;
+};
 
 /*
  * Memory allocation profiler state.  This is used both globally and
@@ -57,7 +57,7 @@ typedef struct MethodTraceState {
  *
  * If you add a field here, zero it out in dvmStartAllocCounting().
  */
-typedef struct AllocProfState {
+struct AllocProfState {
     bool    enabled;            // is allocation tracking enabled?
 
     int     allocCount;         // #of objects allocated
@@ -73,7 +73,7 @@ typedef struct AllocProfState {
 
     int     classInitCount;     // #of initialized classes
     u8      classInitTime;      // cumulative time spent in class init (nsec)
-} AllocProfState;
+};
 
 
 /*
@@ -137,9 +137,9 @@ void dvmMethodTraceGCEnd(void);
 void dvmMethodTraceClassPrepBegin(void);
 void dvmMethodTraceClassPrepEnd(void);
 
-void dvmFastMethodTraceEnter(const Method* method, struct Thread* self);
-void dvmFastMethodTraceExit(struct Thread* self);
-void dvmFastNativeMethodTraceExit(const Method* method, struct Thread* self);
+extern "C" void dvmFastMethodTraceEnter(const Method* method, struct Thread* self);
+extern "C" void dvmFastMethodTraceExit(struct Thread* self);
+extern "C" void dvmFastNativeMethodTraceExit(const Method* method, struct Thread* self);
 
 /*
  * Start/stop alloc counting.

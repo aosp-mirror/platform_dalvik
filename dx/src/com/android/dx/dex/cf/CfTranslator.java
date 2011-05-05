@@ -47,8 +47,8 @@ import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstShort;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
@@ -118,7 +118,7 @@ public class CfTranslator {
 
         CstType thisClass = cf.getThisClass();
         int classAccessFlags = cf.getAccessFlags() & ~AccessFlags.ACC_SUPER;
-        CstUtf8 sourceFile = (cfOptions.positionInfo == PositionList.NONE) ? null :
+        CstString sourceFile = (cfOptions.positionInfo == PositionList.NONE) ? null :
             cf.getSourceFile();
         ClassDefItem out =
             new ClassDefItem(thisClass, classAccessFlags,

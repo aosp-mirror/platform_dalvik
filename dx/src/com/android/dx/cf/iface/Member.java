@@ -17,8 +17,8 @@
 package com.android.dx.cf.iface;
 
 import com.android.dx.rop.cst.CstNat;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 
 /**
  * Interface representing members of class files (that is, fields and methods).
@@ -44,7 +44,7 @@ public interface Member {
      *
      * @return {@code non-null;} the name
      */
-    public CstUtf8 getName();
+    public CstString getName();
 
     /**
      * Get the field {@code descriptor_index} of the member. This is
@@ -52,7 +52,7 @@ public interface Member {
      *
      * @return {@code non-null;} the descriptor
      */
-    public CstUtf8 getDescriptor();
+    public CstString getDescriptor();
 
     /**
      * Get the name and type associated with this member. This is a

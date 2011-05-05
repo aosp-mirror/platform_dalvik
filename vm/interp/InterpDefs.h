@@ -59,13 +59,13 @@ void dvmInterpCheckTrackedRefs(Thread* self, const Method* method,
 /*
  * Process switch statement.
  */
-s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal);
-s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal);
+extern "C" s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal);
+extern "C" s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal);
 
 /*
  * Process fill-array-data.
  */
-bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,
+extern "C" bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,
                                   const u2* arrayData);
 
 /*

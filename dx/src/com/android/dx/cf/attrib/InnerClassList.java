@@ -16,8 +16,8 @@
 
 package com.android.dx.cf.attrib;
 
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.util.FixedSizeList;
 
 /**
@@ -56,7 +56,7 @@ public final class InnerClassList extends FixedSizeList {
      * @param accessFlags original declared access flags
      */
     public void set(int n, CstType innerClass, CstType outerClass,
-                    CstUtf8 innerName, int accessFlags) {
+                    CstString innerName, int accessFlags) {
         set0(n, new Item(innerClass, outerClass, innerName, accessFlags));
     }
 
@@ -71,7 +71,7 @@ public final class InnerClassList extends FixedSizeList {
         private final CstType outerClass;
 
         /** {@code null-ok;} original simple name of this class, if not anonymous */
-        private final CstUtf8 innerName;
+        private final CstString innerName;
 
         /** original declared access flags */
         private final int accessFlags;
@@ -87,7 +87,7 @@ public final class InnerClassList extends FixedSizeList {
          * @param accessFlags original declared access flags
          */
         public Item(CstType innerClass, CstType outerClass,
-                    CstUtf8 innerName, int accessFlags) {
+                    CstString innerName, int accessFlags) {
             if (innerClass == null) {
                 throw new NullPointerException("innerClass == null");
             }
@@ -121,7 +121,7 @@ public final class InnerClassList extends FixedSizeList {
          *
          * @return {@code null-ok;} the name
          */
-        public CstUtf8 getInnerName() {
+        public CstString getInnerName() {
             return innerName;
         }
 

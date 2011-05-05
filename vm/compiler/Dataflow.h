@@ -102,12 +102,16 @@ typedef struct SSARepresentation {
     bool *fpDef;
 } SSARepresentation;
 
+/*
+ * An induction variable is represented by "m*i + c", where i is a basic
+ * induction variable.
+ */
 typedef struct InductionVariableInfo {
     int ssaReg;
     int basicSSAReg;
-    int m;
-    int c;
-    int inc;
+    int m;      // multiplier
+    int c;      // constant
+    int inc;    // loop incriment
 } InductionVariableInfo;
 
 typedef struct ArrayAccessInfo {

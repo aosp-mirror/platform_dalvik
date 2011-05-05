@@ -34,7 +34,7 @@ struct StringObject;
 /*
  * Some additional VM data structures that are associated with the DEX file.
  */
-typedef struct DvmDex {
+struct DvmDex {
     /* pointer to the DexFile we're associated with */
     DexFile*            pDexFile;
 
@@ -63,7 +63,7 @@ typedef struct DvmDex {
 
     /* lock ensuring mutual exclusion during updates */
     pthread_mutex_t     modLock;
-} DvmDex;
+};
 
 
 /*

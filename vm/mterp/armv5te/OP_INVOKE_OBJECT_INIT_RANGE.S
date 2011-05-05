@@ -15,7 +15,7 @@
     tst     r2, #CLASS_ISFINALIZABLE    @ is this class finalizable?
     bne     .L${opcode}_setFinal        @ yes, go
 .L${opcode}_finish:
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeDebuggerActive @ debugger active?
     bne     .L${opcode}_debugger        @ Yes - skip optimization
     FETCH_ADVANCE_INST(${cccc}+1)       @ advance to next instr, load rINST

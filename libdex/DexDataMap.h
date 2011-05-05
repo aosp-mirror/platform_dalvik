@@ -23,12 +23,12 @@
 
 #include "DexFile.h"
 
-typedef struct DexDataMap {
+struct DexDataMap {
     u4 count;    /* number of items currently in the map */
     u4 max;      /* maximum number of items that may be held */
     u4* offsets; /* array of item offsets */
     u2* types;   /* corresponding array of item types */
-} DexDataMap;
+};
 
 /*
  * Allocate and initialize a DexDataMap. Returns NULL on failure.

@@ -32,13 +32,10 @@ void dvmJniShutdown(void);
  */
 struct JavaVMExt;
 
-typedef struct JNIEnvExt {
+struct JNIEnvExt {
     const struct JNINativeInterface* funcTable;     /* must be first */
 
     const struct JNINativeInterface* baseFuncTable;
-
-    /* pointer to the VM we are a part of */
-    struct JavaVMExt* vm;
 
     u4      envThreadId;
     Thread* self;
@@ -46,29 +43,19 @@ typedef struct JNIEnvExt {
     /* if nonzero, we are in a "critical" JNI call */
     int     critical;
 
-    /* keep a copy of this here for speed */
-    bool    forceDataCopy;
-
     struct JNIEnvExt* prev;
     struct JNIEnvExt* next;
-} JNIEnvExt;
+};
 
-typedef struct JavaVMExt {
+struct JavaVMExt {
     const struct JNIInvokeInterface* funcTable;     /* must be first */
 
     const struct JNIInvokeInterface* baseFuncTable;
 
-    /* if multiple VMs are desired, add doubly-linked list stuff here */
-
-    /* per-VM feature flags */
-    bool    useChecked;
-    bool    warnError;
-    bool    forceDataCopy;
-
     /* head of list of JNIEnvs associated with this VM */
     JNIEnvExt*      envList;
     pthread_mutex_t envListLock;
-} JavaVMExt;
+};
 
 /*
  * Native function return type; used by dvmPlatformInvoke().
@@ -77,7 +64,7 @@ typedef struct JavaVMExt {
  * Note: Assembly code in arch/<arch>/Call<arch>.S relies on
  * the enum values defined here.
  */
-typedef enum DalvikJniReturnType {
+enum DalvikJniReturnType {
     DALVIK_JNI_RETURN_VOID = 0,     /* must be zero */
     DALVIK_JNI_RETURN_FLOAT = 1,
     DALVIK_JNI_RETURN_DOUBLE = 2,
@@ -86,7 +73,7 @@ typedef enum DalvikJniReturnType {
     DALVIK_JNI_RETURN_S2 = 5,
     DALVIK_JNI_RETURN_U2 = 6,
     DALVIK_JNI_RETURN_S1 = 7
-} DalvikJniReturnType;
+};
 
 #define DALVIK_JNI_NO_ARG_INFO  0x80000000
 #define DALVIK_JNI_RETURN_MASK  0x70000000

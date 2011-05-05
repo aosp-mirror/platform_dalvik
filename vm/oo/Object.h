@@ -21,9 +21,8 @@
 #ifndef _DALVIK_OO_OBJECT
 #define _DALVIK_OO_OBJECT
 
-#include <Atomic.h>
-
 #include <stddef.h>
+#include "Atomic.h"
 
 /* fwd decl */
 struct DataObject;
@@ -38,18 +37,6 @@ struct StaticField;
 struct InstField;
 struct Field;
 struct RegisterMap;
-typedef struct DataObject DataObject;
-typedef struct InitiatingLoaderList InitiatingLoaderList;
-typedef struct ClassObject ClassObject;
-typedef struct StringObject StringObject;
-typedef struct ArrayObject ArrayObject;
-typedef struct Method Method;
-typedef struct ExceptionEntry ExceptionEntry;
-typedef struct LineNumEntry LineNumEntry;
-typedef struct StaticField StaticField;
-typedef struct InstField InstField;
-typedef struct Field Field;
-typedef struct RegisterMap RegisterMap;
 
 /*
  * Native function pointer type.
@@ -67,32 +54,33 @@ typedef void (*DalvikNativeFunc)(const u4* args, JValue* pResult);
 
 
 /* vm-internal access flags and related definitions */
-typedef enum AccessFlags {
+enum AccessFlags {
     ACC_MIRANDA         = 0x8000,       // method (internal to VM)
     JAVA_FLAGS_MASK     = 0xffff,       // bits set from Java sources (low 16)
-} AccessFlags;
+};
 
 /* Use the top 16 bits of the access flags field for
  * other class flags.  Code should use the *CLASS_FLAG*()
  * macros to set/get these flags.
  */
-typedef enum ClassFlags {
-    CLASS_ISFINALIZABLE     = (1<<31),  // class/ancestor overrides finalize()
-    CLASS_ISARRAY           = (1<<30),  // class is a "[*"
-    CLASS_ISOBJECTARRAY     = (1<<29),  // class is a "[L*" or "[[*"
+enum ClassFlags {
+    CLASS_ISFINALIZABLE        = (1<<31), // class/ancestor overrides finalize()
+    CLASS_ISARRAY              = (1<<30), // class is a "[*"
+    CLASS_ISOBJECTARRAY        = (1<<29), // class is a "[L*" or "[[*"
+    CLASS_ISCLASS              = (1<<28), // class is *the* class Class
 
-    CLASS_ISREFERENCE       = (1<<28),  // class is a soft/weak/phantom ref
-                                        // only ISREFERENCE is set --> soft
-    CLASS_ISWEAKREFERENCE   = (1<<27),  // class is a weak reference
-    CLASS_ISFINALIZERREFERENCE = (1<<26), // class is a phantom reference
-    CLASS_ISPHANTOMREFERENCE = (1<<25), // class is a phantom reference
+    CLASS_ISREFERENCE          = (1<<27), // class is a soft/weak/phantom ref
+                                          // only ISREFERENCE is set --> soft
+    CLASS_ISWEAKREFERENCE      = (1<<26), // class is a weak reference
+    CLASS_ISFINALIZERREFERENCE = (1<<25), // class is a finalizer reference
+    CLASS_ISPHANTOMREFERENCE   = (1<<24), // class is a phantom reference
 
-    CLASS_MULTIPLE_DEFS     = (1<<24),  // DEX verifier: defs in multiple DEXs
+    CLASS_MULTIPLE_DEFS        = (1<<23), // DEX verifier: defs in multiple DEXs
 
     /* unlike the others, these can be present in the optimized DEX file */
-    CLASS_ISOPTIMIZED       = (1<<17),  // class may contain opt instrs
-    CLASS_ISPREVERIFIED     = (1<<16),  // class has been pre-verified
-} ClassFlags;
+    CLASS_ISOPTIMIZED          = (1<<17), // class may contain opt instrs
+    CLASS_ISPREVERIFIED        = (1<<16), // class has been pre-verified
+};
 
 /* bits we can reasonably expect to see set in a DEX access flags field */
 #define EXPECTED_FILE_FLAGS \
@@ -117,9 +105,9 @@ typedef enum ClassFlags {
  * Use the top 16 bits of the access flags field for other method flags.
  * Code should use the *METHOD_FLAG*() macros to set/get these flags.
  */
-typedef enum MethodFlags {
+enum MethodFlags {
     METHOD_ISWRITABLE       = (1<<31),  // the method's code is writable
-} MethodFlags;
+};
 
 /*
  * Get/set method flags.
@@ -137,7 +125,7 @@ typedef enum MethodFlags {
     ((u4)((method)->accessFlags & (flags)))
 
 /* current state of the class, increasing as we progress */
-typedef enum ClassStatus {
+enum ClassStatus {
     CLASS_ERROR         = -1,
 
     CLASS_NOTREADY      = 0,
@@ -148,7 +136,7 @@ typedef enum ClassStatus {
     CLASS_VERIFIED      = 5,    /* logically part of linking; done pre-init */
     CLASS_INITIALIZING  = 6,    /* class init in progress */
     CLASS_INITIALIZED   = 7,    /* ready to go */
-} ClassStatus;
+};
 
 /*
  * Definitions for packing refOffsets in ClassObject.
@@ -192,7 +180,7 @@ typedef enum ClassStatus {
 /*
  * Used for iftable in ClassObject.
  */
-typedef struct InterfaceEntry {
+struct InterfaceEntry {
     /* pointer to interface class */
     ClassObject*    clazz;
 
@@ -201,7 +189,7 @@ typedef struct InterfaceEntry {
      * which holds the vtables for all interfaces declared by this class.
      */
     int*            methodIndexArray;
-} InterfaceEntry;
+};
 
 
 
@@ -217,7 +205,7 @@ typedef struct InterfaceEntry {
  *
  * All objects have an Object header followed by type-specific data.
  */
-typedef struct Object {
+struct Object {
     /* ptr to class object */
     ClassObject*    clazz;
 
@@ -226,25 +214,19 @@ typedef struct Object {
      * the comments in Sync.c for a description of its layout.
      */
     u4              lock;
-} Object;
+};
 
 /*
  * Properly initialize an Object.
  * void DVM_OBJECT_INIT(Object *obj, ClassObject *clazz_)
  */
-#define DVM_OBJECT_INIT(obj, clazz_)                                    \
-    do {                                                                \
-        dvmSetFieldObject((Object *)obj, offsetof(Object, clazz),       \
-                          (Object *)clazz_);                            \
-        DVM_LOCK_INIT(&(obj)->lock);                                    \
-    } while (0)
+#define DVM_OBJECT_INIT(obj, clazz_) \
+    dvmSetFieldObject((Object *)obj, OFFSETOF_MEMBER(Object, clazz), (Object *)clazz_)
 
 /*
  * Data objects have an Object header followed by their instance data.
  */
-struct DataObject {
-    Object          obj;                /* MUST be first item */
-
+struct DataObject : Object {
     /* variable #of u4 slots; u8 uses 2 slots */
     u4              instanceData[1];
 };
@@ -275,9 +257,7 @@ struct StringObject {
  * by the instruction.  If necessary, the width can be derived from
  * the first char of obj->clazz->descriptor.
  */
-struct ArrayObject {
-    Object          obj;                /* MUST be first item */
-
+struct ArrayObject : Object {
     /* number of elements; immutable after init */
     u4              length;
 
@@ -311,10 +291,6 @@ struct Field {
     const char*     name;
     const char*     signature;      /* e.g. "I", "[C", "Landroid/os/Debug;" */
     u4              accessFlags;
-#ifdef PROFILE_FIELD_ACCESS
-    u4              gets;
-    u4              puts;
-#endif
 };
 
 /*
@@ -747,6 +723,24 @@ INLINE bool dvmIsClassLinked(const ClassObject* clazz) {
 /* has class been verified? */
 INLINE bool dvmIsClassVerified(const ClassObject* clazz) {
     return clazz->status >= CLASS_VERIFIED;
+}
+
+/*
+ * Return whether the given object is an instance of Class.
+ */
+INLINE bool dvmIsClassObject(const Object* obj) {
+    assert(obj != NULL);
+    assert(obj->clazz != NULL);
+    return IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISCLASS);
+}
+
+/*
+ * Return whether the given object is the class Class (that is, the
+ * unique class which is an instance of itself).
+ */
+INLINE bool dvmIsTheClassClass(const ClassObject* clazz) {
+    assert(clazz != NULL);
+    return IS_CLASS_FLAG_SET(clazz, CLASS_ISCLASS);
 }
 
 /*

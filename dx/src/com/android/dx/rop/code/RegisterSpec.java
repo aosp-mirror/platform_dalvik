@@ -17,7 +17,7 @@
 package com.android.dx.rop.code;
 
 import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
 import com.android.dx.util.ToHuman;
@@ -581,8 +581,10 @@ public final class RegisterSpec
 
         if (justType != type) {
             sb.append("=");
-            if (human && (type instanceof Constant)) {
-                sb.append(((Constant) type).toHuman());
+            if (human && (type instanceof CstString)) {
+                sb.append(((CstString) type).toQuoted());
+            } else if (human && (type instanceof Constant)) {
+                sb.append(type.toHuman());
             } else {
                 sb.append(type);
             }

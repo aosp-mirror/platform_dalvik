@@ -36,13 +36,13 @@
 /*
  * Use this to keep track of mapped segments.
  */
-typedef struct MemMapping {
+struct MemMapping {
     void*   addr;           /* start of data */
     size_t  length;         /* length of data */
 
     void*   baseAddr;       /* page-aligned base address */
     size_t  baseLength;     /* length of mapping */
-} MemMapping;
+};
 
 /*
  * Copy a map.

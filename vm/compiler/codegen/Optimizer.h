@@ -23,14 +23,14 @@
  * If the corresponding bit is set in gDvmJit.disableOpt, the selected
  * optimization will be suppressed.
  */
-typedef enum optControlVector {
+enum optControlVector {
     kLoadStoreElimination = 0,
     kLoadHoisting,
     kTrackLiveTemps,
     kSuppressLoads,
     kMethodInlining,
     kMethodJit,
-} optControlVector;
+};
 
 /* Forward declarations */
 struct CompilationUnit;

@@ -82,8 +82,8 @@ unspecified registers or condition codes.
 /* save/restore the PC and/or FP from the thread struct */
 #define LOAD_PC_FROM_SELF()     ldr     rPC, [rSELF, #offThread_pc]
 #define SAVE_PC_TO_SELF()       str     rPC, [rSELF, #offThread_pc]
-#define LOAD_FP_FROM_SELF()     ldr     rFP, [rSELF, #offThread_fp]
-#define SAVE_FP_TO_SELF()       str     rFP, [rSELF, #offThread_fp]
+#define LOAD_FP_FROM_SELF()     ldr     rFP, [rSELF, #offThread_curFrame]
+#define SAVE_FP_TO_SELF()       str     rFP, [rSELF, #offThread_curFrame]
 #define LOAD_PC_FP_FROM_SELF()  ldmia   rSELF, {rPC, rFP}
 #define SAVE_PC_FP_TO_SELF()    stmia   rSELF, {rPC, rFP}
 
@@ -7620,7 +7620,7 @@ d2i_doconv:
      * swap if profiler/debuggger active.
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     FETCH(r10, 1)                       @ r10<- BBBB
     EXPORT_PC()                         @ can throw
     ands    r2, #kSubModeDebugProfile   @ Any going on?
@@ -7654,7 +7654,7 @@ d2i_doconv:
      * us if an exception was thrown.
      */
     /* [opt] execute-inline/range {vCCCC..v(CCCC+AA-1)}, inline@BBBB */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     FETCH(r10, 1)                       @ r10<- BBBB
     EXPORT_PC()                         @ can throw
     ands    r2, #kSubModeDebugProfile   @ Any going on?
@@ -7690,7 +7690,7 @@ d2i_doconv:
     tst     r2, #CLASS_ISFINALIZABLE    @ is this class finalizable?
     bne     .LOP_INVOKE_OBJECT_INIT_RANGE_setFinal        @ yes, go
 .LOP_INVOKE_OBJECT_INIT_RANGE_finish:
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeDebuggerActive @ debugger active?
     bne     .LOP_INVOKE_OBJECT_INIT_RANGE_debugger        @ Yes - skip optimization
     FETCH_ADVANCE_INST(2+1)       @ advance to next instr, load rINST
@@ -10755,7 +10755,7 @@ d2i_doconv:
     tst     r2, #CLASS_ISFINALIZABLE    @ is this class finalizable?
     bne     .LOP_INVOKE_OBJECT_INIT_JUMBO_setFinal        @ yes, go
 .LOP_INVOKE_OBJECT_INIT_JUMBO_finish:
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeDebuggerActive @ debugger active?
     bne     .LOP_INVOKE_OBJECT_INIT_JUMBO_debugger        @ Yes - skip optimization
     FETCH_ADVANCE_INST(4+1)       @ advance to next instr, load rINST
@@ -11310,7 +11310,7 @@ dvmAsmSisterStart:
      * The JIT needs the class to be fully resolved before it can
      * include this instruction in a trace.
      */
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown      @ yes, handle the exception
     ands    r1, #kSubModeJitTraceBuild  @ under construction?
     bne     .LOP_NEW_INSTANCE_jitCheck
@@ -12574,7 +12574,7 @@ OP_CMPG_FLOAT_nan:
      * we need to keep this instruction out of it.
      * r10: &resolved_methodToCall
      */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown            @ null, handle exception
     ands    r2, #kSubModeJitTraceBuild        @ trace under construction?
     beq     common_invokeMethodNoRange     @ no (r0=method, r9="this")
@@ -12674,7 +12674,7 @@ OP_CMPG_FLOAT_nan:
      * we need to keep this instruction out of it.
      * r10: &resolved_methodToCall
      */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown            @ null, handle exception
     ands    r2, #kSubModeJitTraceBuild        @ trace under construction?
     beq     common_invokeMethodRange     @ no (r0=method, r9="this")
@@ -13438,7 +13438,7 @@ d2l_doconv:
      * The JIT needs the class to be fully resolved before it can
      * include this instruction in a trace.
      */
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown      @ yes, handle the exception
     ands    r1, #kSubModeJitTraceBuild  @ under construction?
     bne     .LOP_NEW_INSTANCE_JUMBO_jitCheck
@@ -14477,7 +14477,7 @@ d2l_doconv:
      * we need to keep this instruction out of it.
      * r10: &resolved_methodToCall
      */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown            @ null, handle exception
     ands    r2, #kSubModeJitTraceBuild        @ trace under construction?
     beq     common_invokeMethodJumboNoThis    @ no (r0=method, r9="this")
@@ -26813,10 +26813,8 @@ dvmJitToInterpSingleStep:
     mov    r1, #1
     str    r1, [rSELF,#offThread_singleStepCount]  @ just step once
     mov    r0, rSELF
-    mov    r1, #kInterpSingleStep
-    mov    r2, #kSubModeNormal
-    mov    r3, #1                @ true
-    bl     dvmUpdateInterpBreak  @ (self, newBreak, newMode, enable)
+    mov    r1, #kSubModeCountedStep
+    bl     dvmEnableSubMode     @ (self, newMode)
     ldr    rIBASE, [rSELF,#offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)
@@ -27034,8 +27032,8 @@ common_updateProfile:
  *  r2 is jit state.
  */
 common_selectTrace:
-    ldrb    r0,[rSELF,#offThread_breakFlags]
-    ands    r0,#kInterpJitBreak
+    ldrh    r0,[rSELF,#offThread_subMode]
+    ands    r0, #(kSubModeJitTraceBuild | kSubModeJitSV)
     bne     3f                         @ already doing JIT work, continue
     str     r2,[rSELF,#offThread_jitState]
     mov     r0, rSELF
@@ -27090,10 +27088,8 @@ jitSVShadowRunEnd:
     beq    1f
     @ Set up SV single-stepping
     mov    r0, rSELF
-    mov    r1, #kInterpJitBreak
-    mov    r2, #kSubModeJitSV
-    mov    r3, #1                @ true
-    bl     dvmUpdateInterpBreak  @ (self, newBreak, newMode, enable)
+    mov    r1, #kSubModeJitSV
+    bl     dvmEnableSubMode              @ (self, subMode)
     mov    r2,#kJitSelfVerification      @ ask for self verification
     str    r2,[rSELF,#offThread_jitState]
     @ intentional fallthrough
@@ -27148,7 +27144,7 @@ common_invokeMethodJumbo:
  /* On entry: r0 is "Method* methodToCall, r9 is "this" */
 .LinvokeNewJumbo:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -27170,7 +27166,7 @@ common_invokeMethodJumbo:
 common_invokeMethodRange:
 .LinvokeNewRange:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -27200,7 +27196,7 @@ common_invokeMethodRange:
 common_invokeMethodNoRange:
 .LinvokeNewNoRange:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -27250,7 +27246,7 @@ common_invokeMethodNoRange:
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     blo     .LstackOverflow             @ yes, this frame will overflow stack
 
@@ -27304,7 +27300,7 @@ common_invokeMethodNoRange:
     mov     rFP, r1                         @ fp = newFp
     GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
     mov     rINST, r9                       @ publish new rINST
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     cmp     r0,#0
     bne     common_updateProfile
     GOTO_OPCODE(ip)                         @ jump to next instruction
@@ -27312,7 +27308,7 @@ common_invokeMethodNoRange:
     mov     rFP, r1                         @ fp = newFp
     GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
     mov     rINST, r9                       @ publish new rINST
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     GOTO_OPCODE(ip)                         @ jump to next instruction
 #endif
 
@@ -27320,7 +27316,6 @@ common_invokeMethodNoRange:
     @ Profiling - record method entry.  r0: methodToCall
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
     str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
-    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
     mov     r1, r0
     mov     r0, rSELF
     bl      dvmReportInvoke             @ (self, method)
@@ -27330,9 +27325,9 @@ common_invokeMethodNoRange:
 .LinvokeNative:
     @ Prep for the native call
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFp (points to args)
@@ -27360,7 +27355,7 @@ dalvik_mterp:
     @ equivalent to dvmPopJniLocals
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
     bne     common_exceptionThrown      @ no, handle exception
@@ -27372,11 +27367,10 @@ dalvik_mterp:
 11:
     @ r0=newFp, r1=&retval, r2=methodToCall, r3=self, lr=subModes
     stmfd   sp!, {r0-r3}                @ save all but subModes
-    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
-    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
     mov     r0, r2                      @ r0<- methodToCall
     mov     r1, rSELF
-    bl      dvmReportPreNativeInvoke    @ (methodToCall, self)
+    mov     r2, rFP
+    bl      dvmReportPreNativeInvoke    @ (methodToCall, self, fp)
     ldmfd   sp, {r0-r3}                 @ refresh.  NOTE: no sp autoincrement
 
     @ Call the native method
@@ -27387,10 +27381,10 @@ dalvik_mterp:
     ldmfd   sp!, {r0-r3}                @ r2<- methodToCall (others unneeded)
 
     @ Finish up any post-invoke subMode requirements
-    @ interpSave already up-to-date
     mov     r0, r2                      @ r0<- methodToCall
     mov     r1, rSELF
-    bl      dvmReportPostNativeInvoke   @ (methodToCall, self)
+    mov     r2, rFP
+    bl      dvmReportPostNativeInvoke   @ (methodToCall, self, fp)
     b       7b                          @ resume
 
 .LstackOverflow:    @ r0=methodToCall
@@ -27439,7 +27433,7 @@ dalvik_mterp:
  */
 common_returnFromMethod:
 .LreturnNew:
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     SAVEAREA_FROM_FP(r0, rFP)
     ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
     cmp     lr, #0                      @ any special subMode handling needed?
@@ -27463,7 +27457,7 @@ common_returnFromMethod:
     PREFETCH_ADVANCE_INST(rINST, r9, 3) @ advance r9, update new rINST
     str     r2, [rSELF, #offThread_method]@ self->method = newSave->method
     ldr     r1, [r10, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = fp
 #if defined(WITH_JIT)
     ldr     r10, [r0, #offStackSaveArea_returnAddr] @ r10 = saveArea->returnAddr
     mov     rPC, r9                     @ publish new rPC
@@ -27485,7 +27479,7 @@ common_returnFromMethod:
     @ On entry, r0: StackSaveArea
     ldr     r1, [r0, #offStackSaveArea_prevFrame]  @ r2<- prevFP
     str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
-    str     r1, [rSELF, #offThread_fp]   @ update interpSave.fp
+    str     r1, [rSELF, #offThread_curFrame]   @ update interpSave.curFrame
     mov     r0, rSELF
     bl      dvmReportReturn             @ (self)
     SAVEAREA_FROM_FP(r0, rFP)           @ restore StackSaveArea
@@ -27526,7 +27520,7 @@ common_exceptionThrown:
     mov     r1, rSELF                   @ r1<- self
     mov     r0, r9                      @ r0<- exception
     bl      dvmAddTrackedAlloc          @ don't let the exception be GCed
-    ldrb    r2, [rSELF, #offThread_subMode]  @ get subMode flags
+    ldrh    r2, [rSELF, #offThread_subMode]  @ get subMode flags
     mov     r3, #0                      @ r3<- NULL
     str     r3, [rSELF, #offThread_exception] @ self->exception = NULL
 
@@ -27543,7 +27537,7 @@ common_exceptionThrown:
     ldr     r1, [rSELF, #offThread_method] @ r1<- self->method
     mov     r0, rSELF                   @ r0<- self
     ldr     r1, [r1, #offMethod_insns]  @ r1<- method->insns
-    ldrb    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags
+    ldrh    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags
     mov     r2, r9                      @ r2<- exception
     sub     r1, rPC, r1                 @ r1<- pc - method->insns
     mov     r1, r1, asr #1              @ r1<- offset in code units
@@ -27568,7 +27562,7 @@ common_exceptionThrown:
     add     sp, sp, #8                  @ restore stack
     bmi     .LnotCaughtLocally
 
-    /* adjust locals to match self->curFrame and updated PC */
+    /* adjust locals to match self->interpSave.curFrame and updated PC */
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- new save area
     ldr     r1, [r1, #offStackSaveArea_method] @ r1<- new method
     str     r1, [rSELF, #offThread_method]  @ self->method = new method
@@ -27594,7 +27588,7 @@ common_exceptionThrown:
     @ Manage debugger bookkeeping
 7:
     str     rPC, [rSELF, #offThread_pc]     @ update interpSave.pc
-    str     rFP, [rSELF, #offThread_fp]     @ update interpSave.fp
+    str     rFP, [rSELF, #offThread_curFrame]     @ update interpSave.curFrame
     mov     r0, rSELF                       @ arg0<- self
     mov     r1, r9                          @ arg1<- exception
     bl      dvmReportExceptionThrow         @ (self, exception)
@@ -27661,7 +27655,7 @@ common_exceptionThrown:
      *     r0:  field pointer (must preserve)
      */
 common_verifyField:
-    ldrb    r3, [rSELF, #offThread_subMode]  @ r3 <- submode byte
+    ldrh    r3, [rSELF, #offThread_subMode]  @ r3 <- submode byte
     ands    r3, #kSubModeJitTraceBuild
     bxeq    lr                          @ Not building trace, continue
     ldr     r1, [r10]                   @ r1<- reload resolved StaticField ptr

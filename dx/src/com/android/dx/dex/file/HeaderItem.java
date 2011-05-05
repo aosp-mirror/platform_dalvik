@@ -18,7 +18,7 @@ package com.android.dx.dex.file;
 
 import com.android.dx.dex.DexFormat;
 import com.android.dx.dex.SizeOf;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 
@@ -62,7 +62,7 @@ public final class HeaderItem extends IndexedItem {
             lastDataSection.writeSize() - dataOff;
 
         if (out.annotates()) {
-            out.annotate(8, "magic: " + new CstUtf8(DexFormat.MAGIC).toQuoted());
+            out.annotate(8, "magic: " + new CstString(DexFormat.MAGIC).toQuoted());
             out.annotate(4, "checksum");
             out.annotate(20, "signature");
             out.annotate(4, "file_size:       " +

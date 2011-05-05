@@ -35,17 +35,19 @@
  * Ordering is significant.  (Currently only ".dex" is supported directly
  * by the VM.)
  */
-typedef struct ClassPathEntry {
-    enum {
-        kCpeUnknown = 0,
-        kCpeDir,
-        kCpeJar,
-        kCpeDex,
-        kCpeLastEntry       /* used as sentinel at end of array */
-    }       kind;
+enum ClassPathEntryKind {
+    kCpeUnknown = 0,
+    kCpeDir,
+    kCpeJar,
+    kCpeDex,
+    kCpeLastEntry       /* used as sentinel at end of array */
+};
+
+struct ClassPathEntry {
+    ClassPathEntryKind kind;
     char*   fileName;
     void*   ptr;            /* JarFile* or DexFile* */
-} ClassPathEntry;
+};
 
 bool dvmClassStartup(void);
 void dvmClassShutdown(void);
@@ -128,7 +130,7 @@ bool dvmIsClassInitializing(const ClassObject* clazz);
 /*
  * Initialize a class.
  */
-bool dvmInitClass(ClassObject* clazz);
+extern "C" bool dvmInitClass(ClassObject* clazz);
 
 /*
  * Retrieve the system class loader.
@@ -177,10 +179,6 @@ void dvmDumpClass(const ClassObject* clazz, int flags);
 void dvmDumpAllClasses(int flags);
 void dvmDumpLoaderStats(const char* msg);
 int  dvmGetNumLoadedClasses();
-
-#ifdef PROFILE_FIELD_ACCESS
-void dvmDumpFieldAccessCounts(void);
-#endif
 
 /* flags for dvmDumpClass / dvmDumpAllClasses */
 #define kDumpClassFullDetail    1

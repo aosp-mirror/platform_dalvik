@@ -11,9 +11,9 @@
    * down to nothing.
    */
 # define MTERP_OFFSET(_name, _type, _field, _offset)                        \
-    if (offsetof(_type, _field) != _offset) {                               \
+    if (OFFSETOF_MEMBER(_type, _field) != _offset) {                        \
         LOGE("Bad asm offset %s (%d), should be %d\n",                      \
-            #_name, _offset, offsetof(_type, _field));                      \
+            #_name, _offset, OFFSETOF_MEMBER(_type, _field));               \
         failed = true;                                                      \
     }
 # define MTERP_SIZEOF(_name, _type, _size)                                  \
@@ -124,21 +124,13 @@ MTERP_OFFSET(offShadowSpace_shadowFP,    ShadowSpace, shadowFP, 40)
 #endif
 
 /* InstField fields */
-#ifdef PROFILE_FIELD_ACCESS
-MTERP_OFFSET(offInstField_byteOffset,   InstField, byteOffset, 24)
-#else
 MTERP_OFFSET(offInstField_byteOffset,   InstField, byteOffset, 16)
-#endif
 
 /* Field fields */
 MTERP_OFFSET(offField_clazz,            Field, clazz, 0)
 
 /* StaticField fields */
-#ifdef PROFILE_FIELD_ACCESS
-MTERP_OFFSET(offStaticField_value,      StaticField, value, 24)
-#else
 MTERP_OFFSET(offStaticField_value,      StaticField, value, 16)
-#endif
 
 /* Method fields */
 MTERP_OFFSET(offMethod_clazz,           Method, clazz, 0)
@@ -155,7 +147,7 @@ MTERP_OFFSET(offInlineOperation_func,   InlineOperation, func, 0)
 
 /* Thread fields */
 MTERP_OFFSET(offThread_pc,                Thread, interpSave.pc, 0)
-MTERP_OFFSET(offThread_fp,                Thread, interpSave.fp, 4)
+MTERP_OFFSET(offThread_curFrame,          Thread, interpSave.curFrame, 4)
 MTERP_OFFSET(offThread_method,            Thread, interpSave.method, 8)
 MTERP_OFFSET(offThread_methodClassDex,    Thread, interpSave.methodClassDex, 12)
 MTERP_OFFSET(offThread_bailPtr,           Thread, interpSave.bailPtr, 16)
@@ -168,48 +160,44 @@ MTERP_OFFSET(offThread_retval_i,          Thread, retval.i, 32)
 MTERP_OFFSET(offThread_retval_j,          Thread, retval.j, 32)
 MTERP_OFFSET(offThread_retval_l,          Thread, retval.l, 32)
 //40
-MTERP_OFFSET(offThread_cardTable,         Thread, cardTable, 40)
-MTERP_OFFSET(offThread_interpStackEnd,    Thread, interpStackEnd, 44)
-MTERP_OFFSET(offThread_curFrame,          Thread, curFrame, 48)
-MTERP_OFFSET(offThread_exception,         Thread, exception, 52)
-MTERP_OFFSET(offThread_debugIsMethodEntry, Thread, debugIsMethodEntry, 56)
-MTERP_OFFSET(offThread_interpStackSize,   Thread, interpStackSize, 60)
-MTERP_OFFSET(offThread_stackOverflowed,   Thread, stackOverflowed, 64)
-MTERP_OFFSET(offThread_breakFlags, \
-                               Thread, interpBreak.ctl.breakFlags, 72)
 MTERP_OFFSET(offThread_subMode, \
-                               Thread, interpBreak.ctl.subMode, 73)
-MTERP_OFFSET(offThread_suspendCount, \
-                               Thread, interpBreak.ctl.suspendCount, 74)
-MTERP_OFFSET(offThread_dbgSuspendCount, \
-                               Thread, interpBreak.ctl.dbgSuspendCount, 75)
+                               Thread, interpBreak.ctl.subMode, 40)
+MTERP_OFFSET(offThread_breakFlags, \
+                               Thread, interpBreak.ctl.breakFlags, 42)
 MTERP_OFFSET(offThread_curHandlerTable, \
-                               Thread, interpBreak.ctl.curHandlerTable, 76)
-MTERP_OFFSET(offThread_mainHandlerTable,  Thread, mainHandlerTable, 80)
-
-MTERP_OFFSET(offThread_singleStepCount,   Thread, singleStepCount, 88)
+                               Thread, interpBreak.ctl.curHandlerTable, 44)
+MTERP_OFFSET(offThread_suspendCount,      Thread, suspendCount, 48);
+MTERP_OFFSET(offThread_dbgSuspendCount,   Thread, dbgSuspendCount, 52);
+MTERP_OFFSET(offThread_cardTable,         Thread, cardTable, 56)
+MTERP_OFFSET(offThread_interpStackEnd,    Thread, interpStackEnd, 60)
+MTERP_OFFSET(offThread_exception,         Thread, exception, 68)
+MTERP_OFFSET(offThread_debugIsMethodEntry, Thread, debugIsMethodEntry, 72)
+MTERP_OFFSET(offThread_interpStackSize,   Thread, interpStackSize, 76)
+MTERP_OFFSET(offThread_stackOverflowed,   Thread, stackOverflowed, 80)
+MTERP_OFFSET(offThread_mainHandlerTable,  Thread, mainHandlerTable, 88)
+MTERP_OFFSET(offThread_singleStepCount,   Thread, singleStepCount, 96)
 
 #ifdef WITH_JIT
-MTERP_OFFSET(offThread_jitToInterpEntries,Thread, jitToInterpEntries, 92)
-MTERP_OFFSET(offThread_inJitCodeCache,    Thread, inJitCodeCache, 116)
-MTERP_OFFSET(offThread_pJitProfTable,     Thread, pJitProfTable, 120)
-MTERP_OFFSET(offThread_jitThreshold,      Thread, jitThreshold, 124)
-MTERP_OFFSET(offThread_jitResumeNPC,      Thread, jitResumeNPC, 128)
-MTERP_OFFSET(offThread_jitResumeNSP,      Thread, jitResumeNSP, 132)
-MTERP_OFFSET(offThread_jitResumeDPC,      Thread, jitResumeDPC, 136)
-MTERP_OFFSET(offThread_jitState,          Thread, jitState, 140)
-MTERP_OFFSET(offThread_icRechainCount,    Thread, icRechainCount, 144)
-MTERP_OFFSET(offThread_pProfileCountdown, Thread, pProfileCountdown, 148)
-MTERP_OFFSET(offThread_callsiteClass,     Thread, callsiteClass, 152)
-MTERP_OFFSET(offThread_methodToCall,      Thread, methodToCall, 156)
+MTERP_OFFSET(offThread_jitToInterpEntries,Thread, jitToInterpEntries, 100)
+MTERP_OFFSET(offThread_inJitCodeCache,    Thread, inJitCodeCache, 124)
+MTERP_OFFSET(offThread_pJitProfTable,     Thread, pJitProfTable, 128)
+MTERP_OFFSET(offThread_jitThreshold,      Thread, jitThreshold, 132)
+MTERP_OFFSET(offThread_jitResumeNPC,      Thread, jitResumeNPC, 136)
+MTERP_OFFSET(offThread_jitResumeNSP,      Thread, jitResumeNSP, 140)
+MTERP_OFFSET(offThread_jitResumeDPC,      Thread, jitResumeDPC, 144)
+MTERP_OFFSET(offThread_jitState,          Thread, jitState, 148)
+MTERP_OFFSET(offThread_icRechainCount,    Thread, icRechainCount, 152)
+MTERP_OFFSET(offThread_pProfileCountdown, Thread, pProfileCountdown, 156)
+MTERP_OFFSET(offThread_callsiteClass,     Thread, callsiteClass, 160)
+MTERP_OFFSET(offThread_methodToCall,      Thread, methodToCall, 164)
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
-                                Thread, jniLocalRefTable.segmentState.all, 160)
+                                Thread, jniLocalRefTable.segmentState.all, 168)
 #if defined(WITH_SELF_VERIFICATION)
-MTERP_OFFSET(offThread_shadowSpace,       Thread, shadowSpace, 184)
+MTERP_OFFSET(offThread_shadowSpace,       Thread, shadowSpace, 192)
 #endif
 #else
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
-                                Thread, jniLocalRefTable.segmentState.all, 92)
+                                Thread, jniLocalRefTable.segmentState.all, 100)
 #endif
 
 /* Object fields */
@@ -256,15 +244,6 @@ MTERP_OFFSET(offClassObject_status,     ClassObject, status, 44)
 MTERP_OFFSET(offClassObject_super,      ClassObject, super, 72)
 MTERP_OFFSET(offClassObject_vtableCount, ClassObject, vtableCount, 112)
 MTERP_OFFSET(offClassObject_vtable,     ClassObject, vtable, 116)
-
-/* InterpEntry enumeration */
-MTERP_SIZEOF(sizeofClassStatus,         InterpEntry, MTERP_SMALL_ENUM)
-MTERP_CONSTANT(kInterpEntryInstr,   0)
-MTERP_CONSTANT(kInterpEntryReturn,  1)
-MTERP_CONSTANT(kInterpEntryThrow,   2)
-#if defined(WITH_JIT)
-MTERP_CONSTANT(kInterpEntryResume,  3)
-#endif
 
 #if defined(WITH_JIT)
 MTERP_CONSTANT(kJitNot,                 0)
@@ -320,26 +299,21 @@ MTERP_CONSTANT(OP_INVOKE_DIRECT_RANGE, 0x76)
 MTERP_CONSTANT(OP_INVOKE_DIRECT_JUMBO, 0x124)
 
 /* flags for interpBreak */
-MTERP_CONSTANT(kSubModeNormal,            0x00)
-MTERP_CONSTANT(kSubModeMethodTrace,       0x01)
-MTERP_CONSTANT(kSubModeEmulatorTrace,     0x02)
-MTERP_CONSTANT(kSubModeInstCounting,      0x04)
-MTERP_CONSTANT(kSubModeDebuggerActive,    0x08)
-#if defined(WITH_JIT)
-MTERP_CONSTANT(kSubModeJitTraceBuild,     0x10)
-MTERP_CONSTANT(kSubModeJitSV,             0x20)
-#endif
+MTERP_CONSTANT(kSubModeNormal,          0x0000)
+MTERP_CONSTANT(kSubModeMethodTrace,     0x0001)
+MTERP_CONSTANT(kSubModeEmulatorTrace,   0x0002)
+MTERP_CONSTANT(kSubModeInstCounting,    0x0004)
+MTERP_CONSTANT(kSubModeDebuggerActive,  0x0008)
+MTERP_CONSTANT(kSubModeSuspendPending,  0x0010)
+MTERP_CONSTANT(kSubModeCallbackPending, 0x0020)
+MTERP_CONSTANT(kSubModeCountedStep,     0x0040)
+MTERP_CONSTANT(kSubModeJitTraceBuild,   0x4000)
+MTERP_CONSTANT(kSubModeJitSV,           0x8000)
+MTERP_CONSTANT(kSubModeDebugProfile,    0x000f)
 
 MTERP_CONSTANT(kInterpNoBreak,            0x00)
-MTERP_CONSTANT(kInterpSuspendBreak,       0x01)
-MTERP_CONSTANT(kInterpInstCountBreak,     0x02)
-MTERP_CONSTANT(kInterpDebugBreak,         0x04)
-MTERP_CONSTANT(kInterpEmulatorTraceBreak, 0x08)
-MTERP_CONSTANT(kInterpSingleStep,         0x10)
-#if defined(WITH_JIT)
-MTERP_CONSTANT(kInterpJitBreak,           0x40)
-#endif
-MTERP_CONSTANT(kSubModeDebugProfile,      0x0f)
+MTERP_CONSTANT(kInterpSingleStep,         0x01)
+MTERP_CONSTANT(kInterpSafePoint,          0x02)
 
 MTERP_CONSTANT(DBG_METHOD_ENTRY,          0x04)
 MTERP_CONSTANT(DBG_METHOD_EXIT,           0x08)

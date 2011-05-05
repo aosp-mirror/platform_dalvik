@@ -16,7 +16,7 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
@@ -27,14 +27,14 @@ import com.android.dx.util.Leb128Utils;
  */
 public final class StringDataItem extends OffsettedItem {
     /** {@code non-null;} the string value */
-    private final CstUtf8 value;
+    private final CstString value;
 
     /**
      * Constructs an instance.
      *
      * @param value {@code non-null;} the string value
      */
-    public StringDataItem(CstUtf8 value) {
+    public StringDataItem(CstString value) {
         super(1, writeSize(value));
 
         this.value = value;
@@ -46,7 +46,7 @@ public final class StringDataItem extends OffsettedItem {
      * @param value {@code non-null;} the string value
      * @return {@code >= 2}; the write size, in bytes
      */
-    private static int writeSize(CstUtf8 value) {
+    private static int writeSize(CstString value) {
         int utf16Size = value.getUtf16Size();
 
         // The +1 is for the '\0' termination byte.

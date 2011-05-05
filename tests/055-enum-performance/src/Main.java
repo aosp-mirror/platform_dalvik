@@ -19,7 +19,7 @@ public class Main {
         long time2 = System.nanoTime();
         int count3 = test3(500);
         long time3 = System.nanoTime();
-        int count4 = basis(2000);
+        int count4 = basis(500);
         long time4 = System.nanoTime();
 
         System.out.println("basis: performed " + count4 + " iterations");
@@ -33,7 +33,7 @@ public class Main {
         double basisMsec = (time4 - time3) / (double) count4 / 1000000;
 
         double avg = (msec1 + msec2 + msec3) / 3;
-        if (avg < (basisMsec * 25)) {
+        if (avg < (basisMsec * 10)) {
             System.out.println("Timing is acceptable.");
         } else {
             System.out.println("Iterations are taking too long!");
@@ -67,50 +67,46 @@ public class Main {
         System.out.println(Enum.valueOf(c, "ZERO").getClass().getName());
     }
 
+    static final String[] BASIS_COMPARE_ARRAY = {
+        "ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT",
+        "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN",
+        "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN"
+    };
+
     static public int basis(int iters) {
-        /*
-         * The basis time is the time taken to call a static method
-         * passing two arguments, which in turn accesses a static
-         * variable, compares a string, and does a little trivial math
-         * and a trivial comparison. (That is, this is a mini
-         * "omnibus" performance metric.) This is clearly going to be
-         * much faster than Enum.valueOf(), which is why we multiply
-         * the time before testing.
-         */
         for (int i = iters; i > 0; i--) {
-            basisCall(i, "aname");
-            basisCall(i, "bname");
-            basisCall(i, "cname");
-            basisCall(i, "dname");
-            basisCall(i, "ename");
-            basisCall(i, "fname");
-            basisCall(i, "gname");
-            basisCall(i, "hname");
-            basisCall(i, "iname");
-            basisCall(i, "jname");
-            basisCall(i, "kname");
-            basisCall(i, "lname");
-            basisCall(i, "mname");
-            basisCall(i, "nname");
-            basisCall(i, "oname");
-            basisCall(i, "pname");
-            basisCall(i, "qname");
-            basisCall(i, "rname");
-            basisCall(i, "sname");
-            basisCall(i, "tname");
+            basisValueOf("ZERO");
+            basisValueOf("ONE");
+            basisValueOf("TWO");
+            basisValueOf("THREE");
+            basisValueOf("FOUR");
+            basisValueOf("FIVE");
+            basisValueOf("SIX");
+            basisValueOf("SEVEN");
+            basisValueOf("EIGHT");
+            basisValueOf("NINE");
+            basisValueOf("TEN");
+            basisValueOf("ELEVEN");
+            basisValueOf("TWELVE");
+            basisValueOf("THIRTEEN");
+            basisValueOf("FOURTEEN");
+            basisValueOf("FIFTEEN");
+            basisValueOf("SIXTEEN");
+            basisValueOf("SEVENTEEN");
+            basisValueOf("EIGHTEEN");
+            basisValueOf("NINETEEN");
         }
 
         return iters * 20;
     }
 
-    static public int basisCall(int i, String name) {
-        int compare = name.compareTo("fuzzbot");
-
-        if (i < (basisTestValue * compare)) {
-            return basisTestValue;
-        } else {
-            return i;
+    static String basisValueOf(String key) {
+        for (String s : BASIS_COMPARE_ARRAY) {
+            if (s.equals(key)) {
+                return s;
+            }
         }
+        throw new IllegalArgumentException();
     }
 
     static public int test1(int iters) {

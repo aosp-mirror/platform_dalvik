@@ -20,8 +20,7 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.util.FixedSizeList;
 
 /**
- * Constant type to represent a fixed array of other constants. The contents
- * may be of any type <i>other</i> than {@link CstUtf8}.
+ * Constant type to represent a fixed array of other constants.
  */
 public final class CstArray extends Constant {
     /** {@code non-null;} the actual list of contents */
@@ -154,10 +153,6 @@ public final class CstArray extends Constant {
          * @param a {@code null-ok;} the element to set at {@code n}
          */
         public void set(int n, Constant a) {
-            if (a instanceof CstUtf8) {
-                throw new IllegalArgumentException("bad value: " + a);
-            }
-
             set0(n, a);
         }
     }

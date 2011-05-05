@@ -17,8 +17,12 @@
 # Find dx.jar from dx in the android dev tree
 prog=`which dx`
 progdir=`dirname "${prog}"`
+dxjar=$progdir/../framework/dx.jar
 
-javac testdata/*.java
+javac -cp $dxjar `find . -name "*.java"`
+dx --dex --output=test.jar com/android/dx/merge/* $dxjar
+
+# Build a resource .jar containing the .dex files to merge
 dx --dex --output=testdata/Annotated.dex testdata/Annotated*
 dx --dex --output=testdata/Basic.dex testdata/Basic*
 dx --dex --output=testdata/FillArrayData.dex testdata/FillArrayData*
@@ -26,9 +30,8 @@ dx --dex --output=testdata/StaticValues.dex testdata/StaticValues*
 dx --dex --output=testdata/TryCatchFinally.dex testdata/TryCatchFinally*
 jar cfM resources.jar testdata/*.dex
 
-vogar --classpath resources.jar \
-  --classpath $progdir/../framework/dx.jar \
-  com/android/dx/merge/DexMergeTest.java > unit-out.txt
+dalvik -classpath test.jar:resources.jar \
+  junit.textui.TestRunner com.android.dx.merge.DexMergeTest > unit-out.txt
 
 if [ "$?" = "0" ]; then
     echo "Yay!"

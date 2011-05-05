@@ -26,7 +26,6 @@
 #include <errno.h>
 #include <cutils/sched_policy.h>
 
-
 #if defined(CHECK_MUTEX) && !defined(__USE_UNIX98)
 /* glibc lacks this unless you #define __USE_UNIX98 */
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
@@ -40,7 +39,7 @@ enum { PTHREAD_MUTEX_ERRORCHECK = PTHREAD_MUTEX_ERRORCHECK_NP };
  *
  * Note that "suspended" is orthogonal to these values (so says JDWP).
  */
-typedef enum ThreadStatus {
+enum ThreadStatus {
     THREAD_UNDEFINED    = -1,       /* makes enum compatible with int32_t */
 
     /* these match up with JDWP values */
@@ -55,7 +54,7 @@ typedef enum ThreadStatus {
     THREAD_NATIVE       = 7,        /* off in a JNI native method */
     THREAD_VMWAIT       = 8,        /* waiting on a VM resource */
     THREAD_SUSPENDED    = 9,        /* suspended, usually by GC or debugger */
-} ThreadStatus;
+};
 
 /* thread priorities, from java.lang.Thread */
 enum {
@@ -71,7 +70,7 @@ void dvmThreadShutdown(void);
 void dvmSlayDaemons(void);
 
 
-#define kJniLocalRefMin         32
+#define kJniLocalRefMin         64
 #define kJniLocalRefMax         512     /* arbitrary; should be plenty */
 #define kInternalRefDefault     32      /* equally arbitrary */
 #define kInternalRefMax         4096    /* mainly a sanity check */
@@ -84,27 +83,26 @@ void dvmSlayDaemons(void);
  * Interpreter control struction.  Packed into a long long to enable
  * atomic updates.
  */
-typedef union InterpBreak {
+union InterpBreak {
     volatile int64_t   all;
     struct {
+        uint16_t   subMode;
         uint8_t    breakFlags;
-        uint8_t    subMode;
-        int8_t     suspendCount;
-        int8_t     dbgSuspendCount;
+        int8_t     unused;   /* for future expansion */
 #ifndef DVM_NO_ASM_INTERP
         void* curHandlerTable;
 #else
         void* unused;
 #endif
     } ctl;
-} InterpBreak;
+};
 
 /*
  * Our per-thread data.
  *
  * These are allocated on the system heap.
  */
-typedef struct Thread {
+struct Thread {
     /*
      * Interpreter state which must be preserved across nested
      * interpreter invocations (via JNI callbacks).  Must be the first
@@ -122,29 +120,14 @@ typedef struct Thread {
      */
     JValue      retval;
 
-    u1*         cardTable;
-
-    /* current limit of stack; flexes for StackOverflowError */
-    const u1*   interpStackEnd;
-
-    /* FP of bottom-most (currently executing) stack frame on interp stack */
-    void*       curFrame;
-    /* current exception, or NULL if nothing pending */
-    Object*     exception;
-
-    bool        debugIsMethodEntry;
-    /* interpreter stack size; our stacks are fixed-length */
-    int         interpStackSize;
-    bool        stackOverflowed;
-
-    /* thread handle, as reported by pthread_self() */
-    pthread_t   handle;
-
     /*
      * interpBreak contains info about the interpreter mode, as well as
      * a count of the number of times the thread has been suspended.  When
      * the count drops to zero, the thread resumes.
-     *
+     */
+    InterpBreak interpBreak;
+
+    /*
      * "dbgSuspendCount" is the portion of the suspend count that the
      * debugger is responsible for.  This has to be tracked separately so
      * that we can recover correctly if the debugger abruptly disconnects
@@ -157,8 +140,27 @@ typedef struct Thread {
      * Note the non-debug component will rarely be other than 1 or 0 -- (not
      * sure it's even possible with the way mutexes are currently used.)
      */
-    InterpBreak interpBreak;
 
+    int suspendCount;
+    int dbgSuspendCount;
+
+    u1*         cardTable;
+
+    /* current limit of stack; flexes for StackOverflowError */
+    const u1*   interpStackEnd;
+
+    /* FP of bottom-most (currently executing) stack frame on interp stack */
+    void*       XcurFrame;
+    /* current exception, or NULL if nothing pending */
+    Object*     exception;
+
+    bool        debugIsMethodEntry;
+    /* interpreter stack size; our stacks are fixed-length */
+    int         interpStackSize;
+    bool        stackOverflowed;
+
+    /* thread handle, as reported by pthread_self() */
+    pthread_t   handle;
 
     /* Assembly interpreter handler tables */
 #ifndef DVM_NO_ASM_INTERP
@@ -302,13 +304,13 @@ typedef struct Thread {
     pthread_mutex_t   callbackMutex;
     SafePointCallback callback;
     void*             callbackArg;
-} Thread;
+};
 
 /* start point for an internal thread; mimics pthread args */
 typedef void* (*InternalThreadStart)(void* arg);
 
 /* args for internal thread creation */
-typedef struct InternalStartArgs {
+struct InternalStartArgs {
     /* inputs */
     InternalThreadStart func;
     void*       funcArg;
@@ -318,7 +320,7 @@ typedef struct InternalStartArgs {
     /* result */
     volatile Thread** pThread;
     volatile int*     pCreateStatus;
-} InternalStartArgs;
+};
 
 /* finish init */
 bool dvmPrepMainForJni(JNIEnv* pEnv);
@@ -344,7 +346,7 @@ void dvmUnlockThreadList(void);
 /*
  * Thread suspend/resume, used by the GC and debugger.
  */
-typedef enum SuspendCause {
+enum SuspendCause {
     SUSPEND_NOT = 0,
     SUSPEND_FOR_GC,
     SUSPEND_FOR_DEBUG,
@@ -359,7 +361,7 @@ typedef enum SuspendCause {
     SUSPEND_FOR_CC_RESET,    // code-cache reset
     SUSPEND_FOR_REFRESH,     // Reload data cached in interpState
 #endif
-} SuspendCause;
+};
 void dvmSuspendThread(Thread* thread);
 void dvmSuspendSelf(bool jdwpActivity);
 void dvmResumeThread(Thread* thread);
@@ -381,14 +383,14 @@ void dvmWaitForSuspend(Thread* thread);
  * Check to see if we should be suspended now.  If so, suspend ourselves
  * by sleeping on a condition variable.
  */
-bool dvmCheckSuspendPending(Thread* self);
+extern "C" bool dvmCheckSuspendPending(Thread* self);
 
 /*
  * Fast test for use in the interpreter.  Returns "true" if our suspend
  * count is nonzero.
  */
 INLINE bool dvmCheckSuspendQuick(Thread* self) {
-    return (self->interpBreak.ctl.breakFlags & kInterpSuspendBreak);
+    return (self->interpBreak.ctl.subMode & kSubModeSuspendPending);
 }
 
 /*

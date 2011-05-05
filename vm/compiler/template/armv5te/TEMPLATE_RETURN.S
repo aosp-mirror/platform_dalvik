@@ -36,7 +36,7 @@
 
     str     r2, [rSELF, #offThread_method]@ self->method = newSave->method
     ldr     r0, [r10, #offClassObject_pDvmDex] @ r0<- method->clazz->pDvmDex
-    str     rFP, [rSELF, #offThread_curFrame] @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame] @ curFrame = fp
     add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
     str     r0, [rSELF, #offThread_methodClassDex]
     cmp     r8, #0                      @ check the break flags
@@ -49,6 +49,8 @@
 #endif
     mov     pc, r1                      @ callsite is interpreted
 1:
+    mov     r0, #0
+    str     r0, [rSELF, #offThread_inJitCodeCache] @ reset inJitCodeCache
     stmia   rSELF, {rPC, rFP}           @ SAVE_PC_FP_TO_SELF()
     ldr     r2, .LdvmMterpStdBail       @ defined in footer.S
     mov     r0, rSELF                   @ Expecting rSELF in r0

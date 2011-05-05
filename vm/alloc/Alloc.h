@@ -21,6 +21,13 @@
 
 #include <stddef.h>
 
+/* flags for dvmMalloc */
+enum {
+    ALLOC_DEFAULT = 0x00,
+    ALLOC_DONT_TRACK = 0x01,  /* don't add to internal tracking list */
+    ALLOC_NON_MOVING = 0x02,
+};
+
 /*
  * Initialization.
  */
@@ -54,13 +61,7 @@ void* dvmMalloc(size_t size, int flags);
  *
  * Returns NULL and throws an exception on failure.
  */
-Object* dvmAllocObject(ClassObject* clazz, int flags);
-
-/* flags for dvmMalloc */
-enum {
-    ALLOC_DEFAULT       = 0x00,
-    ALLOC_DONT_TRACK    = 0x01,     /* don't add to internal tracking list */
-};
+extern "C" Object* dvmAllocObject(ClassObject* clazz, int flags);
 
 /*
  * Track an object reference that is currently only visible internally.
@@ -69,7 +70,7 @@ enum {
  *
  * The "self" argument is allowed as an optimization; it may be NULL.
  */
-void dvmAddTrackedAlloc(Object* obj, Thread* self);
+extern "C" void dvmAddTrackedAlloc(Object* obj, Thread* self);
 
 /*
  * Remove an object from the internal tracking list.
@@ -78,7 +79,7 @@ void dvmAddTrackedAlloc(Object* obj, Thread* self);
  *
  * The "self" argument is allowed as an optimization; it may be NULL.
  */
-void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
+extern "C" void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
 
 /*
  * Returns true iff <obj> points to a valid allocated object.
@@ -95,7 +96,7 @@ Object* dvmCloneObject(Object* obj, int flags);
 /*
  * Make the object finalizable.
  */
-void dvmSetFinalizable(Object* obj);
+extern "C" void dvmSetFinalizable(Object* obj);
 
 /*
  * Determine the exact number of GC heap bytes used by an object.  (Internal

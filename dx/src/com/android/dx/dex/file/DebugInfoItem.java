@@ -21,8 +21,6 @@ import com.android.dx.dex.code.DalvInsnList;
 import com.android.dx.dex.code.LocalList;
 import com.android.dx.dex.code.PositionList;
 import com.android.dx.rop.cst.CstMethodRef;
-import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.ExceptionWithContext;
 

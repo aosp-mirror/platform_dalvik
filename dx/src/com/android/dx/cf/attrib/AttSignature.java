@@ -16,7 +16,7 @@
 
 package com.android.dx.cf.attrib;
 
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 
 /**
  * Attribute class for standards-track {@code Signature} attributes.
@@ -26,14 +26,14 @@ public final class AttSignature extends BaseAttribute {
     public static final String ATTRIBUTE_NAME = "Signature";
 
     /** {@code non-null;} the signature string */
-    private final CstUtf8 signature;
+    private final CstString signature;
 
     /**
      * Constructs an instance.
      *
      * @param signature {@code non-null;} the signature string
      */
-    public AttSignature(CstUtf8 signature) {
+    public AttSignature(CstString signature) {
         super(ATTRIBUTE_NAME);
 
         if (signature == null) {
@@ -53,7 +53,7 @@ public final class AttSignature extends BaseAttribute {
      *
      * @return {@code non-null;} the signature string
      */
-    public CstUtf8 getSignature() {
+    public CstString getSignature() {
         return signature;
     }
 }

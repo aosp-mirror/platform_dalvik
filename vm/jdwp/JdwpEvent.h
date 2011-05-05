@@ -25,7 +25,7 @@
 /*
  * Event modifiers.  A JdwpEvent may have zero or more of these.
  */
-typedef union JdwpEventMod {
+union JdwpEventMod {
     u1      modKind;                /* JdwpModKind */
     struct {
         u1          modKind;
@@ -76,24 +76,24 @@ typedef union JdwpEventMod {
         u1          modKind;
         ObjectId    objectId;
     } instanceOnly;
-} JdwpEventMod;
+};
 
 /*
  * One of these for every registered event.
  *
  * We over-allocate the struct to hold the modifiers.
  */
-typedef struct JdwpEvent {
-    struct JdwpEvent*       prev;           /* linked list */
-    struct JdwpEvent*       next;
+struct JdwpEvent {
+    JdwpEvent* prev;           /* linked list */
+    JdwpEvent* next;
 
-    enum JdwpEventKind      eventKind;      /* what kind of event is this? */
-    enum JdwpSuspendPolicy  suspendPolicy;  /* suspend all, none, or self? */
-    int                     modCount;       /* #of entries in mods[] */
-    u4                      requestId;      /* serial#, reported to debugger */
+    JdwpEventKind eventKind;      /* what kind of event is this? */
+    JdwpSuspendPolicy suspendPolicy;  /* suspend all, none, or self? */
+    int modCount;       /* #of entries in mods[] */
+    u4 requestId;      /* serial#, reported to debugger */
 
-    JdwpEventMod            mods[1];        /* MUST be last field in struct */
-} JdwpEvent;
+    JdwpEventMod mods[1];        /* MUST be last field in struct */
+};
 
 /*
  * Allocate an event structure with enough space.

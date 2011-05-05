@@ -19,7 +19,7 @@
 #include "alloc/HeapBitmap.h"
 #include "alloc/HeapSource.h"
 
-typedef struct {
+struct GcMarkStack {
     /* Highest address (exclusive)
      */
     const Object **limit;
@@ -35,16 +35,16 @@ typedef struct {
     /* Maximum stack size, in bytes.
      */
     size_t length;
-} GcMarkStack;
+};
 
 /* This is declared publicly so that it can be included in gDvm.gcHeap.
  */
-typedef struct {
+struct GcMarkContext {
     HeapBitmap *bitmap;
     GcMarkStack stack;
     const char *immuneLimit;
     const void *finger;   // only used while scanning/recursing.
-} GcMarkContext;
+};
 
 bool dvmHeapBeginMarkStep(bool isPartial);
 void dvmHeapMarkRootSet(void);

@@ -79,8 +79,8 @@ public abstract class CstMemberRef extends TypedConstant {
             return cmp;
         }
 
-        CstUtf8 thisName = nat.getName();
-        CstUtf8 otherName = otherMember.nat.getName();
+        CstString thisName = nat.getName();
+        CstString otherName = otherMember.nat.getName();
 
         return thisName.compareTo(otherName);
     }

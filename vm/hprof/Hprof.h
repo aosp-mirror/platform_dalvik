@@ -32,7 +32,7 @@ typedef hprof_id hprof_string_id;
 typedef hprof_id hprof_object_id;
 typedef hprof_id hprof_class_object_id;
 
-typedef enum hprof_basic_type {
+enum hprof_basic_type {
     hprof_basic_object = 2,
     hprof_basic_boolean = 4,
     hprof_basic_char = 5,
@@ -42,9 +42,9 @@ typedef enum hprof_basic_type {
     hprof_basic_short = 9,
     hprof_basic_int = 10,
     hprof_basic_long = 11,
-} hprof_basic_type;
+};
 
-typedef enum hprof_tag_t {
+enum hprof_tag_t {
     HPROF_TAG_STRING = 0x01,
     HPROF_TAG_LOAD_CLASS = 0x02,
     HPROF_TAG_UNLOAD_CLASS = 0x03,
@@ -59,13 +59,13 @@ typedef enum hprof_tag_t {
     HPROF_TAG_HEAP_DUMP_END = 0x2C,
     HPROF_TAG_CPU_SAMPLES = 0x0D,
     HPROF_TAG_CONTROL_SETTINGS = 0x0E,
-} hprof_tag_t;
+};
 
 /* Values for the first byte of
  * HEAP_DUMP and HEAP_DUMP_SEGMENT
  * records:
  */
-typedef enum hprof_heap_tag_t {
+enum hprof_heap_tag_t {
     /* standard */
     HPROF_ROOT_UNKNOWN = 0xFF,
     HPROF_ROOT_JNI_GLOBAL = 0x01,
@@ -91,7 +91,7 @@ typedef enum hprof_heap_tag_t {
     HPROF_ROOT_JNI_MONITOR = 0x8e,
     HPROF_UNREACHABLE = 0x90,  /* obsolete */
     HPROF_PRIMITIVE_ARRAY_NODATA_DUMP = 0xc3,
-} hprof_heap_tag_t;
+};
 
 /* Represents a top-level hprof record, whose serialized
  * format is:
@@ -102,22 +102,22 @@ typedef enum hprof_heap_tag_t {
  *                    and belong to this record
  *     [u1]*  BODY: as many bytes as specified in the above u4 field
  */
-typedef struct hprof_record_t {
+struct hprof_record_t {
     unsigned char *body;
     u4 time;
     u4 length;
     size_t allocLen;
     u1 tag;
     bool dirty;
-} hprof_record_t;
+};
 
-typedef enum {
+enum HprofHeapId {
     HPROF_HEAP_DEFAULT = 0,
     HPROF_HEAP_ZYGOTE = 'Z',
     HPROF_HEAP_APP = 'A'
-} HprofHeapId;
+};
 
-typedef struct hprof_context_t {
+struct hprof_context_t {
     /* curRec *must* be first so that we
      * can cast from a context to a record.
      */
@@ -140,11 +140,11 @@ typedef struct hprof_context_t {
     size_t fileDataSize;        // for open_memstream
     FILE *memFp;
     int fd;
-} hprof_context_t;
+};
 
 
 /*
- * HprofString.c functions
+ * HprofString.cpp functions
  */
 
 hprof_string_id hprofLookupStringId(const char *str);
@@ -156,7 +156,7 @@ int hprofShutdown_String(void);
 
 
 /*
- * HprofClass.c functions
+ * HprofClass.cpp functions
  */
 
 hprof_class_object_id hprofLookupClassId(const ClassObject *clazz);
@@ -168,7 +168,7 @@ int hprofShutdown_Class(void);
 
 
 /*
- * HprofHeap.c functions
+ * HprofHeap.cpp functions
  */
 
 int hprofStartHeapDump(hprof_context_t *ctx);
@@ -182,7 +182,7 @@ int hprofMarkRootObject(hprof_context_t *ctx,
 int hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj);
 
 /*
- * HprofOutput.c functions
+ * HprofOutput.cpp functions
  */
 
 void hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
@@ -215,18 +215,13 @@ int hprofAddU8ListToRecord(hprof_record_t *rec,
             hprofAddU4ListToRecord((rec), (const u4 *)(values), (numValues))
 
 /*
- * Hprof.c functions
+ * Hprof.cpp functions
  */
 
 hprof_context_t* hprofStartup(const char *outputFileName, int fd,
     bool directToDdms);
 bool hprofShutdown(hprof_context_t *ctx);
 void hprofFreeContext(hprof_context_t *ctx);
-
-/*
- * HprofVisit.c functions
- */
-
 int hprofDumpHeap(const char* fileName, int fd, bool directToDdms);
 
 #endif  // _DALVIK_HPROF_HPROF

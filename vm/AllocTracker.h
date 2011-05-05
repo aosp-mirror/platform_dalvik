@@ -24,7 +24,6 @@ bool dvmAllocTrackerStartup(void);
 void dvmAllocTrackerShutdown(void);
 
 struct AllocRecord;
-typedef struct AllocRecord AllocRecord;
 
 /*
  * Enable allocation tracking.  Does nothing if tracking is already enabled.
@@ -44,7 +43,7 @@ void dvmDisableAllocTracker(void);
         if (gDvm.allocRecords != NULL)                                      \
             dvmDoTrackAllocation(_clazz, _size);                            \
     }
-void dvmDoTrackAllocation(ClassObject* clazz, int size);
+void dvmDoTrackAllocation(ClassObject* clazz, size_t size);
 
 /*
  * Generate a DDM packet with all of the tracked allocation data.

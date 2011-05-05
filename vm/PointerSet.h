@@ -21,7 +21,6 @@
 #define _DALVIK_POINTERSET
 
 struct PointerSet;   /* private */
-typedef struct PointerSet PointerSet;
 
 /*
  * Allocate a new PointerSet.

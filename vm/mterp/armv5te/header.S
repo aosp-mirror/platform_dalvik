@@ -75,8 +75,8 @@ unspecified registers or condition codes.
 /* save/restore the PC and/or FP from the thread struct */
 #define LOAD_PC_FROM_SELF()     ldr     rPC, [rSELF, #offThread_pc]
 #define SAVE_PC_TO_SELF()       str     rPC, [rSELF, #offThread_pc]
-#define LOAD_FP_FROM_SELF()     ldr     rFP, [rSELF, #offThread_fp]
-#define SAVE_FP_TO_SELF()       str     rFP, [rSELF, #offThread_fp]
+#define LOAD_FP_FROM_SELF()     ldr     rFP, [rSELF, #offThread_curFrame]
+#define SAVE_FP_TO_SELF()       str     rFP, [rSELF, #offThread_curFrame]
 #define LOAD_PC_FP_FROM_SELF()  ldmia   rSELF, {rPC, rFP}
 #define SAVE_PC_FP_TO_SELF()    stmia   rSELF, {rPC, rFP}
 

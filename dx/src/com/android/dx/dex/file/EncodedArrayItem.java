@@ -16,18 +16,9 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.rop.annotation.Annotation;
-import com.android.dx.rop.annotation.AnnotationVisibility;
-import com.android.dx.rop.annotation.NameValuePair;
-import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.CstAnnotation;
 import com.android.dx.rop.cst.CstArray;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.AnnotatedOutput;
-
-import java.util.Arrays;
-import java.util.Comparator;
 
 /**
  * Encoded array of constant values.

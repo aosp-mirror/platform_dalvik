@@ -16,16 +16,8 @@
 
 package com.android.dx.rop.annotation;
 
-import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.CstAnnotation;
-import com.android.dx.rop.cst.CstFieldRef;
-import com.android.dx.rop.cst.CstLiteralBits;
-import com.android.dx.rop.cst.CstMethodRef;
-import com.android.dx.rop.cst.CstNat;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
-import com.android.dx.rop.cst.TypedConstant;
-import com.android.dx.util.Hex;
 import com.android.dx.util.MutabilityControl;
 import com.android.dx.util.ToHuman;
 
@@ -48,7 +40,7 @@ public final class Annotation extends MutabilityControl
     private final AnnotationVisibility visibility;
 
     /** {@code non-null;} map from names to {@link NameValuePair} instances */
-    private final TreeMap<CstUtf8, NameValuePair> elements;
+    private final TreeMap<CstString, NameValuePair> elements;
 
     /**
      * Construct an instance. It initially contains no elements.
@@ -67,7 +59,7 @@ public final class Annotation extends MutabilityControl
 
         this.type = type;
         this.visibility = visibility;
-        this.elements = new TreeMap<CstUtf8, NameValuePair>();
+        this.elements = new TreeMap<CstString, NameValuePair>();
     }
 
     /** {@inheritDoc} */
@@ -211,7 +203,7 @@ public final class Annotation extends MutabilityControl
             throw new NullPointerException("pair == null");
         }
 
-        CstUtf8 name = pair.getName();
+        CstString name = pair.getName();
 
         if (elements.get(name) != null) {
             throw new IllegalArgumentException("name already added: " + name);

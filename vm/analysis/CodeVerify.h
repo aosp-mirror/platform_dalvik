@@ -23,7 +23,6 @@
 #include "analysis/VerifySubs.h"
 #include "analysis/VfyBasicBlock.h"
 
-
 /*
  * Enumeration for register type values.  The "hi" piece of a 64-bit value
  * MUST immediately follow the "lo" piece in the enumeration, so we can check
@@ -126,32 +125,32 @@ typedef u4 MonitorEntries;
  * track the liveness of the method result register (which is not visible
  * to the GC).
  */
-typedef struct {
+struct RegisterLine {
     RegType*        regTypes;
     MonitorEntries* monitorEntries;
     u4*             monitorStack;
     unsigned int    monitorStackTop;
     BitVector*      liveRegs;
-} RegisterLine;
+};
 
 /*
  * Table that maps uninitialized instances to classes, based on the
  * address of the new-instance instruction.  One per method.
  */
-typedef struct UninitInstanceMap {
+struct UninitInstanceMap {
     int numEntries;
     struct {
         int             addr;   /* code offset, or -1 for method arg ("this") */
         ClassObject*    clazz;  /* class created at this address */
     } map[1];
-} UninitInstanceMap;
+};
 #define kUninitThisArgAddr  (-1)
 #define kUninitThisArgSlot  0
 
 /*
  * Various bits of data used by the verifier and register map generator.
  */
-typedef struct VerifierData {
+struct VerifierData {
     /*
      * The method we're working on.
      */
@@ -200,7 +199,7 @@ typedef struct VerifierData {
      * for liveness analysis.
      */
     VfyBasicBlock** basicBlocks;
-} VerifierData;
+};
 
 
 /* table with static merge logic for primitive types */

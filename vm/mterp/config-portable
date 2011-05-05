@@ -19,16 +19,16 @@
 handler-style all-c
 
 # C file header and basic definitions
-import c/header.c
+import c/header.cpp
 
 # C pre-processor defines for stub C instructions
-import portable/stubdefs.c
+import portable/stubdefs.cpp
 
 # common defs for the C opcodes
-import c/opcommon.c
+import c/opcommon.cpp
 
 # entry point
-import portable/entry.c
+import portable/entry.cpp
 
 # opcode list; argument to op-start is default directory
 op-start c
@@ -36,7 +36,7 @@ op-start c
 op-end
 
 # "helper" code
-import c/gotoTargets.c
+import c/gotoTargets.cpp
 
 # finish
-import portable/enddefs.c
+import portable/enddefs.cpp

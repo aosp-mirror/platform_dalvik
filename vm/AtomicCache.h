@@ -31,12 +31,12 @@
  *
  * Must be exactly 16 bytes.
  */
-typedef struct AtomicCacheEntry {
+struct AtomicCacheEntry {
     u4          key1;
     u4          key2;
     u4          value;
     volatile u4 version;    /* version and lock flag */
-} AtomicCacheEntry;
+};
 
 /*
  * One cache.
@@ -45,7 +45,7 @@ typedef struct AtomicCacheEntry {
  * struct and "entries" separately, avoiding an indirection.  (We already
  * handle "numEntries" separately in ATOMIC_CACHE_LOOKUP.)
  */
-typedef struct AtomicCache {
+struct AtomicCache {
     AtomicCacheEntry*   entries;        /* array of entries */
     int         numEntries;             /* #of entries, must be power of 2 */
 
@@ -57,7 +57,7 @@ typedef struct AtomicCache {
     int         hits;                   /* found entry in cache */
     int         misses;                 /* entry was for other keys */
     int         fills;                  /* entry was empty */
-} AtomicCache;
+};
 
 /*
  * Do a cache lookup.  We need to be able to read and write entries

@@ -16,7 +16,7 @@
 
 package com.android.dx.cf.code;
 
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.code.LocalItem;
 import com.android.dx.util.FixedSizeList;
@@ -84,7 +84,7 @@ public final class LocalVariableList extends FixedSizeList {
             Item item = descriptorList.get(i);
             Item signatureItem = signatureList.itemToLocal(item);
             if (signatureItem != null) {
-                CstUtf8 signature = signatureItem.getSignature();
+                CstString signature = signatureItem.getSignature();
                 item = item.withSignature(signature);
             }
             result.set(i, item);
@@ -142,8 +142,8 @@ public final class LocalVariableList extends FixedSizeList {
      * @param signature {@code null-ok;} the variable's type signature
      * @param index {@code >= 0;} the variable's local index
      */
-    public void set(int n, int startPc, int length, CstUtf8 name,
-            CstUtf8 descriptor, CstUtf8 signature, int index) {
+    public void set(int n, int startPc, int length, CstString name,
+            CstString descriptor, CstString signature, int index) {
         set0(n, new Item(startPc, length, name, descriptor, signature, index));
     }
 
@@ -207,13 +207,13 @@ public final class LocalVariableList extends FixedSizeList {
         private final int length;
 
         /** {@code non-null;} the variable's name */
-        private final CstUtf8 name;
+        private final CstString name;
 
         /** {@code null-ok;} the variable's type descriptor */
-        private final CstUtf8 descriptor;
+        private final CstString descriptor;
 
         /** {@code null-ok;} the variable's type signature */
-        private final CstUtf8 signature;
+        private final CstString signature;
 
         /** {@code >= 0;} the variable's local index */
         private final int index;
@@ -232,8 +232,8 @@ public final class LocalVariableList extends FixedSizeList {
          * @param signature {@code null-ok;} the variable's type signature
          * @param index {@code >= 0;} the variable's local index
          */
-        public Item(int startPc, int length, CstUtf8 name,
-                CstUtf8 descriptor, CstUtf8 signature, int index) {
+        public Item(int startPc, int length, CstString name,
+                CstString descriptor, CstString signature, int index) {
             if (startPc < 0) {
                 throw new IllegalArgumentException("startPc < 0");
             }
@@ -286,7 +286,7 @@ public final class LocalVariableList extends FixedSizeList {
          *
          * @return {@code null-ok;} the variable's type descriptor
          */
-        public CstUtf8 getDescriptor() {
+        public CstString getDescriptor() {
             return descriptor;
         }
 
@@ -305,7 +305,7 @@ public final class LocalVariableList extends FixedSizeList {
          *
          * @return {@code null-ok;} the variable's type signature
          */
-        private CstUtf8 getSignature() {
+        private CstString getSignature() {
             return signature;
         }
 
@@ -335,7 +335,7 @@ public final class LocalVariableList extends FixedSizeList {
          * @param newSignature {@code non-null;} the new signature
          * @return {@code non-null;} an appropriately-constructed instance
          */
-        public Item withSignature(CstUtf8 newSignature) {
+        public Item withSignature(CstString newSignature) {
             return new Item(startPc, length, name, descriptor, newSignature,
                     index);
         }

@@ -90,6 +90,11 @@ public class SsaDumper extends BlockDumper {
             return;
         }
 
+        if ((member.getAccessFlags() & (AccessFlags.ACC_ABSTRACT |
+                AccessFlags.ACC_NATIVE)) != 0) {
+            return;
+        }
+
         ConcreteMethod meth =
             new ConcreteMethod((Method) member, classFile, true, true);
         TranslationAdvice advice = DexTranslationAdvice.THE_ONE;

@@ -30,7 +30,7 @@ fields[0]:
   attributes[0]:
     name: Signature
     length: 00000002
-    signature: utf8{"LYo;"}
+    signature: string{"LYo;"}
   end attributes[0]
 end fields[0]
 methods_count: 0000

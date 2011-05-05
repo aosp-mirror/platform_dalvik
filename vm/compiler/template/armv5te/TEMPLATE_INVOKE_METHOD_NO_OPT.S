@@ -43,7 +43,7 @@
     str     r0, [rSELF, #offThread_method]    @ self->method = methodToCall
     str     r3, [rSELF, #offThread_methodClassDex] @ self->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = newFp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = newFp
 #if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r3}                    @ preserve r0-r3
     mov     r1, r6

@@ -16,7 +16,7 @@
 
 /*
  * Maintain a table of references.  Used for internal local references,
- * JNI locals, JNI globals, and GC heap references.
+ * JNI monitor references, and JNI pinned array references.
  *
  * None of the table functions are synchronized.
  */
@@ -36,13 +36,13 @@
  * (This structure is still somewhat transparent; direct access to
  * table/nextEntry is allowed.)
  */
-typedef struct ReferenceTable {
+struct ReferenceTable {
     Object**        nextEntry;          /* top of the list */
     Object**        table;              /* bottom of the list */
 
     int             allocEntries;       /* #of entries we have space for */
     int             maxEntries;         /* max #of entries allowed */
-} ReferenceTable;
+};
 
 /*
  * Initialize a ReferenceTable.

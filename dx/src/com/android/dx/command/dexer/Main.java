@@ -38,7 +38,7 @@ import com.android.dx.rop.annotation.Annotation;
 import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.cst.CstNat;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.FileUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -829,7 +829,7 @@ public class Main {
              * The (default) source file is an attribute of the class, but
              * it's useful to see it in method dumps.
              */
-            CstUtf8 sourceFile = clazz.getSourceFile();
+            CstString sourceFile = clazz.getSourceFile();
             if (sourceFile != null) {
                 pw.println("  source file: " + sourceFile.toQuoted());
             }

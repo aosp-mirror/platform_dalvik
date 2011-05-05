@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef _LIBDEX_DEXDEBUGINFO
-#define _LIBDEX_DEXDEBUGINFO
-
 /*
  * Handling of method debug info in a .dex file.
  */
+
+#ifndef _LIBDEX_DEXDEBUGINFO
+#define _LIBDEX_DEXDEBUGINFO
 
 #include "DexFile.h"
 

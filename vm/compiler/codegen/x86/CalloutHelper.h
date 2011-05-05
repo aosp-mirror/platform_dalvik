@@ -54,6 +54,6 @@ Object* dvmAllocObject(ClassObject* clazz, int flags);  // OP_NEW_INSTANCE
  * Functions declared in gDvmInlineOpsTable[] are used for
  * OP_EXECUTE_INLINE & OP_EXECUTE_INLINE_RANGE.
  */
-double sqrt(double x);  // INLINE_MATH_SQRT
+extern "C" double sqrt(double x);  // INLINE_MATH_SQRT
 
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_X86_CALLOUT_HELPER_H */

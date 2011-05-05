@@ -23,6 +23,7 @@ import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.cst.CstKnownNull;
 import com.android.dx.rop.cst.CstLiteral64;
 import com.android.dx.rop.cst.CstLiteralBits;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 
@@ -336,7 +337,7 @@ public abstract class InsnFormat {
         CstInsn ci = (CstInsn) insn;
         Constant cst = ci.getConstant();
 
-        return cst.toHuman();
+        return cst instanceof CstString ? ((CstString) cst).toQuoted() : cst.toHuman();
     }
 
     /**

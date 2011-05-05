@@ -103,7 +103,7 @@ public final class BasicBlock implements LabeledItem {
 
         if (primarySuccessor >= 0 && !successors.contains(primarySuccessor)) {
             throw new IllegalArgumentException(
-                    "primarySuccessor not in successors");
+                    "primarySuccessor " + primarySuccessor + " not in successors " + successors);
         }
 
         this.label = label;

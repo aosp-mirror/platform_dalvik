@@ -16,13 +16,13 @@
 #ifndef _DALVIK_HEAPDEBUG
 #define _DALVIK_HEAPDEBUG
 
-typedef enum HeapDebugInfoType {
+enum HeapDebugInfoType {
     kVirtualHeapSize = 0,
     kNativeHeapSize = 1,
     kVirtualHeapAllocated = 2,
     kNativeHeapAllocated = 3,
     kVirtualHeapMaximumSize = 4
-} HeapDebugInfoType;
+};
 
 /* Return the specified value.
  * Returns -1 if the type is unknown.

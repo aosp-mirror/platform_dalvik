@@ -16,8 +16,6 @@
 
 package com.android.dx.rop.code;
 
-import com.android.dx.rop.cst.CstUtf8;
-import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;

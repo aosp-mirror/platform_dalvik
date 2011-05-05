@@ -32,7 +32,6 @@ import com.android.dx.rop.cst.CstByte;
 import com.android.dx.rop.cst.CstChar;
 import com.android.dx.rop.cst.CstDouble;
 import com.android.dx.rop.cst.CstEnumRef;
-import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstFloat;
 import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.cst.CstLong;
@@ -40,7 +39,6 @@ import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstShort;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Type;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
@@ -247,8 +245,8 @@ public final class AnnotationParser {
 
         int typeIndex = input.readUnsignedShort();
         int numElements = input.readUnsignedShort();
-        CstUtf8 typeUtf8 = (CstUtf8) pool.get(typeIndex);
-        CstType type = new CstType(Type.intern(typeUtf8.getString()));
+        CstString typeString = (CstString) pool.get(typeIndex);
+        CstType type = new CstType(Type.intern(typeString.getString()));
 
         if (observer != null) {
             parsed(2, "type: " + type.toHuman());
@@ -284,7 +282,7 @@ public final class AnnotationParser {
         requireLength(5);
 
         int elementNameIndex = input.readUnsignedShort();
-        CstUtf8 elementName = (CstUtf8) pool.get(elementNameIndex);
+        CstString elementName = (CstString) pool.get(elementNameIndex);
 
         if (observer != null) {
             parsed(2, "element_name: " + elementName.toHuman());
@@ -310,7 +308,7 @@ public final class AnnotationParser {
         int tag = input.readUnsignedByte();
 
         if (observer != null) {
-            CstUtf8 humanTag = new CstUtf8(Character.toString((char) tag));
+            CstString humanTag = new CstString(Character.toString((char) tag));
             parsed(1, "tag: " + humanTag.toQuoted());
         }
 
@@ -350,7 +348,7 @@ public final class AnnotationParser {
             }
             case 'c': {
                 int classInfoIndex = input.readUnsignedShort();
-                CstUtf8 value = (CstUtf8) pool.get(classInfoIndex);
+                CstString value = (CstString) pool.get(classInfoIndex);
                 Type type = Type.internReturnType(value.getString());
 
                 if (observer != null) {
@@ -360,16 +358,15 @@ public final class AnnotationParser {
                 return new CstType(type);
             }
             case 's': {
-                CstString value = new CstString((CstUtf8) parseConstant());
-                return value;
+                return parseConstant();
             }
             case 'e': {
                 requireLength(4);
 
                 int typeNameIndex = input.readUnsignedShort();
                 int constNameIndex = input.readUnsignedShort();
-                CstUtf8 typeName = (CstUtf8) pool.get(typeNameIndex);
-                CstUtf8 constName = (CstUtf8) pool.get(constNameIndex);
+                CstString typeName = (CstString) pool.get(typeNameIndex);
+                CstString constName = (CstString) pool.get(constNameIndex);
 
                 if (observer != null) {
                     parsed(2, "type_name: " + typeName.toHuman());
@@ -428,8 +425,8 @@ public final class AnnotationParser {
         Constant value = (Constant) pool.get(constValueIndex);
 
         if (observer != null) {
-            String human = (value instanceof CstUtf8)
-                ? ((CstUtf8) value).toQuoted()
+            String human = (value instanceof CstString)
+                ? ((CstString) value).toQuoted()
                 : value.toHuman();
             parsed(2, "constant_value: " + human);
         }

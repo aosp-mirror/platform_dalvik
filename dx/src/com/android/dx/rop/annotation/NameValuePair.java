@@ -18,14 +18,13 @@ package com.android.dx.rop.annotation;
 
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstString;
-import com.android.dx.rop.cst.CstUtf8;
 
 /**
  * A (name, value) pair. These are used as the contents of an annotation.
  */
 public final class NameValuePair implements Comparable<NameValuePair> {
     /** {@code non-null;} the name */
-    private final CstUtf8 name;
+    private final CstString name;
 
     /** {@code non-null;} the value */
     private final Constant value;
@@ -36,18 +35,13 @@ public final class NameValuePair implements Comparable<NameValuePair> {
      * @param name {@code non-null;} the name
      * @param value {@code non-null;} the value
      */
-    public NameValuePair(CstUtf8 name, Constant value) {
+    public NameValuePair(CstString name, Constant value) {
         if (name == null) {
             throw new NullPointerException("name == null");
         }
 
         if (value == null) {
             throw new NullPointerException("value == null");
-        }
-
-        // Reject CstUtf8 values. (They should be CstStrings.)
-        if (value instanceof CstUtf8) {
-            throw new IllegalArgumentException("bad value: " + value);
         }
 
         this.name = name;
@@ -97,7 +91,7 @@ public final class NameValuePair implements Comparable<NameValuePair> {
      *
      * @return {@code non-null;} the name
      */
-    public CstUtf8 getName() {
+    public CstString getName() {
         return name;
     }
 

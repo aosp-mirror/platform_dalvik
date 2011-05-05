@@ -20,15 +20,14 @@ import com.android.dx.cf.attrib.AttCode;
 import com.android.dx.cf.attrib.AttLineNumberTable;
 import com.android.dx.cf.attrib.AttLocalVariableTable;
 import com.android.dx.cf.attrib.AttLocalVariableTypeTable;
-import com.android.dx.cf.attrib.AttSourceFile;
 import com.android.dx.cf.iface.AttributeList;
 import com.android.dx.cf.iface.ClassFile;
 import com.android.dx.cf.iface.Method;
 import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.cst.CstNat;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Prototype;
 
 /**
@@ -45,7 +44,7 @@ public final class ConcreteMethod implements Method {
      * {@code null-ok;} the class's {@code SourceFile} attribute value,
      * if any
      */
-    private final CstUtf8 sourceFile;
+    private final CstString sourceFile;
 
     /**
      * whether the class that this method is part of is defined with
@@ -72,11 +71,15 @@ public final class ConcreteMethod implements Method {
      * @param keepLocals whether to keep the local variable
      * information (if any)
      */
-    public ConcreteMethod(Method method, ClassFile cf, boolean keepLines,
-                          boolean keepLocals) {
+    public ConcreteMethod(Method method, ClassFile cf, boolean keepLines, boolean keepLocals) {
+        this(method, cf.getAccessFlags(), cf.getSourceFile(), keepLines, keepLocals);
+    }
+
+    public ConcreteMethod(Method method, int accessFlags, CstString sourceFile,
+            boolean keepLines, boolean keepLocals) {
         this.method = method;
-        this.accSuper = (cf.getAccessFlags() & AccessFlags.ACC_SUPER) != 0;
-        this.sourceFile = cf.getSourceFile();
+        this.accSuper = (accessFlags & AccessFlags.ACC_SUPER) != 0;
+        this.sourceFile = sourceFile;
 
         AttributeList attribs = method.getAttributes();
         this.attCode = (AttCode) attribs.findFirst(AttCode.ATTRIBUTE_NAME);
@@ -147,12 +150,12 @@ public final class ConcreteMethod implements Method {
     }
 
     /** {@inheritDoc} */
-    public CstUtf8 getName() {
+    public CstString getName() {
         return method.getName();
     }
 
     /** {@inheritDoc} */
-    public CstUtf8 getDescriptor() {
+    public CstString getDescriptor() {
         return method.getDescriptor();
     }
 

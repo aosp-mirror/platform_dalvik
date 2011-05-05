@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include <Thread.h>
-#include <setjmp.h>
-
 #ifndef _DALVIK_VM_COMPILER
 #define _DALVIK_VM_COMPILER
+
+#include <setjmp.h>
+#include "Thread.h"
 
 /*
  * Uncomment the following to enable JIT signature breakpoint
@@ -223,7 +223,7 @@ bool dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
 bool dvmCompilerClearVisitedFlag(struct CompilationUnit *cUnit,
                                  struct BasicBlock *bb);
 char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
-                                      char *note);
+                                      const char *note);
 char *dvmCompilerFullDisassembler(const struct CompilationUnit *cUnit,
                                   const struct MIR *mir);
 char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,
@@ -237,8 +237,9 @@ bool dvmCompilerBuildLoop(struct CompilationUnit *cUnit);
 void dvmCompilerUpdateGlobalState(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);
-void *dvmCompilerGetInterpretTemplate();
+extern "C" void *dvmCompilerGetInterpretTemplate();
 JitInstructionSetType dvmCompilerGetInterpretTemplateSet();
 u8 dvmGetRegResourceMask(int reg);
 void dvmDumpCFG(struct CompilationUnit *cUnit, const char *dirPrefix);
+
 #endif /* _DALVIK_VM_COMPILER */

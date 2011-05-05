@@ -22,15 +22,11 @@ import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.cst.CstInterfaceMethodRef;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.Type;
-import com.android.dx.rop.type.TypeBearer;
 import com.android.dx.rop.code.LocalItem;
 import com.android.dx.util.Hex;
-import com.android.dx.util.IntList;
 
-import java.util.List;
 import java.util.ArrayList;
 
 /**

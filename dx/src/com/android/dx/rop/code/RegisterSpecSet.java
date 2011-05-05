@@ -17,7 +17,6 @@
 package com.android.dx.rop.code;
 
 import com.android.dx.util.MutabilityControl;
-import com.android.dx.rop.cst.CstUtf8;
 
 /**
  * Set of {@link RegisterSpec} instances, where a given register number

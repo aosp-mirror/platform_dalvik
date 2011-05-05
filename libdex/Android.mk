@@ -15,24 +15,24 @@
 LOCAL_PATH:= $(call my-dir)
 
 dex_src_files := \
-	CmdUtils.c \
-	DexCatch.c \
-	DexClass.c \
-	DexDataMap.c \
-	DexDebugInfo.c \
-	DexFile.c \
-	DexInlines.c \
-	DexOptData.c \
-	DexOpcodes.c \
-	DexProto.c \
-	DexSwapVerify.c \
-	DexUtf.c \
-	InstrUtils.c \
-	Leb128.c \
-	OptInvocation.c \
-	sha1.c \
-	SysUtil.c \
-	ZipArchive.c
+	CmdUtils.cpp \
+	DexCatch.cpp \
+	DexClass.cpp \
+	DexDataMap.cpp \
+	DexDebugInfo.cpp \
+	DexFile.cpp \
+	DexInlines.cpp \
+	DexOptData.cpp \
+	DexOpcodes.cpp \
+	DexProto.cpp \
+	DexSwapVerify.cpp \
+	DexUtf.cpp \
+	InstrUtils.cpp \
+	Leb128.cpp \
+	OptInvocation.cpp \
+	sha1.cpp \
+	SysUtil.cpp \
+	ZipArchive.cpp
 
 dex_include_files := \
 	dalvik \

@@ -22,7 +22,6 @@
 #include "Common.h"     // need u1/u2/u4/u8 types
 
 struct ExpandBuf;   /* private */
-typedef struct ExpandBuf ExpandBuf;
 
 /* create a new struct */
 ExpandBuf* expandBufAlloc(void);

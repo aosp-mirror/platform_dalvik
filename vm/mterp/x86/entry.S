@@ -43,7 +43,7 @@ dvmMterpStdRun:
 
 /* Set up "named" registers */
     movl    offThread_pc(%ecx),rPC
-    movl    offThread_fp(%ecx),rFP
+    movl    offThread_curFrame(%ecx),rFP
     movl    offThread_curHandlerTable(%ecx),rIBASE
 
 /* Remember %esp for future "longjmp" */

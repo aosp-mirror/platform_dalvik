@@ -31,7 +31,6 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.TypeBearer;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

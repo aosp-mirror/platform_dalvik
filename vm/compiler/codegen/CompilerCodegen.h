@@ -34,6 +34,9 @@ void dvmCompilerMethodMIR2LIR(CompilationUnit *cUnit);
 /* Assemble LIR into machine code */
 void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info);
 
+/* Perform translation chain operation. */
+extern "C" void* dvmJitChain(void* tgtAddr, u4* branchAddr);
+
 /* Install class objects in the literal pool */
 void dvmJitInstallClassObjectPointers(CompilationUnit *cUnit,
                                       char *codeAddress);

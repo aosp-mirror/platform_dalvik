@@ -63,8 +63,6 @@ public final class FieldId implements Comparable<FieldId> {
         if (buffer == null) {
             return declaringClassIndex + " " + typeIndex + " " + nameIndex;
         }
-        return buffer.typeNames().get(declaringClassIndex)
-                + " { " + buffer.typeNames().get(typeIndex)
-                + " " + buffer.strings().get(nameIndex) + " }";
+        return buffer.typeNames().get(typeIndex) + "." + buffer.strings().get(nameIndex);
     }
 }

@@ -8,26 +8,26 @@ components:
 --
 
 /* Architectural independent building blocks */
-#include "../CodegenCommon.c"
+#include "../CodegenCommon.cpp"
 
 /* Thumb2-specific factory utilities */
-#include "../Thumb2/Factory.c"
+#include "../Thumb2/Factory.cpp"
 /* Factory utilities dependent on arch-specific features */
-#include "../CodegenFactory.c"
+#include "../CodegenFactory.cpp"
 
 /* Thumb2-specific codegen routines */
-#include "../Thumb2/Gen.c"
+#include "../Thumb2/Gen.cpp"
 /* Thumb2+VFP codegen routines */
-#include "../FP/Thumb2VFP.c"
+#include "../FP/Thumb2VFP.cpp"
 
 /* Thumb2-specific register allocation */
-#include "../Thumb2/Ralloc.c"
+#include "../Thumb2/Ralloc.cpp"
 
 /* MIR2LIR dispatcher and architectural independent codegen routines */
-#include "../CodegenDriver.c"
+#include "../CodegenDriver.cpp"
 
 /* Architecture manifest */
-#include "ArchVariant.c"
+#include "ArchVariant.cpp"
 
 --
 

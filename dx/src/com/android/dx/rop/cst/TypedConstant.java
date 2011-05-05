@@ -26,7 +26,7 @@ public abstract class TypedConstant
     /**
      * {@inheritDoc}
      *
-     * This implentation always returns {@code this}.
+     * This implementation always returns {@code this}.
      */
     public final TypeBearer getFrameType() {
         return this;

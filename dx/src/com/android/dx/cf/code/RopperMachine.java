@@ -35,8 +35,8 @@ import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstNat;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
 import com.android.dx.rop.type.TypeList;
@@ -58,8 +58,8 @@ import java.util.ArrayList;
      */
     private static final CstMethodRef MULTIANEWARRAY_METHOD =
         new CstMethodRef(ARRAY_REFLECT_TYPE,
-                         new CstNat(new CstUtf8("newInstance"),
-                                    new CstUtf8("(Ljava/lang/Class;[I)" +
+                         new CstNat(new CstString("newInstance"),
+                                    new CstString("(Ljava/lang/Class;[I)" +
                                                 "Ljava/lang/Object;")));
 
     /** {@code non-null;} {@link Ropper} controlling this instance */

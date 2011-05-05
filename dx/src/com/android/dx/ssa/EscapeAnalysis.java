@@ -32,8 +32,8 @@ import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstNat;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.cst.Zeroes;
 import com.android.dx.rop.type.StdTypeList;
@@ -754,7 +754,7 @@ public class EscapeAnalysis {
         SsaBasicBlock newBlock2 =
             newBlock.insertNewSuccessor(newBlock.getPrimarySuccessor());
         SsaInsn newInsn2 = newBlock2.getInsns().get(0);
-        CstNat newNat = new CstNat(new CstUtf8("<init>"), new CstUtf8("(I)V"));
+        CstNat newNat = new CstNat(new CstString("<init>"), new CstString("(I)V"));
         CstMethodRef newRef = new CstMethodRef(exception, newNat);
         insertThrowingInsnBefore(newInsn2, RegisterSpecList.make(newReg, index),
                                      null, RegOps.INVOKE_DIRECT, newRef);

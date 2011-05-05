@@ -56,7 +56,7 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir);
 
 #if defined(WITH_SELF_VERIFICATION)
 /* Self Verification memory instruction decoder */
-void dvmSelfVerificationMemOpDecode(int lr, int* sp);
+extern "C" void dvmSelfVerificationMemOpDecode(int lr, int* sp);
 #endif
 
 extern void dvmCompilerSetupResourceMasks(ArmLIR *lir);

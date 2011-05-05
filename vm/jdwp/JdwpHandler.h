@@ -25,12 +25,12 @@
 /*
  * JDWP message header for a request.
  */
-typedef struct JdwpReqHeader {
+struct JdwpReqHeader {
     u4  length;
     u4  id;
     u1  cmdSet;
     u1  cmd;
-} JdwpReqHeader;
+};
 
 /*
  * Process a request from the debugger.

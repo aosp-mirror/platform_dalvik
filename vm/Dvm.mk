@@ -25,7 +25,7 @@
 # Compiler defines.
 #
 LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps
-LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter -Wc++-compat
+LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
 LOCAL_CFLAGS += -DARCH_VARIANT=\"$(dvm_arch_variant)\"
 
 #
@@ -59,7 +59,6 @@ ifeq ($(dvm_make_debug_vm),true)
   LOCAL_CFLAGS += -DWITH_TRACKREF_CHECKS
   LOCAL_CFLAGS += -DWITH_EXTRA_GC_CHECKS=1
   #LOCAL_CFLAGS += -DCHECK_MUTEX
-  #LOCAL_CFLAGS += -DPROFILE_FIELD_ACCESS
   LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=3
   # add some extra stuff to make it easier to examine with GDB
   LOCAL_CFLAGS += -DEASY_GDB
@@ -85,121 +84,121 @@ endif  # !dvm_make_debug_vm
 #LOCAL_CFLAGS += -DWITH_JNI_STACK_CHECK
 
 LOCAL_SRC_FILES := \
-	AllocTracker.c \
-	Atomic.c.arm \
-	AtomicCache.c \
-	BitVector.c.arm \
-	CheckJni.c \
-	Ddm.c \
-	Debugger.c \
-	DvmDex.c \
-	Exception.c \
-	Hash.c \
-	IndirectRefTable.c.arm \
-	Init.c \
-	InitRefs.c \
-	InlineNative.c.arm \
-	Inlines.c \
-	Intern.c \
-	Jni.c \
-	JarFile.c \
-	LinearAlloc.c \
-	Misc.c \
-	Native.c \
-	PointerSet.c \
-	Profile.c \
-	Properties.c \
-	RawDexFile.c \
-	ReferenceTable.c \
-	SignalCatcher.c \
-	StdioConverter.c \
-	Sync.c \
-	Thread.c \
-	UtfString.c \
-	alloc/Alloc.c \
-	alloc/CardTable.c \
-	alloc/HeapBitmap.c.arm \
-	alloc/HeapDebug.c \
-	alloc/Heap.c.arm \
-	alloc/DdmHeap.c \
-	alloc/Verify.c \
-	alloc/Visit.c \
-	analysis/CodeVerify.c \
-	analysis/DexPrepare.c \
-	analysis/DexVerify.c \
-	analysis/Liveness.c \
-	analysis/Optimize.c \
-	analysis/RegisterMap.c \
-	analysis/VerifySubs.c \
-	analysis/VfyBasicBlock.c \
-	hprof/Hprof.c \
-	hprof/HprofClass.c \
-	hprof/HprofHeap.c \
-	hprof/HprofOutput.c \
-	hprof/HprofString.c \
-	interp/Interp.c.arm \
-	interp/Stack.c \
-	jdwp/ExpandBuf.c \
-	jdwp/JdwpAdb.c \
-	jdwp/JdwpConstants.c \
-	jdwp/JdwpEvent.c \
-	jdwp/JdwpHandler.c \
-	jdwp/JdwpMain.c \
-	jdwp/JdwpSocket.c \
-	mterp/Mterp.c.arm \
-	mterp/out/InterpC-portable.c.arm \
-	native/InternalNative.c \
-	native/dalvik_bytecode_OpcodeInfo.c \
-	native/dalvik_system_DexFile.c \
-	native/dalvik_system_VMDebug.c \
-	native/dalvik_system_VMRuntime.c \
-	native/dalvik_system_VMStack.c \
-	native/dalvik_system_Zygote.c \
-	native/java_lang_Class.c \
-	native/java_lang_Double.c \
-	native/java_lang_Float.c \
-	native/java_lang_Math.c \
-	native/java_lang_Object.c \
-	native/java_lang_Runtime.c \
-	native/java_lang_String.c \
-	native/java_lang_System.c \
-	native/java_lang_Throwable.c \
-	native/java_lang_VMClassLoader.c \
-	native/java_lang_VMThread.c \
-	native/java_lang_reflect_AccessibleObject.c \
-	native/java_lang_reflect_Array.c \
-	native/java_lang_reflect_Constructor.c \
-	native/java_lang_reflect_Field.c \
-	native/java_lang_reflect_Method.c \
-	native/java_lang_reflect_Proxy.c \
-	native/java_util_concurrent_atomic_AtomicLong.c \
-	native/org_apache_harmony_dalvik_NativeTestTarget.c \
-	native/org_apache_harmony_dalvik_ddmc_DdmServer.c \
-	native/org_apache_harmony_dalvik_ddmc_DdmVmInternal.c \
-	native/sun_misc_Unsafe.c \
-	oo/AccessCheck.c \
-	oo/Array.c \
-	oo/Class.c \
-	oo/Object.c \
-	oo/Resolve.c \
-	oo/TypeCheck.c \
-	reflect/Annotation.c \
-	reflect/Proxy.c \
-	reflect/Reflect.c \
-	test/AtomicTest.c.arm \
-	test/TestHash.c \
-	test/TestIndirectRefTable.c
+	AllocTracker.cpp \
+	Atomic.cpp.arm \
+	AtomicCache.cpp \
+	BitVector.cpp.arm \
+	CheckJni.cpp \
+	Ddm.cpp \
+	Debugger.cpp \
+	DvmDex.cpp \
+	Exception.cpp \
+	Hash.cpp \
+	IndirectRefTable.cpp.arm \
+	Init.cpp \
+	InitRefs.cpp \
+	InlineNative.cpp.arm \
+	Inlines.cpp \
+	Intern.cpp \
+	Jni.cpp \
+	JarFile.cpp \
+	LinearAlloc.cpp \
+	Misc.cpp \
+	Native.cpp \
+	PointerSet.cpp \
+	Profile.cpp \
+	Properties.cpp \
+	RawDexFile.cpp \
+	ReferenceTable.cpp \
+	SignalCatcher.cpp \
+	StdioConverter.cpp \
+	Sync.cpp \
+	Thread.cpp \
+	UtfString.cpp \
+	alloc/Alloc.cpp \
+	alloc/CardTable.cpp \
+	alloc/HeapBitmap.cpp.arm \
+	alloc/HeapDebug.cpp \
+	alloc/Heap.cpp.arm \
+	alloc/DdmHeap.cpp \
+	alloc/Verify.cpp \
+	alloc/Visit.cpp \
+	analysis/CodeVerify.cpp \
+	analysis/DexPrepare.cpp \
+	analysis/DexVerify.cpp \
+	analysis/Liveness.cpp \
+	analysis/Optimize.cpp \
+	analysis/RegisterMap.cpp \
+	analysis/VerifySubs.cpp \
+	analysis/VfyBasicBlock.cpp \
+	hprof/Hprof.cpp \
+	hprof/HprofClass.cpp \
+	hprof/HprofHeap.cpp \
+	hprof/HprofOutput.cpp \
+	hprof/HprofString.cpp \
+	interp/Interp.cpp.arm \
+	interp/Stack.cpp \
+	jdwp/ExpandBuf.cpp \
+	jdwp/JdwpAdb.cpp \
+	jdwp/JdwpConstants.cpp \
+	jdwp/JdwpEvent.cpp \
+	jdwp/JdwpHandler.cpp \
+	jdwp/JdwpMain.cpp \
+	jdwp/JdwpSocket.cpp \
+	mterp/Mterp.cpp.arm \
+	mterp/out/InterpC-portable.cpp.arm \
+	native/InternalNative.cpp \
+	native/dalvik_bytecode_OpcodeInfo.cpp \
+	native/dalvik_system_DexFile.cpp \
+	native/dalvik_system_VMDebug.cpp \
+	native/dalvik_system_VMRuntime.cpp \
+	native/dalvik_system_VMStack.cpp \
+	native/dalvik_system_Zygote.cpp \
+	native/java_lang_Class.cpp \
+	native/java_lang_Double.cpp \
+	native/java_lang_Float.cpp \
+	native/java_lang_Math.cpp \
+	native/java_lang_Object.cpp \
+	native/java_lang_Runtime.cpp \
+	native/java_lang_String.cpp \
+	native/java_lang_System.cpp \
+	native/java_lang_Throwable.cpp \
+	native/java_lang_VMClassLoader.cpp \
+	native/java_lang_VMThread.cpp \
+	native/java_lang_reflect_AccessibleObject.cpp \
+	native/java_lang_reflect_Array.cpp \
+	native/java_lang_reflect_Constructor.cpp \
+	native/java_lang_reflect_Field.cpp \
+	native/java_lang_reflect_Method.cpp \
+	native/java_lang_reflect_Proxy.cpp \
+	native/java_util_concurrent_atomic_AtomicLong.cpp \
+	native/org_apache_harmony_dalvik_NativeTestTarget.cpp \
+	native/org_apache_harmony_dalvik_ddmc_DdmServer.cpp \
+	native/org_apache_harmony_dalvik_ddmc_DdmVmInternal.cpp \
+	native/sun_misc_Unsafe.cpp \
+	oo/AccessCheck.cpp \
+	oo/Array.cpp \
+	oo/Class.cpp \
+	oo/Object.cpp \
+	oo/Resolve.cpp \
+	oo/TypeCheck.cpp \
+	reflect/Annotation.cpp \
+	reflect/Proxy.cpp \
+	reflect/Reflect.cpp \
+	test/AtomicTest.cpp.arm \
+	test/TestHash.cpp \
+	test/TestIndirectRefTable.cpp
 
 WITH_COPYING_GC := $(strip $(WITH_COPYING_GC))
 
 ifeq ($(WITH_COPYING_GC),true)
   LOCAL_CFLAGS += -DWITH_COPYING_GC
   LOCAL_SRC_FILES += \
-	alloc/Copying.c.arm
+	alloc/Copying.cpp.arm
 else
   LOCAL_SRC_FILES += \
-	alloc/HeapSource.c \
-	alloc/MarkSweep.c.arm
+	alloc/HeapSource.cpp \
+	alloc/MarkSweep.cpp.arm
 endif
 
 WITH_JIT := $(strip $(WITH_JIT))
@@ -207,16 +206,16 @@ WITH_JIT := $(strip $(WITH_JIT))
 ifeq ($(WITH_JIT),true)
   LOCAL_CFLAGS += -DWITH_JIT
   LOCAL_SRC_FILES += \
-	compiler/Compiler.c \
-	compiler/Frontend.c \
-	compiler/Utility.c \
-	compiler/InlineTransformation.c \
-	compiler/IntermediateRep.c \
-	compiler/Dataflow.c \
-	compiler/SSATransformation.c \
-	compiler/Loop.c \
-	compiler/Ralloc.c \
-	interp/Jit.c
+	compiler/Compiler.cpp \
+	compiler/Frontend.cpp \
+	compiler/Utility.cpp \
+	compiler/InlineTransformation.cpp \
+	compiler/IntermediateRep.cpp \
+	compiler/Dataflow.cpp \
+	compiler/SSATransformation.cpp \
+	compiler/Loop.cpp \
+	compiler/Ralloc.cpp \
+	interp/Jit.cpp
 endif
 
 LOCAL_C_INCLUDES += \
@@ -224,8 +223,8 @@ LOCAL_C_INCLUDES += \
 	dalvik \
 	dalvik/vm \
 	external/zlib \
+	libcore/include \
 	$(KERNEL_HEADERS)
-
 
 ifeq ($(dvm_simulator),true)
   LOCAL_LDLIBS += -lpthread -ldl
@@ -246,20 +245,20 @@ ifeq ($(dvm_arch),arm)
   LOCAL_SRC_FILES += \
 		arch/arm/CallOldABI.S \
 		arch/arm/CallEABI.S \
-		arch/arm/HintsEABI.c \
-		mterp/out/InterpC-$(dvm_arch_variant).c.arm \
+		arch/arm/HintsEABI.cpp \
+		mterp/out/InterpC-$(dvm_arch_variant).cpp.arm \
 		mterp/out/InterpAsm-$(dvm_arch_variant).S
 
   ifeq ($(WITH_JIT),true)
     LOCAL_SRC_FILES += \
-		compiler/codegen/RallocUtil.c \
-		compiler/codegen/arm/$(dvm_arch_variant)/Codegen.c \
+		compiler/codegen/RallocUtil.cpp \
+		compiler/codegen/arm/$(dvm_arch_variant)/Codegen.cpp \
 		compiler/codegen/arm/$(dvm_arch_variant)/CallingConvention.S \
-		compiler/codegen/arm/Assemble.c \
-		compiler/codegen/arm/ArchUtility.c \
-		compiler/codegen/arm/LocalOptimizations.c \
-		compiler/codegen/arm/GlobalOptimizations.c \
-		compiler/codegen/arm/ArmRallocUtil.c \
+		compiler/codegen/arm/Assemble.cpp \
+		compiler/codegen/arm/ArchUtility.cpp \
+		compiler/codegen/arm/LocalOptimizations.cpp \
+		compiler/codegen/arm/GlobalOptimizations.cpp \
+		compiler/codegen/arm/ArmRallocUtil.cpp \
 		compiler/template/out/CompilerTemplateAsm-$(dvm_arch_variant).S
   endif
 endif
@@ -270,14 +269,14 @@ ifeq ($(dvm_arch),x86)
     LOCAL_CFLAGS += -DDVM_JMP_TABLE_MTERP=1
     LOCAL_SRC_FILES += \
 		arch/$(dvm_arch_variant)/Call386ABI.S \
-		arch/$(dvm_arch_variant)/Hints386ABI.c \
-		mterp/out/InterpC-$(dvm_arch_variant).c \
+		arch/$(dvm_arch_variant)/Hints386ABI.cpp \
+		mterp/out/InterpC-$(dvm_arch_variant).cpp \
 		mterp/out/InterpAsm-$(dvm_arch_variant).S
     ifeq ($(WITH_JIT),true)
       LOCAL_SRC_FILES += \
-		compiler/codegen/x86/Assemble.c \
-		compiler/codegen/x86/ArchUtility.c \
-		compiler/codegen/x86/ia32/Codegen.c \
+		compiler/codegen/x86/Assemble.cpp \
+		compiler/codegen/x86/ArchUtility.cpp \
+		compiler/codegen/x86/ia32/Codegen.cpp \
 		compiler/codegen/x86/ia32/CallingConvention.S \
 		compiler/template/out/CompilerTemplateAsm-ia32.S
     endif
@@ -288,8 +287,8 @@ ifeq ($(dvm_arch),sh)
   MTERP_ARCH_KNOWN := true
   LOCAL_SRC_FILES += \
 		arch/sh/CallSH4ABI.S \
-		arch/generic/Hints.c \
-		mterp/out/InterpC-allstubs.c \
+		arch/generic/Hints.cpp \
+		mterp/out/InterpC-allstubs.cpp \
 		mterp/out/InterpAsm-allstubs.S
 endif
 
@@ -305,9 +304,9 @@ ifeq ($(MTERP_ARCH_KNOWN),false)
   endif
 
   LOCAL_SRC_FILES += \
-		arch/generic/Call.c \
-		arch/generic/Hints.c \
-		mterp/out/InterpC-allstubs.c
+		arch/generic/Call.cpp \
+		arch/generic/Hints.cpp \
+		mterp/out/InterpC-allstubs.cpp
 
   # The following symbols are usually defined in the asm file, but
   # since we don't have an asm file in this case, we instead just

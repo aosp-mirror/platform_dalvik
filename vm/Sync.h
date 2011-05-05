@@ -66,16 +66,6 @@
 struct Object;
 struct Monitor;
 struct Thread;
-typedef struct Monitor Monitor;
-
-/*
- * Initialize a Lock to the proper starting value.
- * This is necessary for thin locking.
- */
-#define DVM_LOCK_INITIAL_THIN_VALUE (0)
-
-#define DVM_LOCK_INIT(lock) \
-    do { *(lock) = DVM_LOCK_INITIAL_THIN_VALUE; } while (0)
 
 /*
  * Returns true if the lock has been fattened.
@@ -85,25 +75,25 @@ typedef struct Monitor Monitor;
 /*
  * Acquire the object's monitor.
  */
-void dvmLockObject(struct Thread* self, struct Object* obj);
+extern "C" void dvmLockObject(Thread* self, Object* obj);
 
 /* Returns true if the unlock succeeded.
  * If the unlock failed, an exception will be pending.
  */
-bool dvmUnlockObject(struct Thread* self, struct Object* obj);
+extern "C" bool dvmUnlockObject(Thread* self, Object* obj);
 
 /*
  * Implementations of some java/lang/Object calls.
  */
-void dvmObjectWait(struct Thread* self, struct Object* obj,
+void dvmObjectWait(Thread* self, Object* obj,
     s8 timeout, s4 nanos, bool interruptShouldThrow);
-void dvmObjectNotify(struct Thread* self, struct Object* obj);
-void dvmObjectNotifyAll(struct Thread* self, struct Object* obj);
+void dvmObjectNotify(Thread* self, Object* obj);
+void dvmObjectNotifyAll(Thread* self, Object* obj);
 
 /*
  * Implementation of System.identityHashCode().
  */
-u4 dvmIdentityHashCode(struct Object* obj);
+u4 dvmIdentityHashCode(Object* obj);
 
 /*
  * Implementation of Thread.sleep().
@@ -115,10 +105,10 @@ void dvmThreadSleep(u8 msec, u4 nsec);
  *
  * Interrupt a thread.  If it's waiting on a monitor, wake it up.
  */
-void dvmThreadInterrupt(struct Thread* thread);
+void dvmThreadInterrupt(Thread* thread);
 
 /* create a new Monitor struct */
-Monitor* dvmCreateMonitor(struct Object* obj);
+Monitor* dvmCreateMonitor(Object* obj);
 
 /*
  * Frees unmarked monitors from the monitor list.  The given callback
@@ -136,7 +126,7 @@ void dvmFreeMonitorList(void);
  * Returns NULL if "mon" is NULL or the monitor is not part of an object
  * (which should only happen for Thread.sleep() in the current implementation).
  */
-struct Object* dvmGetMonitorObject(Monitor* mon);
+Object* dvmGetMonitorObject(Monitor* mon);
 
 /*
  * Get the thread that holds the lock on the specified object.  The
@@ -144,12 +134,12 @@ struct Object* dvmGetMonitorObject(Monitor* mon);
  *
  * The caller must lock the thread list before calling here.
  */
-struct Thread* dvmGetObjectLockHolder(struct Object* obj);
+Thread* dvmGetObjectLockHolder(Object* obj);
 
 /*
  * Checks whether the object is held by the specified thread.
  */
-bool dvmHoldsLock(struct Thread* thread, struct Object* obj);
+bool dvmHoldsLock(Thread* thread, Object* obj);
 
 /*
  * Relative timed wait on condition
