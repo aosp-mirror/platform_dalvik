@@ -288,11 +288,8 @@ static void linearAllocTests()
 
 static size_t classObjectSize(size_t sfieldCount)
 {
-    size_t size;
-
-    size = offsetof(ClassObject, sfields);
-    size += sizeof(StaticField) * sfieldCount;
-    return size;
+    size_t offset = OFFSETOF_MEMBER(ClassObject, sfields);
+    return offset + sizeof(StaticField) * sfieldCount;
 }
 
 size_t dvmClassObjectSize(const ClassObject *clazz)
@@ -346,7 +343,7 @@ static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClas
         return false;
     }
 
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
+    DVM_OBJECT_INIT(newClass, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     SET_CLASS_FLAG(newClass, ACC_PUBLIC | ACC_FINAL | ACC_ABSTRACT);
     newClass->primitiveType = primitiveType;
@@ -379,7 +376,7 @@ static bool createInitialClasses() {
     if (clazz == NULL) {
         return false;
     }
-    DVM_OBJECT_INIT(&clazz->obj, clazz);
+    DVM_OBJECT_INIT(clazz, clazz);
     SET_CLASS_FLAG(clazz, ACC_PUBLIC | ACC_FINAL | CLASS_ISCLASS);
     clazz->descriptor = "Ljava/lang/Class;";
     gDvm.classJavaLangClass = clazz;
@@ -1707,8 +1704,8 @@ got_class:
     /* check some invariants */
     assert(dvmIsClassLinked(clazz));
     assert(gDvm.classJavaLangClass != NULL);
-    assert(clazz->obj.clazz == gDvm.classJavaLangClass);
-    assert(dvmIsClassObject(&clazz->obj));
+    assert(clazz->clazz == gDvm.classJavaLangClass);
+    assert(dvmIsClassObject(clazz));
     assert(clazz == gDvm.classJavaLangObject || clazz->super != NULL);
     if (!dvmIsInterfaceClass(clazz)) {
         //LOGI("class=%s vtableCount=%d, virtualMeth=%d\n",
@@ -1771,13 +1768,13 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
     if (newClass == NULL)
         return NULL;
 
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
+    DVM_OBJECT_INIT(newClass, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptor = descriptor;
     assert(newClass->descriptorAlloc == NULL);
     SET_CLASS_FLAG(newClass, pClassDef->accessFlags);
     dvmSetFieldObject((Object *)newClass,
-                      offsetof(ClassObject, classLoader),
+                      OFFSETOF_MEMBER(ClassObject, classLoader),
                       (Object *)classLoader);
     newClass->pDvmDex = pDvmDex;
     newClass->primitiveType = PRIM_NOT;
@@ -2005,8 +2002,8 @@ void dvmFreeClassInnards(ClassObject* clazz)
     if (clazz == NULL)
         return;
 
-    assert(clazz->obj.clazz == gDvm.classJavaLangClass);
-    assert(dvmIsClassObject(&clazz->obj));
+    assert(clazz->clazz == gDvm.classJavaLangClass);
+    assert(dvmIsClassObject(clazz));
 
     /* Guarantee that dvmFreeClassInnards can be called on a given
      * class multiple times by clearing things out as we free them.
@@ -2519,8 +2516,8 @@ bool dvmLinkClass(ClassObject* clazz)
         LOGV("CLASS: linking '%s'...\n", clazz->descriptor);
 
     assert(gDvm.classJavaLangClass != NULL);
-    assert(clazz->obj.clazz == gDvm.classJavaLangClass);
-    assert(dvmIsClassObject(&clazz->obj));
+    assert(clazz->clazz == gDvm.classJavaLangClass);
+    assert(dvmIsClassObject(clazz));
     if (clazz->classLoader == NULL &&
         (strcmp(clazz->descriptor, "Ljava/lang/Class;") == 0))
     {
@@ -2586,7 +2583,7 @@ bool dvmLinkClass(ClassObject* clazz)
                 goto bail;
             }
             dvmSetFieldObject((Object *)clazz,
-                              offsetof(ClassObject, super),
+                              OFFSETOF_MEMBER(ClassObject, super),
                               (Object *)super);
         }
 
@@ -3745,7 +3742,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
      * sure we left enough room for the instance fields.
      */
     assert(!dvmIsTheClassClass(clazz) || (size_t)fieldOffset <
-        offsetof(ClassObject, instanceData) + sizeof(clazz->instanceData));
+        OFFSETOF_MEMBER(ClassObject, instanceData) + sizeof(clazz->instanceData));
 
     clazz->objectSize = fieldOffset;
 
@@ -4289,7 +4286,7 @@ bool dvmInitClass(ClassObject* clazz)
 verify_failed:
             dvmThrowVerifyError(clazz->descriptor);
             dvmSetFieldObject((Object*) clazz,
-                offsetof(ClassObject, verifyErrorClass),
+                OFFSETOF_MEMBER(ClassObject, verifyErrorClass),
                 (Object*) dvmGetException(self)->clazz);
             clazz->status = CLASS_ERROR;
             goto bail_unlock;

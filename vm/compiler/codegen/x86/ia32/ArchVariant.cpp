@@ -62,8 +62,8 @@ bool dvmCompilerArchVariantInit(void)
 #endif
 
     /* Codegen-specific assumptions */
-    assert(offsetof(ClassObject, vtable) < 128 &&
-           (offsetof(ClassObject, vtable) & 0x3) == 0);
+    assert(OFFSETOF_MEMBER(ClassObject, vtable) < 128 &&
+           (OFFSETOF_MEMBER(ClassObject, vtable) & 0x3) == 0);
     assert(OFFSETOF_MEMBER(ArrayObject, length) < 128 &&
            (OFFSETOF_MEMBER(ArrayObject, length) & 0x3) == 0);
     assert(OFFSETOF_MEMBER(ArrayObject, contents) < 256);

@@ -108,17 +108,17 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
         (ClassObject*) dvmMalloc(newClassSize, ALLOC_NON_MOVING);
     if (newClass == NULL)
         goto bail;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
+    DVM_OBJECT_INIT(newClass, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = dvmNameToDescriptor(nameStr);
     newClass->descriptor = newClass->descriptorAlloc;
     SET_CLASS_FLAG(newClass, ACC_PUBLIC | ACC_FINAL);
     dvmSetFieldObject((Object *)newClass,
-                      offsetof(ClassObject, super),
+                      OFFSETOF_MEMBER(ClassObject, super),
                       (Object *)gDvm.classJavaLangReflectProxy);
     newClass->primitiveType = PRIM_NOT;
     dvmSetFieldObject((Object *)newClass,
-                      offsetof(ClassObject, classLoader),
+                      OFFSETOF_MEMBER(ClassObject, classLoader),
                       (Object *)loader);
 
     /*

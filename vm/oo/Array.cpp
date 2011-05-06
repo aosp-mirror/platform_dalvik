@@ -366,21 +366,21 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
     newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_NON_MOVING);
     if (newClass == NULL)
         return NULL;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
+    DVM_OBJECT_INIT(newClass, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = strdup(descriptor);
     newClass->descriptor = newClass->descriptorAlloc;
     dvmSetFieldObject((Object *)newClass,
-                      offsetof(ClassObject, super),
+                      OFFSETOF_MEMBER(ClassObject, super),
                       (Object *)gDvm.classJavaLangObject);
     newClass->vtableCount = gDvm.classJavaLangObject->vtableCount;
     newClass->vtable = gDvm.classJavaLangObject->vtable;
     newClass->primitiveType = PRIM_NOT;
     dvmSetFieldObject((Object *)newClass,
-                      offsetof(ClassObject, elementClass),
+                      OFFSETOF_MEMBER(ClassObject, elementClass),
                       (Object *)elementClass);
     dvmSetFieldObject((Object *)newClass,
-                      offsetof(ClassObject, classLoader),
+                      OFFSETOF_MEMBER(ClassObject, classLoader),
                       (Object *)elementClass->classLoader);
     newClass->arrayDim = arrayDim;
     newClass->status = CLASS_INITIALIZED;

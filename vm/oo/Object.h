@@ -335,9 +335,7 @@ struct InstField {
  * instance) used in Dalvik works out pretty well.  The only time it's
  * annoying is when enumerating or searching for things with reflection.
  */
-struct ClassObject {
-    Object          obj;                /* MUST be first item */
-
+struct ClassObject : Object {
     /* leave space for instance data; we could access fields directly if we
        freeze the definition of java/lang/Class */
     u4              instanceData[CLASS_FIELD_SLOTS];
