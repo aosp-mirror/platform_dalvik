@@ -176,10 +176,10 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     newClass->sfieldCount = kProxySFieldCount;
     {
         StaticField* sfield = &newClass->sfields[kThrowsField];
-        sfield->field.clazz = newClass;
-        sfield->field.name = "throws";
-        sfield->field.signature = "[[Ljava/lang/Throwable;";
-        sfield->field.accessFlags = ACC_STATIC | ACC_PRIVATE;
+        sfield->clazz = newClass;
+        sfield->name = "throws";
+        sfield->signature = "[[Ljava/lang/Throwable;";
+        sfield->accessFlags = ACC_STATIC | ACC_PRIVATE;
         dvmSetStaticFieldObject(sfield, (Object*)throws);
     }
 

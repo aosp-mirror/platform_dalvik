@@ -221,7 +221,7 @@ struct Object {
  * void DVM_OBJECT_INIT(Object *obj, ClassObject *clazz_)
  */
 #define DVM_OBJECT_INIT(obj, clazz_) \
-    dvmSetFieldObject((Object *)obj, OFFSETOF_MEMBER(Object, clazz), (Object *)clazz_)
+    dvmSetFieldObject(obj, OFFSETOF_MEMBER(Object, clazz), clazz_)
 
 /*
  * Data objects have an Object header followed by their instance data.
@@ -294,17 +294,14 @@ struct Field {
 /*
  * Static field.
  */
-struct StaticField {
-    Field           field;          /* MUST be first item */
+struct StaticField : Field {
     JValue          value;          /* initially set from DEX for primitives */
 };
 
 /*
  * Instance field.
  */
-struct InstField {
-    Field           field;          /* MUST be first item */
-
+struct InstField : Field {
     /*
      * This field indicates the byte offset from the beginning of the
      * (Object *) to the actual instance data; e.g., byteOffset==0 is

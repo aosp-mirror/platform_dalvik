@@ -1630,7 +1630,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         case OP_SGET_BYTE_JUMBO:
         case OP_SGET_SHORT:
         case OP_SGET_SHORT_JUMBO: {
-            int valOffset = offsetof(StaticField, value);
+            int valOffset = OFFSETOF_MEMBER(StaticField, value);
             int tReg = dvmCompilerAllocTemp(cUnit);
             bool isVolatile;
             const Method *method = (mir->OptimizationFlags & MIR_CALLEE) ?
@@ -1679,7 +1679,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_SGET_WIDE:
         case OP_SGET_WIDE_JUMBO: {
-            int valOffset = offsetof(StaticField, value);
+            int valOffset = OFFSETOF_MEMBER(StaticField, value);
             const Method *method = (mir->OptimizationFlags & MIR_CALLEE) ?
                 mir->meta.calleeMethod : cUnit->method;
             void *fieldPtr = (void*)
@@ -1719,7 +1719,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         case OP_SPUT_BYTE_JUMBO:
         case OP_SPUT_SHORT:
         case OP_SPUT_SHORT_JUMBO: {
-            int valOffset = offsetof(StaticField, value);
+            int valOffset = OFFSETOF_MEMBER(StaticField, value);
             int tReg = dvmCompilerAllocTemp(cUnit);
             int objHead;
             bool isVolatile;
@@ -1756,7 +1756,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, tReg,  (int) fieldPtr);
             if (isSputObject) {
                 objHead = dvmCompilerAllocTemp(cUnit);
-                loadWordDisp(cUnit, tReg, offsetof(Field, clazz), objHead);
+                loadWordDisp(cUnit, tReg, OFFSETOF_MEMBER(Field, clazz), objHead);
             }
             HEAP_ACCESS_SHADOW(true);
             storeWordDisp(cUnit, tReg, valOffset ,rlSrc.lowReg);
@@ -1776,7 +1776,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         case OP_SPUT_WIDE:
         case OP_SPUT_WIDE_JUMBO: {
             int tReg = dvmCompilerAllocTemp(cUnit);
-            int valOffset = offsetof(StaticField, value);
+            int valOffset = OFFSETOF_MEMBER(StaticField, value);
             const Method *method = (mir->OptimizationFlags & MIR_CALLEE) ?
                 mir->meta.calleeMethod : cUnit->method;
             void *fieldPtr = (void*)

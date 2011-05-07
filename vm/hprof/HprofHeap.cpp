@@ -331,8 +331,8 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                     size_t size;
                     const StaticField *f = &thisClass->sfields[i];
 
-                    t = signatureToBasicTypeAndSize(f->field.signature, &size);
-                    hprofAddIdToRecord(rec, hprofLookupStringId(f->field.name));
+                    t = signatureToBasicTypeAndSize(f->signature, &size);
+                    hprofAddIdToRecord(rec, hprofLookupStringId(f->name));
                     hprofAddU1ToRecord(rec, t);
                     if (size == 1) {
                         hprofAddU1ToRecord(rec, (u1)f->value.b);
@@ -356,8 +356,8 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                 const InstField *f = &thisClass->ifields[i];
                 hprof_basic_type t;
 
-                t = signatureToBasicTypeAndSize(f->field.signature, NULL);
-                hprofAddIdToRecord(rec, hprofLookupStringId(f->field.name));
+                t = signatureToBasicTypeAndSize(f->signature, NULL);
+                hprofAddIdToRecord(rec, hprofLookupStringId(f->name));
                 hprofAddU1ToRecord(rec, t);
             }
         } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
@@ -445,7 +445,7 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                     hprof_basic_type t;
                     size_t size;
 
-                    t = signatureToBasicTypeAndSize(f->field.signature, &size);
+                    t = signatureToBasicTypeAndSize(f->signature, &size);
                     if (size == 1) {
                         hprofAddU1ToRecord(rec,
                                 (u1)dvmGetFieldByte(obj, f->byteOffset));

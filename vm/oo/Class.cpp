@@ -2341,10 +2341,10 @@ static void loadSFieldFromDex(ClassObject* clazz,
 
     pFieldId = dexGetFieldId(pDexFile, pDexSField->fieldIdx);
 
-    sfield->field.clazz = clazz;
-    sfield->field.name = dexStringById(pDexFile, pFieldId->nameIdx);
-    sfield->field.signature = dexStringByTypeIdx(pDexFile, pFieldId->typeIdx);
-    sfield->field.accessFlags = pDexSField->accessFlags;
+    sfield->clazz = clazz;
+    sfield->name = dexStringById(pDexFile, pFieldId->nameIdx);
+    sfield->signature = dexStringByTypeIdx(pDexFile, pFieldId->typeIdx);
+    sfield->accessFlags = pDexSField->accessFlags;
 
     /* Static object field values are set to "standard default values"
      * (null or 0) until the class is initialized.  We delay loading
@@ -2365,10 +2365,10 @@ static void loadIFieldFromDex(ClassObject* clazz,
 
     pFieldId = dexGetFieldId(pDexFile, pDexIField->fieldIdx);
 
-    ifield->field.clazz = clazz;
-    ifield->field.name = dexStringById(pDexFile, pFieldId->nameIdx);
-    ifield->field.signature = dexStringByTypeIdx(pDexFile, pFieldId->typeIdx);
-    ifield->field.accessFlags = pDexIField->accessFlags;
+    ifield->clazz = clazz;
+    ifield->name = dexStringById(pDexFile, pFieldId->nameIdx);
+    ifield->signature = dexStringByTypeIdx(pDexFile, pFieldId->typeIdx);
+    ifield->accessFlags = pDexIField->accessFlags;
 #ifndef NDEBUG
     assert(ifield->byteOffset == 0);    // cleared earlier with calloc
     ifield->byteOffset = -1;    // make it obvious if we fail to set later
@@ -2393,7 +2393,7 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
     dvmLinearReadWrite(clazz->classLoader, clazz->ifields);
     for (i = 0; i < clazz->ifieldRefCount; i++) {
         InstField *pField = &clazz->ifields[i];
-        if (strcmp(pField->field.name, "referent") == 0) {
+        if (strcmp(pField->name, "referent") == 0) {
             int targetIndex;
 
             /* Swap this field with the last object field.
@@ -3503,7 +3503,7 @@ static inline void swapField(InstField* pOne, InstField* pTwo)
 {
     InstField swap;
 
-    LOGVV("  --- swap '%s' and '%s'\n", pOne->field.name, pTwo->field.name);
+    LOGVV("  --- swap '%s' and '%s'\n", pOne->name, pTwo->name);
     swap = *pOne;
     *pOne = *pTwo;
     *pTwo = swap;
@@ -3566,7 +3566,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
     j = clazz->ifieldCount - 1;
     for (i = 0; i < clazz->ifieldCount; i++) {
         InstField* pField = &clazz->ifields[i];
-        char c = pField->field.signature[0];
+        char c = pField->signature[0];
 
         if (c != '[' && c != 'L') {
             /* This isn't a reference field; see if any reference fields
@@ -3575,7 +3575,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
              */
             while (j > i) {
                 InstField* refField = &clazz->ifields[j--];
-                char rc = refField->field.signature[0];
+                char rc = refField->signature[0];
 
                 if (rc == '[' || rc == 'L') {
                     /* Here's a reference field that follows at least one
@@ -3609,7 +3609,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
 
         pField->byteOffset = fieldOffset;
         fieldOffset += sizeof(u4);
-        LOGVV("  --- offset1 '%s'=%d\n", pField->field.name,pField->byteOffset);
+        LOGVV("  --- offset1 '%s'=%d\n", pField->name,pField->byteOffset);
     }
 
     /*
@@ -3621,7 +3621,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
         LOGVV("  +++ not aligned\n");
 
         InstField* pField = &clazz->ifields[i];
-        char c = pField->field.signature[0];
+        char c = pField->signature[0];
 
         if (c != 'J' && c != 'D') {
             /*
@@ -3632,7 +3632,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
             fieldOffset += sizeof(u4);
             i++;
             LOGVV("  --- offset2 '%s'=%d\n",
-                pField->field.name, pField->byteOffset);
+                pField->name, pField->byteOffset);
         } else {
             /*
              * Next field is 64-bit, so search for a 32-bit field we can
@@ -3642,17 +3642,17 @@ static bool computeFieldOffsets(ClassObject* clazz)
             j = clazz->ifieldCount - 1;
             while (j > i) {
                 InstField* singleField = &clazz->ifields[j--];
-                char rc = singleField->field.signature[0];
+                char rc = singleField->signature[0];
 
                 if (rc != 'J' && rc != 'D') {
                     swapField(pField, singleField);
                     //c = rc;
                     LOGVV("  +++ swapped '%s' for alignment\n",
-                        pField->field.name);
+                        pField->name);
                     pField->byteOffset = fieldOffset;
                     fieldOffset += sizeof(u4);
                     LOGVV("  --- offset3 '%s'=%d\n",
-                        pField->field.name, pField->byteOffset);
+                        pField->name, pField->byteOffset);
                     found = true;
                     i++;
                     break;
@@ -3673,7 +3673,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
     j = clazz->ifieldCount - 1;
     for ( ; i < clazz->ifieldCount; i++) {
         InstField* pField = &clazz->ifields[i];
-        char c = pField->field.signature[0];
+        char c = pField->signature[0];
 
         if (c != 'D' && c != 'J') {
             /* This isn't a double-wide field; see if any double fields
@@ -3682,7 +3682,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
              */
             while (j > i) {
                 InstField* doubleField = &clazz->ifields[j--];
-                char rc = doubleField->field.signature[0];
+                char rc = doubleField->signature[0];
 
                 if (rc == 'D' || rc == 'J') {
                     /* Here's a double-wide field that follows at least one
@@ -3704,7 +3704,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
         }
 
         pField->byteOffset = fieldOffset;
-        LOGVV("  --- offset4 '%s'=%d\n", pField->field.name,pField->byteOffset);
+        LOGVV("  --- offset4 '%s'=%d\n", pField->name,pField->byteOffset);
         fieldOffset += sizeof(u4);
         if (c == 'J' || c == 'D')
             fieldOffset += sizeof(u4);
@@ -3717,7 +3717,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
     j = 0;  // seen non-ref
     for (i = 0; i < clazz->ifieldCount; i++) {
         InstField *pField = &clazz->ifields[i];
-        char c = pField->field.signature[0];
+        char c = pField->signature[0];
 
         if (c == 'D' || c == 'J') {
             assert((pField->byteOffset & 0x07) == 0);
@@ -3811,7 +3811,7 @@ static void initSFields(ClassObject* clazz)
         AnnotationValue value;
         bool parsed = dvmEncodedArrayIteratorGetNext(&iterator, &value);
         StaticField* sfield = &clazz->sfields[i];
-        const char* descriptor = sfield->field.signature;
+        const char* descriptor = sfield->signature;
         bool isObj = false;
 
         if (! parsed) {
@@ -4765,15 +4765,15 @@ static int dumpClass(void* vclazz, void* varg)
     if (clazz->sfieldCount > 0) {
         LOGI("  static fields (%d entries):\n", clazz->sfieldCount);
         for (i = 0; i < clazz->sfieldCount; i++) {
-            LOGI("    %2d: %20s %s\n", i, clazz->sfields[i].field.name,
-                clazz->sfields[i].field.signature);
+            LOGI("    %2d: %20s %s\n", i, clazz->sfields[i].name,
+                clazz->sfields[i].signature);
         }
     }
     if (clazz->ifieldCount > 0) {
         LOGI("  instance fields (%d entries):\n", clazz->ifieldCount);
         for (i = 0; i < clazz->ifieldCount; i++) {
-            LOGI("    %2d: %20s %s\n", i, clazz->ifields[i].field.name,
-                clazz->ifields[i].field.signature);
+            LOGI("    %2d: %20s %s\n", i, clazz->ifields[i].name,
+                clazz->ifields[i].signature);
         }
     }
     return 0;

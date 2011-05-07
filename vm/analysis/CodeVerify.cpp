@@ -2662,9 +2662,9 @@ static InstField* getInstField(const Method* meth,
         mustBeLocal = true;
     }
 
-    if (!dvmInstanceof(objClass, instField->field.clazz)) {
+    if (!dvmInstanceof(objClass, instField->clazz)) {
         LOG_VFY("VFY: invalid field access (field %s.%s, through %s ref)\n",
-                instField->field.clazz->descriptor, instField->field.name,
+                instField->clazz->descriptor, instField->name,
                 objClass->descriptor);
         *pFailure = VERIFY_ERROR_NO_FIELD;
         goto bail;
@@ -2676,7 +2676,7 @@ static InstField* getInstField(const Method* meth,
             instField >= objClass->ifields + objClass->ifieldCount)
         {
             LOG_VFY("VFY: invalid constructor field access (field %s in %s)\n",
-                    instField->field.name, objClass->descriptor);
+                    instField->name, objClass->descriptor);
             *pFailure = VERIFY_ERROR_GENERIC;
             goto bail;
         }
@@ -4769,13 +4769,13 @@ iget_1nr_common:
                 break;
 
             /* make sure the field's type is compatible with expectation */
-            fieldType = primSigCharToRegType(instField->field.signature[0]);
+            fieldType = primSigCharToRegType(instField->signature[0]);
             if (fieldType == kRegTypeUnknown ||
                 !checkFieldArrayStore1nr(tmpType, fieldType))
             {
                 LOG_VFY("VFY: invalid iget-1nr of %s.%s (inst=%d field=%d)\n",
-                        instField->field.clazz->descriptor,
-                        instField->field.name, tmpType, fieldType);
+                        instField->clazz->descriptor,
+                        instField->name, tmpType, fieldType);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -4796,7 +4796,7 @@ iget_1nr_common:
             if (!VERIFY_OK(failure))
                 break;
             /* check the type, which should be prim */
-            switch (instField->field.signature[0]) {
+            switch (instField->signature[0]) {
             case 'D':
                 dstType = kRegTypeDoubleLo;
                 break;
@@ -4805,8 +4805,8 @@ iget_1nr_common:
                 break;
             default:
                 LOG_VFY("VFY: invalid iget-wide of %s.%s\n",
-                        instField->field.clazz->descriptor,
-                        instField->field.name);
+                        instField->clazz->descriptor,
+                        instField->name);
                 dstType = kRegTypeUnknown;
                 failure = VERIFY_ERROR_GENERIC;
                 break;
@@ -4828,11 +4828,11 @@ iget_1nr_common:
                             &failure);
             if (!VERIFY_OK(failure))
                 break;
-            fieldClass = getFieldClass(meth, &instField->field);
+            fieldClass = getFieldClass(meth, instField);
             if (fieldClass == NULL) {
                 /* class not found or primitive type */
                 LOG_VFY("VFY: unable to recover field class from '%s'\n",
-                    instField->field.signature);
+                    instField->signature);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -4890,18 +4890,18 @@ iput_1nr_common:
                             &failure);
             if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &instField->field, &failure);
+            checkFinalFieldAccess(meth, instField, &failure);
             if (!VERIFY_OK(failure))
                 break;
 
             /* get type of field we're storing into */
-            fieldType = primSigCharToRegType(instField->field.signature[0]);
+            fieldType = primSigCharToRegType(instField->signature[0]);
             if (fieldType == kRegTypeUnknown ||
                 !checkFieldArrayStore1nr(tmpType, fieldType))
             {
                 LOG_VFY("VFY: invalid iput-1nr of %s.%s (inst=%d field=%d)\n",
-                        instField->field.clazz->descriptor,
-                        instField->field.name, tmpType, fieldType);
+                        instField->clazz->descriptor,
+                        instField->name, tmpType, fieldType);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -4924,20 +4924,20 @@ iput_1nr_common:
                             &failure);
             if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &instField->field, &failure);
+            checkFinalFieldAccess(meth, instField, &failure);
             if (!VERIFY_OK(failure))
                 break;
 
             /* check the type, which should be prim */
-            switch (instField->field.signature[0]) {
+            switch (instField->signature[0]) {
             case 'D':
             case 'J':
                 /* these are okay (and interchangeable) */
                 break;
             default:
                 LOG_VFY("VFY: invalid iput-wide of %s.%s\n",
-                        instField->field.clazz->descriptor,
-                        instField->field.name);
+                        instField->clazz->descriptor,
+                        instField->name);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -4956,14 +4956,14 @@ iput_1nr_common:
                             &failure);
             if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &instField->field, &failure);
+            checkFinalFieldAccess(meth, instField, &failure);
             if (!VERIFY_OK(failure))
                 break;
 
-            fieldClass = getFieldClass(meth, &instField->field);
+            fieldClass = getFieldClass(meth, instField);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'\n",
-                    instField->field.signature);
+                    instField->signature);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -4971,7 +4971,7 @@ iput_1nr_common:
             valueType = getRegisterType(workLine, decInsn.vA);
             if (!regTypeIsReference(valueType)) {
                 LOG_VFY("VFY: storing non-ref v%d into ref field '%s' (%s)\n",
-                        decInsn.vA, instField->field.name,
+                        decInsn.vA, instField->name,
                         fieldClass->descriptor);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
@@ -4990,8 +4990,8 @@ iput_1nr_common:
                 {
                     LOG_VFY("VFY: storing type '%s' into field type '%s' (%s.%s)\n",
                             valueClass->descriptor, fieldClass->descriptor,
-                            instField->field.clazz->descriptor,
-                            instField->field.name);
+                            instField->clazz->descriptor,
+                            instField->name);
                     failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
@@ -5036,11 +5036,11 @@ sget_1nr_common:
              * widths.  (We can't generally require an exact type match,
              * because e.g. "int" and "float" are interchangeable.)
              */
-            fieldType = primSigCharToRegType(staticField->field.signature[0]);
+            fieldType = primSigCharToRegType(staticField->signature[0]);
             if (!checkFieldArrayStore1nr(tmpType, fieldType)) {
                 LOG_VFY("VFY: invalid sget-1nr of %s.%s (inst=%d actual=%d)\n",
-                    staticField->field.clazz->descriptor,
-                    staticField->field.name, tmpType, fieldType);
+                    staticField->clazz->descriptor,
+                    staticField->name, tmpType, fieldType);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -5058,7 +5058,7 @@ sget_1nr_common:
             if (!VERIFY_OK(failure))
                 break;
             /* check the type, which should be prim */
-            switch (staticField->field.signature[0]) {
+            switch (staticField->signature[0]) {
             case 'D':
                 dstType = kRegTypeDoubleLo;
                 break;
@@ -5067,8 +5067,8 @@ sget_1nr_common:
                 break;
             default:
                 LOG_VFY("VFY: invalid sget-wide of %s.%s\n",
-                        staticField->field.clazz->descriptor,
-                        staticField->field.name);
+                        staticField->clazz->descriptor,
+                        staticField->name);
                 dstType = kRegTypeUnknown;
                 failure = VERIFY_ERROR_GENERIC;
                 break;
@@ -5087,10 +5087,10 @@ sget_1nr_common:
             staticField = getStaticField(meth, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
-            fieldClass = getFieldClass(meth, &staticField->field);
+            fieldClass = getFieldClass(meth, staticField);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'\n",
-                    staticField->field.signature);
+                    staticField->signature);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -5147,7 +5147,7 @@ sput_1nr_common:
             staticField = getStaticField(meth, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &staticField->field, &failure);
+            checkFinalFieldAccess(meth, staticField, &failure);
             if (!VERIFY_OK(failure))
                 break;
 
@@ -5158,11 +5158,11 @@ sput_1nr_common:
              * Using e.g. sput-short to write into a 32-bit integer field
              * can lead to trouble if we do 16-bit writes.
              */
-            fieldType = primSigCharToRegType(staticField->field.signature[0]);
+            fieldType = primSigCharToRegType(staticField->signature[0]);
             if (!checkFieldArrayStore1nr(tmpType, fieldType)) {
                 LOG_VFY("VFY: invalid sput-1nr of %s.%s (inst=%d actual=%d)\n",
-                    staticField->field.clazz->descriptor,
-                    staticField->field.name, tmpType, fieldType);
+                    staticField->clazz->descriptor,
+                    staticField->name, tmpType, fieldType);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -5182,20 +5182,20 @@ sput_1nr_common:
             staticField = getStaticField(meth, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &staticField->field, &failure);
+            checkFinalFieldAccess(meth, staticField, &failure);
             if (!VERIFY_OK(failure))
                 break;
 
             /* check the type, which should be prim */
-            switch (staticField->field.signature[0]) {
+            switch (staticField->signature[0]) {
             case 'D':
             case 'J':
                 /* these are okay */
                 break;
             default:
                 LOG_VFY("VFY: invalid sput-wide of %s.%s\n",
-                        staticField->field.clazz->descriptor,
-                        staticField->field.name);
+                        staticField->clazz->descriptor,
+                        staticField->name);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -5212,14 +5212,14 @@ sput_1nr_common:
             staticField = getStaticField(meth, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &staticField->field, &failure);
+            checkFinalFieldAccess(meth, staticField, &failure);
             if (!VERIFY_OK(failure))
                 break;
 
-            fieldClass = getFieldClass(meth, &staticField->field);
+            fieldClass = getFieldClass(meth, staticField);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'\n",
-                    staticField->field.signature);
+                    staticField->signature);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
             }
@@ -5227,7 +5227,7 @@ sput_1nr_common:
             valueType = getRegisterType(workLine, decInsn.vA);
             if (!regTypeIsReference(valueType)) {
                 LOG_VFY("VFY: storing non-ref v%d into ref field '%s' (%s)\n",
-                        decInsn.vA, staticField->field.name,
+                        decInsn.vA, staticField->name,
                         fieldClass->descriptor);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
@@ -5246,8 +5246,8 @@ sput_1nr_common:
                 {
                     LOG_VFY("VFY: storing type '%s' into field type '%s' (%s.%s)\n",
                             valueClass->descriptor, fieldClass->descriptor,
-                            staticField->field.clazz->descriptor,
-                            staticField->field.name);
+                            staticField->clazz->descriptor,
+                            staticField->name);
                     failure = VERIFY_ERROR_GENERIC;
                     break;
                 }

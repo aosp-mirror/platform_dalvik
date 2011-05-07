@@ -1180,7 +1180,7 @@ void dvmDbgOutputAllFields(RefTypeId refTypeId, bool withGeneric,
     expandBufAdd4BE(pReply, declared);
 
     for (int i = 0; i < clazz->sfieldCount; i++) {
-        Field* field = &clazz->sfields[i].field;
+        Field* field = &clazz->sfields[i];
         expandBufAddFieldId(pReply, fieldToFieldId(field));
         expandBufAddUtf8String(pReply, (const u1*) field->name);
         expandBufAddUtf8String(pReply, (const u1*) field->signature);
@@ -1191,7 +1191,7 @@ void dvmDbgOutputAllFields(RefTypeId refTypeId, bool withGeneric,
         expandBufAdd4BE(pReply, augmentedAccessFlags(field->accessFlags));
     }
     for (int i = 0; i < clazz->ifieldCount; i++) {
-        Field* field = (Field*)&clazz->ifields[i].field;
+        Field* field = &clazz->ifields[i];
         expandBufAddFieldId(pReply, fieldToFieldId(field));
         expandBufAddUtf8String(pReply, (const u1*) field->name);
         expandBufAddUtf8String(pReply, (const u1*) field->signature);
@@ -1470,7 +1470,7 @@ void dvmDbgGetFieldValue(ObjectId objectId, FieldId fieldId, ExpandBuf* pReply)
     Object* obj = objectIdToObject(objectId);
     RefTypeId classId = classObjectToRefTypeId(obj->clazz);
     InstField* ifield = (InstField*) fieldIdToField(classId, fieldId);
-    u1 tag = basicTagFromDescriptor(ifield->field.signature);
+    u1 tag = basicTagFromDescriptor(ifield->signature);
 
     if (tag == JT_ARRAY || tag == JT_OBJECT) {
         Object* objVal = dvmGetFieldObject(obj, ifield->byteOffset);
@@ -1512,7 +1512,7 @@ void dvmDbgGetFieldValue(ObjectId objectId, FieldId fieldId, ExpandBuf* pReply)
             expandBufAdd8BE(pReply, value.j);
             break;
         default:
-            LOGE("ERROR: unhandled field type '%s'\n", ifield->field.signature);
+            LOGE("ERROR: unhandled field type '%s'\n", ifield->signature);
             assert(false);
             break;
         }
@@ -1529,7 +1529,7 @@ void dvmDbgSetFieldValue(ObjectId objectId, FieldId fieldId, u8 value,
     RefTypeId classId = classObjectToRefTypeId(obj->clazz);
     InstField* field = (InstField*) fieldIdToField(classId, fieldId);
 
-    switch (field->field.signature[0]) {
+    switch (field->signature[0]) {
     case JT_BOOLEAN:
         assert(width == 1);
         dvmSetFieldBoolean(obj, field->byteOffset, value != 0);
@@ -1559,7 +1559,7 @@ void dvmDbgSetFieldValue(ObjectId objectId, FieldId fieldId, u8 value,
         dvmSetFieldLong(obj, field->byteOffset, value);
         break;
     default:
-        LOGE("ERROR: unhandled class type '%s'\n", field->field.signature);
+        LOGE("ERROR: unhandled class type '%s'\n", field->signature);
         assert(false);
         break;
     }
@@ -1574,7 +1574,7 @@ void dvmDbgGetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
     ExpandBuf* pReply)
 {
     StaticField* sfield = (StaticField*) fieldIdToField(refTypeId, fieldId);
-    u1 tag = basicTagFromDescriptor(sfield->field.signature);
+    u1 tag = basicTagFromDescriptor(sfield->signature);
 
     if (tag == JT_ARRAY || tag == JT_OBJECT) {
         Object* objVal = dvmGetStaticFieldObject(sfield);
@@ -1616,7 +1616,7 @@ void dvmDbgGetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
             expandBufAdd8BE(pReply, value.j);
             break;
         default:
-            LOGE("ERROR: unhandled field type '%s'\n", sfield->field.signature);
+            LOGE("ERROR: unhandled field type '%s'\n", sfield->signature);
             assert(false);
             break;
         }
@@ -1635,7 +1635,7 @@ void dvmDbgSetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
 
     value.j = rawValue;
 
-    switch (sfield->field.signature[0]) {
+    switch (sfield->signature[0]) {
     case JT_BOOLEAN:
         assert(width == 1);
         dvmSetStaticFieldBoolean(sfield, value.z);
@@ -1675,7 +1675,7 @@ void dvmDbgSetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
         dvmSetStaticFieldDouble(sfield, value.d);
         break;
     default:
-        LOGE("ERROR: unhandled class type '%s'\n", sfield->field.signature);
+        LOGE("ERROR: unhandled class type '%s'\n", sfield->signature);
         assert(false);
         break;
     }

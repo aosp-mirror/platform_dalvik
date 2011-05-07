@@ -392,7 +392,7 @@ static void scanFields(const Object *obj, GcMarkContext *ctx)
         while (refOffsets != 0) {
             size_t rshift = CLZ(refOffsets);
             size_t offset = CLASS_OFFSET_FROM_CLZ(rshift);
-            Object *ref = dvmGetFieldObject((Object*)obj, offset);
+            Object *ref = dvmGetFieldObject(obj, offset);
             markObject(ref, ctx);
             refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
         }
@@ -402,8 +402,8 @@ static void scanFields(const Object *obj, GcMarkContext *ctx)
              clazz = clazz->super) {
             InstField *field = clazz->ifields;
             for (int i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
-                void *addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
-                Object *ref = (Object *)((JValue *)addr)->l;
+                void *addr = BYTE_OFFSET(obj, field->byteOffset);
+                Object *ref = ((JValue *)addr)->l;
                 markObject(ref, ctx);
             }
         }
@@ -418,9 +418,9 @@ static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
     assert(clazz != NULL);
     assert(ctx != NULL);
     for (int i = 0; i < clazz->sfieldCount; ++i) {
-        char ch = clazz->sfields[i].field.signature[0];
+        char ch = clazz->sfields[i].signature[0];
         if (ch == '[' || ch == 'L') {
-            Object *obj = (Object *)clazz->sfields[i].value.l;
+            Object *obj = clazz->sfields[i].value.l;
             markObject(obj, ctx);
         }
     }

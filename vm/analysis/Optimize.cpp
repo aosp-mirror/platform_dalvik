@@ -626,7 +626,7 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
                 *pFailure = VERIFY_ERROR_NO_FIELD;
             return NULL;
         }
-        if (dvmIsStaticField(&resField->field)) {
+        if (dvmIsStaticField(resField)) {
             LOGD("DexOpt: wanted instance, got static for field %s.%s\n",
                 resClass->descriptor,
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
@@ -642,13 +642,13 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
     }
 
     /* access allowed? */
-    tweakLoader(referrer, resField->field.clazz);
+    tweakLoader(referrer, resField->clazz);
     bool allowed = dvmCheckFieldAccess(referrer, (Field*)resField);
-    untweakLoader(referrer, resField->field.clazz);
+    untweakLoader(referrer, resField->clazz);
     if (!allowed) {
         LOGI("DexOpt: access denied from %s to field %s.%s\n",
-            referrer->descriptor, resField->field.clazz->descriptor,
-            resField->field.name);
+            referrer->descriptor, resField->clazz->descriptor,
+            resField->name);
         if (pFailure != NULL)
             *pFailure = VERIFY_ERROR_ACCESS_FIELD;
         return NULL;
@@ -700,7 +700,7 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
                 *pFailure = VERIFY_ERROR_NO_FIELD;
             return NULL;
         }
-        if (!dvmIsStaticField(&resField->field)) {
+        if (!dvmIsStaticField(resField)) {
             LOGD("DexOpt: wanted static, got instance for field %s.%s\n",
                 resClass->descriptor, fieldName);
             if (pFailure != NULL)
@@ -720,13 +720,13 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
     }
 
     /* access allowed? */
-    tweakLoader(referrer, resField->field.clazz);
+    tweakLoader(referrer, resField->clazz);
     bool allowed = dvmCheckFieldAccess(referrer, (Field*)resField);
-    untweakLoader(referrer, resField->field.clazz);
+    untweakLoader(referrer, resField->clazz);
     if (!allowed) {
         LOGI("DexOpt: access denied from %s to field %s.%s\n",
-            referrer->descriptor, resField->field.clazz->descriptor,
-            resField->field.name);
+            referrer->descriptor, resField->clazz->descriptor,
+            resField->name);
         if (pFailure != NULL)
             *pFailure = VERIFY_ERROR_ACCESS_FIELD;
         return NULL;
@@ -768,19 +768,19 @@ static void rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
         return;
     }
 
-    if (volatileOpc != OP_NOP && dvmIsVolatileField(&instField->field)) {
+    if (volatileOpc != OP_NOP && dvmIsVolatileField(instField)) {
         updateOpcode(method, insns, volatileOpc);
         LOGV("DexOpt: rewrote ifield access %s.%s --> volatile\n",
-            instField->field.clazz->descriptor, instField->field.name);
+            instField->clazz->descriptor, instField->name);
     } else if (quickOpc != OP_NOP && instField->byteOffset < 65536) {
         updateOpcode(method, insns, quickOpc);
         dvmUpdateCodeUnit(method, insns+1, (u2) instField->byteOffset);
         LOGV("DexOpt: rewrote ifield access %s.%s --> %d\n",
-            instField->field.clazz->descriptor, instField->field.name,
+            instField->clazz->descriptor, instField->name,
             instField->byteOffset);
     } else {
         LOGV("DexOpt: no rewrite of ifield access %s.%s\n",
-            instField->field.clazz->descriptor, instField->field.name);
+            instField->clazz->descriptor, instField->name);
     }
 
     return;
@@ -809,13 +809,13 @@ static void rewriteJumboInstField(Method* method, u2* insns, Opcode volatileOpc)
         return;
     }
 
-    if (dvmIsVolatileField(&instField->field)) {
+    if (dvmIsVolatileField(instField)) {
         updateOpcode(method, insns, volatileOpc);
         LOGV("DexOpt: rewrote jumbo ifield access %s.%s --> volatile\n",
-            instField->field.clazz->descriptor, instField->field.name);
+            instField->clazz->descriptor, instField->name);
     } else {
         LOGV("DexOpt: no rewrite of jumbo ifield access %s.%s\n",
-            instField->field.clazz->descriptor, instField->field.name);
+            instField->clazz->descriptor, instField->name);
     }
 }
 
@@ -842,10 +842,10 @@ static void rewriteStaticField0(Method* method, u2* insns, Opcode volatileOpc,
         return;
     }
 
-    if (dvmIsVolatileField(&staticField->field)) {
+    if (dvmIsVolatileField(staticField)) {
         updateOpcode(method, insns, volatileOpc);
         LOGV("DexOpt: rewrote sfield access %s.%s --> volatile\n",
-            staticField->field.clazz->descriptor, staticField->field.name);
+            staticField->clazz->descriptor, staticField->name);
     }
 }
 
@@ -1318,7 +1318,7 @@ static bool needsReturnBarrier(Method* method)
      */
     int idx = clazz->ifieldCount;
     while (--idx >= 0) {
-        if (dvmIsFinalField(&clazz->ifields[idx].field))
+        if (dvmIsFinalField(&clazz->ifields[idx]))
             return true;
     }
 

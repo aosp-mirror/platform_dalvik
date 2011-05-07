@@ -282,11 +282,11 @@ ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly)
     else {
         count = 0;
         for (int i = 0; i < clazz->sfieldCount; i++) {
-            if ((clazz->sfields[i].field.accessFlags & ACC_PUBLIC) != 0)
+            if ((clazz->sfields[i].accessFlags & ACC_PUBLIC) != 0)
                 count++;
         }
         for (int i = 0; i < clazz->ifieldCount; i++) {
-            if ((clazz->ifields[i].field.accessFlags & ACC_PUBLIC) != 0)
+            if ((clazz->ifields[i].accessFlags & ACC_PUBLIC) != 0)
                 count++;
         }
     }
@@ -301,9 +301,9 @@ ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly)
     size_t fieldCount = 0;
     for (int i = 0; i < clazz->sfieldCount; i++) {
         if (!publicOnly ||
-            (clazz->sfields[i].field.accessFlags & ACC_PUBLIC) != 0)
+            (clazz->sfields[i].accessFlags & ACC_PUBLIC) != 0)
         {
-            Object* field = createFieldObject(&clazz->sfields[i].field, clazz);
+            Object* field = createFieldObject(&clazz->sfields[i], clazz);
             if (field == NULL) {
                 goto fail;
             }
@@ -314,9 +314,9 @@ ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly)
     }
     for (int i = 0; i < clazz->ifieldCount; i++) {
         if (!publicOnly ||
-            (clazz->ifields[i].field.accessFlags & ACC_PUBLIC) != 0)
+            (clazz->ifields[i].accessFlags & ACC_PUBLIC) != 0)
         {
-            Object* field = createFieldObject(&clazz->ifields[i].field, clazz);
+            Object* field = createFieldObject(&clazz->ifields[i], clazz);
             if (field == NULL) {
                 goto fail;
             }
@@ -786,7 +786,7 @@ Object* dvmGetDeclaredField(ClassObject* clazz, StringObject* nameObj)
         dvmInitClass(gDvm.classJavaLangReflectField);
 
     for (i = 0; i < clazz->sfieldCount; i++) {
-        Field* field = &clazz->sfields[i].field;
+        Field* field = &clazz->sfields[i];
         if (strcmp(name, field->name) == 0) {
             fieldObj = createFieldObject(field, clazz);
             break;
@@ -794,7 +794,7 @@ Object* dvmGetDeclaredField(ClassObject* clazz, StringObject* nameObj)
     }
     if (fieldObj == NULL) {
         for (i = 0; i < clazz->ifieldCount; i++) {
-            Field* field = &clazz->ifields[i].field;
+            Field* field = &clazz->ifields[i];
             if (strcmp(name, field->name) == 0) {
                 fieldObj = createFieldObject(field, clazz);
                 break;

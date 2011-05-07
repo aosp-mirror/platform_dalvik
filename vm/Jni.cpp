@@ -1749,7 +1749,7 @@ static jfieldID GetStaticFieldID(JNIEnv* env, jclass jclazz, const char* name, c
         ScopedJniThreadState ts(env);                                       \
         StaticField* sfield = (StaticField*) fieldID;                       \
         _ctype value;                                                       \
-        if (dvmIsVolatileField(&sfield->field)) {                           \
+        if (dvmIsVolatileField(sfield)) {                                   \
             if (_isref) {   /* only when _ctype==jobject */                 \
                 Object* obj = dvmGetStaticFieldObjectVolatile(sfield);      \
                 value = (_ctype)(u4)addLocalReference(env, obj);            \
@@ -1786,7 +1786,7 @@ GET_STATIC_TYPE_FIELD(jdouble, Double, false);
         UNUSED_PARAMETER(jclazz);                                           \
         ScopedJniThreadState ts(env);                                       \
         StaticField* sfield = (StaticField*) fieldID;                       \
-        if (dvmIsVolatileField(&sfield->field)) {                           \
+        if (dvmIsVolatileField(sfield)) {                                   \
             if (_isref) {   /* only when _ctype==jobject */                 \
                 Object* valObj =                                            \
                     dvmDecodeIndirectRef(env, (jobject)(u4)value);          \
@@ -1827,7 +1827,7 @@ SET_STATIC_TYPE_FIELD(jdouble, double, Double, false);
         Object* obj = dvmDecodeIndirectRef(env, jobj);                      \
         InstField* field = (InstField*) fieldID;                            \
         _ctype value;                                                       \
-        if (dvmIsVolatileField(&field->field)) {                            \
+        if (dvmIsVolatileField(field)) {                            \
             if (_isref) {   /* only when _ctype==jobject */                 \
                 Object* valObj =                                            \
                     dvmGetFieldObjectVolatile(obj, field->byteOffset);      \
@@ -1866,7 +1866,7 @@ GET_TYPE_FIELD(jdouble, Double, false);
         ScopedJniThreadState ts(env);                                       \
         Object* obj = dvmDecodeIndirectRef(env, jobj);                      \
         InstField* field = (InstField*) fieldID;                            \
-        if (dvmIsVolatileField(&field->field)) {                            \
+        if (dvmIsVolatileField(field)) {                                    \
             if (_isref) {   /* only when _ctype==jobject */                 \
                 Object* valObj =                                            \
                     dvmDecodeIndirectRef(env, (jobject)(u4)value);          \

@@ -414,8 +414,8 @@ InstField* dvmResolveInstField(const ClassObject* referrer, u4 ifieldIdx)
      * could still be in the process of initializing it if the field
      * access is from a static initializer.
      */
-    assert(dvmIsClassInitialized(resField->field.clazz) ||
-           dvmIsClassInitializing(resField->field.clazz));
+    assert(dvmIsClassInitialized(resField->clazz) ||
+           dvmIsClassInitializing(resField->clazz));
 
     /*
      * The class is initialized (or initializing), the field has been
@@ -429,7 +429,7 @@ InstField* dvmResolveInstField(const ClassObject* referrer, u4 ifieldIdx)
      */
     dvmDexSetResolvedField(pDvmDex, ifieldIdx, (Field*)resField);
     LOGVV("    field %u is %s.%s\n",
-        ifieldIdx, resField->field.clazz->descriptor, resField->field.name);
+        ifieldIdx, resField->clazz->descriptor, resField->name);
 
     return resField;
 }
@@ -473,8 +473,8 @@ StaticField* dvmResolveStaticField(const ClassObject* referrer, u4 sfieldIdx)
      * we need to do it now.  Note that, if the field was inherited from
      * a superclass, it is not necessarily the same as "resClass".
      */
-    if (!dvmIsClassInitialized(resField->field.clazz) &&
-        !dvmInitClass(resField->field.clazz))
+    if (!dvmIsClassInitialized(resField->clazz) &&
+        !dvmInitClass(resField->clazz))
     {
         assert(dvmCheckException(dvmThreadSelf()));
         return NULL;
@@ -487,13 +487,13 @@ StaticField* dvmResolveStaticField(const ClassObject* referrer, u4 sfieldIdx)
      * the store, otherwise other threads could use the field without waiting
      * for class init to finish.
      */
-    if (dvmIsClassInitialized(resField->field.clazz)) {
+    if (dvmIsClassInitialized(resField->clazz)) {
         dvmDexSetResolvedField(pDvmDex, sfieldIdx, (Field*) resField);
     } else {
         LOGVV("--- not caching resolved field %s.%s (class init=%d/%d)\n",
-            resField->field.clazz->descriptor, resField->field.name,
-            dvmIsClassInitializing(resField->field.clazz),
-            dvmIsClassInitialized(resField->field.clazz));
+            resField->clazz->descriptor, resField->name,
+            dvmIsClassInitializing(resField->clazz),
+            dvmIsClassInitialized(resField->clazz));
     }
 
     return resField;

@@ -464,8 +464,8 @@ static bool processAnnotationValue(const ClassObject* clazz,
             if (sfield == NULL) {
                 return false;
             } else {
-                assert(sfield->field.clazz->descriptor[0] == 'L');
-                elemObj = (Object*)sfield->value.l;
+                assert(sfield->clazz->descriptor[0] == 'L');
+                elemObj = sfield->value.l;
                 setObject = true;
                 dvmAddTrackedAlloc(elemObj, self);      // balance the Release
             }
