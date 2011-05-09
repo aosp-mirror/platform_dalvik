@@ -562,11 +562,11 @@ static void processXjitop(const char *opt)
             startValue = strtol(startPtr, &endPtr, 16);
             if (startPtr != endPtr) {
                 /* Just in case value is out of range */
-                startValue &= 0xff;
+                startValue %= kNumPackedOpcodes;
 
                 if (*endPtr == '-') {
                     endValue = strtol(endPtr+1, &endPtr, 16);
-                    endValue &= 0xff;
+                    endValue %= kNumPackedOpcodes;
                 } else {
                     endValue = startValue;
                 }
@@ -575,8 +575,7 @@ static void processXjitop(const char *opt)
                     LOGW("Dalvik opcode %x is selected for debugging",
                          (unsigned int) startValue);
                     /* Mark the corresponding bit to 1 */
-                    gDvmJit.opList[startValue >> 3] |=
-                        1 << (startValue & 0x7);
+                    gDvmJit.opList[startValue >> 3] |= 1 << (startValue & 0x7);
                 }
 
                 if (*endPtr == 0) {
@@ -597,7 +596,7 @@ static void processXjitop(const char *opt)
         } while (1);
     } else {
         int i;
-        for (i = 0; i < 32; i++) {
+        for (i = 0; i < (kNumPackedOpcodes+7)/8; i++) {
             gDvmJit.opList[i] = 0xff;
         }
         dvmFprintf(stderr, "Warning: select all opcodes\n");
