@@ -593,7 +593,7 @@ const Method* dvmGetVirtualizedMethod(const ClassObject* clazz,
 /*
  * Get the source file associated with a method.
  */
-const char* dvmGetMethodSourceFile(const Method* meth);
+extern "C" const char* dvmGetMethodSourceFile(const Method* meth);
 
 /*
  * Find a field within a class.  The superclass is not searched.

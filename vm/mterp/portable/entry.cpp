@@ -8,9 +8,6 @@ void dvmInterpretPortable(Thread* self)
 #if defined(EASY_GDB)
     StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->interpSave.curFrame);
 #endif
-#if defined(WITH_TRACKREF_CHECKS)
-    int debugTrackedRefStart = self->interpSave.debugTrackedRefStart;
-#endif
     DvmDex* methodClassDex;     // curMethod->clazz->pDvmDex
     JValue retval;
 

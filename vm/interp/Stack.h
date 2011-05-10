@@ -224,7 +224,7 @@ Object* dvmInvokeMethod(Object* invokeObj, const Method* meth,
  * into the specified method.  Returns -2 for native methods, -1 if no
  * match was found.
  */
-int dvmLineNumFromPC(const Method* method, u4 relPc);
+extern "C" int dvmLineNumFromPC(const Method* method, u4 relPc);
 
 /*
  * Given a frame pointer, compute the current call depth.  The value can be

@@ -231,7 +231,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
         getLongFromArray(fp, (_idx)) : (assert(!"bad reg"),1969) )
 # define SET_REGISTER_WIDE(_idx, _val) \
     ( (_idx) < curMethod->registersSize-1 ? \
-        putLongToArray(fp, (_idx), (_val)) : (assert(!"bad reg"),1969) )
+        (void)putLongToArray(fp, (_idx), (_val)) : assert(!"bad reg") )
 # define GET_REGISTER_FLOAT(_idx) \
     ( (_idx) < curMethod->registersSize ? \
         (*((float*) &fp[(_idx)])) : (assert(!"bad reg"),1969.0f) )
@@ -243,7 +243,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
         getDoubleFromArray(fp, (_idx)) : (assert(!"bad reg"),1969.0) )
 # define SET_REGISTER_DOUBLE(_idx, _val) \
     ( (_idx) < curMethod->registersSize-1 ? \
-        putDoubleToArray(fp, (_idx), (_val)) : (assert(!"bad reg"),1969.0) )
+        (void)putDoubleToArray(fp, (_idx), (_val)) : assert(!"bad reg") )
 #else
 # define GET_REGISTER(_idx)                 (fp[(_idx)])
 # define SET_REGISTER(_idx, _val)           (fp[(_idx)] = (_val))
