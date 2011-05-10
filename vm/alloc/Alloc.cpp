@@ -30,7 +30,7 @@
 bool dvmGcStartup()
 {
     dvmInitMutex(&gDvm.gcHeapLock);
-
+    pthread_cond_init(&gDvm.gcHeapCond, NULL);
     return dvmHeapStartup();
 }
 
