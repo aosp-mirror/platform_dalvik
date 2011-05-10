@@ -857,7 +857,7 @@ struct DvmJitGlobals {
     bool includeSelectedMethod;
 
     /* Disable JIT for selected opcodes - one bit for each opcode */
-    char opList[32];
+    char opList[(kNumPackedOpcodes+7)/8];
 
     /* Disable JIT for selected methods */
     HashTable *methodTable;

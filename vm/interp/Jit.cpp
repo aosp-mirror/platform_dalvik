@@ -289,13 +289,12 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
     }
 
     /*
-     * Check that the current pc is the end of the trace when at least one
-     * instruction is interpreted.
+     * Check if the current pc matches the endPC. Only check for non-zero
+     * trace length when backward branches are involved.
      */
-    if ((state == kSVSDebugInterp || state == kSVSSingleStep ||
-         state == kSVSBackwardBranch) &&
-        shadowSpace->traceLength != 0 &&
-        pc == shadowSpace->endPC) {
+    if (pc == shadowSpace->endPC &&
+        (state == kSVSDebugInterp || state == kSVSSingleStep ||
+         (state == kSVSBackwardBranch && shadowSpace->traceLength != 0))) {
 
         shadowSpace->selfVerificationState = kSVSIdle;
 
