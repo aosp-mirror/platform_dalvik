@@ -65,7 +65,6 @@ static StringObject* insertString(HashTable* table, u4 key, StringObject* value)
     }
     void* entry = dvmHashTableLookup(table, key, (void*)value,
                                      dvmHashcmpStrings, true);
-    assert(entry == value);
     return (StringObject*)entry;
 }
 
@@ -99,12 +98,14 @@ static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
                  */
                 dvmHashTableRemove(gDvm.internedStrings, key, interned);
                 found = insertString(gDvm.literalStrings, key, interned);
+                assert(found == interned);
             } else {
                 /*
                  * No match in the literal table or the interned
                  * table.  Insert into the literal table.
                  */
                 found = insertString(gDvm.literalStrings, key, strObj);
+                assert(found == strObj);
             }
         }
     } else {
@@ -115,7 +116,7 @@ static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
         if (found == NULL) {
             /*
              * No match was found in the literal table.  Insert into
-             * the intern table.
+             * the intern table if it does not already exist.
              */
             found = insertString(gDvm.internedStrings, key, strObj);
         }
