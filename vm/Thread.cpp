@@ -264,7 +264,6 @@ bool dvmThreadStartup()
     /* prep thread-related locks and conditions */
     dvmInitMutex(&gDvm.threadListLock);
     pthread_cond_init(&gDvm.threadStartCond, NULL);
-    //dvmInitMutex(&gDvm.vmExitLock);
     pthread_cond_init(&gDvm.vmExitCond, NULL);
     dvmInitMutex(&gDvm._threadSuspendLock);
     dvmInitMutex(&gDvm.threadSuspendCountLock);

@@ -495,7 +495,6 @@ struct DvmGlobals {
      * on a condition variable.
      */
     int         nonDaemonThreadCount;   /* must hold threadListLock to access */
-    //pthread_mutex_t vmExitLock;
     pthread_cond_t  vmExitCond;
 
     /*
