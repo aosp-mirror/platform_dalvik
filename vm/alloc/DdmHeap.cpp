@@ -53,8 +53,7 @@ enum HpifWhen {
  */
 #define HPIF_SIZE(numHeaps) \
         (sizeof(u4) + (numHeaps) * (5 * sizeof(u4) + sizeof(u1) + sizeof(u8)))
-void
-dvmDdmSendHeapInfo(int reason, bool shouldLock)
+void dvmDdmSendHeapInfo(int reason, bool shouldLock)
 {
     struct timeval now;
     u8 nowMs;
@@ -123,8 +122,7 @@ skip_when:
     dvmDbgDdmSendChunk(CHUNK_TYPE("HPIF"), b - buf, buf);
 }
 
-bool
-dvmDdmHandleHpifChunk(int when)
+bool dvmDdmHandleHpifChunk(int when)
 {
     switch (when) {
     case HPIF_WHEN_NOW:
@@ -187,8 +185,7 @@ struct HeapChunkContext {
 
 #define ALLOCATION_UNIT_SIZE 8
 
-static void
-flush_hpsg_chunk(HeapChunkContext *ctx)
+static void flush_hpsg_chunk(HeapChunkContext *ctx)
 {
     /* Patch the "length of piece" field.
      */
@@ -208,9 +205,8 @@ flush_hpsg_chunk(HeapChunkContext *ctx)
     ctx->pieceLenField = NULL;
 }
 
-static void
-heap_chunk_callback(const void *chunkptr, size_t chunklen,
-                    const void *userptr, size_t userlen, void *arg)
+static void heap_chunk_callback(const void *chunkptr, size_t chunklen,
+                                const void *userptr, size_t userlen, void *arg)
 {
     HeapChunkContext *ctx = (HeapChunkContext *)arg;
     u1 state;
@@ -359,8 +355,7 @@ enum HpsgWhat {
 
 extern "C" void dlmalloc_walk_heap(void(*)(const void*, size_t, const void*, size_t, void*),void*);
 
-static void
-walkHeap(bool merge, bool native)
+static void walkHeap(bool merge, bool native)
 {
     HeapChunkContext ctx;
 
@@ -396,8 +391,7 @@ walkHeap(bool merge, bool native)
     free(ctx.buf);
 }
 
-void
-dvmDdmSendHeapSegments(bool shouldLock, bool native)
+void dvmDdmSendHeapSegments(bool shouldLock, bool native)
 {
     u1 heapId[sizeof(u4)];
     GcHeap *gcHeap = gDvm.gcHeap;
@@ -455,8 +449,7 @@ dvmDdmSendHeapSegments(bool shouldLock, bool native)
     }
 }
 
-bool
-dvmDdmHandleHpsgNhsgChunk(int when, int what, bool native)
+bool dvmDdmHandleHpsgNhsgChunk(int when, int what, bool native)
 {
     LOGI("dvmDdmHandleHpsgChunk(when %d, what %d, heap %d)\n", when, what,
          native);

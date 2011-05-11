@@ -39,8 +39,7 @@
  */
 #define CLASS_STATICS_ID(clazz) ((hprof_object_id)(((u4)(clazz)) | 1))
 
-int
-hprofStartHeapDump(hprof_context_t *ctx)
+int hprofStartHeapDump(hprof_context_t *ctx)
 {
     UNUSED_PARAMETER(ctx);
 
@@ -49,15 +48,14 @@ hprofStartHeapDump(hprof_context_t *ctx)
     return 0;
 }
 
-int
-hprofFinishHeapDump(hprof_context_t *ctx)
+int hprofFinishHeapDump(hprof_context_t *ctx)
 {
     return hprofStartNewRecord(ctx, HPROF_TAG_HEAP_DUMP_END, HPROF_TIME);
 }
 
-int
-hprofSetGcScanState(hprof_context_t *ctx,
-                    hprof_heap_tag_t state, u4 threadSerialNumber)
+int hprofSetGcScanState(hprof_context_t *ctx,
+                        hprof_heap_tag_t state,
+                        u4 threadSerialNumber)
 {
     /* Used by hprofMarkRootObject()
      */
@@ -66,8 +64,8 @@ hprofSetGcScanState(hprof_context_t *ctx,
     return 0;
 }
 
-static hprof_basic_type
-signatureToBasicTypeAndSize(const char *sig, size_t *sizeOut)
+static hprof_basic_type signatureToBasicTypeAndSize(const char *sig,
+                                                    size_t *sizeOut)
 {
     char c = sig[0];
     hprof_basic_type ret;
@@ -94,8 +92,8 @@ signatureToBasicTypeAndSize(const char *sig, size_t *sizeOut)
     return ret;
 }
 
-static hprof_basic_type
-primitiveToBasicTypeAndSize(PrimitiveType prim, size_t *sizeOut)
+static hprof_basic_type primitiveToBasicTypeAndSize(PrimitiveType prim,
+                                                    size_t *sizeOut)
 {
     hprof_basic_type ret;
     size_t size;
@@ -124,8 +122,7 @@ primitiveToBasicTypeAndSize(PrimitiveType prim, size_t *sizeOut)
  * only true when marking the root set or unreachable
  * objects.  Used to add rootset references to obj.
  */
-int
-hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
+int hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
 {
     hprof_record_t *rec = &ctx->curRec;
     int err;
@@ -212,14 +209,12 @@ hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
     return err;
 }
 
-static int
-stackTraceSerialNumber(const void *obj)
+static int stackTraceSerialNumber(const void *obj)
 {
     return HPROF_NULL_STACK_TRACE;
 }
 
-int
-hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
+int hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
 {
     const ClassObject *clazz;
     hprof_record_t *rec = &ctx->curRec;

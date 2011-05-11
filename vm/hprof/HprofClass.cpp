@@ -21,8 +21,7 @@
 
 static HashTable *gClassHashTable;
 
-int
-hprofStartup_Class()
+int hprofStartup_Class()
 {
     gClassHashTable = dvmHashTableCreate(128, NULL);
     if (gClassHashTable == NULL) {
@@ -31,16 +30,14 @@ hprofStartup_Class()
     return 0;
 }
 
-int
-hprofShutdown_Class()
+int hprofShutdown_Class()
 {
     dvmHashTableFree(gClassHashTable);
 
     return 0;
 }
 
-static u4
-computeClassHash(const ClassObject *clazz)
+static u4 computeClassHash(const ClassObject *clazz)
 {
     u4 hash;
     const char *cp;
@@ -55,8 +52,7 @@ computeClassHash(const ClassObject *clazz)
     return hash;
 }
 
-static int
-classCmp(const void *v1, const void *v2)
+static int classCmp(const void *v1, const void *v2)
 {
     const ClassObject *c1 = (const ClassObject *)v1;
     const ClassObject *c2 = (const ClassObject *)v2;
@@ -69,8 +65,7 @@ classCmp(const void *v1, const void *v2)
     return diff;
 }
 
-static int
-getPrettyClassNameId(const char *descriptor)
+static int getPrettyClassNameId(const char *descriptor)
 {
     char* name = dvmHumanReadableDescriptor(descriptor);
     if (name == NULL) {
@@ -81,8 +76,7 @@ getPrettyClassNameId(const char *descriptor)
     return classNameId;
 }
 
-hprof_class_object_id
-hprofLookupClassId(const ClassObject *clazz)
+hprof_class_object_id hprofLookupClassId(const ClassObject *clazz)
 {
     void *val;
 
@@ -114,8 +108,7 @@ hprofLookupClassId(const ClassObject *clazz)
     return (hprof_class_object_id)clazz;
 }
 
-int
-hprofDumpClasses(hprof_context_t *ctx)
+int hprofDumpClasses(hprof_context_t *ctx)
 {
     HashIter iter;
     hprof_record_t *rec = &ctx->curRec;

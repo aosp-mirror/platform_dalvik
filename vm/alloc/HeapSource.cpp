@@ -196,8 +196,7 @@ static bool isSoftLimited(const HeapSource *hs)
  * Returns approximately the maximum number of bytes allowed to be
  * allocated from the active heap before a GC is forced.
  */
-static size_t
-getAllocLimit(const HeapSource *hs)
+static size_t getAllocLimit(const HeapSource *hs)
 {
     if (isSoftLimited(hs)) {
         return hs->softLimit;
@@ -293,8 +292,7 @@ static void countFree(Heap *heap, const void *ptr, size_t *numBytes)
 
 static HeapSource *gHs = NULL;
 
-static mspace
-createMspace(void *base, size_t startSize, size_t maximumSize)
+static mspace createMspace(void *base, size_t startSize, size_t maximumSize)
 {
     mspace msp;
 
@@ -484,8 +482,8 @@ static void freeMarkStack(GcMarkStack *stack)
  * dvmHeapSource*() functions.  Returns a GcHeap structure
  * allocated from the heap source.
  */
-GcHeap *
-dvmHeapSourceStartup(size_t startSize, size_t maximumSize, size_t growthLimit)
+GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
+                             size_t growthLimit)
 {
     GcHeap *gcHeap;
     HeapSource *hs;
@@ -587,8 +585,7 @@ bool dvmHeapSourceStartupAfterZygote()
  * probably be unnecessary if we had a compacting GC -- the source of our
  * troubles is small allocations filling in the gaps from larger ones.)
  */
-bool
-dvmHeapSourceStartupBeforeFork()
+bool dvmHeapSourceStartupBeforeFork()
 {
     HeapSource *hs = gHs; // use a local to avoid the implicit "volatile"
 
@@ -620,8 +617,7 @@ void dvmHeapSourceThreadShutdown()
  * attached to it.  This call has the side effect of setting the given
  * gcHeap pointer and gHs to NULL.
  */
-void
-dvmHeapSourceShutdown(GcHeap **gcHeap)
+void dvmHeapSourceShutdown(GcHeap **gcHeap)
 {
     assert(gcHeap != NULL);
     if (*gcHeap != NULL && (*gcHeap)->heapSource != NULL) {
@@ -651,9 +647,8 @@ void *dvmHeapSourceGetBase()
  *
  * Caller must hold the heap lock.
  */
-size_t
-dvmHeapSourceGetValue(HeapSourceValueSpec spec, size_t perHeapStats[],
-                      size_t arrayLen)
+size_t dvmHeapSourceGetValue(HeapSourceValueSpec spec, size_t perHeapStats[],
+                             size_t arrayLen)
 {
     HeapSource *hs = gHs;
     size_t value = 0;
@@ -785,8 +780,7 @@ void dvmMarkImmuneObjects(const char *immuneLimit)
 /*
  * Allocates <n> bytes of zeroed data.
  */
-void *
-dvmHeapSourceAlloc(size_t n)
+void* dvmHeapSourceAlloc(size_t n)
 {
     HeapSource *hs = gHs;
     Heap *heap;
@@ -831,8 +825,7 @@ dvmHeapSourceAlloc(size_t n)
 /* Remove any hard limits, try to allocate, and shrink back down.
  * Last resort when trying to allocate an object.
  */
-static void *
-heapAllocAndGrow(HeapSource *hs, Heap *heap, size_t n)
+static void* heapAllocAndGrow(HeapSource *hs, Heap *heap, size_t n)
 {
     void *ptr;
     size_t max;
@@ -857,8 +850,7 @@ heapAllocAndGrow(HeapSource *hs, Heap *heap, size_t n)
  * Allocates <n> bytes of zeroed data, growing as much as possible
  * if necessary.
  */
-void *
-dvmHeapSourceAllocAndGrow(size_t n)
+void* dvmHeapSourceAllocAndGrow(size_t n)
 {
     HeapSource *hs = gHs;
     Heap *heap;
@@ -986,8 +978,7 @@ size_t dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
 /*
  * Returns true iff <ptr> is in the heap source.
  */
-bool
-dvmHeapSourceContainsAddress(const void *ptr)
+bool dvmHeapSourceContainsAddress(const void *ptr)
 {
     HS_BOILERPLATE();
 
@@ -997,8 +988,7 @@ dvmHeapSourceContainsAddress(const void *ptr)
 /*
  * Returns true iff <ptr> was allocated from the heap source.
  */
-bool
-dvmHeapSourceContains(const void *ptr)
+bool dvmHeapSourceContains(const void *ptr)
 {
     HS_BOILERPLATE();
 
@@ -1011,8 +1001,7 @@ dvmHeapSourceContains(const void *ptr)
 /*
  * Returns the value of the requested flag.
  */
-bool
-dvmHeapSourceGetPtrFlag(const void *ptr, HeapSourcePtrFlag flag)
+bool dvmHeapSourceGetPtrFlag(const void *ptr, HeapSourcePtrFlag flag)
 {
     if (ptr == NULL) {
         return false;
@@ -1049,8 +1038,7 @@ dvmHeapSourceGetPtrFlag(const void *ptr, HeapSourcePtrFlag flag)
  * Returns the number of usable bytes in an allocated chunk; the size
  * may be larger than the size passed to dvmHeapSourceAlloc().
  */
-size_t
-dvmHeapSourceChunkSize(const void *ptr)
+size_t dvmHeapSourceChunkSize(const void *ptr)
 {
     Heap *heap;
 
@@ -1069,8 +1057,7 @@ dvmHeapSourceChunkSize(const void *ptr)
  *
  * Caller must hold the heap lock.
  */
-size_t
-dvmHeapSourceFootprint()
+size_t dvmHeapSourceFootprint()
 {
     HS_BOILERPLATE();
 
@@ -1116,8 +1103,7 @@ void dvmClearGrowthLimit()
  * what it's compared against (though, in practice, it only looks at
  * the current heap).
  */
-static size_t
-getSoftFootprint(bool includeActive)
+static size_t getSoftFootprint(bool includeActive)
 {
     HeapSource *hs = gHs;
     size_t ret;
@@ -1136,8 +1122,7 @@ getSoftFootprint(bool includeActive)
  * Gets the maximum number of bytes that the heap source is allowed
  * to allocate from the system.
  */
-size_t
-dvmHeapSourceGetIdealFootprint()
+size_t dvmHeapSourceGetIdealFootprint()
 {
     HeapSource *hs = gHs;
 
@@ -1150,8 +1135,7 @@ dvmHeapSourceGetIdealFootprint()
  * Sets the soft limit, handling any necessary changes to the allowed
  * footprint of the active heap.
  */
-static void
-setSoftLimit(HeapSource *hs, size_t softLimit)
+static void setSoftLimit(HeapSource *hs, size_t softLimit)
 {
     /* Compare against the actual footprint, rather than the
      * max_allowed, because the heap may not have grown all the
@@ -1178,8 +1162,7 @@ setSoftLimit(HeapSource *hs, size_t softLimit)
  * to allocate from the system.  Clamps to the appropriate maximum
  * value.
  */
-static void
-setIdealFootprint(size_t max)
+static void setIdealFootprint(size_t max)
 {
     HeapSource *hs = gHs;
 #if DEBUG_HEAP_SOURCE
@@ -1225,8 +1208,7 @@ setIdealFootprint(size_t max)
 /*
  * Make the ideal footprint equal to the current footprint.
  */
-static void
-snapIdealFootprint()
+static void snapIdealFootprint()
 {
     HS_BOILERPLATE();
 
@@ -1277,8 +1259,7 @@ void dvmSetTargetHeapUtilization(float newTarget)
  *
  * targetUtilization is in the range 1..HEAP_UTILIZATION_MAX.
  */
-static size_t
-getUtilizationTarget(size_t liveSize, size_t targetUtilization)
+static size_t getUtilizationTarget(size_t liveSize, size_t targetUtilization)
 {
     size_t targetSize;
 
