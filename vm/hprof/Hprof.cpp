@@ -35,8 +35,8 @@
 
 #define kHeadSuffix "-hptemp"
 
-hprof_context_t *
-hprofStartup(const char *outputFileName, int fd, bool directToDdms)
+hprof_context_t* hprofStartup(const char *outputFileName, int fd,
+                              bool directToDdms)
 {
     hprofStartup_String();
     hprofStartup_Class();
@@ -58,8 +58,7 @@ hprofStartup(const char *outputFileName, int fd, bool directToDdms)
 /*
  * Finish up the hprof dump.  Returns true on success.
  */
-bool
-hprofShutdown(hprof_context_t *tailCtx)
+bool hprofShutdown(hprof_context_t *tailCtx)
 {
     /* flush the "tail" portion of the output */
     hprofFlushCurrentRecord(tailCtx);
@@ -158,8 +157,7 @@ hprofShutdown(hprof_context_t *tailCtx)
 /*
  * Free any heap-allocated items in "ctx", and then free "ctx" itself.
  */
-void
-hprofFreeContext(hprof_context_t *ctx)
+void hprofFreeContext(hprof_context_t *ctx)
 {
     assert(ctx != NULL);
 
