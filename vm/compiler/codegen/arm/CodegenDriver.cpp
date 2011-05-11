@@ -1353,8 +1353,7 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
 static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
 {
     int flags = dexGetFlagsFromOpcode(mir->dalvikInsn.opcode);
-    int flagsToCheck = kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
-                       kInstrCanThrow;
+    int flagsToCheck = kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn;
 
     // Single stepping is considered loop mode breaker
     if (cUnit->jitMode == kJitLoop) {

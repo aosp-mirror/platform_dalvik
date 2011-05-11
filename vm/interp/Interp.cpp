@@ -1828,10 +1828,10 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
 #endif
 
     /*
-     * SingleStep processing.  NOTE: must be the last here to allow
+     * CountedStep processing.  NOTE: must be the last here to allow
      * preceeding special case handler to manipulate single-step count.
      */
-    if (self->interpBreak.ctl.breakFlags & kInterpSingleStep) {
+    if (self->interpBreak.ctl.subMode & kSubModeCountedStep) {
         if (self->singleStepCount == 0) {
             // We've exhausted our single step count
             dvmDisableSubMode(self, kSubModeCountedStep);
