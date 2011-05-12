@@ -398,12 +398,16 @@ public:
         ScopedJniThreadState ts(mEnv);
 
         Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
-        ClassObject* clazz = obj->clazz;
+        if (!dvmIsValidObject(obj)) {
+            LOGW("JNI ERROR: field operation on invalid reference (%p)", jobj);
+            dvmAbort();
+        }
 
         /*
          * Check this class and all of its superclasses for a matching field.
          * Don't need to scan interfaces.
          */
+        ClassObject* clazz = obj->clazz;
         while (clazz != NULL) {
             if ((InstField*) fieldID >= clazz->ifields &&
                     (InstField*) fieldID < clazz->ifields + clazz->ifieldCount) {
@@ -413,7 +417,7 @@ public:
             clazz = clazz->super;
         }
 
-        LOGW("JNI WARNING: inst fieldID %p not valid for class %s",
+        LOGW("JNI WARNING: instance fieldID %p not valid for class %s",
                 fieldID, obj->clazz->descriptor);
         showLocation();
         abortMaybe();
