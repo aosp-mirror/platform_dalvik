@@ -110,6 +110,36 @@ static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
     return loadConstantNoClobber(cUnit, rDest, value);
 }
 
+/*
+ * Load a class pointer value into a fixed or temp register.  Target
+ * register is clobbered, and marked inUse.
+ */
+static ArmLIR *loadClassPointer(CompilationUnit *cUnit, int rDest, int value)
+{
+    ArmLIR *res;
+    cUnit->hasClassLiterals = true;
+    if (dvmCompilerIsTemp(cUnit, rDest)) {
+        dvmCompilerClobber(cUnit, rDest);
+        dvmCompilerMarkInUse(cUnit, rDest);
+    }
+    ArmLIR *dataTarget = scanLiteralPool(cUnit->classPointerList, value, 0);
+    if (dataTarget == NULL) {
+        dataTarget = addWordData(cUnit, &cUnit->classPointerList, value);
+        /* Counts the number of class pointers in this translation */
+        cUnit->numClassPointers++;
+    }
+    ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    loadPcRel->opcode = kThumbLdrPcRel;
+    loadPcRel->generic.target = (LIR *) dataTarget;
+    loadPcRel->operands[0] = rDest;
+    setupResourceMasks(loadPcRel);
+    setMemRefType(loadPcRel, true, kLiteral);
+    loadPcRel->aliasInfo = dataTarget->operands[0];
+    res = loadPcRel;
+    dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
+    return res;
+}
+
 static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
 {
     ArmOpcode opcode = kThumbBkpt;
@@ -661,7 +691,7 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     if (load2 != NULL && cUnit->heapMemOp)
         load2->flags.insertWrapper = true;
 #endif
-    return res;
+    return load;
 }
 
 static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
