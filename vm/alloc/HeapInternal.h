@@ -24,12 +24,12 @@
 struct HeapSource;
 
 struct GcHeap {
-    HeapSource      *heapSource;
+    HeapSource *heapSource;
 
     /* Linked lists of subclass instances of java/lang/ref/Reference
      * that we find while recursing.  The "next" pointers are hidden
-     * in the objects' <code>int Reference.vmData</code> fields.
-     * These lists are cleared and rebuilt each time the GC runs.
+     * in the Reference objects' pendingNext fields.  These lists are
+     * cleared and rebuilt each time the GC runs.
      */
     Object *softReferences;
     Object *weakReferences;
@@ -43,29 +43,28 @@ struct GcHeap {
     /* The current state of the mark step.
      * Only valid during a GC.
      */
-    GcMarkContext   markContext;
+    GcMarkContext markContext;
 
     /* GC's card table */
-    u1*             cardTableBase;
-    size_t          cardTableLength;
+    u1* cardTableBase;
+    size_t cardTableLength;
 
     /* GC's modified union table. */
-    u1*             modUnionTableBase;
-    size_t          modUnionTableLength;
+    u1* modUnionTableBase;
+    size_t modUnionTableLength;
 
     /* Is the GC running?  Used to avoid recursive calls to GC.
      */
-    bool            gcRunning;
+    bool gcRunning;
 
     /*
      * Debug control values
      */
-
-    int             ddmHpifWhen;
-    int             ddmHpsgWhen;
-    int             ddmHpsgWhat;
-    int             ddmNhsgWhen;
-    int             ddmNhsgWhat;
+    int ddmHpifWhen;
+    int ddmHpsgWhen;
+    int ddmHpsgWhat;
+    int ddmNhsgWhen;
+    int ddmNhsgWhat;
 };
 
 bool dvmLockHeap(void);
