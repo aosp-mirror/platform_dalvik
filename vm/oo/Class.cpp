@@ -1497,8 +1497,9 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
      * making it an informative abort rather than an assert).
      */
     if (dvmCheckException(self)) {
-        LOGE("Class lookup %s attempted while exception %s pending\n",
-            descriptor, dvmGetException(self)->clazz->descriptor);
+        LOGE("Class lookup %s attempted with exception pending", descriptor);
+        LOGW("Pending exception is:");
+        dvmLogExceptionStackTrace();
         dvmDumpAllThreads(false);
         dvmAbort();
     }

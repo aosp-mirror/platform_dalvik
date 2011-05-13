@@ -689,7 +689,7 @@ private:
          */
         bool printException = false;
         if ((flags & kFlag_ExcepOkay) == 0 && dvmCheckException(dvmThreadSelf())) {
-            LOGW("JNI WARNING: JNI method called with exception raised");
+            LOGW("JNI WARNING: JNI method called with exception pending");
             printWarn = true;
             printException = true;
         }
