@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "jdwp/JdwpPriv.h"
 #include "jdwp/JdwpHandler.h"
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <errno.h>
 #include <unistd.h>
+#include <cutils/sockets.h>
 
-/* the JDWP <-> ADB transport protocol is explained in details
- * in //device/tools/adb/jdwp_service.c, here's a summary.
+/*
+ * The JDWP <-> ADB transport protocol is explained in detail
+ * in system/core/adb/jdwp_service.c. Here's a summary.
  *
  * 1/ when the JDWP thread starts, it tries to connect to a Unix
  *    domain stream socket (@jdwp-control) that is opened by the
@@ -34,7 +37,6 @@
  *    daemon. each incoming file descriptor is a pass-through to
  *    a given JDWP debugger, that can be used to read the usual
  *    JDWP-handshake, etc...
- *
  */
 
 #define kInputBufferSize    8192
@@ -239,6 +241,13 @@ retry:
                                &netState->controlAddr.controlAddrPlain,
                                netState->controlAddrLen);
             if (!ret) {
+                if (!socket_peer_is_trusted(netState->controlSock)) {
+                    if (shutdown(netState->controlSock, SHUT_RDWR)) {
+                        LOGE("trouble shutting down socket: %s", strerror(errno));
+                    }
+                    return false;
+                }
+
                 /* now try to send our pid to the ADB daemon */
                 do {
                     ret = send( netState->controlSock, buff, 4, 0 );
