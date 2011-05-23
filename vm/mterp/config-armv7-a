@@ -156,6 +156,8 @@ op-start armv5te
     op OP_SUB_DOUBLE_2ADDR arm-vfp
     op OP_SUB_FLOAT arm-vfp
     op OP_SUB_FLOAT_2ADDR arm-vfp
+
+    alt OP_DISPATCH_FF armv5te
 op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates

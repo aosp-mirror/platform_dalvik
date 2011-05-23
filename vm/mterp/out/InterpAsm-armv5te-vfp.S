@@ -20290,25 +20290,16 @@ dvmAsmAltInstructionStart = .L_ALT_OP_NOP
 /* ------------------------------ */
     .balign 64
 .L_ALT_OP_DISPATCH_FF: /* 0xff */
-/* File: armv5te/alt_stub.S */
+/* File: armv5te/ALT_OP_DISPATCH_FF.S */
 /*
- * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
- * any interesting requests and then jump to the real instruction
- * handler.    Note that the call to dvmCheckBefore is done as a tail call.
- * rIBASE updates won't be seen until a refresh, and we can tell we have a
- * stale rIBASE if breakFlags==0.  Always refresh rIBASE here, and then
- * bail to the real handler if breakFlags==0.
+ * Unlike other alt stubs, we don't want to call dvmCheckBefore() here.
+ * Instead, just treat this as a trampoline to reach the real alt
+ * handler (which will do the dvmCheckBefore() call.
  */
-    ldrb   r3, [rSELF, #offThread_breakFlags]
-    adrl   lr, dvmAsmInstructionStart + (255 * 64)
-    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
-    cmp    r3, #0
-    bxeq   lr                   @ nothing to do - jump to real handler
-    EXPORT_PC()
-    mov    r0, rPC              @ arg0
-    mov    r1, rFP              @ arg1
-    mov    r2, rSELF            @ arg2
-    b      dvmCheckBefore       @ (dPC,dFP,self) tail call
+    mov     ip, rINST, lsr #8           @ ip<- extended opcode
+    add     ip, ip, #256                @ add offset for extended opcodes
+    GOTO_OPCODE(ip)                     @ go to proper extended handler
+
 
 /* ------------------------------ */
     .balign 64
