@@ -3,5 +3,5 @@
 bail:
     ILOGD("|-- Leaving interpreter loop");      // note "curMethod" may be NULL
 
-    self->retval = retval;
+    self->interpSave.retval = retval;
 }

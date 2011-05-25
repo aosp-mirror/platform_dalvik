@@ -99,6 +99,7 @@ struct InterpSaveState {
     u4*             curFrame;   // Dalvik frame pointer
     const Method    *method;    // Method being executed
     DvmDex*         methodClassDex;
+    JValue          retval;
     void*           bailPtr;
 #if defined(WITH_TRACKREF_CHECKS)
     int             debugTrackedRefStart;

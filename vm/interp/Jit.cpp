@@ -96,7 +96,7 @@ void* dvmSelfVerificationSaveState(const u2* pc, u4* fp,
     // Remember original state
     shadowSpace->startPC = pc;
     shadowSpace->fp = fp;
-    shadowSpace->retval = self->retval;
+    shadowSpace->retval = self->interpSave.retval;
     shadowSpace->interpStackEnd = self->interpStackEnd;
 
     /*
@@ -165,7 +165,7 @@ void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
     self->interpSave.curFrame = shadowSpace->fp;
     self->interpSave.method = shadowSpace->method;
     self->interpSave.methodClassDex = shadowSpace->methodClassDex;
-    self->retval = shadowSpace->retval;
+    self->interpSave.retval = shadowSpace->retval;
     self->interpStackEnd = shadowSpace->interpStackEnd;
 
     return shadowSpace;

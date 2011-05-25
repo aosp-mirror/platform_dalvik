@@ -1984,7 +1984,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     // Call the interpreter
     (*stdInterp)(self);
 
-    *pResult = self->retval;
+    *pResult = self->interpSave.retval;
 
     /* Restore interpreter state from previous activation */
     self->interpSave = interpSaveState;
