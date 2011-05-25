@@ -61,13 +61,13 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
      * properly aligned. This test will catch both of these cases.
      */
     if (!isValidPointer(pOpt, pOptStart, pOptEnd)) {
-        LOGE("Bogus opt data start pointer\n");
+        LOGE("Bogus opt data start pointer");
         return false;
     }
 
     /* Make sure that the opt data length is a whole number of words. */
     if ((optLength & 3) != 0) {
-        LOGE("Unaligned opt data area end\n");
+        LOGE("Unaligned opt data area end");
         return false;
     }
 
@@ -76,14 +76,14 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
      * one chunk header.
      */
     if (optLength < 8) {
-        LOGE("Undersized opt data area (%u)\n", optLength);
+        LOGE("Undersized opt data area (%u)", optLength);
         return false;
     }
 
     /* Process chunks until we see the end marker. */
     while (*pOpt != kDexChunkEnd) {
         if (!isValidPointer(pOpt + 2, pOptStart, pOptEnd)) {
-            LOGE("Bogus opt data content pointer at offset %u\n",
+            LOGE("Bogus opt data content pointer at offset %u",
                     ((const u1*) pOpt) - data);
             return false;
         }
@@ -99,7 +99,7 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
         const u4* pNextOpt = pOpt + (roundedSize / sizeof(u4));
 
         if (!isValidPointer(pNextOpt, pOptStart, pOptEnd)) {
-            LOGE("Opt data area problem for chunk of size %u at offset %u\n",
+            LOGE("Opt data area problem for chunk of size %u at offset %u",
                     size, ((const u1*) pOpt) - data);
             return false;
         }
@@ -109,11 +109,11 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
             pDexFile->pClassLookup = (const DexClassLookup*) pOptData;
             break;
         case kDexChunkRegisterMaps:
-            LOGV("+++ found register maps, size=%u\n", size);
+            LOGV("+++ found register maps, size=%u", size);
             pDexFile->pRegisterMapPool = pOptData;
             break;
         default:
-            LOGI("Unknown chunk 0x%08x (%c%c%c%c), size=%d in opt data area\n",
+            LOGI("Unknown chunk 0x%08x (%c%c%c%c), size=%d in opt data area",
                 *pOpt,
                 (char) ((*pOpt) >> 24), (char) ((*pOpt) >> 16),
                 (char) ((*pOpt) >> 8),  (char)  (*pOpt),
