@@ -35,7 +35,7 @@ void dvmInterpretPortable(Thread* self)
     curMethod = self->interpSave.method;
     pc = self->interpSave.pc;
     fp = self->interpSave.curFrame;
-    retval = self->retval;   /* only need for kInterpEntryReturn? */
+    retval = self->interpSave.retval;   /* only need for kInterpEntryReturn? */
 
     methodClassDex = curMethod->clazz->pDvmDex;
 

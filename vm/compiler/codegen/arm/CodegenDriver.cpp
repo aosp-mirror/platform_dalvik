@@ -3678,7 +3678,7 @@ static bool handleExecuteInlineC(CompilationUnit *cUnit, MIR *mir)
     dvmCompilerClobberCallRegs(cUnit);
     dvmCompilerClobber(cUnit, r4PC);
     dvmCompilerClobber(cUnit, r7);
-    int offset = offsetof(Thread, retval);
+    int offset = offsetof(Thread, interpSave.retval);
     opRegRegImm(cUnit, kOpAdd, r4PC, r6SELF, offset);
     opImm(cUnit, kOpPush, (1<<r4PC) | (1<<r7));
     LOAD_FUNC_ADDR(cUnit, r4PC, fn);

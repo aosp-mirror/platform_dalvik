@@ -57,7 +57,7 @@ static void loadValueDirect(CompilationUnit *cUnit, RegLocation rlSrc,
     if (rlSrc.location == kLocPhysReg) {
         genRegCopy(cUnit, reg1, rlSrc.lowReg);
     } else  if (rlSrc.location == kLocRetval) {
-        loadWordDisp(cUnit, rSELF, offsetof(Thread, retval), reg1);
+        loadWordDisp(cUnit, rSELF, offsetof(Thread, interpSave.retval), reg1);
     } else {
         assert(rlSrc.location == kLocDalvikFrame);
         loadWordDisp(cUnit, rFP, dvmCompilerS2VReg(cUnit, rlSrc.sRegLow) << 2,
@@ -90,7 +90,8 @@ static void loadValueDirectWide(CompilationUnit *cUnit, RegLocation rlSrc,
     if (rlSrc.location == kLocPhysReg) {
         genRegCopyWide(cUnit, regLo, regHi, rlSrc.lowReg, rlSrc.highReg);
     } else if (rlSrc.location == kLocRetval) {
-        loadBaseDispWide(cUnit, NULL, rSELF, offsetof(Thread, retval),
+        loadBaseDispWide(cUnit, NULL, rSELF,
+                         offsetof(Thread, interpSave.retval),
                          regLo, regHi, INVALID_SREG);
     } else {
         assert(rlSrc.location == kLocDalvikFrame);
@@ -124,7 +125,8 @@ static RegLocation loadValue(CompilationUnit *cUnit, RegLocation rlSrc,
         rlSrc.location = kLocPhysReg;
         dvmCompilerMarkLive(cUnit, rlSrc.lowReg, rlSrc.sRegLow);
     } else if (rlSrc.location == kLocRetval) {
-        loadWordDisp(cUnit, rSELF, offsetof(Thread, retval), rlSrc.lowReg);
+        loadWordDisp(cUnit, rSELF, offsetof(Thread, interpSave.retval),
+                     rlSrc.lowReg);
         rlSrc.location = kLocPhysReg;
         dvmCompilerClobber(cUnit, rlSrc.lowReg);
     }
@@ -164,7 +166,7 @@ static void storeValue(CompilationUnit *cUnit, RegLocation rlDest,
 
 
     if (rlDest.location == kLocRetval) {
-        storeBaseDisp(cUnit, rSELF, offsetof(Thread, retval),
+        storeBaseDisp(cUnit, rSELF, offsetof(Thread, interpSave.retval),
                       rlDest.lowReg, kWord);
         dvmCompilerClobber(cUnit, rlDest.lowReg);
     } else {
@@ -192,7 +194,8 @@ static RegLocation loadValueWide(CompilationUnit *cUnit, RegLocation rlSrc,
         dvmCompilerMarkLive(cUnit, rlSrc.highReg,
                             dvmCompilerSRegHi(rlSrc.sRegLow));
     } else if (rlSrc.location == kLocRetval) {
-        loadBaseDispWide(cUnit, NULL, rSELF, offsetof(Thread, retval),
+        loadBaseDispWide(cUnit, NULL, rSELF,
+                         offsetof(Thread, interpSave.retval),
                          rlSrc.lowReg, rlSrc.highReg, INVALID_SREG);
         rlSrc.location = kLocPhysReg;
         dvmCompilerClobber(cUnit, rlSrc.lowReg);
@@ -242,7 +245,7 @@ static void storeValueWide(CompilationUnit *cUnit, RegLocation rlDest,
 
 
     if (rlDest.location == kLocRetval) {
-        storeBaseDispWide(cUnit, rSELF, offsetof(Thread, retval),
+        storeBaseDispWide(cUnit, rSELF, offsetof(Thread, interpSave.retval),
                           rlDest.lowReg, rlDest.highReg);
         dvmCompilerClobber(cUnit, rlDest.lowReg);
         dvmCompilerClobber(cUnit, rlDest.highReg);

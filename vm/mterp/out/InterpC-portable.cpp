@@ -1242,7 +1242,7 @@ void dvmInterpretPortable(Thread* self)
     curMethod = self->interpSave.method;
     pc = self->interpSave.pc;
     fp = self->interpSave.curFrame;
-    retval = self->retval;   /* only need for kInterpEntryReturn? */
+    retval = self->interpSave.retval;   /* only need for kInterpEntryReturn? */
 
     methodClassDex = curMethod->clazz->pDvmDex;
 
@@ -5401,6 +5401,6 @@ GOTO_TARGET_END
 bail:
     ILOGD("|-- Leaving interpreter loop");      // note "curMethod" may be NULL
 
-    self->retval = retval;
+    self->interpSave.retval = retval;
 }
 

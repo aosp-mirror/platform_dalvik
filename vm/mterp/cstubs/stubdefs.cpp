@@ -22,7 +22,7 @@
  * Redefine what used to be local variable accesses into Thread struct
  * references.  (These are undefined down in "footer.cpp".)
  */
-#define retval                  self->retval
+#define retval                  self->interpSave.retval
 #define pc                      self->interpSave.pc
 #define fp                      self->interpSave.curFrame
 #define curMethod               self->interpSave.method

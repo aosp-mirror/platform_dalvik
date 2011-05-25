@@ -214,7 +214,7 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
 
 static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(Thread, retval);
+    int offset = offsetof(Thread, interpSave.retval);
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     int reg0 = loadValue(cUnit, rlSrc, kCoreReg).lowReg;
     int signMask = dvmCompilerAllocTemp(cUnit);
@@ -229,7 +229,7 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 
 static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(Thread, retval);
+    int offset = offsetof(Thread, interpSave.retval);
     RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation regSrc = loadValueWide(cUnit, rlSrc, kCoreReg);
     int reglo = regSrc.lowReg;
@@ -248,7 +248,7 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
 /* No select in thumb, so we need to branch.  Thumb2 will do better */
 static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
 {
-    int offset = offsetof(Thread, retval);
+    int offset = offsetof(Thread, interpSave.retval);
     RegLocation rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 1);
     int reg0 = loadValue(cUnit, rlSrc1, kCoreReg).lowReg;

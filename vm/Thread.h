@@ -118,7 +118,6 @@ struct Thread {
      * be located towards the beginning of the Thread structure for
      * efficiency.
      */
-    JValue      retval;
 
     /*
      * interpBreak contains info about the interpreter mode, as well as
