@@ -1404,6 +1404,8 @@ public final class Dops {
      * the last in its chain
      */
     public static Dop getNextOrNull(Dop opcode, DexOptions options) {
+        boolean suppressExtendedOpcodes = !options.canUseExtendedOpcodes();
+
         for (;;) {
             int nextOpcode = opcode.getNextOpcode();
 
@@ -1413,7 +1415,7 @@ public final class Dops {
 
             opcode = get(nextOpcode);
 
-            if (!options.enableExtendedOpcodes && Opcodes.isExtended(nextOpcode)) {
+            if (suppressExtendedOpcodes && Opcodes.isExtended(nextOpcode)) {
                 /*
                  * Continuing rather than just returning null here
                  * protects against the possibility that an

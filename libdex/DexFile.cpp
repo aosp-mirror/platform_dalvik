@@ -336,16 +336,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
     dexFileSetupBasicPointers(pDexFile, data);
     pHeader = pDexFile->pHeader;
 
-    magic = pHeader->magic;
-    if (memcmp(magic, DEX_MAGIC, 4) != 0) {
-        /* not expected */
-        LOGE("bad magic number (0x%02x %02x %02x %02x)\n",
-             magic[0], magic[1], magic[2], magic[3]);
-        goto bail;
-    }
-    if (memcmp(magic+4, DEX_MAGIC_VERS, 4) != 0) {
-        LOGE("bad dex version (0x%02x %02x %02x %02x)\n",
-             magic[4], magic[5], magic[6], magic[7]);
+    if (!dexHasValidMagic(pHeader)) {
         goto bail;
     }
 

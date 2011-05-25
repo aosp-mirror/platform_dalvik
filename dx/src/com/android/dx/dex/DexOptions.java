@@ -20,6 +20,21 @@ package com.android.dx.dex;
  * Container for options used to control details of dex file generation.
  */
 public class DexOptions {
-    /** whether extended opcodes are allowed */
-    public boolean enableExtendedOpcodes = true;
+    /** target API level */
+    public int targetApiLevel = DexFormat.API_CURRENT;
+
+    /**
+     * Gets the dex file magic number corresponding to this instance.
+     */
+    public String getMagic() {
+        return DexFormat.apiToMagic(targetApiLevel);
+    }
+
+    /**
+     * Returns whether extended opcodes are allowed. This became
+     * allowed as of Ice Cream Sandwich.
+     */
+    public boolean canUseExtendedOpcodes() {
+        return targetApiLevel >= DexFormat.API_CURRENT;
+    }
 }

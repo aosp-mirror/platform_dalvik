@@ -2781,6 +2781,32 @@ static bool crossVerifyEverything(CheckState* state, DexMapList* pMap)
     return okay;
 }
 
+/* (documented in header file) */
+bool dexHasValidMagic(const DexHeader* pHeader)
+{
+    const u1* magic = pHeader->magic;
+    const u1* version = &magic[4];
+
+    if (memcmp(magic, DEX_MAGIC, 4) != 0) {
+        LOGE("ERROR: unrecognized magic number (%02x %02x %02x %02x)",
+            magic[0], magic[1], magic[2], magic[3]);
+        return false;
+    }
+
+    if ((memcmp(version, DEX_MAGIC_VERS, 4) != 0) &&
+            (memcmp(version, DEX_MAGIC_VERS_API_13, 4) != 0)) {
+        /*
+         * Magic was correct, but this is an unsupported older or
+         * newer format variant.
+         */
+        LOGE("ERROR: unsupported dex version (%02x %02x %02x %02x)",
+            version[0], version[1], version[2], version[3]);
+        return false;
+    }
+
+    return true;
+}
+
 /*
  * Fix the byte ordering of all fields in the DEX file, and do
  * structural verification. This is only required for code that opens
@@ -2798,25 +2824,12 @@ int dexSwapAndVerify(u1* addr, int len)
     LOGV("+++ swapping and verifying\n");
 
     /*
-     * Start by verifying the magic number.  The caller verified that "len"
-     * says we have at least a header's worth of data.
+     * Note: The caller must have verified that "len" is at least as
+     * large as a dex file header.
      */
     pHeader = (DexHeader*) addr;
-    if (memcmp(pHeader->magic, DEX_MAGIC, 4) != 0) {
-        /* really shouldn't be here -- this is weird */
-        LOGE("ERROR: Can't byte swap: bad magic number "
-                "(0x%02x %02x %02x %02x)\n",
-             pHeader->magic[0], pHeader->magic[1],
-             pHeader->magic[2], pHeader->magic[3]);
-        okay = false;
-    }
 
-    if (okay && memcmp(pHeader->magic+4, DEX_MAGIC_VERS, 4) != 0) {
-        /* older or newer version we don't know how to read */
-        LOGE("ERROR: Can't byte swap: bad dex version "
-                "(0x%02x %02x %02x %02x)\n",
-             pHeader->magic[4], pHeader->magic[5],
-             pHeader->magic[6], pHeader->magic[7]);
+    if (!dexHasValidMagic(pHeader)) {
         okay = false;
     }
 
