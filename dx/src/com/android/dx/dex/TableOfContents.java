@@ -75,7 +75,9 @@ public final class TableOfContents {
 
     private void readHeader(DexBuffer.Section headerIn) throws UnsupportedEncodingException {
         byte[] magic = headerIn.readByteArray(8);
-        if (!Arrays.equals(DexFormat.MAGIC.getBytes("UTF-8"), magic)) {
+        int apiTarget = DexFormat.magicToApi(magic);
+
+        if (apiTarget < 0) {
             throw new DexException("Unexpected magic: " + Arrays.toString(magic));
         }
 
@@ -164,7 +166,7 @@ public final class TableOfContents {
     }
 
     public void writeHeader(DexBuffer.Section out) throws IOException {
-        out.write(DexFormat.MAGIC.getBytes("UTF-8"));
+        out.write(DexFormat.apiToMagic(DexFormat.API_CURRENT).getBytes("UTF-8"));
         out.writeInt(checksum);
         out.write(signature);
         out.writeInt(fileSize);

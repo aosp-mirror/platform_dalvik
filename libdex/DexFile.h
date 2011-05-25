@@ -49,8 +49,15 @@
 
 /* DEX file magic number */
 #define DEX_MAGIC       "dex\n"
-/* version, encoded in 4 bytes of ASCII */
-#define DEX_MAGIC_VERS  "035\0"
+
+/* current version, encoded in 4 bytes of ASCII */
+#define DEX_MAGIC_VERS  "036\0"
+
+/*
+ * older but still-recognized version (corresponding to Android API
+ * levels 13 and earlier
+ */
+#define DEX_MAGIC_VERS_API_13  "035\0"
 
 /* same, but for optimized DEX header */
 #define DEX_OPT_MAGIC   "dey\n"
@@ -558,6 +565,13 @@ int dexSwapAndVerify(u1* addr, int len);
  * Return 0 on success.
  */
 int dexSwapAndVerifyIfNecessary(u1* addr, int len);
+
+/*
+ * Check to see if the file magic and format version in the given
+ * header are recognized as valid. Returns true if they are
+ * acceptable.
+ */
+bool dexHasValidMagic(const DexHeader* pHeader);
 
 /*
  * Compute DEX checksum.
