@@ -87,6 +87,11 @@ extern "C" void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
 bool dvmIsValidObject(const Object* obj);
 
 /*
+ * Returns true iff <obj> points to a zygote allocated object.
+ */
+bool dvmIsZygoteObject(const Object* obj);
+
+/*
  * Create a copy of an object.
  *
  * Returns NULL and throws an exception on failure.

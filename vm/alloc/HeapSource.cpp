@@ -968,39 +968,24 @@ bool dvmHeapSourceContains(const void *ptr)
     return false;
 }
 
-/*
- * Returns the value of the requested flag.
- */
-bool dvmHeapSourceGetPtrFlag(const void *ptr, HeapSourcePtrFlag flag)
+bool dvmIsZygoteObject(const Object* obj)
 {
-    if (ptr == NULL) {
-        return false;
-    }
+    HeapSource *hs = gHs;
 
-    if (flag == HS_CONTAINS) {
-        return dvmHeapSourceContains(ptr);
-    } else if (flag == HS_ALLOCATED_IN_ZYGOTE) {
-        HeapSource *hs = gHs;
+    HS_BOILERPLATE();
 
-        HS_BOILERPLATE();
-
-        if (hs->sawZygote) {
-            Heap *heap;
-
-            heap = ptr2heap(hs, ptr);
-            if (heap != NULL) {
-                /* If the object is not in the active heap, we assume that
-                 * it was allocated as part of zygote.
-                 */
-                return heap != hs->heaps;
-            }
+    if (dvmHeapSourceContains(obj) && hs->sawZygote) {
+        Heap *heap = ptr2heap(hs, obj);
+        if (heap != NULL) {
+            /* If the object is not in the active heap, we assume that
+             * it was allocated as part of zygote.
+             */
+            return heap != hs->heaps;
         }
-        /* The pointer is outside of any known heap, or we are not
-         * running in zygote mode.
-         */
-        return false;
     }
-
+    /* The pointer is outside of any known heap, or we are not
+     * running in zygote mode.
+     */
     return false;
 }
 
