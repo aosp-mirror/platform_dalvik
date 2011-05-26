@@ -964,7 +964,7 @@ GOTO_TARGET_DECL(exceptionThrown);
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
             ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)]);      \
-        ILOGV("+ AGET[%d]=0x%x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));  \
+        ILOGV("+ AGET[%d]=%#x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));   \
     }                                                                       \
     FINISH(2);
 

@@ -347,8 +347,8 @@ bool dvmTestAtomicSpeed()
             &failingCasTest) == 0)
         dvmFprintf(stdout, "failing test did not fail!\n");
 
-    dvmFprintf(stdout, "andTest = 0x%x\n", andTest);
-    dvmFprintf(stdout, "orTest = 0x%x\n", orTest);
+    dvmFprintf(stdout, "andTest = %#x\n", andTest);
+    dvmFprintf(stdout, "orTest = %#x\n", orTest);
     dvmFprintf(stdout, "failingCasTest = %d\n", failingCasTest);
 
 #ifdef TEST_BIONIC

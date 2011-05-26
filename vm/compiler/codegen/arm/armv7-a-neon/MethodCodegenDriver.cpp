@@ -400,7 +400,7 @@ static bool methodBlockCodeGen(CompilationUnit *cUnit, BasicBlock *bb)
         }
 
         if (notHandled) {
-            LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled",
+            LOGE("%#06x: Opcode %#x (%s) / Fmt %d not handled",
                  mir->offset,
                  dalvikOpcode, dexGetOpcodeName(dalvikOpcode),
                  dalvikFormat);

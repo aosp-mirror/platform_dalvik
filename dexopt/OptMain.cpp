@@ -455,7 +455,7 @@ static int fromDex(int argc, char* const argv[])
     GET_ARG(crc, strtoul, "bad crc");
     GET_ARG(flags, strtol, "bad flags");
 
-    LOGV("Args: fd=%d off=%ld len=%ld name='%s' mod=0x%x crc=0x%x flg=%d (argc=%d)",
+    LOGV("Args: fd=%d off=%ld len=%ld name='%s' mod=%#x crc=%#x flg=%d (argc=%d)",
         fd, offset, length, debugFileName, modWhen, crc, flags, argc);
     assert(argc > 0);
 

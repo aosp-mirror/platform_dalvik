@@ -138,11 +138,11 @@ static void buildInsnString(const char *fmt, ArmLIR *lir, char* buf,
                        break;
                    case 'n':
                        operand = ~expandImmediate(operand);
-                       sprintf(tbuf,"%d [0x%x]", operand, operand);
+                       sprintf(tbuf,"%d [%#x]", operand, operand);
                        break;
                    case 'm':
                        operand = expandImmediate(operand);
-                       sprintf(tbuf,"%d [0x%x]", operand, operand);
+                       sprintf(tbuf,"%d [%#x]", operand, operand);
                        break;
                    case 's':
                        sprintf(tbuf,"s%d",operand & FP_REG_MASK);
@@ -413,7 +413,7 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
     }
     for (lirInsn = cUnit->literalList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (ArmLIR *) lirInsn;
-        LOGD("%p (%04x): .word (0x%x)",
+        LOGD("%p (%04x): .word (%#x)",
              (char*)cUnit->baseAddr + armLIR->generic.offset,
              armLIR->generic.offset,
              armLIR->operands[0]);

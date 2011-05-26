@@ -1604,7 +1604,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
         gDvmJit.translationChains++;
 
         COMPILER_TRACE_CHAINING(
-            LOGD("Jit Runtime: chaining 0x%x to 0x%x",
+            LOGD("Jit Runtime: chaining %#x to %#x",
                  (int) branchAddr, (int) tgtAddr & -2));
 
         /*
@@ -1943,7 +1943,7 @@ static u4* unchainSingle(JitEntry *trace)
                     dvmAbort();  // dvmAbort OK here - can't safely recover
             }
             COMPILER_TRACE_CHAINING(
-                LOGD("Jit Runtime: unchaining 0x%x", (int)pChainCells));
+                LOGD("Jit Runtime: unchaining %#x", (int)pChainCells));
             pChainCells += elemSize;  /* Advance by a fixed number of words */
         }
     }
@@ -2423,7 +2423,7 @@ static int selfVerificationLoad(int addr, int size)
             dvmAbort();
     }
 
-    //LOGD("*** HEAP LOAD: Addr: 0x%x Data: 0x%x Size: %d", addr, data, size);
+    //LOGD("*** HEAP LOAD: Addr: %#x Data: %#x Size: %d", addr, data, size);
     return data;
 }
 
@@ -2447,7 +2447,7 @@ static s8 selfVerificationLoadDoubleword(int addr)
         }
     }
 
-    //LOGD("*** HEAP LOAD DOUBLEWORD: Addr: 0x%x Data: 0x%x Data2: 0x%x",
+    //LOGD("*** HEAP LOAD DOUBLEWORD: Addr: %#x Data: %#x Data2: %#x",
     //    addr, data, data2);
     return (((s8) data2) << 32) | data;
 }
@@ -2467,7 +2467,7 @@ static void selfVerificationStore(int addr, int data, int size)
     int maskedAddr = addr & 0xFFFFFFFC;
     int alignment = addr & 0x3;
 
-    //LOGD("*** HEAP STORE: Addr: 0x%x Data: 0x%x Size: %d", addr, data, size);
+    //LOGD("*** HEAP STORE: Addr: %#x Data: %#x Size: %d", addr, data, size);
 
     for (heapSpacePtr = shadowSpace->heapSpace;
          heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
@@ -2515,7 +2515,7 @@ static void selfVerificationStoreDoubleword(int addr, s8 double_data)
     int data2 = double_data >> 32;
     bool store1 = false, store2 = false;
 
-    //LOGD("*** HEAP STORE DOUBLEWORD: Addr: 0x%x Data: 0x%x, Data2: 0x%x",
+    //LOGD("*** HEAP STORE DOUBLEWORD: Addr: %#x Data: %#x, Data2: %#x",
     //    addr, data, data2);
 
     for (heapSpacePtr = shadowSpace->heapSpace;
@@ -2628,7 +2628,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
 
     if ((insn & kMemOp2) == kMemOp2) {
         insn = (insn << 16) | (insn >> 16);
-        //LOGD("*** THUMB2 - Addr: 0x%x Insn: 0x%x", lr, insn);
+        //LOGD("*** THUMB2 - Addr: %#x Insn: %#x", lr, insn);
 
         int opcode12 = (insn >> 20) & 0xFFF;
         int opcode4 = (insn >> 8) & 0xF;
@@ -2795,7 +2795,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
             }
         }
     } else {
-        //LOGD("*** THUMB - Addr: 0x%x Insn: 0x%x", lr, insn);
+        //LOGD("*** THUMB - Addr: %#x Insn: %#x", lr, insn);
 
         // Update the link register
         selfVerificationMemRegStore(sp, old_lr+2, 13);

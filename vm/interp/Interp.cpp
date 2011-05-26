@@ -278,7 +278,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
             LOGV("Class %s verified, adding breakpoint at %p",
                 method->clazz->descriptor, addr);
             if (instructionIsMagicNop(addr)) {
-                LOGV("Refusing to set breakpoint on %04x at %s.%s + 0x%x",
+                LOGV("Refusing to set breakpoint on %04x at %s.%s + %#x",
                     *addr, method->clazz->descriptor, method->name,
                     instrOffset);
             } else {
@@ -317,11 +317,11 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
     if (idx < 0) {
         /* breakpoint not found in set -- unexpected */
         if (*(u1*)addr == OP_BREAKPOINT) {
-            LOGE("Unable to restore breakpoint opcode (%s.%s +0x%x)",
+            LOGE("Unable to restore breakpoint opcode (%s.%s +%#x)",
                 method->clazz->descriptor, method->name, instrOffset);
             dvmAbort();
         } else {
-            LOGW("Breakpoint was already restored? (%s.%s +0x%x)",
+            LOGW("Breakpoint was already restored? (%s.%s +%#x)",
                 method->clazz->descriptor, method->name, instrOffset);
         }
     } else {
@@ -375,7 +375,7 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
             LOGV("Flushing breakpoint at %p for %s",
                 pBreak->addr, clazz->descriptor);
             if (instructionIsMagicNop(pBreak->addr)) {
-                LOGV("Refusing to flush breakpoint on %04x at %s.%s + 0x%x",
+                LOGV("Refusing to flush breakpoint on %04x at %s.%s + %#x",
                     *pBreak->addr, pBreak->method->clazz->descriptor,
                     pBreak->method->name, pBreak->addr - pBreak->method->insns);
             } else {
@@ -1592,26 +1592,26 @@ void dvmCheckInterpStateConsistency()
     handlerTable = self->interpBreak.ctl.curHandlerTable;
     for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
         if (subMode != thread->interpBreak.ctl.subMode) {
-            LOGD("Warning: subMode mismatch - 0x%x:0x%x, tid[%d]",
+            LOGD("Warning: subMode mismatch - %#x:%#x, tid[%d]",
                 subMode,thread->interpBreak.ctl.subMode,thread->threadId);
          }
         if (breakFlags != thread->interpBreak.ctl.breakFlags) {
-            LOGD("Warning: breakFlags mismatch - 0x%x:0x%x, tid[%d]",
+            LOGD("Warning: breakFlags mismatch - %#x:%#x, tid[%d]",
                 breakFlags,thread->interpBreak.ctl.breakFlags,thread->threadId);
          }
         if (handlerTable != thread->interpBreak.ctl.curHandlerTable) {
-            LOGD("Warning: curHandlerTable mismatch - 0x%x:0x%x, tid[%d]",
+            LOGD("Warning: curHandlerTable mismatch - %#x:%#x, tid[%d]",
                 (int)handlerTable,(int)thread->interpBreak.ctl.curHandlerTable,
                 thread->threadId);
          }
 #if defined(WITH_JIT)
          if (thread->pJitProfTable != gDvmJit.pProfTable) {
-             LOGD("Warning: pJitProfTable mismatch - 0x%x:0x%x, tid[%d]",
+             LOGD("Warning: pJitProfTable mismatch - %#x:%#x, tid[%d]",
                   (int)thread->pJitProfTable,(int)gDvmJit.pProfTable,
                   thread->threadId);
          }
          if (thread->jitThreshold != gDvmJit.threshold) {
-             LOGD("Warning: jitThreshold mismatch - 0x%x:0x%x, tid[%d]",
+             LOGD("Warning: jitThreshold mismatch - %#x:%#x, tid[%d]",
                   (int)thread->jitThreshold,(int)gDvmJit.threshold,
                   thread->threadId);
          }
@@ -1846,13 +1846,13 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
             if (self->jitResumeDPC != NULL) {
                 if (self->jitResumeDPC == pc) {
                     if (self->jitResumeNPC != NULL) {
-                        LOGD("SS return to trace - pc:0x%x to 0x:%x",
+                        LOGD("SS return to trace - pc:%#x to 0x:%x",
                              (int)pc, (int)self->jitResumeNPC);
                     } else {
-                        LOGD("SS return to interp - pc:0x%x",(int)pc);
+                        LOGD("SS return to interp - pc:%#x",(int)pc);
                     }
                 } else {
-                    LOGD("SS failed to return.  Expected 0x%x, now at 0x%x",
+                    LOGD("SS failed to return.  Expected %#x, now at %#x",
                          (int)self->jitResumeDPC, (int)pc);
                 }
             }

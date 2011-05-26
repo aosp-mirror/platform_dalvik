@@ -1601,7 +1601,7 @@ char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
             strcpy(buffer, "PHI");
         }
         else {
-            sprintf(buffer, "Opcode 0x%x", opcode);
+            sprintf(buffer, "Opcode %#x", opcode);
         }
         flags = 0;
     } else {
@@ -1712,7 +1712,7 @@ char *dvmCompilerFullDisassembler(const CompilationUnit *cUnit,
             snprintf(buffer + strlen(buffer), 256, ")");
         }
         else {
-            sprintf(buffer, "Opcode 0x%x", opcode);
+            sprintf(buffer, "Opcode %#x", opcode);
         }
         goto done;
     } else {

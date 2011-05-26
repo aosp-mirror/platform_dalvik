@@ -1538,7 +1538,7 @@ static JdwpError handleER_Set(JdwpState* state,
 
     pEvent->requestId = requestId;
 
-    LOGV("    --> event requestId=0x%x", requestId);
+    LOGV("    --> event requestId=%#x", requestId);
 
     /* add it to the list */
     JdwpError err = dvmJdwpRegisterEvent(state, pEvent);

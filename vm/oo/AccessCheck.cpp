@@ -143,7 +143,7 @@ bool dvmCheckMethodAccess(const ClassObject* accessFrom, const Method* method)
  */
 bool dvmCheckFieldAccess(const ClassObject* accessFrom, const Field* field)
 {
-    //LOGI("CHECK ACCESS from '%s' to field '%s' (in %s) flags=0x%x",
+    //LOGI("CHECK ACCESS from '%s' to field '%s' (in %s) flags=%#x",
     //    accessFrom->descriptor, field->name,
     //    field->clazz->descriptor, field->accessFlags);
     return checkAccess(accessFrom, field->clazz, field->accessFlags);

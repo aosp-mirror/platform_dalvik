@@ -1220,7 +1220,7 @@ void dumpTrace()
         method = lookupMethod(pKeys, methodId);
         if (method == NULL) {
             method = &bogusMethod;
-            sprintf(bogusBuf, "methodId: 0x%x", methodId);
+            sprintf(bogusBuf, "methodId: %#x", methodId);
             method->signature = bogusBuf;
         }
 

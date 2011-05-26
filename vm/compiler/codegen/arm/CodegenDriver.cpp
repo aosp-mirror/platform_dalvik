@@ -837,7 +837,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
             op = kOpLsr;
             break;
         default:
-            LOGE("Invalid word arith op: 0x%x(%d)",
+            LOGE("Invalid word arith op: %#x(%d)",
                  mir->dalvikInsn.opcode, mir->dalvikInsn.opcode);
             dvmCompilerAbort(cUnit);
     }
@@ -1477,7 +1477,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
 {
     Opcode dalvikOpcode = mir->dalvikInsn.opcode;
     if ((dalvikOpcode >= OP_UNUSED_3E) && (dalvikOpcode <= OP_UNUSED_43)) {
-        LOGE("Codegen: got unused opcode 0x%x",dalvikOpcode);
+        LOGE("Codegen: got unused opcode %#x",dalvikOpcode);
         return true;
     }
     switch (dalvikOpcode) {
@@ -1491,7 +1491,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_DISPATCH_FF:
-            LOGE("Codegen: got unused opcode 0x%x",dalvikOpcode);
+            LOGE("Codegen: got unused opcode %#x",dalvikOpcode);
             return true;
         case OP_NOP:
             break;
@@ -4547,7 +4547,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     }
                 }
                 if (notHandled) {
-                    LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled",
+                    LOGE("%#06x: Opcode %#x (%s) / Fmt %d not handled",
                          mir->offset,
                          dalvikOpcode, dexGetOpcodeName(dalvikOpcode),
                          dalvikFormat);

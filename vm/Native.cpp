@@ -773,7 +773,7 @@ static void appendValue(char type, const JValue value, char* buf, size_t n,
         if (value.b >= 0 && value.b < 10) {
             sprintf(p, "%d", value.b);
         } else {
-            sprintf(p, "0x%x (%d)", value.b, value.b);
+            sprintf(p, "%#x (%d)", value.b, value.b);
         }
         break;
     case 'C':
@@ -793,7 +793,7 @@ static void appendValue(char type, const JValue value, char* buf, size_t n,
         sprintf(p, "%d", value.i);
         break;
     case 'L':
-        sprintf(p, "0x%x", value.i);
+        sprintf(p, "%#x", value.i);
         break;
     case 'J':
         sprintf(p, "%lld", value.j);

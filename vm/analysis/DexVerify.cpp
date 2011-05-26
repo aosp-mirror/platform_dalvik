@@ -692,7 +692,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
         if (absOffset < 0 || absOffset >= (s4)insnCount ||
             !dvmInsnIsOpcode(insnFlags, absOffset))
         {
-            LOG_VFY("VFY: invalid switch target %d (-> 0x%x) at 0x%x[%d]",
+            LOG_VFY("VFY: invalid switch target %d (-> %#x) at %#x[%d]",
                 offset, absOffset, curOffset, targ);
             return false;
         }
@@ -726,7 +726,7 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
         return false;
 
     if (!selfOkay && offset == 0) {
-        LOG_VFY_METH(meth, "VFY: branch offset of zero not allowed at 0x%x",
+        LOG_VFY_METH(meth, "VFY: branch offset of zero not allowed at %#x",
             curOffset);
         return false;
     }
@@ -737,7 +737,7 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
      * it's unwise to depend on that.
      */
     if (((s8) curOffset + (s8) offset) != (s8)(curOffset + offset)) {
-        LOG_VFY_METH(meth, "VFY: branch target overflow 0x%x +%d",
+        LOG_VFY_METH(meth, "VFY: branch target overflow %#x +%d",
             curOffset, offset);
         return false;
     }
@@ -746,7 +746,7 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
         !dvmInsnIsOpcode(insnFlags, absOffset))
     {
         LOG_VFY_METH(meth,
-            "VFY: invalid branch target %d (-> 0x%x) at 0x%x\n",
+            "VFY: invalid branch target %d (-> %#x) at %#x\n",
             offset, absOffset, curOffset);
         return false;
     }

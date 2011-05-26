@@ -1673,7 +1673,7 @@ static void markRefsAsInitialized(RegisterLine* registerLine, int insnRegCount,
 
     clazz = getUninitInstance(uninitMap, regTypeToUninitIndex(uninitType));
     if (clazz == NULL) {
-        LOGE("VFY: unable to find type=0x%x (idx=%d)",
+        LOGE("VFY: unable to find type=%#x (idx=%d)",
             uninitType, regTypeToUninitIndex(uninitType));
         *pFailure = VERIFY_ERROR_GENERIC;
         return;
@@ -2910,7 +2910,7 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx,
     if (commonSuper == NULL) {
         /* no catch blocks, or no catches with classes we can find */
         LOG_VFY_METH(meth,
-            "VFY: unable to find exception handler at addr 0x%x\n", insnIdx);
+            "VFY: unable to find exception handler at addr %#x\n", insnIdx);
         *pFailure = VERIFY_ERROR_GENERIC;
     } else {
         // TODO: verify the class is an instance of Throwable?
@@ -3403,7 +3403,7 @@ void handleMonitorExit(RegisterLine* workLine, u4 regIdx, u4 insnIdx,
     if ((workLine->monitorEntries[regIdx] & (1 << workLine->monitorStackTop))
             == 0)
     {
-        LOG_VFY("VFY: monitor-exit bit %d not set: addr=0x%04x (bits[%d]=0x%x)",
+        LOG_VFY("VFY: monitor-exit bit %d not set: addr=0x%04x (bits[%d]=%#x)",
             workLine->monitorStackTop, insnIdx, regIdx,
             workLine->monitorEntries[regIdx]);
         *pFailure = VERIFY_ERROR_GENERIC;
@@ -6039,7 +6039,7 @@ sput_1nr_common:
         int insnWidth = dvmInsnGetWidth(insnFlags, insnIdx);
         if (insnIdx+insnWidth >= insnsSize) {
             LOG_VFY_METH(meth,
-                "VFY: execution can walk off end of code area (from 0x%x)\n",
+                "VFY: execution can walk off end of code area (from %#x)\n",
                 insnIdx);
             goto bail;
         }

@@ -916,7 +916,7 @@ GOTO_TARGET_DECL(exceptionThrown);
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
             ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)]);      \
-        ILOGV("+ AGET[%d]=0x%x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));  \
+        ILOGV("+ AGET[%d]=%#x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));   \
     }                                                                       \
     FINISH(2);
 
@@ -1243,7 +1243,7 @@ void dvmInterpretPortable(Thread* self)
 
     methodClassDex = curMethod->clazz->pDvmDex;
 
-    LOGVV("threadid=%d: %s.%s pc=0x%x fp=%p",
+    LOGVV("threadid=%d: %s.%s pc=%#x fp=%p",
         self->threadId, curMethod->clazz->descriptor, curMethod->name,
         pc - curMethod->insns, fp);
 

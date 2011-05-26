@@ -114,7 +114,7 @@ static inline bool checkPtrRange(const CheckState* state,
     const void* fileEnd = state->fileEnd;
     if ((start < fileStart) || (start > fileEnd)
             || (end < start) || (end > fileEnd)) {
-        LOGW("Bad offset range for %s: 0x%x..0x%x", label,
+        LOGW("Bad offset range for %s: %#x..%#x", label,
                 fileOffset(state, start), fileOffset(state, end));
         return false;
     }
@@ -299,7 +299,7 @@ static bool swapDexHeader(const CheckState* state, DexHeader* pHeader)
     SWAP_OFFSET4(pHeader->dataOff);
 
     if (pHeader->endianTag != kDexEndianConstant) {
-        LOGE("Unexpected endian_tag: 0x%x", pHeader->endianTag);
+        LOGE("Unexpected endian_tag: %#x", pHeader->endianTag);
         return false;
     }
 
@@ -328,7 +328,7 @@ static bool checkHeaderSection(const CheckState* state, u4 sectionOffset,
     }
 
     if (sectionOffset != 0) {
-        LOGE("Header at 0x%x; not at start of file", sectionOffset);
+        LOGE("Header at %#x; not at start of file", sectionOffset);
         return false;
     }
 
@@ -416,13 +416,13 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
         if (first) {
             first = false;
         } else if (lastOffset >= item->offset) {
-            LOGE("Out-of-order map item: 0x%x then 0x%x",
+            LOGE("Out-of-order map item: %#x then %#x",
                     lastOffset, item->offset);
             return false;
         }
 
         if (item->offset >= state->pHeader->fileSize) {
-            LOGE("Map item after end of file: %x, size 0x%x",
+            LOGE("Map item after end of file: %x, size %#x",
                     item->offset, state->pHeader->fileSize);
             return false;
         }
@@ -452,7 +452,7 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
         }
 
         if ((usedBits & bit) != 0) {
-            LOGE("Duplicate map section of type 0x%x", item->type);
+            LOGE("Duplicate map section of type %#x", item->type);
             return false;
         }
 
@@ -515,7 +515,7 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
 
     state->pDataMap = dexDataMapAlloc(dataItemCount);
     if (state->pDataMap == NULL) {
-        LOGE("Unable to allocate data map (size 0x%x)", dataItemCount);
+        LOGE("Unable to allocate data map (size %#x)", dataItemCount);
         return false;
     }
 
@@ -531,7 +531,7 @@ static bool checkMapSection(const CheckState* state, u4 sectionOffset,
     }
 
     if (sectionOffset != state->pHeader->mapOff) {
-        LOGE("Map not at header-defined offset: 0x%x, expected 0x%x",
+        LOGE("Map not at header-defined offset: %#x, expected %#x",
                 sectionOffset, state->pHeader->mapOff);
         return false;
     }
@@ -601,7 +601,7 @@ static void* crossVerifyTypeIdItem(const CheckState* state, void* ptr) {
     if (item0 != NULL) {
         // Check ordering. This relies on string_ids being in order.
         if (item0->descriptorIdx >= item->descriptorIdx) {
-            LOGE("Out-of-order type_ids: 0x%x then 0x%x",
+            LOGE("Out-of-order type_ids: %#x then %#x",
                     item0->descriptorIdx, item->descriptorIdx);
             return NULL;
         }
@@ -1073,7 +1073,7 @@ static u1* swapFieldAnnotations(const CheckState* state, u4 count, u1* addr) {
         if (first) {
             first = false;
         } else if (lastIdx >= item->fieldIdx) {
-            LOGE("Out-of-order field_idx: 0x%x then 0x%x", lastIdx,
+            LOGE("Out-of-order field_idx: %#x then %#x", lastIdx,
                  item->fieldIdx);
             return NULL;
         }
@@ -1102,7 +1102,7 @@ static u1* swapMethodAnnotations(const CheckState* state, u4 count, u1* addr) {
         if (first) {
             first = false;
         } else if (lastIdx >= item->methodIdx) {
-            LOGE("Out-of-order method_idx: 0x%x then 0x%x", lastIdx,
+            LOGE("Out-of-order method_idx: %#x then %#x", lastIdx,
                  item->methodIdx);
             return NULL;
         }
@@ -1132,7 +1132,7 @@ static u1* swapParameterAnnotations(const CheckState* state, u4 count,
         if (first) {
             first = false;
         } else if (lastIdx >= item->methodIdx) {
-            LOGE("Out-of-order method_idx: 0x%x then 0x%x", lastIdx,
+            LOGE("Out-of-order method_idx: %#x then %#x", lastIdx,
                  item->methodIdx);
             return NULL;
         }
@@ -1423,7 +1423,7 @@ static void* crossVerifyAnnotationSetItem(const CheckState* state, void* ptr) {
         if (first) {
             first = false;
         } else if (lastIdx >= idx) {
-            LOGE("Out-of-order entry types: 0x%x then 0x%x",
+            LOGE("Out-of-order entry types: %#x then %#x",
                     lastIdx, idx);
             return NULL;
         }
@@ -1495,7 +1495,7 @@ static bool verifyMethods(const CheckState* state, u4 size,
                 return false;
             }
         } else if (method->codeOff != 0) {
-            LOGE("Unexpected non-zero code_off 0x%x for access_flags %x",
+            LOGE("Unexpected non-zero code_off %#x for access_flags %x",
                     method->codeOff, accessFlags);
             return false;
         }
@@ -1696,7 +1696,7 @@ static u4 setHandlerOffsAndVerify(const CheckState* state,
             }
 
             if (addr >= code->insnsSize) {
-                LOGE("Invalid addr: 0x%x", addr);
+                LOGE("Invalid addr: %#x", addr);
                 return 0;
             }
         }
@@ -1710,7 +1710,7 @@ static u4 setHandlerOffsAndVerify(const CheckState* state,
             }
 
             if (addr >= code->insnsSize) {
-                LOGE("Invalid catch_all_addr: 0x%x", addr);
+                LOGE("Invalid catch_all_addr: %#x", addr);
                 return 0;
             }
         }
@@ -1768,7 +1768,7 @@ static void* swapTriesAndCatches(const CheckState* state, DexCode* code) {
         }
 
         if (tries->startAddr >= code->insnsSize) {
-            LOGE("Invalid start_addr: 0x%x", tries->startAddr);
+            LOGE("Invalid start_addr: %#x", tries->startAddr);
             return NULL;
         }
 
@@ -1779,14 +1779,14 @@ static void* swapTriesAndCatches(const CheckState* state, DexCode* code) {
         }
 
         if (i == handlersSize) {
-            LOGE("Bogus handler offset: 0x%x", tries->handlerOff);
+            LOGE("Bogus handler offset: %#x", tries->handlerOff);
             return NULL;
         }
 
         lastEnd = tries->startAddr + tries->insnCount;
 
         if (lastEnd > code->insnsSize) {
-            LOGE("Invalid insn_count: 0x%x (end addr 0x%x)",
+            LOGE("Invalid insn_count: %#x (end addr %#x)",
                     tries->insnCount, lastEnd);
             return NULL;
         }
@@ -1845,7 +1845,7 @@ static void* swapCodeItem(const CheckState* state, void* ptr) {
         if ((((u4) insns) & 3) != 0) {
             // Four-byte alignment for the tries. Verify the spacer is a 0.
             if (*insns != 0) {
-                LOGE("Non-zero padding: 0x%x", (u4) *insns);
+                LOGE("Non-zero padding: %#x", (u4) *insns);
                 return NULL;
             }
         }
@@ -1882,7 +1882,7 @@ static void* intraVerifyStringDataItem(const CheckState* state, void* ptr) {
             case 0x00: {
                 // Special case of bit pattern 0xxx.
                 if (byte1 == 0) {
-                    LOGE("String shorter than indicated utf16_size 0x%x",
+                    LOGE("String shorter than indicated utf16_size %#x",
                             utf16Size);
                     return NULL;
                 }
@@ -1908,19 +1908,19 @@ static void* intraVerifyStringDataItem(const CheckState* state, void* ptr) {
                  * Note: 1111 is valid for normal UTF-8, but not the
                  * modified UTF-8 used here.
                  */
-                LOGE("Illegal start byte 0x%x", byte1);
+                LOGE("Illegal start byte %#x", byte1);
                 return NULL;
             }
             case 0x0e: {
                 // Bit pattern 1110, so there are two additional bytes.
                 u1 byte2 = *(data++);
                 if ((byte2 & 0xc0) != 0x80) {
-                    LOGE("Illegal continuation byte 0x%x", byte2);
+                    LOGE("Illegal continuation byte %#x", byte2);
                     return NULL;
                 }
                 u1 byte3 = *(data++);
                 if ((byte3 & 0xc0) != 0x80) {
-                    LOGE("Illegal continuation byte 0x%x", byte3);
+                    LOGE("Illegal continuation byte %#x", byte3);
                     return NULL;
                 }
                 u2 value = ((byte1 & 0x0f) << 12) | ((byte2 & 0x3f) << 6)
@@ -1936,7 +1936,7 @@ static void* intraVerifyStringDataItem(const CheckState* state, void* ptr) {
                 // Bit pattern 110x, so there is one additional byte.
                 u1 byte2 = *(data++);
                 if ((byte2 & 0xc0) != 0x80) {
-                    LOGE("Illegal continuation byte 0x%x", byte2);
+                    LOGE("Illegal continuation byte %#x", byte2);
                     return NULL;
                 }
                 u2 value = ((byte1 & 0x1f) << 6) | (byte2 & 0x3f);
@@ -1950,7 +1950,7 @@ static void* intraVerifyStringDataItem(const CheckState* state, void* ptr) {
     }
 
     if (*(data++) != '\0') {
-        LOGE("String longer than indicated utf16_size 0x%x", utf16Size);
+        LOGE("String longer than indicated utf16_size %#x", utf16Size);
         return NULL;
     }
 
@@ -1980,7 +1980,7 @@ static void* intraVerifyDebugInfoItem(const CheckState* state, void* ptr) {
     }
 
     if (parametersSize > 65536) {
-        LOGE("Invalid parameters_size: 0x%x", parametersSize);
+        LOGE("Invalid parameters_size: %#x", parametersSize);
         return NULL;
     }
 
@@ -2159,7 +2159,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
     switch (valueType) {
         case kDexAnnotationByte: {
             if (valueArg != 0) {
-                LOGE("Bogus byte size 0x%x", valueArg);
+                LOGE("Bogus byte size %#x", valueArg);
                 return NULL;
             }
             data++;
@@ -2168,7 +2168,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         case kDexAnnotationShort:
         case kDexAnnotationChar: {
             if (valueArg > 1) {
-                LOGE("Bogus char/short size 0x%x", valueArg);
+                LOGE("Bogus char/short size %#x", valueArg);
                 return NULL;
             }
             data += valueArg + 1;
@@ -2177,7 +2177,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         case kDexAnnotationInt:
         case kDexAnnotationFloat: {
             if (valueArg > 3) {
-                LOGE("Bogus int/float size 0x%x", valueArg);
+                LOGE("Bogus int/float size %#x", valueArg);
                 return NULL;
             }
             data += valueArg + 1;
@@ -2190,7 +2190,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         }
         case kDexAnnotationString: {
             if (valueArg > 3) {
-                LOGE("Bogus string size 0x%x", valueArg);
+                LOGE("Bogus string size %#x", valueArg);
                 return NULL;
             }
             u4 idx = readUnsignedLittleEndian(state, &data, valueArg + 1);
@@ -2199,7 +2199,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         }
         case kDexAnnotationType: {
             if (valueArg > 3) {
-                LOGE("Bogus type size 0x%x", valueArg);
+                LOGE("Bogus type size %#x", valueArg);
                 return NULL;
             }
             u4 idx = readUnsignedLittleEndian(state, &data, valueArg + 1);
@@ -2209,7 +2209,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         case kDexAnnotationField:
         case kDexAnnotationEnum: {
             if (valueArg > 3) {
-                LOGE("Bogus field/enum size 0x%x", valueArg);
+                LOGE("Bogus field/enum size %#x", valueArg);
                 return NULL;
             }
             u4 idx = readUnsignedLittleEndian(state, &data, valueArg + 1);
@@ -2218,7 +2218,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         }
         case kDexAnnotationMethod: {
             if (valueArg > 3) {
-                LOGE("Bogus method size 0x%x", valueArg);
+                LOGE("Bogus method size %#x", valueArg);
                 return NULL;
             }
             u4 idx = readUnsignedLittleEndian(state, &data, valueArg + 1);
@@ -2227,7 +2227,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         }
         case kDexAnnotationArray: {
             if (valueArg != 0) {
-                LOGE("Bogus array value_arg 0x%x", valueArg);
+                LOGE("Bogus array value_arg %#x", valueArg);
                 return NULL;
             }
             data = verifyEncodedArray(state, data, crossVerify);
@@ -2235,7 +2235,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         }
         case kDexAnnotationAnnotation: {
             if (valueArg != 0) {
-                LOGE("Bogus annotation value_arg 0x%x", valueArg);
+                LOGE("Bogus annotation value_arg %#x", valueArg);
                 return NULL;
             }
             data = verifyEncodedAnnotation(state, data, crossVerify);
@@ -2243,7 +2243,7 @@ static const u1* verifyEncodedValue(const CheckState* state,
         }
         case kDexAnnotationNull: {
             if (valueArg != 0) {
-                LOGE("Bogus null value_arg 0x%x", valueArg);
+                LOGE("Bogus null value_arg %#x", valueArg);
                 return NULL;
             }
             // Nothing else to do for this type.
@@ -2251,14 +2251,14 @@ static const u1* verifyEncodedValue(const CheckState* state,
         }
         case kDexAnnotationBoolean: {
             if (valueArg > 1) {
-                LOGE("Bogus boolean value_arg 0x%x", valueArg);
+                LOGE("Bogus boolean value_arg %#x", valueArg);
                 return NULL;
             }
             // Nothing else to do for this type.
             break;
         }
         default: {
-            LOGE("Bogus value_type 0x%x", valueType);
+            LOGE("Bogus value_type %#x", valueType);
             return NULL;
         }
     }
@@ -2319,7 +2319,7 @@ static const u1* verifyEncodedAnnotation(const CheckState* state,
         if (first) {
             first = false;
         } else if (lastIdx >= idx) {
-            LOGE("Out-of-order encoded_annotation name_idx: 0x%x then 0x%x",
+            LOGE("Out-of-order encoded_annotation name_idx: %#x then %#x",
                     lastIdx, idx);
             return NULL;
         }
@@ -2353,7 +2353,7 @@ static void* intraVerifyAnnotationItem(const CheckState* state, void* ptr) {
             break;
         }
         default: {
-            LOGE("Bogus annotation visibility: 0x%x", *data);
+            LOGE("Bogus annotation visibility: %#x", *data);
             return NULL;
         }
     }
@@ -2415,12 +2415,12 @@ static bool iterateSectionWithOptionalUpdate(CheckState* state,
         newOffset = fileOffset(state, newPtr);
 
         if (newPtr == NULL) {
-            LOGE("Trouble with item %d @ offset 0x%x", i, offset);
+            LOGE("Trouble with item %d @ offset %#x", i, offset);
             return false;
         }
 
         if (newOffset > state->fileLen) {
-            LOGE("Item %d @ offset 0x%x ends out of bounds", i, offset);
+            LOGE("Item %d @ offset %#x ends out of bounds", i, offset);
             return false;
         }
 
@@ -2458,13 +2458,13 @@ static bool checkBoundsAndIterateSection(CheckState* state,
         u4 offset, u4 count, u4 expectedOffset, u4 expectedCount,
         ItemVisitorFunction* func, u4 alignment, u4* nextOffset) {
     if (offset != expectedOffset) {
-        LOGE("Bogus offset for section: got 0x%x; expected 0x%x",
+        LOGE("Bogus offset for section: got %#x; expected %#x",
                 offset, expectedOffset);
         return false;
     }
 
     if (count != expectedCount) {
-        LOGE("Bogus size for section: got 0x%x; expected 0x%x",
+        LOGE("Bogus size for section: got %#x; expected %#x",
                 count, expectedCount);
         return false;
     }
@@ -2484,7 +2484,7 @@ static bool iterateDataSection(CheckState* state, u4 offset, u4 count,
     assert(nextOffset != NULL);
 
     if ((offset < dataStart) || (offset >= dataEnd)) {
-        LOGE("Bogus offset for data subsection: 0x%x", offset);
+        LOGE("Bogus offset for data subsection: %#x", offset);
         return false;
     }
 
@@ -2494,7 +2494,7 @@ static bool iterateDataSection(CheckState* state, u4 offset, u4 count,
     }
 
     if (*nextOffset > dataEnd) {
-        LOGE("Out-of-bounds end of data subsection: 0x%x", *nextOffset);
+        LOGE("Out-of-bounds end of data subsection: %#x", *nextOffset);
         return false;
     }
 

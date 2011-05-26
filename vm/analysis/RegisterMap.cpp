@@ -874,7 +874,7 @@ const RegisterMap* dvmRegisterMapGetNext(const void** pPtr)
     const RegisterMap* pMap = (const RegisterMap*) *pPtr;
 
     *pPtr = /*align32*/(((u1*) pMap) + computeRegisterMapSize(pMap));
-    LOGVV("getNext: %p -> %p (f=0x%x w=%d e=%d)",
+    LOGVV("getNext: %p -> %p (f=%#x w=%d e=%d)",
         pMap, *pPtr, pMap->format, pMap->regWidth,
         dvmRegisterMapGetNumEntries(pMap));
     return pMap;
