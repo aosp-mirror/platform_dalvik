@@ -18,9 +18,6 @@
  */
 #include "Hprof.h"
 
-#include "alloc/HeapInternal.h"
-#include "alloc/HeapSource.h"
-
 /* Set DUMP_PRIM_DATA to 1 if you want to include the contents
  * of primitive arrays (byte arrays, character arrays, etc.)
  * in heap dumps.  This can be a large amount of data.
@@ -220,9 +217,7 @@ int hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
     hprof_record_t *rec = &ctx->curRec;
     HprofHeapId desiredHeap;
 
-    desiredHeap =
-            dvmHeapSourceGetPtrFlag(obj, HS_ALLOCATED_IN_ZYGOTE) ?
-            HPROF_HEAP_ZYGOTE : HPROF_HEAP_APP;
+    desiredHeap = dvmIsZygoteObject(obj) ? HPROF_HEAP_ZYGOTE : HPROF_HEAP_APP;
 
     if (ctx->objectsInSegment >= OBJECTS_PER_SEGMENT ||
         rec->length >= BYTES_PER_SEGMENT)
