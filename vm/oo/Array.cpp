@@ -151,7 +151,7 @@ ArrayObject* dvmAllocPrimitiveArray(char type, size_t length, int allocFlags)
         width = 8;
         break;
     default:
-        LOGE("Unknown primitive type '%c'\n", type);
+        LOGE("Unknown primitive type '%c'", type);
         dvmAbort();
         return NULL; // Keeps the compiler happy.
     }
@@ -175,17 +175,17 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
     ArrayObject* newArray;
     const char* elemName = arrayClass->descriptor + 1; // Advance past one '['.
 
-    LOGVV("dvmAllocMultiArray: class='%s' curDim=%d *dimensions=%d\n",
+    LOGVV("dvmAllocMultiArray: class='%s' curDim=%d *dimensions=%d",
         arrayClass->descriptor, curDim, *dimensions);
 
     if (curDim == 0) {
         if (*elemName == 'L' || *elemName == '[') {
-            LOGVV("  end: array class (obj) is '%s'\n",
+            LOGVV("  end: array class (obj) is '%s'",
                 arrayClass->descriptor);
             newArray = allocArray(arrayClass, *dimensions,
                         kObjectArrayRefWidth, ALLOC_DEFAULT);
         } else {
-            LOGVV("  end: array class (prim) is '%s'\n",
+            LOGVV("  end: array class (prim) is '%s'",
                 arrayClass->descriptor);
             newArray = dvmAllocPrimitiveArray(
                     dexGetPrimitiveTypeDescriptorChar(arrayClass->elementClass->primitiveType),
@@ -246,11 +246,11 @@ ClassObject* dvmFindArrayClass(const char* descriptor, Object* loader)
     ClassObject* clazz;
 
     assert(descriptor[0] == '[');
-    //LOGV("dvmFindArrayClass: '%s' %p\n", descriptor, loader);
+    //LOGV("dvmFindArrayClass: '%s' %p", descriptor, loader);
 
     clazz = dvmLookupClass(descriptor, loader, false);
     if (clazz == NULL) {
-        LOGV("Array class '%s' %p not found; creating\n", descriptor, loader);
+        LOGV("Array class '%s' %p not found; creating", descriptor, loader);
         clazz = createArrayClass(descriptor, loader);
         if (clazz != NULL)
             dvmAddInitiatingLoader(clazz, loader);
@@ -306,7 +306,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         if (descriptor[1] == 'L') {
             /* array of objects; strip off "[" and look up descriptor. */
             const char* subDescriptor = &descriptor[1];
-            LOGVV("searching for element class '%s'\n", subDescriptor);
+            LOGVV("searching for element class '%s'", subDescriptor);
             elementClass = dvmFindClassNoInit(subDescriptor, loader);
             extraFlags |= CLASS_ISOBJECTARRAY;
         } else {
@@ -342,11 +342,11 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
      * other threads.)
      */
     if (loader != elementClass->classLoader) {
-        LOGVV("--- checking for '%s' in %p vs. elem %p\n",
+        LOGVV("--- checking for '%s' in %p vs. elem %p",
             descriptor, loader, elementClass->classLoader);
         newClass = dvmLookupClass(descriptor, elementClass->classLoader, false);
         if (newClass != NULL) {
-            LOGV("--- we already have %s in %p, don't need in %p\n",
+            LOGV("--- we already have %s in %p, don't need in %p",
                 descriptor, elementClass->classLoader, loader);
             return newClass;
         }
@@ -414,7 +414,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         dvmFindSystemClassNoInit("Ljava/io/Serializable;");
     dvmLinearReadOnly(newClass->classLoader, newClass->interfaces);
     if (newClass->interfaces[0] == NULL || newClass->interfaces[1] == NULL) {
-        LOGE("Unable to create array class '%s': missing interfaces\n",
+        LOGE("Unable to create array class '%s': missing interfaces",
             descriptor);
         dvmFreeClassInnards(newClass);
         dvmThrowInternalError("missing array ifaces");
@@ -478,7 +478,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
     }
     dvmReleaseTrackedAlloc((Object*) newClass, NULL);
 
-    LOGV("Created array class '%s' %p (access=0x%04x.%04x)\n",
+    LOGV("Created array class '%s' %p (access=0x%04x.%04x)",
         descriptor, newClass->classLoader,
         newClass->accessFlags >> 16,
         newClass->accessFlags & JAVA_FLAGS_MASK);
@@ -504,7 +504,7 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     length = dstArray->length;
     for (count = 0; count < length; count++) {
         if (!dvmInstanceof(src[count]->clazz, dstElemClass)) {
-            LOGW("dvmCopyObjectArray: can't store %s in %s\n",
+            LOGW("dvmCopyObjectArray: can't store %s in %s",
                 src[count]->clazz->descriptor, dstElemClass->descriptor);
             return false;
         }
@@ -540,7 +540,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
          * necessary for correctness.
          */
         if (!dvmUnboxPrimitive(*src, dstElemClass, &result)) {
-            LOGW("dvmCopyObjectArray: can't store %s in %s\n",
+            LOGW("dvmCopyObjectArray: can't store %s in %s",
                 (*src)->clazz->descriptor, dstElemClass->descriptor);
             return false;
         }

@@ -69,16 +69,16 @@ bool dvmStdioConverterStartup()
         return false;
 
     if (pipe(pipeStorage->stdoutPipe) != 0) {
-        LOGW("pipe failed: %s\n", strerror(errno));
+        LOGW("pipe failed: %s", strerror(errno));
         return false;
     }
     if (pipe(pipeStorage->stderrPipe) != 0) {
-        LOGW("pipe failed: %s\n", strerror(errno));
+        LOGW("pipe failed: %s", strerror(errno));
         return false;
     }
 
     if (dup2(pipeStorage->stdoutPipe[1], kFilenoStdout) != kFilenoStdout) {
-        LOGW("dup2(1) failed: %s\n", strerror(errno));
+        LOGW("dup2(1) failed: %s", strerror(errno));
         return false;
     }
     close(pipeStorage->stdoutPipe[1]);
@@ -87,7 +87,7 @@ bool dvmStdioConverterStartup()
     /* don't redirect stderr on sim -- logs get written there! */
     /* (don't need this on the sim anyway) */
     if (dup2(pipeStorage->stderrPipe[1], kFilenoStderr) != kFilenoStderr) {
-        LOGW("dup2(2) failed: %d %s\n", errno, strerror(errno));
+        LOGW("dup2(2) failed: %d %s", errno, strerror(errno));
         return false;
     }
     close(pipeStorage->stderrPipe[1]);
@@ -132,7 +132,7 @@ void dvmStdioConverterShutdown()
     printf("Shutting down\n");
     fflush(stdout);
 
-    LOGD("Joining stdio converter...\n");
+    LOGD("Joining stdio converter...");
     pthread_join(gDvm.stdioConverterHandle, NULL);
 }
 
@@ -181,12 +181,12 @@ static void* stdioConverterThreadStart(void* arg)
 
         if (fdCount < 0) {
             if (errno != EINTR) {
-                LOGE("select on stdout/stderr failed\n");
+                LOGE("select on stdout/stderr failed");
                 break;
             }
-            LOGD("Got EINTR, ignoring\n");
+            LOGD("Got EINTR, ignoring");
         } else if (fdCount == 0) {
-            LOGD("WEIRD: select returned zero\n");
+            LOGD("WEIRD: select returned zero");
         } else {
             bool err = false;
             if (FD_ISSET(pipeStorage->stdoutPipe[0], &readfds)) {
@@ -200,7 +200,7 @@ static void* stdioConverterThreadStart(void* arg)
 
             /* probably EOF; give up */
             if (err) {
-                LOGW("stdio converter got read error; shutting it down\n");
+                LOGW("stdio converter got read error; shutting it down");
                 break;
             }
         }
@@ -232,11 +232,11 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag)
     want = kMaxLine - data->count;
     actual = read(fd, data->buf + data->count, want);
     if (actual <= 0) {
-        LOGW("read %s: (%d,%d) failed (%d): %s\n",
+        LOGW("read %s: (%d,%d) failed (%d): %s",
             tag, fd, want, (int)actual, strerror(errno));
         return false;
     } else {
-        //LOGI("read %s: %d at %d\n", tag, actual, data->count);
+        //LOGI("read %s: %d at %d", tag, actual, data->count);
     }
     data->count += actual;
 
@@ -250,7 +250,7 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag)
     for (i = data->count; i > 0; i--, cp++) {
         if (*cp == '\n' || (*cp == '\r' && i != 0 && *(cp+1) != '\n')) {
             *cp = '\0';
-            //LOGW("GOT %d at %d '%s'\n", cp - start, start - data->buf, start);
+            //LOGW("GOT %d at %d '%s'", cp - start, start - data->buf, start);
             LOG(LOG_INFO, tag, "%s", start);
             start = cp+1;
         }

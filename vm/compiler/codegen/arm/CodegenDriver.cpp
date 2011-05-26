@@ -1477,7 +1477,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
 {
     Opcode dalvikOpcode = mir->dalvikInsn.opcode;
     if ((dalvikOpcode >= OP_UNUSED_3E) && (dalvikOpcode <= OP_UNUSED_43)) {
-        LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpcode);
+        LOGE("Codegen: got unused opcode 0x%x",dalvikOpcode);
         return true;
     }
     switch (dalvikOpcode) {
@@ -1491,7 +1491,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_DISPATCH_FF:
-            LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpcode);
+            LOGE("Codegen: got unused opcode 0x%x",dalvikOpcode);
             return true;
         case OP_NOP:
             break;
@@ -2155,7 +2155,7 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             break;
         default:
             cond = (ArmConditionCode)0;
-            LOGE("Unexpected opcode (%d) for Fmt21t\n", dalvikOpcode);
+            LOGE("Unexpected opcode (%d) for Fmt21t", dalvikOpcode);
             dvmCompilerAbort(cUnit);
     }
     genConditionalBranch(cUnit, cond, &labelList[bb->taken->id]);
@@ -2700,7 +2700,7 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             break;
         default:
             cond = (ArmConditionCode)0;
-            LOGE("Unexpected opcode (%d) for Fmt22t\n", dalvikOpcode);
+            LOGE("Unexpected opcode (%d) for Fmt22t", dalvikOpcode);
             dvmCompilerAbort(cUnit);
     }
     genConditionalBranch(cUnit, cond, &labelList[bb->taken->id]);
@@ -4547,7 +4547,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     }
                 }
                 if (notHandled) {
-                    LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled\n",
+                    LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled",
                          mir->offset,
                          dalvikOpcode, dexGetOpcodeName(dalvikOpcode),
                          dalvikFormat);

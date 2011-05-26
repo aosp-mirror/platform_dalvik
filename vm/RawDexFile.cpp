@@ -210,7 +210,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
      * doesn't have to be seeked anywhere in particular.
      */
     if (dvmDexFileOpenFromFd(optFd, &pDvmDex) != 0) {
-        LOGI("Unable to map cached %s\n", fileName);
+        LOGI("Unable to map cached %s", fileName);
         goto bail;
     }
 
@@ -218,7 +218,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
         /* unlock the fd */
         if (!dvmUnlockCachedDexFile(optFd)) {
             /* uh oh -- this process needs to exit or we'll wedge the system */
-            LOGE("Unable to unlock DEX file\n");
+            LOGE("Unable to unlock DEX file");
             goto bail;
         }
         locked = false;

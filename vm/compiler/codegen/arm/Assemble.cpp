@@ -958,7 +958,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             intptr_t target = lirTarget->generic.offset;
             int delta = target - pc;
             if (delta & 0x3) {
-                LOGE("PC-rel distance is not multiples of 4: %d\n", delta);
+                LOGE("PC-rel distance is not multiples of 4: %d", delta);
                 dvmCompilerAbort(cUnit);
             }
             if ((lir->opcode == kThumb2LdrPcRel12) && (delta > 4091)) {
@@ -1035,7 +1035,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if (delta > 2046 || delta < -2048) {
-                LOGE("Unconditional branch distance out of range: %d\n", delta);
+                LOGE("Unconditional branch distance out of range: %d", delta);
                 dvmCompilerAbort(cUnit);
             }
             lir->operands[0] = delta >> 1;
@@ -1437,7 +1437,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* Allocate enough space for the code block */
     cUnit->codeBuffer = (unsigned char *)dvmCompilerNew(chainCellOffset, true);
     if (cUnit->codeBuffer == NULL) {
-        LOGE("Code buffer allocation failure\n");
+        LOGE("Code buffer allocation failure");
         info->discardResult = true;
         return;
     }
@@ -1604,7 +1604,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
         gDvmJit.translationChains++;
 
         COMPILER_TRACE_CHAINING(
-            LOGD("Jit Runtime: chaining 0x%x to 0x%x\n",
+            LOGD("Jit Runtime: chaining 0x%x to 0x%x",
                  (int) branchAddr, (int) tgtAddr & -2));
 
         /*

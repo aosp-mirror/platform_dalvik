@@ -324,7 +324,7 @@ static bool handleJdwpOption(const char* name, const char* value)
         } else if (strcmp(value, "dt_android_adb") == 0) {
             gDvm.jdwpTransport = kJdwpTransportAndroidAdb;
         } else {
-            LOGE("JDWP transport '%s' not supported\n", value);
+            LOGE("JDWP transport '%s' not supported", value);
             return false;
         }
     } else if (strcmp(name, "server") == 0) {
@@ -333,7 +333,7 @@ static bool handleJdwpOption(const char* name, const char* value)
         else if (*value == 'y')
             gDvm.jdwpServer = true;
         else {
-            LOGE("JDWP option 'server' must be 'y' or 'n'\n");
+            LOGE("JDWP option 'server' must be 'y' or 'n'");
             return false;
         }
     } else if (strcmp(name, "suspend") == 0) {
@@ -342,7 +342,7 @@ static bool handleJdwpOption(const char* name, const char* value)
         else if (*value == 'y')
             gDvm.jdwpSuspend = true;
         else {
-            LOGE("JDWP option 'suspend' must be 'y' or 'n'\n");
+            LOGE("JDWP option 'suspend' must be 'y' or 'n'");
             return false;
         }
     } else if (strcmp(name, "address") == 0) {
@@ -359,12 +359,12 @@ static bool handleJdwpOption(const char* name, const char* value)
             value = colon + 1;
         }
         if (*value == '\0') {
-            LOGE("JDWP address missing port\n");
+            LOGE("JDWP address missing port");
             return false;
         }
         port = strtol(value, &end, 10);
         if (*end != '\0') {
-            LOGE("JDWP address has junk in port field '%s'\n", value);
+            LOGE("JDWP address has junk in port field '%s'", value);
             return false;
         }
         gDvm.jdwpPort = port;
@@ -374,9 +374,9 @@ static bool handleJdwpOption(const char* name, const char* value)
                strcmp(name, "timeout") == 0)
     {
         /* valid but unsupported */
-        LOGI("Ignoring JDWP option '%s'='%s'\n", name, value);
+        LOGI("Ignoring JDWP option '%s'='%s'", name, value);
     } else {
-        LOGI("Ignoring unrecognized JDWP option '%s'='%s'\n", name, value);
+        LOGI("Ignoring unrecognized JDWP option '%s'='%s'", name, value);
     }
 
     return true;
@@ -401,14 +401,14 @@ static bool parseJdwpOptions(const char* str)
 
         value = strchr(name, '=');
         if (value == NULL) {
-            LOGE("JDWP opts: garbage at '%s'\n", name);
+            LOGE("JDWP opts: garbage at '%s'", name);
             goto bail;
         }
 
         comma = strchr(name, ',');      // use name, not value, for safety
         if (comma != NULL) {
             if (comma < value) {
-                LOGE("JDWP opts: found comma before '=' in '%s'\n", mangle);
+                LOGE("JDWP opts: found comma before '=' in '%s'", mangle);
                 goto bail;
             }
             *comma = '\0';
@@ -430,11 +430,11 @@ static bool parseJdwpOptions(const char* str)
      * Make sure the combination of arguments makes sense.
      */
     if (gDvm.jdwpTransport == kJdwpTransportUnknown) {
-        LOGE("JDWP opts: must specify transport\n");
+        LOGE("JDWP opts: must specify transport");
         goto bail;
     }
     if (!gDvm.jdwpServer && (gDvm.jdwpHost == NULL || gDvm.jdwpPort == 0)) {
-        LOGE("JDWP opts: when server=n, must specify host and port\n");
+        LOGE("JDWP opts: when server=n, must specify host and port");
         goto bail;
     }
     // transport mandatory
@@ -481,7 +481,7 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
             pCtrl->pkgOrClass = dvmDotToSlash(pkgOrClass+1);    // skip ':'
             if (pCtrl->pkgOrClass == NULL) {
                 /* can happen if class name includes an illegal '/' */
-                LOGW("Unable to process assertion arg '%s'\n", pkgOrClass);
+                LOGW("Unable to process assertion arg '%s'", pkgOrClass);
                 return false;
             }
 
@@ -518,13 +518,13 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
 void dvmLateEnableAssertions()
 {
     if (gDvm.assertionCtrl == NULL) {
-        LOGD("Not late-enabling assertions: no assertionCtrl array\n");
+        LOGD("Not late-enabling assertions: no assertionCtrl array");
         return;
     } else if (gDvm.assertionCtrlCount != 0) {
-        LOGD("Not late-enabling assertions: some asserts already configured\n");
+        LOGD("Not late-enabling assertions: some asserts already configured");
         return;
     }
-    LOGD("Late-enabling assertions\n");
+    LOGD("Late-enabling assertions");
 
     /* global enable for all but system */
     AssertionControl* pCtrl = gDvm.assertionCtrl;
@@ -655,9 +655,9 @@ static int processOptions(int argc, const char* const argv[],
 {
     int i;
 
-    LOGV("VM options (%d):\n", argc);
+    LOGV("VM options (%d):", argc);
     for (i = 0; i < argc; i++)
-        LOGV("  %d: '%s'\n", i, argv[i]);
+        LOGV("  %d: '%s'", i, argv[i]);
 
     /*
      * Over-allocate AssertionControl array for convenience.  If allocated,
@@ -1009,7 +1009,7 @@ static int processOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;
             }
-            LOGV("Precise GC configured %s\n", gDvm.preciseGc ? "ON" : "OFF");
+            LOGV("Precise GC configured %s", gDvm.preciseGc ? "ON" : "OFF");
 
         } else if (strcmp(argv[i], "-Xcheckdexsum") == 0) {
             gDvm.verifyDexChecksum = true;
@@ -1099,7 +1099,7 @@ static void busCatcher(int signum, siginfo_t* info, void* context)
 {
     void* addr = info->si_addr;
 
-    LOGE("Caught a SIGBUS (%d), addr=%p\n", signum, addr);
+    LOGE("Caught a SIGBUS (%d), addr=%p", signum, addr);
 
     /*
      * If we return at this point the SIGBUS just keeps happening, so we
@@ -1155,9 +1155,9 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 
     assert(gDvm.initializing);
 
-    LOGV("VM init args (%d):\n", argc);
+    LOGV("VM init args (%d):", argc);
     for (i = 0; i < argc; i++)
-        LOGV("  %d: '%s'\n", i, argv[i]);
+        LOGV("  %d: '%s'", i, argv[i]);
 
     /* prep properties storage */
     if (!dvmPropertiesStartup())
@@ -1180,7 +1180,7 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 #if WITH_EXTRA_GC_CHECKS > 1
     /* only "portable" interp has the extra goodies */
     if (gDvm.executionMode != kExecutionModeInterpPortable) {
-        LOGI("Switching to 'portable' interpreter for GC checks\n");
+        LOGI("Switching to 'portable' interpreter for GC checks");
         gDvm.executionMode = kExecutionModeInterpPortable;
     }
 #endif
@@ -1199,13 +1199,13 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 
     /* verify system page size */
     if (sysconf(_SC_PAGESIZE) != SYSTEM_PAGE_SIZE) {
-        LOGE("ERROR: expected page size %d, got %d\n",
+        LOGE("ERROR: expected page size %d, got %d",
             SYSTEM_PAGE_SIZE, (int) sysconf(_SC_PAGESIZE));
         goto fail;
     }
 
     /* mterp setup */
-    LOGV("Using executionMode %d\n", gDvm.executionMode);
+    LOGV("Using executionMode %d", gDvm.executionMode);
     dvmCheckAsmConstants();
 
     /*
@@ -1304,7 +1304,7 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      */
     if (dvmReferenceTableEntries(&dvmThreadSelf()->internalLocalRefTable) != 0)
     {
-        LOGW("Warning: tracked references remain post-initialization\n");
+        LOGW("Warning: tracked references remain post-initialization");
         dvmDumpReferenceTable(&dvmThreadSelf()->internalLocalRefTable, "MAIN");
     }
 
@@ -1330,13 +1330,13 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 
 #ifndef NDEBUG
     if (!dvmTestHash())
-        LOGE("dvmTestHash FAILED\n");
+        LOGE("dvmTestHash FAILED");
     if (false /*noisy!*/ && !dvmTestIndirectRefTable())
-        LOGE("dvmTestIndirectRefTable FAILED\n");
+        LOGE("dvmTestIndirectRefTable FAILED");
 #endif
 
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGE("Exception pending at end of VM initialization\n");
+        LOGE("Exception pending at end of VM initialization");
         dvmLogExceptionStackTrace();
         goto fail;
     }
@@ -1435,12 +1435,12 @@ bool dvmInitAfterZygote()
      * come last.
      */
     if (!initJdwp()) {
-        LOGD("JDWP init failed; continuing anyway\n");
+        LOGD("JDWP init failed; continuing anyway");
     }
 
     endJdwp = dvmGetRelativeTimeUsec();
 
-    LOGV("thread-start heap=%d quit=%d jdwp=%d total=%d usec\n",
+    LOGV("thread-start heap=%d quit=%d jdwp=%d total=%d usec",
         (int)(endHeap-startHeap), (int)(endQuit-startQuit),
         (int)(endJdwp-startJdwp), (int)(endJdwp-startHeap));
 
@@ -1487,7 +1487,7 @@ static bool initJdwp()
 
         if (gDvm.jdwpHost != NULL) {
             if (strlen(gDvm.jdwpHost) >= sizeof(params.host)-1) {
-                LOGE("ERROR: hostname too long: '%s'\n", gDvm.jdwpHost);
+                LOGE("ERROR: hostname too long: '%s'", gDvm.jdwpHost);
                 return false;
             }
             strcpy(params.host, gDvm.jdwpHost);
@@ -1501,7 +1501,7 @@ static bool initJdwp()
 
         gDvm.jdwpState = dvmJdwpStartup(&params);
         if (gDvm.jdwpState == NULL) {
-            LOGW("WARNING: debugger thread failed to initialize\n");
+            LOGW("WARNING: debugger thread failed to initialize");
             /* TODO: ignore? fail? need to mimic "expected" behavior */
         }
     }
@@ -1513,7 +1513,7 @@ static bool initJdwp()
     if (dvmJdwpIsActive(gDvm.jdwpState)) {
         //dvmChangeStatus(NULL, THREAD_RUNNING);
         if (!dvmJdwpPostVMStart(gDvm.jdwpState, gDvm.jdwpSuspend)) {
-            LOGW("WARNING: failed to post 'start' message to debugger\n");
+            LOGW("WARNING: failed to post 'start' message to debugger");
             /* keep going */
         }
         //dvmChangeStatus(NULL, THREAD_NATIVE);
@@ -1613,7 +1613,7 @@ fail:
  */
 void dvmShutdown()
 {
-    LOGV("VM shutting down\n");
+    LOGV("VM shutting down");
 
     if (CALC_CACHE_STATS)
         dvmDumpAtomicCacheStats(gDvm.instanceofCache);
@@ -1653,7 +1653,7 @@ void dvmShutdown()
     dvmSlayDaemons();
 
     if (gDvm.verboseShutdown)
-        LOGD("VM cleaning up\n");
+        LOGD("VM cleaning up");
 
     dvmDebuggerShutdown();
     dvmProfilingShutdown();
@@ -1751,7 +1751,7 @@ void dvmPrintNativeBackTrace() {
  */
 void dvmAbort()
 {
-    LOGE("VM aborting\n");
+    LOGE("VM aborting");
 
     fflush(NULL);       // flush all open file buffers
 

@@ -369,7 +369,7 @@ static Method* findMethodInListByDescriptor(const ClassObject* clazz,
     size_t argCount = countArgsAndFindReturnType(descriptor, &returnType);
 
     if (returnType == NULL) {
-        LOGW("Bogus method descriptor: %s\n", descriptor);
+        LOGW("Bogus method descriptor: %s", descriptor);
         return NULL;
     }
 

@@ -21,7 +21,7 @@ HANDLE_OPCODE(OP_PACKED_SWITCH /*vAA, +BBBB*/)
         testVal = GET_REGISTER(vsrc1);
 
         offset = dvmInterpHandlePackedSwitch(switchData, testVal);
-        ILOGV("> branch taken (0x%04x)\n", offset);
+        ILOGV("> branch taken (0x%04x)", offset);
         if (offset <= 0)  /* uncommon */
             PERIODIC_CHECKS(offset);
         FINISH(offset);

@@ -16,7 +16,7 @@ HANDLE_OPCODE(OP_BREAKPOINT)
          * the thread resumed.
          */
         u1 originalOpcode = dvmGetOriginalOpcode(pc);
-        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)\n", originalOpcode, inst,
+        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)", originalOpcode, inst,
             INST_REPLACE_OP(inst, originalOpcode));
         inst = INST_REPLACE_OP(inst, originalOpcode);
         FINISH_BKPT(originalOpcode);

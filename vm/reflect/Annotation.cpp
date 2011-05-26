@@ -245,12 +245,12 @@ static Method* resolveAmbiguousMethod(const ClassObject* referrer, u4 methodIdx)
     resClass = dvmResolveClass(referrer, pMethodId->classIdx, true);
     if (resClass == NULL) {
         /* note exception will be pending */
-        LOGD("resolveAmbiguousMethod: unable to find class %d\n", methodIdx);
+        LOGD("resolveAmbiguousMethod: unable to find class %d", methodIdx);
         return NULL;
     }
     if (dvmIsInterfaceClass(resClass)) {
         /* method is part of an interface -- not expecting that */
-        LOGD("resolveAmbiguousMethod: method in interface?\n");
+        LOGD("resolveAmbiguousMethod: method in interface?");
         return NULL;
     }
 
@@ -330,7 +330,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     valueArg = valueType >> kDexAnnotationValueArgShift;
     width = valueArg + 1;       /* assume, correct later */
 
-    LOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]\n",
+    LOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]",
         valueType & kDexAnnotationValueTypeMask, valueArg, ptr-1,
         (ptr-1) - (u1*)clazz->pDvmDex->pDexFile->baseAddr);
 
@@ -485,11 +485,11 @@ static bool processAnnotationValue(const ClassObject* clazz,
             u4 size, count;
 
             size = readUleb128(&ptr);
-            LOGVV("--- annotation array, size is %u at %p\n", size, ptr);
+            LOGVV("--- annotation array, size is %u at %p", size, ptr);
             newArray = dvmAllocArrayByClass(gDvm.classJavaLangObjectArray,
                 size, ALLOC_DEFAULT);
             if (newArray == NULL) {
-                LOGE("annotation element array alloc failed (%d)\n", size);
+                LOGE("annotation element array alloc failed (%d)", size);
                 return false;
             }
 
@@ -531,7 +531,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
         width = 0;
         break;
     default:
-        LOGE("Bad annotation element value byte 0x%02x (0x%02x)\n",
+        LOGE("Bad annotation element value byte 0x%02x (0x%02x)",
             valueType, valueType & kDexAnnotationValueTypeMask);
         assert(false);
         return false;
@@ -580,7 +580,7 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
      * (valueObj->clazz->descriptor+1, valueObj->clazz->classLoader).
      */
     if (strcmp(valueObj->clazz->descriptor, "[Ljava/lang/Object;") != 0) {
-        LOGE("Unexpected src type class (%s)\n", valueObj->clazz->descriptor);
+        LOGE("Unexpected src type class (%s)", valueObj->clazz->descriptor);
         return NULL;
     }
     srcElemClass = gDvm.classJavaLangObject;
@@ -596,7 +596,7 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
     } else {
         dstElemClass = dvmFindPrimitiveClass(firstChar);
     }
-    LOGV("HEY: converting valueObj from [%s to [%s\n",
+    LOGV("HEY: converting valueObj from [%s to [%s",
         srcElemClass->descriptor, dstElemClass->descriptor);
 
     ArrayObject* srcArray = (ArrayObject*) valueObj;
@@ -605,7 +605,7 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
 
     newArray = dvmAllocArrayByClass(methodReturn, length, ALLOC_DEFAULT);
     if (newArray == NULL) {
-        LOGE("Failed creating duplicate annotation class (%s %d)\n",
+        LOGE("Failed creating duplicate annotation class (%s %d)",
             methodReturn->descriptor, length);
         goto bail;
     }
@@ -617,7 +617,7 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
         success = dvmUnboxObjectArray(newArray, srcArray, dstElemClass);
     }
     if (!success) {
-        LOGE("Annotation array copy failed\n");
+        LOGE("Annotation array copy failed");
         dvmReleaseTrackedAlloc((Object*)newArray, self);
         newArray = NULL;
         goto bail;
@@ -660,7 +660,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
     elementNameIdx = readUleb128(pPtr);
 
     if (!processAnnotationValue(clazz, pPtr, &avalue, kAllObjects)) {
-        LOGW("Failed processing annotation value\n");
+        LOGW("Failed processing annotation value");
         goto bail;
     }
     valueObj = (Object*)avalue.value.l;
@@ -676,7 +676,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
     if (name != NULL) {
         Method* annoMeth = dvmFindVirtualMethodByName(annoClass, name);
         if (annoMeth == NULL) {
-            LOGW("WARNING: could not find annotation member %s in %s\n",
+            LOGW("WARNING: could not find annotation member %s in %s",
                 name, annoClass->descriptor);
         } else {
             methodObj = dvmCreateReflectMethodObject(annoMeth);
@@ -686,7 +686,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
     if (newMember == NULL || nameObj == NULL || methodObj == NULL ||
         methodReturn == NULL)
     {
-        LOGE("Failed creating annotation element (m=%p n=%p a=%p r=%p)\n",
+        LOGE("Failed creating annotation element (m=%p n=%p a=%p r=%p)",
             newMember, nameObj, methodObj, methodReturn);
         goto bail;
     }
@@ -700,7 +700,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
     dvmCallMethod(self, gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init,
         newMember, &unused, nameObj, valueObj, methodReturn, methodObj);
     if (dvmCheckException(self)) {
-        LOGD("Failed constructing annotation element\n");
+        LOGD("Failed constructing annotation element");
         goto bail;
     }
 
@@ -749,20 +749,20 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
     typeIdx = readUleb128(&ptr);
     size = readUleb128(&ptr);
 
-    LOGVV("----- processEnc ptr=%p type=%d size=%d\n", ptr, typeIdx, size);
+    LOGVV("----- processEnc ptr=%p type=%d size=%d", ptr, typeIdx, size);
 
     annoClass = dvmDexGetResolvedClass(clazz->pDvmDex, typeIdx);
     if (annoClass == NULL) {
         annoClass = dvmResolveClass(clazz, typeIdx, true);
         if (annoClass == NULL) {
-            LOGE("Unable to resolve %s annotation class %d\n",
+            LOGE("Unable to resolve %s annotation class %d",
                 clazz->descriptor, typeIdx);
             assert(dvmCheckException(self));
             return NULL;
         }
     }
 
-    LOGV("----- processEnc ptr=%p [0x%06x]  typeIdx=%d size=%d class=%s\n",
+    LOGV("----- processEnc ptr=%p [0x%06x]  typeIdx=%d size=%d class=%s",
         *pPtr, *pPtr - (u1*) clazz->pDvmDex->pDexFile->baseAddr,
         typeIdx, size, annoClass->descriptor);
 
@@ -778,7 +778,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
             gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray,
             size, ALLOC_DEFAULT);
         if (elementArray == NULL) {
-            LOGE("failed to allocate annotation member array (%d elements)\n",
+            LOGE("failed to allocate annotation member array (%d elements)",
                 size);
             goto bail;
         }
@@ -801,7 +801,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
         gDvm.methOrgApacheHarmonyLangAnnotationAnnotationFactory_createAnnotation,
         NULL, &result, annoClass, elementArray);
     if (dvmCheckException(self)) {
-        LOGD("Failed creating an annotation\n");
+        LOGD("Failed creating an annotation");
         //dvmLogExceptionStackTrace();
         goto bail;
     }
@@ -960,7 +960,7 @@ static bool skipAnnotationValue(const ClassObject* clazz, const u1** pPtr)
     valueArg = valueType >> kDexAnnotationValueArgShift;
     width = valueArg + 1;       /* assume */
 
-    LOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]\n",
+    LOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]",
         valueType & kDexAnnotationValueTypeMask, valueArg, ptr-1,
         (ptr-1) - (u1*)clazz->pDvmDex->pDexFile->baseAddr);
 
@@ -1000,7 +1000,7 @@ static bool skipAnnotationValue(const ClassObject* clazz, const u1** pPtr)
         width = 0;
         break;
     default:
-        LOGE("Bad annotation element value byte 0x%02x\n", valueType);
+        LOGE("Bad annotation element value byte 0x%02x", valueType);
         assert(false);
         return false;
     }
@@ -1146,7 +1146,7 @@ static Object* getAnnotationValue(const ClassObject* clazz,
     /* find the annotation */
     ptr = searchEncodedAnnotation(clazz, pAnnoItem->annotation, annoName);
     if (ptr == NULL) {
-        LOGW("%s annotation lacks '%s' member\n", debugAnnoName, annoName);
+        LOGW("%s annotation lacks '%s' member", debugAnnoName, annoName);
         return GAV_FAILED;
     }
 
@@ -1155,7 +1155,7 @@ static Object* getAnnotationValue(const ClassObject* clazz,
 
     /* make sure it has the expected format */
     if (avalue.type != expectedType) {
-        LOGW("%s %s has wrong type (0x%02x, expected 0x%02x)\n",
+        LOGW("%s %s has wrong type (0x%02x, expected 0x%02x)",
             debugAnnoName, annoName, avalue.type, expectedType);
         return GAV_FAILED;
     }
@@ -1412,18 +1412,18 @@ ClassObject* dvmGetEnclosingClass(const ClassObject* clazz)
     const u1* ptr;
     ptr = searchEncodedAnnotation(clazz, pAnnoItem->annotation, "value");
     if (ptr == NULL) {
-        LOGW("EnclosingMethod annotation lacks 'value' member\n");
+        LOGW("EnclosingMethod annotation lacks 'value' member");
         return NULL;
     }
 
     /* parse it, verify the type */
     AnnotationValue avalue;
     if (!processAnnotationValue(clazz, &ptr, &avalue, kAllRaw)) {
-        LOGW("EnclosingMethod parse failed\n");
+        LOGW("EnclosingMethod parse failed");
         return NULL;
     }
     if (avalue.type != kDexAnnotationMethod) {
-        LOGW("EnclosingMethod value has wrong type (0x%02x, expected 0x%02x)\n",
+        LOGW("EnclosingMethod value has wrong type (0x%02x, expected 0x%02x)",
             avalue.type, kDexAnnotationMethod);
         return NULL;
     }
@@ -1469,14 +1469,14 @@ bool dvmGetInnerClass(const ClassObject* clazz, StringObject** pName,
     const u1* ptr;
     ptr = searchEncodedAnnotation(clazz, pAnnoItem->annotation, "name");
     if (ptr == NULL) {
-        LOGW("InnerClass annotation lacks 'name' member\n");
+        LOGW("InnerClass annotation lacks 'name' member");
         return false;
     }
 
     /* parse it into an Object */
     AnnotationValue avalue;
     if (!processAnnotationValue(clazz, &ptr, &avalue, kAllObjects)) {
-        LOGD("processAnnotationValue failed on InnerClass member 'name'\n");
+        LOGD("processAnnotationValue failed on InnerClass member 'name'");
         return false;
     }
 
@@ -1484,7 +1484,7 @@ bool dvmGetInnerClass(const ClassObject* clazz, StringObject** pName,
     if (avalue.type != kDexAnnotationNull &&
         avalue.type != kDexAnnotationString)
     {
-        LOGW("InnerClass name has bad type (0x%02x, expected STRING or NULL)\n",
+        LOGW("InnerClass name has bad type (0x%02x, expected STRING or NULL)",
             avalue.type);
         return false;
     }
@@ -1494,17 +1494,17 @@ bool dvmGetInnerClass(const ClassObject* clazz, StringObject** pName,
 
     ptr = searchEncodedAnnotation(clazz, pAnnoItem->annotation, "accessFlags");
     if (ptr == NULL) {
-        LOGW("InnerClass annotation lacks 'accessFlags' member\n");
+        LOGW("InnerClass annotation lacks 'accessFlags' member");
         return false;
     }
 
     /* parse it, verify the type */
     if (!processAnnotationValue(clazz, &ptr, &avalue, kAllRaw)) {
-        LOGW("InnerClass accessFlags parse failed\n");
+        LOGW("InnerClass accessFlags parse failed");
         return false;
     }
     if (avalue.type != kDexAnnotationInt) {
-        LOGW("InnerClass value has wrong type (0x%02x, expected 0x%02x)\n",
+        LOGW("InnerClass value has wrong type (0x%02x, expected 0x%02x)",
             avalue.type, kDexAnnotationInt);
         return false;
     }
@@ -1616,7 +1616,7 @@ static u4 getMethodIdx(const Method* method)
     if (hi < lo) {
         /* this should be impossible -- the method came out of this DEX */
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGE("Unable to find method %s.%s %s in DEX file!\n",
+        LOGE("Unable to find method %s.%s %s in DEX file!",
             method->clazz->descriptor, method->name, desc);
         free(desc);
         dvmAbort();
@@ -1833,11 +1833,11 @@ Object* dvmGetAnnotationDefaultValue(const Method* method)
     const u1* ptr;
     ptr = searchEncodedAnnotation(clazz, pAnnoItem->annotation, "value");
     if (ptr == NULL) {
-        LOGW("AnnotationDefault annotation lacks 'value'\n");
+        LOGW("AnnotationDefault annotation lacks 'value'");
         return NULL;
     }
     if ((*ptr & kDexAnnotationValueTypeMask) != kDexAnnotationAnnotation) {
-        LOGW("AnnotationDefault value has wrong type (0x%02x)\n",
+        LOGW("AnnotationDefault value has wrong type (0x%02x)",
             *ptr & kDexAnnotationValueTypeMask);
         return NULL;
     }
@@ -1855,7 +1855,7 @@ Object* dvmGetAnnotationDefaultValue(const Method* method)
     /* got it, pull it out */
     AnnotationValue avalue;
     if (!processAnnotationValue(clazz, &ptr, &avalue, kAllObjects)) {
-        LOGD("processAnnotationValue failed on default for '%s'\n",
+        LOGD("processAnnotationValue failed on default for '%s'",
             method->name);
         return NULL;
     }
@@ -1925,7 +1925,7 @@ static u4 getFieldIdx(const Field* field)
 
     if (hi < lo) {
         /* this should be impossible -- the field came out of this DEX */
-        LOGE("Unable to find field %s.%s %s in DEX file!\n",
+        LOGE("Unable to find field %s.%s %s in DEX file!",
             field->clazz->descriptor, field->name, field->signature);
         dvmAbort();
     }
@@ -2076,7 +2076,7 @@ static ArrayObject* processAnnotationSetRefList(const ClassObject* clazz,
     annoArrayArray = dvmAllocArrayByClass(
         gDvm.classJavaLangAnnotationAnnotationArrayArray, count, ALLOC_DEFAULT);
     if (annoArrayArray == NULL) {
-        LOGW("annotation set ref array alloc failed\n");
+        LOGW("annotation set ref array alloc failed");
         goto bail;
     }
 
@@ -2092,7 +2092,7 @@ static ArrayObject* processAnnotationSetRefList(const ClassObject* clazz,
                                                  pAnnoSet,
                                                  kDexVisibilityRuntime);
         if (annoSet == NULL) {
-            LOGW("processAnnotationSet failed\n");
+            LOGW("processAnnotationSet failed");
             annoArrayArray = NULL;
             goto bail;
         }

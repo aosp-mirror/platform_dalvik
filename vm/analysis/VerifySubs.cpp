@@ -58,7 +58,7 @@ void dvmLogVerifyFailure(const Method* meth, const char* format, ...)
     LOG_PRI_VA(logLevel, LOG_TAG, format, ap);
     if (meth != NULL) {
         char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-        LOG_PRI(logLevel, LOG_TAG, "VFY:  rejected %s.%s %s\n",
+        LOG_PRI(logLevel, LOG_TAG, "VFY:  rejected %s.%s %s",
             meth->clazz->descriptor, meth->name, desc);
         free(desc);
     }
@@ -81,7 +81,7 @@ void dvmLogUnableToResolveClass(const char* missingClassDescr,
     char* dotFromClass = dvmHumanReadableDescriptor(meth->clazz->descriptor);
     //char* methodDescr = dexProtoCopyMethodDescriptor(&meth->prototype);
 
-    LOGE("Could not find class '%s', referenced from method %s.%s\n",
+    LOGE("Could not find class '%s', referenced from method %s.%s",
         dotMissingClass, dotFromClass, meth->name/*, methodDescr*/);
 
     free(dotMissingClass);

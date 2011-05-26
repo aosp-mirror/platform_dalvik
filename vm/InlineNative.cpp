@@ -136,7 +136,7 @@ bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         return false;
     }
 
-    //LOGI("String.charAt this=0x%08x index=%d\n", arg0, arg1);
+    //LOGI("String.charAt this=0x%08x index=%d", arg0, arg1);
     count = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
     if ((s4) arg1 < 0 || (s4) arg1 >= count) {
         dvmThrowStringIndexOutOfBoundsExceptionWithIndex(count, arg1);
@@ -180,9 +180,9 @@ static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
     thisStr = dvmCreateCstrFromString(thisStrObj);
     compStr = dvmCreateCstrFromString(compStrObj);
 
-    LOGE("%s expected %d got %d\n", compareType, expectResult, newResult);
-    LOGE(" this (o=%d l=%d) '%s'\n", thisOffset, thisCount, thisStr);
-    LOGE(" comp (o=%d l=%d) '%s'\n", compOffset, compCount, compStr);
+    LOGE("%s expected %d got %d", compareType, expectResult, newResult);
+    LOGE(" this (o=%d l=%d) '%s'", thisOffset, thisCount, thisStr);
+    LOGE(" comp (o=%d l=%d) '%s'", compOffset, compCount, compStr);
     dvmPrintHexDumpEx(ANDROID_LOG_INFO, LOG_TAG,
         ((const u2*) thisArray->contents) + thisOffset, thisCount*2,
         kHexDumpLocal);
@@ -403,7 +403,7 @@ bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
-    //LOGI("String.length this=0x%08x pResult=%p\n", arg0, pResult);
+    //LOGI("String.length this=0x%08x pResult=%p", arg0, pResult);
 
     /* null reference check on "this" */
     if ((Object*) arg0 == NULL) {
@@ -421,7 +421,7 @@ bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
-    //LOGI("String.isEmpty this=0x%08x pResult=%p\n", arg0, pResult);
+    //LOGI("String.isEmpty this=0x%08x pResult=%p", arg0, pResult);
 
     /* null reference check on "this" */
     if ((Object*) arg0 == NULL) {
@@ -455,7 +455,7 @@ static inline int indexOfCommon(Object* strObj, int ch, int start)
     const u2* chars = (const u2*)(void*)charArray->contents;
     int offset = dvmGetFieldInt(strObj, STRING_FIELDOFF_OFFSET);
     int count = dvmGetFieldInt(strObj, STRING_FIELDOFF_COUNT);
-    //LOGI("String.indexOf(0x%08x, 0x%04x, %d) off=%d count=%d\n",
+    //LOGI("String.indexOf(0x%08x, 0x%04x, %d) off=%d count=%d",
     //    (u4) strObj, ch, start, offset, count);
 
     /* factor out the offset */
@@ -893,7 +893,7 @@ Method* dvmResolveInlineNative(int opIndex)
     gDvm.inlinedMethods[opIndex] = method;
     IF_LOGV() {
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGV("Registered for profile: %s.%s %s\n",
+        LOGV("Registered for profile: %s.%s %s",
             method->clazz->descriptor, method->name, desc);
         free(desc);
     }

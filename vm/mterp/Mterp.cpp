@@ -41,7 +41,7 @@ bool dvmCheckAsmConstants()
 #include "mterp/common/asm-constants.h"
 
     if (failed) {
-        LOGE("Please correct the values in mterp/common/asm-constants.h\n");
+        LOGE("Please correct the values in mterp/common/asm-constants.h");
         dvmAbort();
     }
 
@@ -56,8 +56,8 @@ bool dvmCheckAsmConstants()
     int interpSize = (uintptr_t) dvmAsmInstructionEnd -
                      (uintptr_t) dvmAsmInstructionStart;
     if (interpSize != 0 && interpSize != kNumPackedOpcodes*width) {
-        LOGE("ERROR: unexpected asm interp size %d\n", interpSize);
-        LOGE("(did an instruction handler exceed %d bytes?)\n", width);
+        LOGE("ERROR: unexpected asm interp size %d", interpSize);
+        LOGE("(did an instruction handler exceed %d bytes?)", width);
         dvmAbort();
     }
 #endif
@@ -79,16 +79,16 @@ void dvmMterpStd(Thread* self)
     IF_LOGVV() {
         char* desc = dexProtoCopyMethodDescriptor(
                          &self->interpSave.method->prototype);
-        LOGVV("mterp threadid=%d : %s.%s %s\n",
+        LOGVV("mterp threadid=%d : %s.%s %s",
             dvmThreadSelf()->threadId,
             self->interpSave.method->clazz->descriptor,
             self->interpSave.method->name,
             desc);
         free(desc);
     }
-    //LOGI("self is %p, pc=%p, fp=%p\n", self, self->interpSave.pc,
+    //LOGI("self is %p, pc=%p, fp=%p", self, self->interpSave.pc,
     //      self->interpSave.curFrame);
-    //LOGI("first instruction is 0x%04x\n", self->interpSave.pc[0]);
+    //LOGI("first instruction is 0x%04x", self->interpSave.pc[0]);
 
     /*
      * Handle any ongoing profiling and prep for debugging

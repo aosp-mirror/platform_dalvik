@@ -205,7 +205,7 @@ static void logClassLoadWithTime(char type, ClassObject* clazz, u8 time) {
     pid_t pid = getpid();
     unsigned int tid = (unsigned int) pthread_self();
 
-    LOG(LOG_INFO, "PRELOAD", "%c%d:%d:%d:%s:%d:%s:%lld\n", type, ppid, pid, tid,
+    LOG(LOG_INFO, "PRELOAD", "%c%d:%d:%d:%s:%d:%s:%lld", type, ppid, pid, tid,
         get_process_name(), (int) clazz->classLoader, clazz->descriptor,
         time);
 }
@@ -274,13 +274,13 @@ static void linearAllocTests()
     dvmLinearReadOnly(NULL, (char*)fiddle);
 
     char* str = (char*)dvmLinearStrdup(NULL, "This is a test!");
-    LOGI("GOT: '%s'\n", str);
+    LOGI("GOT: '%s'", str);
 
     /* try to check the bounds; allocator may round allocation size up */
     fiddle = (char*)dvmLinearAlloc(NULL, 12);
-    LOGI("Should be 1: %d\n", dvmLinearAllocContains(fiddle, 12));
-    LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle, 13));
-    LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle - 128*1024, 1));
+    LOGI("Should be 1: %d", dvmLinearAllocContains(fiddle, 12));
+    LOGI("Should be 0: %d", dvmLinearAllocContains(fiddle, 13));
+    LOGI("Should be 0: %d", dvmLinearAllocContains(fiddle - 128*1024, 1));
 
     dvmLinearAllocDump(NULL);
     dvmLinearFree(NULL, (char*)str);
@@ -314,7 +314,7 @@ ClassObject* dvmFindPrimitiveClass(char type)
         case PRIM_FLOAT:   return gDvm.typeFloat;
         case PRIM_DOUBLE:  return gDvm.typeDouble;
         default: {
-            LOGW("Unknown primitive type '%c'\n", type);
+            LOGW("Unknown primitive type '%c'", type);
             return NULL;
         }
     }
@@ -354,7 +354,7 @@ static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClas
 
     /* don't need to set newClass->objectSize */
 
-    LOGVV("Constructed class for primitive type '%s'\n", newClass->descriptor);
+    LOGVV("Constructed class for primitive type '%s'", newClass->descriptor);
 
     *pClass = newClass;
     dvmReleaseTrackedAlloc((Object*) newClass, NULL);
@@ -380,7 +380,7 @@ static bool createInitialClasses() {
     SET_CLASS_FLAG(clazz, ACC_PUBLIC | ACC_FINAL | CLASS_ISCLASS);
     clazz->descriptor = "Ljava/lang/Class;";
     gDvm.classJavaLangClass = clazz;
-    LOGVV("Constructed the class Class.\n");
+    LOGVV("Constructed the class Class.");
 
     /*
      * Initialize the classes representing primitive types. These are
@@ -410,7 +410,7 @@ bool dvmClassStartup()
 {
     /* make this a requirement -- don't currently support dirs in path */
     if (strcmp(gDvm.bootClassPathStr, ".") == 0) {
-        LOGE("ERROR: must specify non-'.' bootclasspath\n");
+        LOGE("ERROR: must specify non-'.' bootclasspath");
         return false;
     }
 
@@ -515,7 +515,7 @@ static void dumpClassPath(const ClassPathEntry* cpe)
         default:            kindStr = "???";    break;
         }
 
-        LOGI("  %2d: type=%s %s %p\n", idx, kindStr, cpe->fileName, cpe->ptr);
+        LOGI("  %2d: type=%s %s %p", idx, kindStr, cpe->fileName, cpe->ptr);
         if (CALC_CACHE_STATS && cpe->kind == kCpeJar) {
             JarFile* pJarFile = (JarFile*) cpe->ptr;
             DvmDex* pDvmDex = dvmGetJarFileDex(pJarFile);
@@ -599,7 +599,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
 
     cc = stat(cpe->fileName, &sb);
     if (cc < 0) {
-        LOGD("Unable to stat classpath element '%s'\n", cpe->fileName);
+        LOGD("Unable to stat classpath element '%s'", cpe->fileName);
         return false;
     }
     if (S_ISDIR(sb.st_mode)) {
@@ -631,7 +631,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
         return true;
     }
 
-    LOGD("Unable to process classpath element '%s'\n", cpe->fileName);
+    LOGD("Unable to process classpath element '%s'", cpe->fileName);
     return false;
 }
 
@@ -696,7 +696,7 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
         } else {
             if (isBootstrap &&
                     dvmPathToAbsolutePortion(cp) == NULL) {
-                LOGE("Non-absolute bootclasspath entry '%s'\n", cp);
+                LOGE("Non-absolute bootclasspath entry '%s'", cp);
                 free(cpe);
                 cpe = NULL;
                 goto bail;
@@ -729,13 +729,13 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
     }
     assert(idx <= count);
     if (idx == 0 && !gDvm.optimizing) {
-        LOGE("No valid entries found in bootclasspath '%s'\n", pathStr);
+        LOGE("No valid entries found in bootclasspath '%s'", pathStr);
         free(cpe);
         cpe = NULL;
         goto bail;
     }
 
-    LOGVV("  (filled %d of %d slots)\n", idx, count);
+    LOGVV("  (filled %d of %d slots)", idx, count);
 
     /* put end marker in over-alloc slot */
     cpe[idx].kind = kCpeLastEntry;
@@ -764,15 +764,15 @@ static DvmDex* searchBootPathForClass(const char* descriptor,
     const DexClassDef* pFoundDef = NULL;
     DvmDex* pFoundFile = NULL;
 
-    LOGVV("+++ class '%s' not yet loaded, scanning bootclasspath...\n",
+    LOGVV("+++ class '%s' not yet loaded, scanning bootclasspath...",
         descriptor);
 
     while (cpe->kind != kCpeLastEntry) {
-        //LOGV("+++  checking '%s' (%d)\n", cpe->fileName, cpe->kind);
+        //LOGV("+++  checking '%s' (%d)", cpe->fileName, cpe->kind);
 
         switch (cpe->kind) {
         case kCpeDir:
-            LOGW("Directory entries ('%s') not supported in bootclasspath\n",
+            LOGW("Directory entries ('%s') not supported in bootclasspath",
                 cpe->fileName);
             break;
         case kCpeJar:
@@ -808,7 +808,7 @@ static DvmDex* searchBootPathForClass(const char* descriptor,
             }
             break;
         default:
-            LOGE("Unknown kind %d\n", cpe->kind);
+            LOGE("Unknown kind %d", cpe->kind);
             assert(false);
             break;
         }
@@ -884,7 +884,7 @@ StringObject* dvmGetBootPathResource(const char* name, int idx)
     const ClassPathEntry* cpe = gDvm.bootClassPath;
     StringObject* urlObj = NULL;
 
-    LOGV("+++ searching for resource '%s' in %d(%s)\n",
+    LOGV("+++ searching for resource '%s' in %d(%s)",
         name, idx, cpe[idx].fileName);
 
     /* we could use direct array index, but I don't entirely trust "idx" */
@@ -912,14 +912,14 @@ StringObject* dvmGetBootPathResource(const char* name, int idx)
         }
         break;
     case kCpeDex:
-        LOGV("No resources in DEX files\n");
+        LOGV("No resources in DEX files");
         goto bail;
     default:
         assert(false);
         goto bail;
     }
 
-    LOGV("+++ using URL='%s'\n", urlBuf);
+    LOGV("+++ using URL='%s'", urlBuf);
     urlObj = dvmCreateStringFromCstr(urlBuf);
 
 bail:
@@ -983,7 +983,7 @@ bool dvmLoaderInInitiatingList(const ClassObject* clazz, const Object* loader)
     int i;
     for (i = loaderList->initiatingLoaderCount-1; i >= 0; --i) {
         if (loaderList->initiatingLoaders[i] == loader) {
-            //LOGI("+++ found initiating match %p in %s\n",
+            //LOGI("+++ found initiating match %p in %s",
             //    loader, clazz->descriptor);
             return true;
         }
@@ -1006,7 +1006,7 @@ void dvmAddInitiatingLoader(ClassObject* clazz, Object* loader)
     if (loader != clazz->classLoader) {
         assert(loader != NULL);
 
-        LOGVV("Adding %p to '%s' init list\n", loader, clazz->descriptor);
+        LOGVV("Adding %p to '%s' init list", loader, clazz->descriptor);
         dvmHashTableLock(gDvm.loadedClasses);
 
         /*
@@ -1015,7 +1015,7 @@ void dvmAddInitiatingLoader(ClassObject* clazz, Object* loader)
          * checking before every add, so we may not want to do this.
          */
         //if (dvmLoaderInInitiatingList(clazz, loader)) {
-        //    LOGW("WOW: simultaneous add of initiating class loader\n");
+        //    LOGW("WOW: simultaneous add of initiating class loader");
         //    goto bail_unlock;
         //}
 
@@ -1041,7 +1041,7 @@ void dvmAddInitiatingLoader(ClassObject* clazz, Object* loader)
             }
             loaderList->initiatingLoaders = newList;
 
-            //LOGI("Expanded init list to %d (%s)\n",
+            //LOGI("Expanded init list to %d (%s)",
             //    loaderList->initiatingLoaderCount+kInitLoaderInc,
             //    clazz->descriptor);
         }
@@ -1078,7 +1078,7 @@ static int hashcmpClassByCrit(const void* vclazz, const void* vcrit)
               (pCrit->loader != NULL &&
                dvmLoaderInInitiatingList(clazz, pCrit->loader)) ));
     //if (match)
-    //    LOGI("+++ %s %p matches existing %s %p\n",
+    //    LOGI("+++ %s %p matches existing %s %p",
     //        pCrit->descriptor, pCrit->loader,
     //        clazz->descriptor, clazz->classLoader);
     return !match;
@@ -1131,7 +1131,7 @@ ClassObject* dvmLookupClass(const char* descriptor, Object* loader,
     crit.loader = loader;
     hash = dvmComputeUtf8Hash(descriptor);
 
-    LOGVV("threadid=%d: dvmLookupClass searching for '%s' %p\n",
+    LOGVV("threadid=%d: dvmLookupClass searching for '%s' %p",
         dvmThreadSelf()->threadId, descriptor, loader);
 
     dvmHashTableLock(gDvm.loadedClasses);
@@ -1148,7 +1148,7 @@ ClassObject* dvmLookupClass(const char* descriptor, Object* loader,
      * the wait-for-class code centralized.
      */
     if (found && !unprepOkay && !dvmIsClassLinked((ClassObject*)found)) {
-        LOGV("Ignoring not-yet-ready %s, using slow path\n",
+        LOGV("Ignoring not-yet-ready %s, using slow path",
             ((ClassObject*)found)->descriptor);
         found = NULL;
     }
@@ -1180,7 +1180,7 @@ bool dvmAddClassToHash(ClassObject* clazz)
                 hashcmpClassByClass, true);
     dvmHashTableUnlock(gDvm.loadedClasses);
 
-    LOGV("+++ dvmAddClassToHash '%s' %p (isnew=%d) --> %p\n",
+    LOGV("+++ dvmAddClassToHash '%s' %p (isnew=%d) --> %p",
         clazz->descriptor, clazz->classLoader,
         (found == (void*) clazz), clazz);
 
@@ -1216,13 +1216,13 @@ void dvmCheckClassTablePerf()
  */
 static void removeClassFromHash(ClassObject* clazz)
 {
-    LOGV("+++ removeClassFromHash '%s'\n", clazz->descriptor);
+    LOGV("+++ removeClassFromHash '%s'", clazz->descriptor);
 
     u4 hash = dvmComputeUtf8Hash(clazz->descriptor);
 
     dvmHashTableLock(gDvm.loadedClasses);
     if (!dvmHashTableRemove(gDvm.loadedClasses, hash, clazz))
-        LOGW("Hash table remove failed on class '%s'\n", clazz->descriptor);
+        LOGW("Hash table remove failed on class '%s'", clazz->descriptor);
     dvmHashTableUnlock(gDvm.loadedClasses);
 }
 
@@ -1290,7 +1290,7 @@ ClassObject* dvmFindClassNoInit(const char* descriptor,
     assert(descriptor != NULL);
     //assert(loader != NULL);
 
-    LOGVV("FindClassNoInit '%s' %p\n", descriptor, loader);
+    LOGVV("FindClassNoInit '%s' %p", descriptor, loader);
 
     if (*descriptor == '[') {
         /*
@@ -1318,7 +1318,7 @@ ClassObject* dvmFindClassNoInit(const char* descriptor,
 static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
     Object* loader)
 {
-    //LOGI("##### findClassFromLoaderNoInit (%s,%p)\n",
+    //LOGI("##### findClassFromLoaderNoInit (%s,%p)",
     //        descriptor, loader);
 
     Thread* self = dvmThreadSelf();
@@ -1337,10 +1337,10 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
      */
     ClassObject* clazz = dvmLookupClass(descriptor, loader, false);
     if (clazz != NULL) {
-        LOGVV("Already loaded: %s %p\n", descriptor, loader);
+        LOGVV("Already loaded: %s %p", descriptor, loader);
         return clazz;
     } else {
-        LOGVV("Not already loaded: %s %p\n", descriptor, loader);
+        LOGVV("Not already loaded: %s %p", descriptor, loader);
     }
 
     char* dotName = NULL;
@@ -1366,7 +1366,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
      * implementation eventually calls VMClassLoader.loadClass to see if
      * the bootstrap class loader can find it before doing its own load.
      */
-    LOGVV("--- Invoking loadClass(%s, %p)\n", dotName, loader);
+    LOGVV("--- Invoking loadClass(%s, %p)", dotName, loader);
     {
         const Method* loadClass =
             loader->clazz->vtable[gDvm.voffJavaLangClassLoader_loadClass];
@@ -1378,7 +1378,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         Object* excep = dvmGetException(self);
         if (excep != NULL) {
 #if DVM_SHOW_EXCEPTION >= 2
-            LOGD("NOTE: loadClass '%s' %p threw exception %s\n",
+            LOGD("NOTE: loadClass '%s' %p threw exception %s",
                  dotName, loader, excep->clazz->descriptor);
 #endif
             dvmAddTrackedAlloc(excep, self);
@@ -1388,7 +1388,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
             clazz = NULL;
             goto bail;
         } else if (clazz == NULL) {
-            LOGW("ClassLoader returned NULL w/o exception pending\n");
+            LOGW("ClassLoader returned NULL w/o exception pending");
             dvmThrowNullPointerException("ClassLoader returned null");
             goto bail;
         }
@@ -1398,7 +1398,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
 
     dvmAddInitiatingLoader(clazz, loader);
 
-    LOGVV("--- Successfully loaded %s %p (thisldr=%p clazz=%p)\n",
+    LOGVV("--- Successfully loaded %s %p (thisldr=%p clazz=%p)",
         descriptor, clazz->classLoader, loader, clazz);
 
 bail:
@@ -1480,7 +1480,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
     bool profilerNotified = false;
 
     if (loader != NULL) {
-        LOGVV("#### findClassNoInit(%s,%p,%p)\n", descriptor, loader,
+        LOGVV("#### findClassNoInit(%s,%p,%p)", descriptor, loader,
             pDvmDex->pDexFile);
     }
 
@@ -1567,7 +1567,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
              *
              * (Yes, this happens.)
              */
-            //LOGW("WOW: somebody loaded %s simultaneously\n", descriptor);
+            //LOGW("WOW: somebody loaded %s simultaneously", descriptor);
             clazz->initThreadId = 0;
             dvmUnlockObject(self, (Object*) clazz);
 
@@ -1606,7 +1606,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
             dvmUnlockObject(self, (Object*) clazz);
 
 #if LOG_CLASS_LOADING
-            LOG(LOG_INFO, "DVMLINK FAILED FOR CLASS ", "%s in %s\n",
+            LOG(LOG_INFO, "DVMLINK FAILED FOR CLASS ", "%s in %s",
                 clazz->descriptor, get_process_name());
 
             /*
@@ -1619,9 +1619,9 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
             clazz = NULL;
             if (gDvm.optimizing) {
                 /* happens with "external" libs */
-                LOGV("Link of class '%s' failed\n", descriptor);
+                LOGV("Link of class '%s' failed", descriptor);
             } else {
-                LOGW("Link of class '%s' failed\n", descriptor);
+                LOGW("Link of class '%s' failed", descriptor);
             }
             goto bail;
         }
@@ -1678,13 +1678,13 @@ got_class:
             if (!dvmIsClassLinked(clazz) &&
                 clazz->initThreadId == self->threadId)
             {
-                LOGW("Recursive link on class %s\n", clazz->descriptor);
+                LOGW("Recursive link on class %s", clazz->descriptor);
                 dvmUnlockObject(self, (Object*) clazz);
                 dvmThrowClassCircularityError(clazz->descriptor);
                 clazz = NULL;
                 goto bail;
             }
-            //LOGI("WAITING  for '%s' (owner=%d)\n",
+            //LOGI("WAITING  for '%s' (owner=%d)",
             //    clazz->descriptor, clazz->initThreadId);
             while (!dvmIsClassLinked(clazz) && clazz->status != CLASS_ERROR) {
                 dvmObjectWait(self, (Object*) clazz, 0, 0, false);
@@ -1709,7 +1709,7 @@ got_class:
     assert(dvmIsClassObject(clazz));
     assert(clazz == gDvm.classJavaLangObject || clazz->super != NULL);
     if (!dvmIsInterfaceClass(clazz)) {
-        //LOGI("class=%s vtableCount=%d, virtualMeth=%d\n",
+        //LOGI("class=%s vtableCount=%d, virtualMeth=%d",
         //    clazz->descriptor, clazz->vtableCount,
         //    clazz->virtualMethodCount);
         assert(clazz->vtableCount >= clazz->virtualMethodCount);
@@ -1743,7 +1743,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
      * runtime state.
      */
     if ((pClassDef->accessFlags & ~EXPECTED_FILE_FLAGS) != 0) {
-        LOGW("Invalid file flags in class %s: %04x\n",
+        LOGW("Invalid file flags in class %s: %04x",
             descriptor, pClassDef->accessFlags);
         return NULL;
     }
@@ -1876,7 +1876,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         if (classMapData != NULL &&
             pHeader->directMethodsSize + pHeader->virtualMethodsSize != numMethods)
         {
-            LOGE("ERROR: in %s, direct=%d virtual=%d, maps have %d\n",
+            LOGE("ERROR: in %s, direct=%d virtual=%d, maps have %d",
                 newClass->descriptor, pHeader->directMethodsSize,
                 pHeader->virtualMethodsSize, numMethods);
             assert(false);
@@ -1961,7 +1961,7 @@ static ClassObject* loadClassFromDex(DvmDex* pDvmDex,
     pDexFile = pDvmDex->pDexFile;
 
     if (gDvm.verboseClass) {
-        LOGV("CLASS: loading '%s'...\n",
+        LOGV("CLASS: loading '%s'...",
             dexGetClassDescriptor(pDexFile, pClassDef));
     }
 
@@ -1978,7 +1978,7 @@ static ClassObject* loadClassFromDex(DvmDex* pDvmDex,
             classLoader);
 
     if (gDvm.verboseClass && (result != NULL)) {
-        LOGI("[Loaded %s from DEX %p (cl=%p)]\n",
+        LOGI("[Loaded %s from DEX %p (cl=%p)]",
             result->descriptor, pDvmDex, classLoader);
     }
 
@@ -2134,8 +2134,8 @@ static void freeMethodInnards(Method* meth)
 static void cloneMethod(Method* dst, const Method* src)
 {
     if (src->registerMap != NULL) {
-        LOGE("GLITCH: only expected abstract methods here\n");
-        LOGE("        cloning %s.%s\n", src->clazz->descriptor, src->name);
+        LOGE("GLITCH: only expected abstract methods here");
+        LOGE("        cloning %s.%s", src->clazz->descriptor, src->name);
         dvmAbort();
     }
     memcpy(dst, src, sizeof(Method));
@@ -2238,7 +2238,7 @@ void dvmMakeCodeReadWrite(Method* meth)
     assert(!dvmIsNativeMethod(meth) && !dvmIsAbstractMethod(meth));
 
     size_t dexCodeSize = dexGetDexCodeSize(methodDexCode);
-    LOGD("Making a copy of %s.%s code (%d bytes)\n",
+    LOGD("Making a copy of %s.%s code (%d bytes)",
         meth->clazz->descriptor, meth->name, dexCodeSize);
 
     DexCode* newCode =
@@ -2258,7 +2258,7 @@ void dvmMakeCodeReadWrite(Method* meth)
 void dvmMakeCodeReadOnly(Method* meth)
 {
     DexCode* methodDexCode = (DexCode*) dvmGetMethodCode(meth);
-    LOGV("+++ marking %p read-only\n", methodDexCode);
+    LOGV("+++ marking %p read-only", methodDexCode);
     dvmLinearReadOnly(meth->clazz->classLoader, methodDexCode);
 }
 #endif
@@ -2427,7 +2427,7 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
     }
     dvmLinearReadOnly(clazz->classLoader, clazz->ifields);
     if (i == clazz->ifieldRefCount) {
-        LOGE("Unable to reorder 'referent' in %s\n", clazz->descriptor);
+        LOGE("Unable to reorder 'referent' in %s", clazz->descriptor);
         return false;
     }
 
@@ -2436,7 +2436,7 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
      * info about the class.
      */
     if (!dvmFindReferenceMembers(clazz)) {
-        LOGE("Trouble with Reference setup\n");
+        LOGE("Trouble with Reference setup");
         return false;
     }
 
@@ -2514,7 +2514,7 @@ bool dvmLinkClass(ClassObject* clazz)
     assert(clazz->descriptor != NULL);
     assert(clazz->status == CLASS_IDX || clazz->status == CLASS_LOADED);
     if (gDvm.verboseClass)
-        LOGV("CLASS: linking '%s'...\n", clazz->descriptor);
+        LOGV("CLASS: linking '%s'...", clazz->descriptor);
 
     assert(gDvm.classJavaLangClass != NULL);
     assert(clazz->clazz == gDvm.classJavaLangClass);
@@ -2575,10 +2575,10 @@ bool dvmLinkClass(ClassObject* clazz)
                 assert(dvmCheckException(dvmThreadSelf()));
                 if (gDvm.optimizing) {
                     /* happens with "external" libs */
-                    LOGV("Unable to resolve superclass of %s (%d)\n",
+                    LOGV("Unable to resolve superclass of %s (%d)",
                          clazz->descriptor, superclassIdx);
                 } else {
-                    LOGW("Unable to resolve superclass of %s (%d)\n",
+                    LOGW("Unable to resolve superclass of %s (%d)",
                          clazz->descriptor, superclassIdx);
                 }
                 goto bail;
@@ -2607,11 +2607,11 @@ bool dvmLinkClass(ClassObject* clazz)
                         dexStringByTypeIdx(pDexFile, interfaceIdxArray[i]);
                     if (gDvm.optimizing) {
                         /* happens with "external" libs */
-                        LOGV("Failed resolving %s interface %d '%s'\n",
+                        LOGV("Failed resolving %s interface %d '%s'",
                              clazz->descriptor, interfaceIdxArray[i],
                              classDescriptor);
                     } else {
-                        LOGI("Failed resolving %s interface %d '%s'\n",
+                        LOGI("Failed resolving %s interface %d '%s'",
                              clazz->descriptor, interfaceIdxArray[i],
                              classDescriptor);
                     }
@@ -2621,12 +2621,12 @@ bool dvmLinkClass(ClassObject* clazz)
                 /* are we allowed to implement this interface? */
                 if (!dvmCheckClassAccess(clazz, clazz->interfaces[i])) {
                     dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
-                    LOGW("Interface '%s' is not accessible to '%s'\n",
+                    LOGW("Interface '%s' is not accessible to '%s'",
                          clazz->interfaces[i]->descriptor, clazz->descriptor);
                     dvmThrowIllegalAccessError("interface not accessible");
                     goto bail;
                 }
-                LOGVV("+++  found interface '%s'\n",
+                LOGVV("+++  found interface '%s'",
                       clazz->interfaces[i]->descriptor);
             }
             dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
@@ -2663,17 +2663,17 @@ bool dvmLinkClass(ClassObject* clazz)
         }
         /* verify */
         if (dvmIsFinalClass(clazz->super)) {
-            LOGW("Superclass of '%s' is final '%s'\n",
+            LOGW("Superclass of '%s' is final '%s'",
                 clazz->descriptor, clazz->super->descriptor);
             dvmThrowIncompatibleClassChangeError("superclass is final");
             goto bail;
         } else if (dvmIsInterfaceClass(clazz->super)) {
-            LOGW("Superclass of '%s' is interface '%s'\n",
+            LOGW("Superclass of '%s' is interface '%s'",
                 clazz->descriptor, clazz->super->descriptor);
             dvmThrowIncompatibleClassChangeError("superclass is an interface");
             goto bail;
         } else if (!dvmCheckClassAccess(clazz, clazz->super)) {
-            LOGW("Superclass of '%s' (%s) is not accessible\n",
+            LOGW("Superclass of '%s' (%s) is not accessible",
                 clazz->descriptor, clazz->super->descriptor);
             dvmThrowIllegalAccessError("superclass not accessible");
             goto bail;
@@ -2759,7 +2759,7 @@ bool dvmLinkClass(ClassObject* clazz)
         int count = clazz->virtualMethodCount;
 
         if (count != (u2) count) {
-            LOGE("Too many methods (%d) in interface '%s'\n", count,
+            LOGE("Too many methods (%d) in interface '%s'", count,
                  clazz->descriptor);
             goto bail;
         }
@@ -2772,7 +2772,7 @@ bool dvmLinkClass(ClassObject* clazz)
         dvmLinearReadOnly(clazz->classLoader, clazz->virtualMethods);
     } else {
         if (!createVtable(clazz)) {
-            LOGW("failed creating vtable\n");
+            LOGW("failed creating vtable");
             goto bail;
         }
     }
@@ -2803,7 +2803,7 @@ bool dvmLinkClass(ClassObject* clazz)
     if ((clazz->classLoader == NULL)
             && (strcmp(clazz->descriptor, "Ljava/lang/ref/Reference;") == 0)) {
         if (!precacheReferenceOffsets(clazz)) {
-            LOGE("failed pre-caching Reference offsets\n");
+            LOGE("failed pre-caching Reference offsets");
             dvmThrowInternalError(NULL);
             goto bail;
         }
@@ -2825,7 +2825,7 @@ bool dvmLinkClass(ClassObject* clazz)
         clazz->status = CLASS_RESOLVED;
     okay = true;
     if (gDvm.verboseClass)
-        LOGV("CLASS: linked '%s'\n", clazz->descriptor);
+        LOGV("CLASS: linked '%s'", clazz->descriptor);
 
     /*
      * We send CLASS_PREPARE events to the debugger from here.  The
@@ -2870,7 +2870,7 @@ static bool createVtable(ClassObject* clazz)
     int i;
 
     if (clazz->super != NULL) {
-        //LOGI("SUPER METHODS %d %s->%s\n", clazz->super->vtableCount,
+        //LOGI("SUPER METHODS %d %s->%s", clazz->super->vtableCount,
         //    clazz->descriptor, clazz->super->descriptor);
     }
 
@@ -2884,7 +2884,7 @@ static bool createVtable(ClassObject* clazz)
          */
         assert(strcmp(clazz->descriptor, "Ljava/lang/Object;") == 0);
     }
-    //LOGD("+++ max vmethods for '%s' is %d\n", clazz->descriptor, maxCount);
+    //LOGD("+++ max vmethods for '%s' is %d", clazz->descriptor, maxCount);
 
     /*
      * Over-allocate the table, then realloc it down if necessary.  So
@@ -2919,14 +2919,14 @@ static bool createVtable(ClassObject* clazz)
                 {
                     /* verify */
                     if (dvmIsFinalMethod(superMeth)) {
-                        LOGW("Method %s.%s overrides final %s.%s\n",
+                        LOGW("Method %s.%s overrides final %s.%s",
                             localMeth->clazz->descriptor, localMeth->name,
                             superMeth->clazz->descriptor, superMeth->name);
                         goto bail;
                     }
                     clazz->vtable[si] = localMeth;
                     localMeth->methodIndex = (u2) si;
-                    //LOGV("+++   override %s.%s (slot %d)\n",
+                    //LOGV("+++   override %s.%s (slot %d)",
                     //    clazz->descriptor, localMeth->name, si);
                     break;
                 }
@@ -2938,13 +2938,13 @@ static bool createVtable(ClassObject* clazz)
                 localMeth->methodIndex = (u2) actualCount;
                 actualCount++;
 
-                //LOGV("+++   add method %s.%s\n",
+                //LOGV("+++   add method %s.%s",
                 //    clazz->descriptor, localMeth->name);
             }
         }
 
         if (actualCount != (u2) actualCount) {
-            LOGE("Too many methods (%d) in class '%s'\n", actualCount,
+            LOGE("Too many methods (%d) in class '%s'", actualCount,
                  clazz->descriptor);
             goto bail;
         }
@@ -2957,10 +2957,10 @@ static bool createVtable(ClassObject* clazz)
             clazz->vtable = (Method **)dvmLinearRealloc(clazz->classLoader,
                 clazz->vtable, sizeof(*(clazz->vtable)) * actualCount);
             if (clazz->vtable == NULL) {
-                LOGE("vtable realloc failed\n");
+                LOGE("vtable realloc failed");
                 goto bail;
             } else {
-                LOGVV("+++  reduced vtable from %d to %d\n",
+                LOGVV("+++  reduced vtable from %d to %d",
                     maxCount, actualCount);
             }
         }
@@ -2970,7 +2970,7 @@ static bool createVtable(ClassObject* clazz)
         /* java/lang/Object case */
         int count = clazz->virtualMethodCount;
         if (count != (u2) count) {
-            LOGE("Too many methods (%d) in base class '%s'\n", count,
+            LOGE("Too many methods (%d) in base class '%s'", count,
                  clazz->descriptor);
             goto bail;
         }
@@ -3028,7 +3028,7 @@ static bool createIftable(ClassObject* clazz)
     for (int i = 0; i < clazz->interfaceCount; i++)
         ifCount += clazz->interfaces[i]->iftableCount;
 
-    LOGVV("INTF: class '%s' direct w/supra=%d super=%d total=%d\n",
+    LOGVV("INTF: class '%s' direct w/supra=%d super=%d total=%d",
         clazz->descriptor, ifCount - superIfCount, superIfCount, ifCount);
 
     if (ifCount == 0) {
@@ -3061,7 +3061,7 @@ static bool createIftable(ClassObject* clazz)
 
         /* make sure this is still an interface class */
         if (!dvmIsInterfaceClass(interf)) {
-            LOGW("Class '%s' implements non-interface '%s'\n",
+            LOGW("Class '%s' implements non-interface '%s'",
                 clazz->descriptor, interf->descriptor);
             dvmThrowIncompatibleClassChangeErrorWithClassMessage(
                 clazz->descriptor);
@@ -3104,7 +3104,7 @@ static bool createIftable(ClassObject* clazz)
                 if (i == j)
                     continue;
                 if (clazz->iftable[i].clazz == clazz->iftable[j].clazz) {
-                    LOGVV("INTF: redundant interface %s in %s\n",
+                    LOGVV("INTF: redundant interface %s in %s",
                         clazz->iftable[i].clazz->descriptor,
                         clazz->descriptor);
 
@@ -3117,7 +3117,7 @@ static bool createIftable(ClassObject* clazz)
                 }
             }
         }
-        LOGVV("INTF: class '%s' nodupes=%d\n", clazz->descriptor, ifCount);
+        LOGVV("INTF: class '%s' nodupes=%d", clazz->descriptor, ifCount);
     } // if (false)
 
     clazz->iftableCount = ifCount;
@@ -3155,14 +3155,14 @@ static bool createIftable(ClassObject* clazz)
          * Note it's valid for an interface to have no methods (e.g.
          * java/io/Serializable).
          */
-        LOGVV("INTF: pool: %d from %s\n",
+        LOGVV("INTF: pool: %d from %s",
             clazz->iftable[i].clazz->virtualMethodCount,
             clazz->iftable[i].clazz->descriptor);
         poolSize += clazz->iftable[i].clazz->virtualMethodCount;
     }
 
     if (poolSize == 0) {
-        LOGVV("INTF: didn't find any new interfaces with methods\n");
+        LOGVV("INTF: didn't find any new interfaces with methods");
         result = true;
         goto bail;
     }
@@ -3220,7 +3220,7 @@ static bool createIftable(ClassObject* clazz)
 
             IF_LOGVV() {
                 char* desc = dexProtoCopyMethodDescriptor(&imeth->prototype);
-                LOGVV("INTF:  matching '%s' '%s'\n", imeth->name, desc);
+                LOGVV("INTF:  matching '%s' '%s'", imeth->name, desc);
                 free(desc);
             }
 
@@ -3228,9 +3228,9 @@ static bool createIftable(ClassObject* clazz)
                 if (dvmCompareMethodNamesAndProtos(imeth, clazz->vtable[j])
                     == 0)
                 {
-                    LOGVV("INTF:   matched at %d\n", j);
+                    LOGVV("INTF:   matched at %d", j);
                     if (!dvmIsPublicMethod(clazz->vtable[j])) {
-                        LOGW("Implementation of %s.%s is not public\n",
+                        LOGW("Implementation of %s.%s is not public",
                             clazz->descriptor, clazz->vtable[j]->name);
                         dvmThrowIllegalAccessError(
                             "interface implementation not public");
@@ -3244,7 +3244,7 @@ static bool createIftable(ClassObject* clazz)
                 IF_LOGV() {
                     char* desc =
                         dexProtoCopyMethodDescriptor(&imeth->prototype);
-                    LOGV("No match for '%s' '%s' in '%s' (creating miranda)\n",
+                    LOGV("No match for '%s' '%s' in '%s' (creating miranda)",
                             imeth->name, desc, clazz->descriptor);
                     free(desc);
                 }
@@ -3280,7 +3280,7 @@ static bool createIftable(ClassObject* clazz)
                         IF_LOGVV() {
                             char* desc = dexProtoCopyMethodDescriptor(
                                     &imeth->prototype);
-                            LOGVV("MIRANDA dupe: %s and %s %s%s\n",
+                            LOGVV("MIRANDA dupe: %s and %s %s%s",
                                 mirandaList[mir]->clazz->descriptor,
                                 imeth->clazz->descriptor,
                                 imeth->name, desc);
@@ -3293,12 +3293,12 @@ static bool createIftable(ClassObject* clazz)
                 /* point the iftable at a phantom slot index */
                 clazz->iftable[i].methodIndexArray[methIdx] =
                     clazz->vtableCount + mir;
-                LOGVV("MIRANDA: %s points at slot %d\n",
+                LOGVV("MIRANDA: %s points at slot %d",
                     imeth->name, clazz->vtableCount + mir);
 
                 /* if non-duplicate among Mirandas, add to Miranda list */
                 if (mir == mirandaCount) {
-                    //LOGV("MIRANDA: holding '%s' in slot %d\n",
+                    //LOGV("MIRANDA: holding '%s' in slot %d",
                     //    imeth->name, mir);
                     mirandaList[mirandaCount++] = imeth;
                 }
@@ -3313,7 +3313,7 @@ static bool createIftable(ClassObject* clazz)
         int oldMethodCount, oldVtableCount;
 
         for (int i = 0; i < mirandaCount; i++) {
-            LOGVV("MIRANDA %d: %s.%s\n", i,
+            LOGVV("MIRANDA %d: %s.%s", i,
                 mirandaList[i]->clazz->descriptor, mirandaList[i]->name);
         }
         if (mirandaCount > kManyMirandas) {
@@ -3324,7 +3324,7 @@ static bool createIftable(ClassObject* clazz)
              * massive collection of Miranda methods and a lot of wasted
              * space, sometimes enough to blow out the LinearAlloc cap.
              */
-            LOGD("Note: class %s has %d unimplemented (abstract) methods\n",
+            LOGD("Note: class %s has %d unimplemented (abstract) methods",
                 clazz->descriptor, mirandaCount);
         }
 
@@ -3359,7 +3359,7 @@ static bool createIftable(ClassObject* clazz)
              * stuff makes it look like the class actually has an abstract
              * method declaration in it.
              */
-            LOGVV("MIRANDA fixing vtable pointers\n");
+            LOGVV("MIRANDA fixing vtable pointers");
             dvmLinearReadWrite(clazz->classLoader, clazz->vtable);
             Method* meth = newVirtualMethods;
             for (int i = 0; i < clazz->virtualMethodCount; i++, meth++)
@@ -3504,7 +3504,7 @@ static inline void swapField(InstField* pOne, InstField* pTwo)
 {
     InstField swap;
 
-    LOGVV("  --- swap '%s' and '%s'\n", pOne->name, pTwo->name);
+    LOGVV("  --- swap '%s' and '%s'", pOne->name, pTwo->name);
     swap = *pOne;
     *pOne = *pTwo;
     *pTwo = swap;
@@ -3553,12 +3553,12 @@ static bool computeFieldOffsets(ClassObject* clazz)
     else
         fieldOffset = OFFSETOF_MEMBER(DataObject, instanceData);
 
-    LOGVV("--- computeFieldOffsets '%s'\n", clazz->descriptor);
+    LOGVV("--- computeFieldOffsets '%s'", clazz->descriptor);
 
-    //LOGI("OFFSETS fieldCount=%d\n", clazz->ifieldCount);
-    //LOGI("dataobj, instance: %d\n", offsetof(DataObject, instanceData));
-    //LOGI("classobj, access: %d\n", offsetof(ClassObject, accessFlags));
-    //LOGI("super=%p, fieldOffset=%d\n", clazz->super, fieldOffset);
+    //LOGI("OFFSETS fieldCount=%d", clazz->ifieldCount);
+    //LOGI("dataobj, instance: %d", offsetof(DataObject, instanceData));
+    //LOGI("classobj, access: %d", offsetof(ClassObject, accessFlags));
+    //LOGI("super=%p, fieldOffset=%d", clazz->super, fieldOffset);
 
     /*
      * Start by moving all reference fields to the front.
@@ -3610,7 +3610,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
 
         pField->byteOffset = fieldOffset;
         fieldOffset += sizeof(u4);
-        LOGVV("  --- offset1 '%s'=%d\n", pField->name,pField->byteOffset);
+        LOGVV("  --- offset1 '%s'=%d", pField->name,pField->byteOffset);
     }
 
     /*
@@ -3619,7 +3619,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
      * If we can't find one, we'll have to pad it.
      */
     if (i != clazz->ifieldCount && (fieldOffset & 0x04) != 0) {
-        LOGVV("  +++ not aligned\n");
+        LOGVV("  +++ not aligned");
 
         InstField* pField = &clazz->ifields[i];
         char c = pField->signature[0];
@@ -3632,7 +3632,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
             pField->byteOffset = fieldOffset;
             fieldOffset += sizeof(u4);
             i++;
-            LOGVV("  --- offset2 '%s'=%d\n",
+            LOGVV("  --- offset2 '%s'=%d",
                 pField->name, pField->byteOffset);
         } else {
             /*
@@ -3648,11 +3648,11 @@ static bool computeFieldOffsets(ClassObject* clazz)
                 if (rc != 'J' && rc != 'D') {
                     swapField(pField, singleField);
                     //c = rc;
-                    LOGVV("  +++ swapped '%s' for alignment\n",
+                    LOGVV("  +++ swapped '%s' for alignment",
                         pField->name);
                     pField->byteOffset = fieldOffset;
                     fieldOffset += sizeof(u4);
-                    LOGVV("  --- offset3 '%s'=%d\n",
+                    LOGVV("  --- offset3 '%s'=%d",
                         pField->name, pField->byteOffset);
                     found = true;
                     i++;
@@ -3660,7 +3660,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
                 }
             }
             if (!found) {
-                LOGV("  +++ inserting pad field in '%s'\n", clazz->descriptor);
+                LOGV("  +++ inserting pad field in '%s'", clazz->descriptor);
                 fieldOffset += sizeof(u4);
             }
         }
@@ -3705,7 +3705,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
         }
 
         pField->byteOffset = fieldOffset;
-        LOGVV("  --- offset4 '%s'=%d\n", pField->name,pField->byteOffset);
+        LOGVV("  --- offset4 '%s'=%d", pField->name,pField->byteOffset);
         fieldOffset += sizeof(u4);
         if (c == 'J' || c == 'D')
             fieldOffset += sizeof(u4);
@@ -3759,7 +3759,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
  */
 static void throwEarlierClassFailure(ClassObject* clazz)
 {
-    LOGI("Rejecting re-init on previously-failed class %s v=%p\n",
+    LOGI("Rejecting re-init on previously-failed class %s v=%p",
         clazz->descriptor, clazz->verifyErrorClass);
 
     if (clazz->verifyErrorClass == NULL) {
@@ -3788,7 +3788,7 @@ static void initSFields(ClassObject* clazz)
     }
     if (clazz->pDvmDex == NULL) {
         /* generated class; any static fields should already be set up */
-        LOGV("Not initializing static fields in %s\n", clazz->descriptor);
+        LOGV("Not initializing static fields in %s", clazz->descriptor);
         return;
     }
     pDexFile = clazz->pDvmDex->pDexFile;
@@ -4088,7 +4088,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
             if (meth != clazz->super->vtable[i] &&
                 !checkMethodDescriptorClasses(meth, clazz->super, clazz))
             {
-                LOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)\n",
+                LOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)",
                     meth->name, clazz->descriptor, clazz->classLoader,
                     clazz->super->descriptor, clazz->super->classLoader);
                 dvmThrowLinkageError(
@@ -4260,14 +4260,14 @@ bool dvmInitClass(ClassObject* clazz)
              clazz->classLoader == NULL))
         {
             /* advance to "verified" state */
-            LOGV("+++ not verifying class %s (cl=%p)\n",
+            LOGV("+++ not verifying class %s (cl=%p)",
                 clazz->descriptor, clazz->classLoader);
             clazz->status = CLASS_VERIFIED;
             goto noverify;
         }
 
         if (!gDvm.optimizing)
-            LOGV("+++ late verify on %s\n", clazz->descriptor);
+            LOGV("+++ late verify on %s", clazz->descriptor);
 
         /*
          * We're not supposed to optimize an unverified class, but during
@@ -4312,7 +4312,7 @@ noverify:
      * system classes, and dexopt runs single-threaded.
      */
     if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED) && !gDvm.optimizing) {
-        LOGV("+++ late optimize on %s (pv=%d)\n",
+        LOGV("+++ late optimize on %s (pv=%d)",
             clazz->descriptor, IS_CLASS_FLAG_SET(clazz, CLASS_ISPREVERIFIED));
         bool essentialOnly = (gDvm.dexOptMode != OPTIMIZE_MODE_FULL);
         dvmOptimizeClass(clazz, essentialOnly);
@@ -4328,12 +4328,12 @@ noverify:
     while (clazz->status == CLASS_INITIALIZING) {
         /* we caught somebody else in the act; was it us? */
         if (clazz->initThreadId == self->threadId) {
-            //LOGV("HEY: found a recursive <clinit>\n");
+            //LOGV("HEY: found a recursive <clinit>");
             goto bail_unlock;
         }
 
         if (dvmCheckException(self)) {
-            LOGW("GLITCH: exception pending at start of class init\n");
+            LOGW("GLITCH: exception pending at start of class init");
             dvmAbort();
         }
 
@@ -4350,7 +4350,7 @@ noverify:
          * was set), bail out.
          */
         if (dvmCheckException(self)) {
-            LOGI("Class init of '%s' failing with wait() exception\n",
+            LOGI("Class init of '%s' failing with wait() exception",
                 clazz->descriptor);
             /*
              * TODO: this is bogus, because it means the two threads have a
@@ -4370,7 +4370,7 @@ noverify:
             goto bail_unlock;
         }
         if (clazz->status == CLASS_INITIALIZING) {
-            LOGI("Waiting again for class init\n");
+            LOGI("Waiting again for class init");
             continue;
         }
         assert(clazz->status == CLASS_INITIALIZED ||
@@ -4467,9 +4467,9 @@ noverify:
      */
     method = dvmFindDirectMethodByDescriptor(clazz, "<clinit>", "()V");
     if (method == NULL) {
-        LOGVV("No <clinit> found for %s\n", clazz->descriptor);
+        LOGVV("No <clinit> found for %s", clazz->descriptor);
     } else {
-        LOGVV("Invoking %s.<clinit>\n", clazz->descriptor);
+        LOGVV("Invoking %s.<clinit>", clazz->descriptor);
         JValue unused;
         dvmCallMethod(self, method, NULL, &unused);
     }
@@ -4480,10 +4480,10 @@ noverify:
          * need to throw an ExceptionInInitializerError, but we want to
          * tuck the original exception into the "cause" field.
          */
-        LOGW("Exception %s thrown while initializing %s\n",
+        LOGW("Exception %s thrown while initializing %s",
             (dvmGetException(self)->clazz)->descriptor, clazz->descriptor);
         dvmThrowExceptionInInitializerError();
-        //LOGW("+++ replaced\n");
+        //LOGW("+++ replaced");
 
         dvmLockObject(self, (Object*) clazz);
         clazz->status = CLASS_ERROR;
@@ -4491,7 +4491,7 @@ noverify:
         /* success! */
         dvmLockObject(self, (Object*) clazz);
         clazz->status = CLASS_INITIALIZED;
-        LOGVV("Initialized class: %s\n", clazz->descriptor);
+        LOGVV("Initialized class: %s", clazz->descriptor);
 
         /*
          * Update alloc counters.  TODO: guard with mutex.
@@ -4585,7 +4585,7 @@ void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
 
     if (method->registerMap != NULL) {
         /* unexpected during class loading, okay on first use (uncompress) */
-        LOGV("NOTE: registerMap already set for %s.%s\n",
+        LOGV("NOTE: registerMap already set for %s.%s",
             method->clazz->descriptor, method->name);
         /* keep going */
     }
@@ -4671,7 +4671,7 @@ static int dumpClass(void* vclazz, void* varg)
     int i;
 
     if (clazz == NULL) {
-        LOGI("dumpClass: ignoring request to dump null class\n");
+        LOGI("dumpClass: ignoring request to dump null class");
         return 0;
     }
 
@@ -4683,13 +4683,13 @@ static int dumpClass(void* vclazz, void* varg)
         initStr = dvmIsClassInitialized(clazz) ? "true" : "false";
 
         if (showInit && showLoader)
-            LOGI("%s %p %s\n", clazz->descriptor, clazz->classLoader, initStr);
+            LOGI("%s %p %s", clazz->descriptor, clazz->classLoader, initStr);
         else if (showInit)
-            LOGI("%s %s\n", clazz->descriptor, initStr);
+            LOGI("%s %s", clazz->descriptor, initStr);
         else if (showLoader)
-            LOGI("%s %p\n", clazz->descriptor, clazz->classLoader);
+            LOGI("%s %p", clazz->descriptor, clazz->classLoader);
         else
-            LOGI("%s\n", clazz->descriptor);
+            LOGI("%s", clazz->descriptor);
 
         return 0;
     }
@@ -4700,32 +4700,32 @@ static int dumpClass(void* vclazz, void* varg)
     else
         super = NULL;
 
-    LOGI("----- %s '%s' cl=%p ser=0x%08x -----\n",
+    LOGI("----- %s '%s' cl=%p ser=0x%08x -----",
         dvmIsInterfaceClass(clazz) ? "interface" : "class",
         clazz->descriptor, clazz->classLoader, clazz->serialNumber);
-    LOGI("  objectSize=%d (%d from super)\n", (int) clazz->objectSize,
+    LOGI("  objectSize=%d (%d from super)", (int) clazz->objectSize,
         super != NULL ? (int) super->objectSize : -1);
-    LOGI("  access=0x%04x.%04x\n", clazz->accessFlags >> 16,
+    LOGI("  access=0x%04x.%04x", clazz->accessFlags >> 16,
         clazz->accessFlags & JAVA_FLAGS_MASK);
     if (super != NULL)
-        LOGI("  super='%s' (cl=%p)\n", super->descriptor, super->classLoader);
+        LOGI("  super='%s' (cl=%p)", super->descriptor, super->classLoader);
     if (dvmIsArrayClass(clazz)) {
-        LOGI("  dimensions=%d elementClass=%s\n",
+        LOGI("  dimensions=%d elementClass=%s",
             clazz->arrayDim, clazz->elementClass->descriptor);
     }
     if (clazz->iftableCount > 0) {
-        LOGI("  interfaces (%d):\n", clazz->iftableCount);
+        LOGI("  interfaces (%d):", clazz->iftableCount);
         for (i = 0; i < clazz->iftableCount; i++) {
             InterfaceEntry* ent = &clazz->iftable[i];
             int j;
 
-            LOGI("    %2d: %s (cl=%p)\n",
+            LOGI("    %2d: %s (cl=%p)",
                 i, ent->clazz->descriptor, ent->clazz->classLoader);
 
             /* enable when needed */
             if (false && ent->methodIndexArray != NULL) {
                 for (j = 0; j < ent->clazz->virtualMethodCount; j++)
-                    LOGI("      %2d: %d %s %s\n",
+                    LOGI("      %2d: %d %s %s",
                         j, ent->methodIndexArray[j],
                         ent->clazz->virtualMethods[j].name,
                         clazz->vtable[ent->methodIndexArray[j]]->name);
@@ -4733,30 +4733,30 @@ static int dumpClass(void* vclazz, void* varg)
         }
     }
     if (!dvmIsInterfaceClass(clazz)) {
-        LOGI("  vtable (%d entries, %d in super):\n", clazz->vtableCount,
+        LOGI("  vtable (%d entries, %d in super):", clazz->vtableCount,
             super != NULL ? super->vtableCount : 0);
         for (i = 0; i < clazz->vtableCount; i++) {
             desc = dexProtoCopyMethodDescriptor(&clazz->vtable[i]->prototype);
-            LOGI("    %s%2d: %p %20s %s\n",
+            LOGI("    %s%2d: %p %20s %s",
                 (i != clazz->vtable[i]->methodIndex) ? "*** " : "",
                 (u4) clazz->vtable[i]->methodIndex, clazz->vtable[i],
                 clazz->vtable[i]->name, desc);
             free(desc);
         }
-        LOGI("  direct methods (%d entries):\n", clazz->directMethodCount);
+        LOGI("  direct methods (%d entries):", clazz->directMethodCount);
         for (i = 0; i < clazz->directMethodCount; i++) {
             desc = dexProtoCopyMethodDescriptor(
                     &clazz->directMethods[i].prototype);
-            LOGI("    %2d: %20s %s\n", i, clazz->directMethods[i].name,
+            LOGI("    %2d: %20s %s", i, clazz->directMethods[i].name,
                 desc);
             free(desc);
         }
     } else {
-        LOGI("  interface methods (%d):\n", clazz->virtualMethodCount);
+        LOGI("  interface methods (%d):", clazz->virtualMethodCount);
         for (i = 0; i < clazz->virtualMethodCount; i++) {
             desc = dexProtoCopyMethodDescriptor(
                     &clazz->virtualMethods[i].prototype);
-            LOGI("    %2d: %2d %20s %s\n", i,
+            LOGI("    %2d: %2d %20s %s", i,
                 (u4) clazz->virtualMethods[i].methodIndex,
                 clazz->virtualMethods[i].name,
                 desc);
@@ -4764,16 +4764,16 @@ static int dumpClass(void* vclazz, void* varg)
         }
     }
     if (clazz->sfieldCount > 0) {
-        LOGI("  static fields (%d entries):\n", clazz->sfieldCount);
+        LOGI("  static fields (%d entries):", clazz->sfieldCount);
         for (i = 0; i < clazz->sfieldCount; i++) {
-            LOGI("    %2d: %20s %s\n", i, clazz->sfields[i].name,
+            LOGI("    %2d: %20s %s", i, clazz->sfields[i].name,
                 clazz->sfields[i].signature);
         }
     }
     if (clazz->ifieldCount > 0) {
-        LOGI("  instance fields (%d entries):\n", clazz->ifieldCount);
+        LOGI("  instance fields (%d entries):", clazz->ifieldCount);
         for (i = 0; i < clazz->ifieldCount; i++) {
-            LOGI("    %2d: %20s %s\n", i, clazz->ifields[i].name,
+            LOGI("    %2d: %20s %s", i, clazz->ifields[i].name,
                 clazz->ifields[i].signature);
         }
     }
@@ -4817,12 +4817,12 @@ int dvmGetNumLoadedClasses()
  */
 void dvmDumpLoaderStats(const char* msg)
 {
-    LOGV("VM stats (%s): cls=%d/%d meth=%d ifld=%d sfld=%d linear=%d\n",
+    LOGV("VM stats (%s): cls=%d/%d meth=%d ifld=%d sfld=%d linear=%d",
         msg, gDvm.numLoadedClasses, dvmHashTableNumEntries(gDvm.loadedClasses),
         gDvm.numDeclaredMethods, gDvm.numDeclaredInstFields,
         gDvm.numDeclaredStaticFields, gDvm.pBootLoaderAlloc->curOffset);
 #ifdef COUNT_PRECISE_METHODS
-    LOGI("GC precise methods: %d\n",
+    LOGI("GC precise methods: %d",
         dvmPointerSetGetCount(gDvm.preciseMethods));
 #endif
 }

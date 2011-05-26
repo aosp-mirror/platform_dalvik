@@ -304,69 +304,69 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
     /* Handle pseudo-ops individually, and all regular insns as a group */
     switch(lir->opcode) {
         case kArmChainingCellBottom:
-            LOGD("-------- end of chaining cells (0x%04x)\n", offset);
+            LOGD("-------- end of chaining cells (0x%04x)", offset);
             break;
         case kArmPseudoBarrier:
             LOGD("-------- BARRIER");
             break;
         case kArmPseudoExtended:
-            LOGD("-------- %s\n", (char *) dest);
+            LOGD("-------- %s", (char *) dest);
             break;
         case kArmPseudoSSARep:
-            DUMP_SSA_REP(LOGD("-------- %s\n", (char *) dest));
+            DUMP_SSA_REP(LOGD("-------- %s", (char *) dest));
             break;
         case kArmPseudoChainingCellBackwardBranch:
-            LOGD("L%p:\n", lir);
-            LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
+            LOGD("L%p:", lir);
+            LOGD("-------- chaining cell (backward branch): 0x%04x", dest);
             break;
         case kArmPseudoChainingCellNormal:
-            LOGD("L%p:\n", lir);
-            LOGD("-------- chaining cell (normal): 0x%04x\n", dest);
+            LOGD("L%p:", lir);
+            LOGD("-------- chaining cell (normal): 0x%04x", dest);
             break;
         case kArmPseudoChainingCellHot:
-            LOGD("L%p:\n", lir);
-            LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
+            LOGD("L%p:", lir);
+            LOGD("-------- chaining cell (hot): 0x%04x", dest);
             break;
         case kArmPseudoChainingCellInvokePredicted:
-            LOGD("L%p:\n", lir);
-            LOGD("-------- chaining cell (predicted): %s%s\n",
+            LOGD("L%p:", lir);
+            LOGD("-------- chaining cell (predicted): %s%s",
                  dest ? ((Method *) dest)->clazz->descriptor : "",
                  dest ? ((Method *) dest)->name : "N/A");
             break;
         case kArmPseudoChainingCellInvokeSingleton:
-            LOGD("L%p:\n", lir);
-            LOGD("-------- chaining cell (invoke singleton): %s%s/%p\n",
+            LOGD("L%p:", lir);
+            LOGD("-------- chaining cell (invoke singleton): %s%s/%p",
                  ((Method *)dest)->clazz->descriptor,
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;
         case kArmPseudoEntryBlock:
-            LOGD("-------- entry offset: 0x%04x\n", dest);
+            LOGD("-------- entry offset: 0x%04x", dest);
             break;
         case kArmPseudoDalvikByteCodeBoundary:
-            LOGD("-------- dalvik offset: 0x%04x @ %s\n", dest,
+            LOGD("-------- dalvik offset: 0x%04x @ %s", dest,
                  (char *) lir->operands[1]);
             break;
         case kArmPseudoExitBlock:
-            LOGD("-------- exit offset: 0x%04x\n", dest);
+            LOGD("-------- exit offset: 0x%04x", dest);
             break;
         case kArmPseudoPseudoAlign4:
-            LOGD("%p (%04x): .align4\n", baseAddr + offset, offset);
+            LOGD("%p (%04x): .align4", baseAddr + offset, offset);
             break;
         case kArmPseudoPCReconstructionCell:
-            LOGD("L%p:\n", lir);
-            LOGD("-------- reconstruct dalvik PC : 0x%04x @ +0x%04x\n", dest,
+            LOGD("L%p:", lir);
+            LOGD("-------- reconstruct dalvik PC : 0x%04x @ +0x%04x", dest,
                  lir->operands[1]);
             break;
         case kArmPseudoPCReconstructionBlockLabel:
             /* Do nothing */
             break;
         case kArmPseudoEHBlockLabel:
-            LOGD("Exception_Handling:\n");
+            LOGD("Exception_Handling:");
             break;
         case kArmPseudoTargetLabel:
         case kArmPseudoNormalBlockLabel:
-            LOGD("L%p:\n", lir);
+            LOGD("L%p:", lir);
             break;
         default:
             if (lir->flags.isNop && !dumpNop) {
@@ -376,7 +376,7 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
                             baseAddr, 256);
             buildInsnString(EncodingMap[lir->opcode].fmt, lir, buf, baseAddr,
                             256);
-            LOGD("%p (%04x): %-8s%s%s\n",
+            LOGD("%p (%04x): %-8s%s%s",
                  baseAddr + offset, offset, opName, buf,
                  lir->flags.isNop ? "(nop)" : "");
             break;
@@ -395,25 +395,25 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
 /* Dump instructions and constant pool contents */
 void dvmCompilerCodegenDump(CompilationUnit *cUnit)
 {
-    LOGD("Dumping LIR insns\n");
+    LOGD("Dumping LIR insns");
     LIR *lirInsn;
     ArmLIR *armLIR;
 
-    LOGD("installed code is at %p\n", cUnit->baseAddr);
-    LOGD("total size is %d bytes\n", cUnit->totalSize);
+    LOGD("installed code is at %p", cUnit->baseAddr);
+    LOGD("total size is %d bytes", cUnit->totalSize);
     for (lirInsn = cUnit->firstLIRInsn; lirInsn; lirInsn = lirInsn->next) {
         dvmDumpLIRInsn(lirInsn, (unsigned char *) cUnit->baseAddr);
     }
     for (lirInsn = cUnit->classPointerList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (ArmLIR *) lirInsn;
-        LOGD("%p (%04x): .class (%s)\n",
+        LOGD("%p (%04x): .class (%s)",
              (char*)cUnit->baseAddr + armLIR->generic.offset,
              armLIR->generic.offset,
              ((CallsiteInfo *) armLIR->operands[0])->classDescriptor);
     }
     for (lirInsn = cUnit->literalList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (ArmLIR *) lirInsn;
-        LOGD("%p (%04x): .word (0x%x)\n",
+        LOGD("%p (%04x): .word (0x%x)",
              (char*)cUnit->baseAddr + armLIR->generic.offset,
              armLIR->generic.offset,
              armLIR->operands[0]);

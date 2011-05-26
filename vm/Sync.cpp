@@ -98,11 +98,11 @@ Monitor* dvmCreateMonitor(Object* obj)
 
     mon = (Monitor*) calloc(1, sizeof(Monitor));
     if (mon == NULL) {
-        LOGE("Unable to allocate monitor\n");
+        LOGE("Unable to allocate monitor");
         dvmAbort();
     }
     if (((u4)mon & 7) != 0) {
-        LOGE("Misaligned monitor: %p\n", mon);
+        LOGE("Misaligned monitor: %p", mon);
         dvmAbort();
     }
     mon->obj = obj;
@@ -560,7 +560,7 @@ static void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
 #endif
     endSec = ts->tv_sec + msec / 1000;
     if (endSec >= 0x7fffffff) {
-        LOGV("NOTE: end time exceeds epoch\n");
+        LOGV("NOTE: end time exceeds epoch");
         endSec = 0x7ffffffe;
     }
     ts->tv_sec = endSec;

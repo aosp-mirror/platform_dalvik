@@ -95,7 +95,7 @@
         {                                                                   \
             char* desc;                                                     \
             desc = dexProtoCopyMethodDescriptor(&curMethod->prototype);     \
-            LOGE("Invalid branch %d at 0x%04x in %s.%s %s\n",               \
+            LOGE("Invalid branch %d at 0x%04x in %s.%s %s",                 \
                 myoff, (int) (pc - curMethod->insns),                       \
                 curMethod->clazz->descriptor, curMethod->name, desc);       \
             free(desc);                                                     \
@@ -120,11 +120,11 @@
 # define ILOG(_level, ...) do {                                             \
         char debugStrBuf[128];                                              \
         snprintf(debugStrBuf, sizeof(debugStrBuf), __VA_ARGS__);            \
-        if (curMethod != NULL)                                                 \
-            LOG(_level, LOG_TAG"i", "%-2d|%04x%s\n",                        \
+        if (curMethod != NULL)                                              \
+            LOG(_level, LOG_TAG"i", "%-2d|%04x%s",                          \
                 self->threadId, (int)(pc - curMethod->insns), debugStrBuf); \
         else                                                                \
-            LOG(_level, LOG_TAG"i", "%-2d|####%s\n",                        \
+            LOG(_level, LOG_TAG"i", "%-2d|####%s",                          \
                 self->threadId, debugStrBuf);                               \
     } while(false)
 void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly);
@@ -314,14 +314,14 @@ static inline bool checkForNull(Object* obj)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsValidObject(obj)) {
-        LOGE("Invalid object %p\n", obj);
+        LOGE("Invalid object %p", obj);
         dvmAbort();
     }
 #endif
 #ifndef NDEBUG
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
         /* probable heap corruption */
-        LOGE("Invalid object class %p (in %p)\n", obj->clazz, obj);
+        LOGE("Invalid object class %p (in %p)", obj->clazz, obj);
         dvmAbort();
     }
 #endif
@@ -346,14 +346,14 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsValidObject(obj)) {
-        LOGE("Invalid object %p\n", obj);
+        LOGE("Invalid object %p", obj);
         dvmAbort();
     }
 #endif
 #ifndef NDEBUG
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
         /* probable heap corruption */
-        LOGE("Invalid object class %p (in %p)\n", obj->clazz, obj);
+        LOGE("Invalid object class %p (in %p)", obj->clazz, obj);
         dvmAbort();
     }
 #endif

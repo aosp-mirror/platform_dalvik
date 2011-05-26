@@ -89,7 +89,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             result = 1;                                                     \
         else                                                                \
             result = (_nanVal);                                             \
-        ILOGV("+ result=%d\n", result);                                     \
+        ILOGV("+ result=%d", result);                                       \
         SET_REGISTER(vdst, result);                                         \
     }                                                                       \
     FINISH(2);
@@ -668,7 +668,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -691,7 +691,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -714,7 +714,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -737,7 +737,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \

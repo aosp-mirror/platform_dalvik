@@ -289,7 +289,7 @@ static mspace createMspace(void *base, size_t startSize, size_t maximumSize)
      * memory in the case where a process uses even less
      * than the starting size.
      */
-    LOGV_HEAP("Creating VM heap of size %zu\n", startSize);
+    LOGV_HEAP("Creating VM heap of size %zu", startSize);
     errno = 0;
 
     mspace msp = create_contiguous_mspace_with_base(startSize/2,
@@ -303,7 +303,7 @@ static mspace createMspace(void *base, size_t startSize, size_t maximumSize)
         /* There's no guarantee that errno has meaning when the call
          * fails, but it often does.
          */
-        LOGE_HEAP("Can't create VM heap of size (%zu,%zu): %s\n",
+        LOGE_HEAP("Can't create VM heap of size (%zu,%zu): %s",
             startSize/2, maximumSize, strerror(errno));
     }
 
@@ -340,7 +340,7 @@ static bool addNewHeap(HeapSource *hs)
 
     assert(hs != NULL);
     if (hs->numHeaps >= HEAP_SOURCE_MAX_HEAP_COUNT) {
-        LOGE("Attempt to create too many heaps (%zd >= %zd)\n",
+        LOGE("Attempt to create too many heaps (%zd >= %zd)",
                 hs->numHeaps, HEAP_SOURCE_MAX_HEAP_COUNT);
         dvmAbort();
         return false;
@@ -505,14 +505,14 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
 
     gcHeap = (GcHeap *)malloc(sizeof(*gcHeap));
     if (gcHeap == NULL) {
-        LOGE_HEAP("Can't allocate heap descriptor\n");
+        LOGE_HEAP("Can't allocate heap descriptor");
         goto fail;
     }
     memset(gcHeap, 0, sizeof(*gcHeap));
 
     hs = (HeapSource *)malloc(sizeof(*hs));
     if (hs == NULL) {
-        LOGE_HEAP("Can't allocate heap source\n");
+        LOGE_HEAP("Can't allocate heap source");
         free(gcHeap);
         goto fail;
     }
@@ -530,15 +530,15 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
     hs->heapBase = (char *)base;
     hs->heapLength = length;
     if (!addInitialHeap(hs, msp, growthLimit)) {
-        LOGE_HEAP("Can't add initial heap\n");
+        LOGE_HEAP("Can't add initial heap");
         goto fail;
     }
     if (!dvmHeapBitmapInit(&hs->liveBits, base, length, "dalvik-bitmap-1")) {
-        LOGE_HEAP("Can't create liveBits\n");
+        LOGE_HEAP("Can't create liveBits");
         goto fail;
     }
     if (!dvmHeapBitmapInit(&hs->markBits, base, length, "dalvik-bitmap-2")) {
-        LOGE_HEAP("Can't create markBits\n");
+        LOGE_HEAP("Can't create markBits");
         dvmHeapBitmapDelete(&hs->liveBits);
         goto fail;
     }
@@ -581,7 +581,7 @@ bool dvmHeapSourceStartupBeforeFork()
         /* Create a new heap for post-fork zygote allocations.  We only
          * try once, even if it fails.
          */
-        LOGV("Splitting out new zygote heap\n");
+        LOGV("Splitting out new zygote heap");
         gDvm.newZygoteHeapAllocated = true;
         dvmClearCardTable();
         return addNewHeap(gHs);
@@ -773,7 +773,7 @@ void* dvmHeapSourceAlloc(size_t n)
          * This allocation would push us over the soft limit; act as
          * if the heap is full.
          */
-        LOGV_HEAP("softLimit of %zd.%03zdMB hit for %zd-byte allocation\n",
+        LOGV_HEAP("softLimit of %zd.%03zdMB hit for %zd-byte allocation",
                   FRACTIONAL_MB(hs->softLimit), n);
         return NULL;
     }
@@ -1118,7 +1118,7 @@ static void setIdealFootprint(size_t max)
     HeapSource *hs = gHs;
     size_t maximumSize = getMaximumSize(hs);
     if (max > maximumSize) {
-        LOGI_HEAP("Clamp target GC heap from %zd.%03zdMB to %u.%03uMB\n",
+        LOGI_HEAP("Clamp target GC heap from %zd.%03zdMB to %u.%03uMB",
                 FRACTIONAL_MB(max),
                 FRACTIONAL_MB(maximumSize));
         max = maximumSize;
@@ -1183,7 +1183,7 @@ void dvmSetTargetHeapUtilization(float newTarget)
 
     hs->targetUtilization =
             (size_t)(newTarget * (float)HEAP_UTILIZATION_MAX);
-    LOGV("Set heap target utilization to %zd/%d (%f)\n",
+    LOGV("Set heap target utilization to %zd/%d (%f)",
             hs->targetUtilization, HEAP_UTILIZATION_MAX, newTarget);
 }
 
@@ -1302,7 +1302,7 @@ void dvmHeapSourceTrim(size_t bytesTrimmed[], size_t arrayLen)
     size_t nativeBytes = 0;
     dlmalloc_walk_free_pages(releasePagesInRange, &nativeBytes);
 
-    LOGD_HEAP("madvised %zd (GC) + %zd (native) = %zd total bytes\n",
+    LOGD_HEAP("madvised %zd (GC) + %zd (native) = %zd total bytes",
             heapBytes, nativeBytes, heapBytes + nativeBytes);
 }
 

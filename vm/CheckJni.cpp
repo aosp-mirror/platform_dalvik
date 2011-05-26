@@ -984,10 +984,10 @@ private:
         // TODO: we could mprotect instead, and keep the allocation around for a while.
         // This would be even more expensive, but it might catch more errors.
         // if (mprotect(fullBuf, totalByteCount, PROT_NONE) != 0) {
-        //     LOGW("mprotect(PROT_NONE) failed: %s\n", strerror(errno));
+        //     LOGW("mprotect(PROT_NONE) failed: %s", strerror(errno));
         // }
         if (munmap(fullBuf, totalByteCount) != 0) {
-            LOGW("munmap failed: %s\n", strerror(errno));
+            LOGW("munmap failed: %s", strerror(errno));
             dvmAbort();
         }
     }

@@ -614,14 +614,14 @@ static void Dalvik_dalvik_system_VMDebug_cacheRegisterMap(const u4* args,
     }
     *methodDescr++ = '\0';
 
-    //LOGD("GOT: %s %s %s\n", classAndMethodDesc, methodName, methodDescr);
+    //LOGD("GOT: %s %s %s", classAndMethodDesc, methodName, methodDescr);
 
     /*
      * Find the class, but only if it's already loaded.
      */
     clazz = dvmLookupClass(classAndMethodDesc, NULL, false);
     if (clazz == NULL) {
-        LOGD("Class %s not found in bootstrap loader\n", classAndMethodDesc);
+        LOGD("Class %s not found in bootstrap loader", classAndMethodDesc);
         goto bail;
     }
 
@@ -657,15 +657,15 @@ static void Dalvik_dalvik_system_VMDebug_cacheRegisterMap(const u4* args,
         const RegisterMap* pMap;
         pMap = dvmGetExpandedRegisterMap(method);
         if (pMap == NULL) {
-            LOGV("No map for %s.%s %s\n",
+            LOGV("No map for %s.%s %s",
                 classAndMethodDesc, methodName, methodDescr);
         } else {
-            LOGV("Found map %s.%s %s\n",
+            LOGV("Found map %s.%s %s",
                 classAndMethodDesc, methodName, methodDescr);
             result = true;
         }
     } else {
-        LOGV("Unable to find %s.%s %s\n",
+        LOGV("Unable to find %s.%s %s",
             classAndMethodDesc, methodName, methodDescr);
     }
 
@@ -683,11 +683,11 @@ static void Dalvik_dalvik_system_VMDebug_dumpReferenceTables(const u4* args,
     UNUSED_PARAMETER(args);
     UNUSED_PARAMETER(pResult);
 
-    LOGI("--- reference table dump ---\n");
+    LOGI("--- reference table dump ---");
     dvmDumpJniReferenceTables();
     // could dump thread's internalLocalRefTable, probably not useful
     // ditto for thread's jniMonitorRefTable
-    LOGI("---\n");
+    LOGI("---");
     RETURN_VOID();
 }
 
@@ -706,7 +706,7 @@ static void Dalvik_dalvik_system_VMDebug_crash(const u4* args,
     UNUSED_PARAMETER(args);
     UNUSED_PARAMETER(pResult);
 
-    LOGW("Crashing VM on request\n");
+    LOGW("Crashing VM on request");
     dvmDumpThread(dvmThreadSelf(), false);
     dvmAbort();
 }

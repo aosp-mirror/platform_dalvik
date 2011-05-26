@@ -27,7 +27,7 @@ bool dvmCompilerHeapInit(void)
     arenaHead =
         (ArenaMemBlock *) malloc(sizeof(ArenaMemBlock) + ARENA_DEFAULT_SIZE);
     if (arenaHead == NULL) {
-        LOGE("No memory left to create compiler heap memory\n");
+        LOGE("No memory left to create compiler heap memory");
         return false;
     }
     arenaHead->blockSize = ARENA_DEFAULT_SIZE;
@@ -183,18 +183,18 @@ void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
     while (true) {
         bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
         if (bb == NULL) break;
-        LOGD("Block %d (%s) (insn %04x - %04x%s)\n",
+        LOGD("Block %d (%s) (insn %04x - %04x%s)",
              bb->id,
              blockTypeNames[bb->blockType],
              bb->startOffset,
              bb->lastMIRInsn ? bb->lastMIRInsn->offset : bb->startOffset,
              bb->lastMIRInsn ? "" : " empty");
         if (bb->taken) {
-            LOGD("  Taken branch: block %d (%04x)\n",
+            LOGD("  Taken branch: block %d (%04x)",
                  bb->taken->id, bb->taken->startOffset);
         }
         if (bb->fallThrough) {
-            LOGD("  Fallthrough : block %d (%04x)\n",
+            LOGD("  Fallthrough : block %d (%04x)",
                  bb->fallThrough->id, bb->fallThrough->startOffset);
         }
     }

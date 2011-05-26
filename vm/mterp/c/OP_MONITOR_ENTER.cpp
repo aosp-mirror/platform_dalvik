@@ -8,7 +8,7 @@ HANDLE_OPCODE(OP_MONITOR_ENTER /*vAA*/)
         obj = (Object*)GET_REGISTER(vsrc1);
         if (!checkForNullExportPC(obj, fp, pc))
             GOTO_exceptionThrown();
-        ILOGV("+ locking %p %s\n", obj, obj->clazz->descriptor);
+        ILOGV("+ locking %p %s", obj, obj->clazz->descriptor);
         EXPORT_PC();    /* need for precise GC */
         dvmLockObject(self, obj);
     }

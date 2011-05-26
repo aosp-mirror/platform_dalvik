@@ -36,7 +36,7 @@ void dvmInterpretPortable(Thread* self)
 
     methodClassDex = curMethod->clazz->pDvmDex;
 
-    LOGVV("threadid=%d: %s.%s pc=0x%x fp=%p\n",
+    LOGVV("threadid=%d: %s.%s pc=0x%x fp=%p",
         self->threadId, curMethod->clazz->descriptor, curMethod->name,
         pc - curMethod->insns, fp);
 

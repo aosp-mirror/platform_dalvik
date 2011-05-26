@@ -130,10 +130,10 @@ bool dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
             pSet->alloc = 4;
         else
             pSet->alloc *= 2;
-        LOGVV("expanding %p to %d\n", pSet, pSet->alloc);
+        LOGVV("expanding %p to %d", pSet, pSet->alloc);
         newList = (const void**)realloc(pSet->list, pSet->alloc * sizeof(void*));
         if (newList == NULL) {
-            LOGE("Failed expanding ptr set (alloc=%d)\n", pSet->alloc);
+            LOGE("Failed expanding ptr set (alloc=%d)", pSet->alloc);
             dvmAbort();
         }
         pSet->list = newList;
@@ -148,14 +148,14 @@ bool dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
          * terminated "above" or "below" the value.
          */
         if (nearby != 0 && ptr < pSet->list[nearby-1]) {
-            //LOGD("nearby-1=%d %p, inserting %p at -1\n",
+            //LOGD("nearby-1=%d %p, inserting %p at -1",
             //    nearby-1, pSet->list[nearby-1], ptr);
             nearby--;
         } else if (ptr < pSet->list[nearby]) {
-            //LOGD("nearby=%d %p, inserting %p at +0\n",
+            //LOGD("nearby=%d %p, inserting %p at +0",
             //    nearby, pSet->list[nearby], ptr);
         } else {
-            //LOGD("nearby+1=%d %p, inserting %p at +1\n",
+            //LOGD("nearby+1=%d %p, inserting %p at +1",
             //    nearby+1, pSet->list[nearby+1], ptr);
             nearby++;
         }
@@ -267,7 +267,7 @@ void dvmPointerSetIntersect(PointerSet* pSet, const void** ptrArray, int count)
  */
 void dvmPointerSetDump(const PointerSet* pSet)
 {
-    LOGI("PointerSet %p\n", pSet);
+    LOGI("PointerSet %p", pSet);
     int i;
     for (i = 0; i < pSet->count; i++)
         LOGI(" %2d: %p", i, pSet->list[i]);

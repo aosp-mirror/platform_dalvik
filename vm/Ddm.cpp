@@ -61,7 +61,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
      */
     dataArray = dvmAllocPrimitiveArray('B', dataLen, ALLOC_DEFAULT);
     if (dataArray == NULL) {
-        LOGW("array alloc failed (%d)\n", dataLen);
+        LOGW("array alloc failed (%d)", dataLen);
         dvmClearException(self);
         goto bail;
     }
@@ -75,7 +75,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     length = get4BE((u1*)dataArray->contents + 4);
     offset = kChunkHdrLen;
     if (offset+length > (unsigned int) dataLen) {
-        LOGW("WARNING: bad chunk found (len=%u pktLen=%d)\n", length, dataLen);
+        LOGW("WARNING: bad chunk found (len=%u pktLen=%d)", length, dataLen);
         goto bail;
     }
 
@@ -86,7 +86,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     dvmCallMethod(self, gDvm.methDalvikDdmcServer_dispatch, NULL, &callRes,
         type, dataArray, offset, length);
     if (dvmCheckException(self)) {
-        LOGI("Exception thrown by dispatcher for 0x%08x\n", type);
+        LOGI("Exception thrown by dispatcher for 0x%08x", type);
         dvmLogExceptionStackTrace();
         dvmClearException(self);
         goto bail;
@@ -118,13 +118,13 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     offset = dvmGetFieldInt(chunk, gDvm.offDalvikDdmcChunk_offset);
     length = dvmGetFieldInt(chunk, gDvm.offDalvikDdmcChunk_length);
 
-    LOGV("DDM reply: type=0x%08x data=%p offset=%d length=%d\n",
+    LOGV("DDM reply: type=0x%08x data=%p offset=%d length=%d",
         type, replyData, offset, length);
 
     if (length == 0 || replyData == NULL)
         goto bail;
     if (offset + length > replyData->length) {
-        LOGW("WARNING: chunk off=%d len=%d exceeds reply array len %d\n",
+        LOGW("WARNING: chunk off=%d len=%d exceeds reply array len %d",
             offset, length, replyData->length);
         goto bail;
     }
@@ -132,7 +132,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     u1* reply;
     reply = (u1*) malloc(length + kChunkHdrLen);
     if (reply == NULL) {
-        LOGW("malloc %d failed\n", length+kChunkHdrLen);
+        LOGW("malloc %d failed", length+kChunkHdrLen);
         goto bail;
     }
     set4BE(reply + 0, type);
@@ -143,7 +143,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     *pReplyLen = length + kChunkHdrLen;
     result = true;
 
-    LOGV("dvmHandleDdm returning type=%.4s buf=%p len=%d\n",
+    LOGV("dvmHandleDdm returning type=%.4s buf=%p len=%d",
         (char*) reply, reply, length);
 
 bail:
@@ -164,7 +164,7 @@ static void broadcast(int event)
     Thread* self = dvmThreadSelf();
 
     if (self->status != THREAD_RUNNING) {
-        LOGE("ERROR: DDM broadcast with thread status=%d\n", self->status);
+        LOGE("ERROR: DDM broadcast with thread status=%d", self->status);
         /* try anyway? */
     }
 
@@ -180,7 +180,7 @@ static void broadcast(int event)
     dvmCallMethod(self, gDvm.methDalvikDdmcServer_broadcast, NULL, &unused,
         event);
     if (dvmCheckException(self)) {
-        LOGI("Exception thrown by broadcast(%d)\n", event);
+        LOGI("Exception thrown by broadcast(%d)", event);
         dvmLogExceptionStackTrace();
         dvmClearException(self);
         return;
@@ -196,7 +196,7 @@ void dvmDdmConnected()
 {
     // TODO: any init
 
-    LOGV("Broadcasting DDM connect\n");
+    LOGV("Broadcasting DDM connect");
     broadcast(CONNECTED);
 }
 
@@ -207,7 +207,7 @@ void dvmDdmConnected()
  */
 void dvmDdmDisconnected()
 {
-    LOGV("Broadcasting DDM disconnect\n");
+    LOGV("Broadcasting DDM disconnect");
     broadcast(DISCONNECTED);
 
     gDvm.ddmThreadNotification = false;
@@ -230,7 +230,7 @@ void dvmDdmSetThreadNotification(bool enable)
     if (enable) {
         Thread* thread;
         for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
-            //LOGW("notify %d\n", thread->threadId);
+            //LOGW("notify %d", thread->threadId);
             dvmDdmSendThreadNotification(thread, true);
         }
     }
@@ -431,7 +431,7 @@ ArrayObject* dvmDdmGetStackTraceById(u4 threadId)
             break;
     }
     if (thread == NULL) {
-        LOGI("dvmDdmGetStackTraceById: threadid=%d not found\n", threadId);
+        LOGI("dvmDdmGetStackTraceById: threadid=%d not found", threadId);
         dvmUnlockThreadList();
         return NULL;
     }

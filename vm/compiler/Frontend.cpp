@@ -49,7 +49,7 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
     dexDecodeInstruction(codePtr, decInsn);
     if (printMe) {
         char *decodedString = dvmCompilerGetDalvikDisassembly(decInsn, NULL);
-        LOGD("%p: %#06x %s\n", codePtr, opcode, decodedString);
+        LOGD("%p: %#06x %s", codePtr, opcode, decodedString);
     }
     return dexGetWidthFromOpcode(opcode);
 }
@@ -1745,7 +1745,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     curBB = entryCodeBB;
 
     if (cUnit.printMe) {
-        LOGD("--------\nCompiler: Building trace for %s, offset 0x%x\n",
+        LOGD("--------\nCompiler: Building trace for %s, offset 0x%x",
              desc->method->name, curOffset);
     }
 

@@ -60,7 +60,7 @@ static void sigchldHandler(int s)
            become unsafe. */
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status)) {
-                LOG(LOG_DEBUG, ZYGOTE_LOG_TAG, "Process %d exited cleanly (%d)\n",
+                LOG(LOG_DEBUG, ZYGOTE_LOG_TAG, "Process %d exited cleanly (%d)",
                     (int) pid, WEXITSTATUS(status));
             } else {
                 IF_LOGV(/*should use ZYGOTE_LOG_TAG*/) {
@@ -83,7 +83,7 @@ static void sigchldHandler(int s)
             }
 #ifdef WCOREDUMP
             if (WCOREDUMP(status)) {
-                LOG(LOG_INFO, ZYGOTE_LOG_TAG, "Process %d dumped core\n",
+                LOG(LOG_INFO, ZYGOTE_LOG_TAG, "Process %d dumped core",
                     (int) pid);
             }
 #endif /* ifdef WCOREDUMP */
@@ -235,7 +235,7 @@ static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
     }
 
     if (!dvmGcPreZygoteFork()) {
-        LOGE("pre-fork heap failed\n");
+        LOGE("pre-fork heap failed");
         dvmAbort();
     }
 
@@ -276,7 +276,7 @@ static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
  */
 static void enableDebugFeatures(u4 debugFlags)
 {
-    LOGV("debugFlags is 0x%02x\n", debugFlags);
+    LOGV("debugFlags is 0x%02x", debugFlags);
 
     gDvm.jdwpAllowed = ((debugFlags & DEBUG_ENABLE_DEBUGGER) != 0);
 
@@ -342,7 +342,7 @@ static int setCapabilities(int64_t permitted, int64_t effective)
     capdata.effective = effective;
     capdata.permitted = permitted;
 
-    LOGV("CAPSET perm=%llx eff=%llx\n", permitted, effective);
+    LOGV("CAPSET perm=%llx eff=%llx", permitted, effective);
     if (capset(&capheader, &capdata) != 0)
         return errno;
 #endif /*HAVE_ANDROID_OS*/
@@ -386,7 +386,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
     }
 
     if (!dvmGcPreZygoteFork()) {
-        LOGE("pre-fork heap failed\n");
+        LOGE("pre-fork heap failed");
         dvmAbort();
     }
 
@@ -443,7 +443,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
 
         err = setCapabilities(permittedCapabilities, effectiveCapabilities);
         if (err != 0) {
-            LOGE("cannot set capabilities (%llx,%llx): %s\n",
+            LOGE("cannot set capabilities (%llx,%llx): %s",
                 permittedCapabilities, effectiveCapabilities, strerror(err));
             dvmAbort();
         }
@@ -460,7 +460,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         unsetSignalHandler();
         gDvm.zygote = false;
         if (!dvmInitAfterZygote()) {
-            LOGE("error in post-zygote initialization\n");
+            LOGE("error in post-zygote initialization");
             dvmAbort();
         }
     } else if (pid > 0) {

@@ -259,7 +259,7 @@ static void *tryMalloc(size_t size)
      */
 //TODO: wait for the finalizers from the previous GC to finish
 collect_soft_refs:
-    LOGI_HEAP("Forcing collection of SoftReferences for %zu-byte allocation\n",
+    LOGI_HEAP("Forcing collection of SoftReferences for %zu-byte allocation",
             size);
     gcForMalloc(true);
     ptr = dvmHeapSourceAllocAndGrow(size);
@@ -268,7 +268,7 @@ collect_soft_refs:
     }
 //TODO: maybe wait for finalizers and try one last time
 
-    LOGE_HEAP("Out of memory on a %zd-byte allocation.\n", size);
+    LOGE_HEAP("Out of memory on a %zd-byte allocation.", size);
 //TODO: tell the HeapSource to dump its state
     dvmDumpThread(dvmThreadSelf(), false);
 
@@ -525,7 +525,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
      */
 
     if (gcHeap->gcRunning) {
-        LOGW_HEAP("Attempted recursive GC\n");
+        LOGW_HEAP("Attempted recursive GC");
         return;
     }
 
@@ -553,7 +553,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     /* Set up the marking context.
      */
     if (!dvmHeapBeginMarkStep(spec->isPartial)) {
-        LOGE_HEAP("dvmHeapBeginMarkStep failed; aborting\n");
+        LOGE_HEAP("dvmHeapBeginMarkStep failed; aborting");
         dvmAbort();
     }
 
@@ -740,15 +740,15 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
              rootTime, dirtyTime);
     }
     if (gcHeap->ddmHpifWhen != 0) {
-        LOGD_HEAP("Sending VM heap info to DDM\n");
+        LOGD_HEAP("Sending VM heap info to DDM");
         dvmDdmSendHeapInfo(gcHeap->ddmHpifWhen, false);
     }
     if (gcHeap->ddmHpsgWhen != 0) {
-        LOGD_HEAP("Dumping VM heap to DDM\n");
+        LOGD_HEAP("Dumping VM heap to DDM");
         dvmDdmSendHeapSegments(false, false);
     }
     if (gcHeap->ddmNhsgWhen != 0) {
-        LOGD_HEAP("Dumping native heap to DDM\n");
+        LOGD_HEAP("Dumping native heap to DDM");
         dvmDdmSendHeapSegments(false, true);
     }
 }

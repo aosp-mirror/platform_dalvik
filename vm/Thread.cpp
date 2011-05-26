@@ -253,13 +253,13 @@ bool dvmThreadStartup()
 
     /* allocate a TLS slot */
     if (pthread_key_create(&gDvm.pthreadKeySelf, threadExitCheck) != 0) {
-        LOGE("ERROR: pthread_key_create failed\n");
+        LOGE("ERROR: pthread_key_create failed");
         return false;
     }
 
     /* test our pthread lib */
     if (pthread_getspecific(gDvm.pthreadKeySelf) != NULL)
-        LOGW("WARNING: newly-created pthread TLS slot is not NULL\n");
+        LOGW("WARNING: newly-created pthread TLS slot is not NULL");
 
     /* prep thread-related locks and conditions */
     dvmInitMutex(&gDvm.threadListLock);
@@ -550,12 +550,12 @@ void dvmSlayDaemons()
                 gDvm.offJavaLangThread_daemon))
         {
             /* should never happen; suspend it with the rest */
-            LOGW("threadid=%d: non-daemon id=%d still running at shutdown?!\n",
+            LOGW("threadid=%d: non-daemon id=%d still running at shutdown?!",
                 threadId, target->threadId);
         }
 
         char* threadName = dvmGetThreadName(target);
-        LOGV("threadid=%d: suspending daemon id=%d name='%s'\n",
+        LOGV("threadid=%d: suspending daemon id=%d name='%s'",
             threadId, target->threadId, threadName);
         free(threadName);
 
@@ -607,7 +607,7 @@ void dvmSlayDaemons()
 
                 if (target->status == THREAD_RUNNING) {
                     if (!complained)
-                        LOGD("threadid=%d not ready yet\n", target->threadId);
+                        LOGD("threadid=%d not ready yet", target->threadId);
                     allSuspended = false;
                     /* keep going so we log each running daemon once */
                 }
@@ -616,12 +616,12 @@ void dvmSlayDaemons()
             }
 
             if (allSuspended) {
-                LOGV("threadid=%d: all daemons have suspended\n", threadId);
+                LOGV("threadid=%d: all daemons have suspended", threadId);
                 break;
             } else {
                 if (!complained) {
                     complained = true;
-                    LOGD("threadid=%d: waiting briefly for daemon suspension\n",
+                    LOGD("threadid=%d: waiting briefly for daemon suspension",
                         threadId);
                 }
             }
@@ -687,7 +687,7 @@ bool dvmPrepMainThread()
     Method* init;
     JValue unused;
 
-    LOGV("+++ finishing prep on main VM thread\n");
+    LOGV("+++ finishing prep on main VM thread");
 
     /* main thread is always first in list at this point */
     thread = gDvm.threadList;
@@ -698,14 +698,14 @@ bool dvmPrepMainThread()
      * we create an instance of them.
      */
     if (!dvmInitClass(gDvm.classJavaLangClass)) {
-        LOGE("'Class' class failed to initialize\n");
+        LOGE("'Class' class failed to initialize");
         return false;
     }
     if (!dvmInitClass(gDvm.classJavaLangThreadGroup) ||
         !dvmInitClass(gDvm.classJavaLangThread) ||
         !dvmInitClass(gDvm.classJavaLangVMThread))
     {
-        LOGE("thread classes failed to initialize\n");
+        LOGE("thread classes failed to initialize");
         return false;
     }
 
@@ -719,7 +719,7 @@ bool dvmPrepMainThread()
      */
     threadObj = dvmAllocObject(gDvm.classJavaLangThread, ALLOC_DEFAULT);
     if (threadObj == NULL) {
-        LOGE("unable to allocate main thread object\n");
+        LOGE("unable to allocate main thread object");
         return false;
     }
     dvmReleaseTrackedAlloc(threadObj, NULL);
@@ -735,7 +735,7 @@ bool dvmPrepMainThread()
     dvmCallMethod(thread, init, threadObj, &unused, groupObj, threadNameStr,
         THREAD_NORM_PRIORITY, false);
     if (dvmCheckException(thread)) {
-        LOGE("exception thrown while constructing main thread object\n");
+        LOGE("exception thrown while constructing main thread object");
         return false;
     }
 
@@ -744,7 +744,7 @@ bool dvmPrepMainThread()
      */
     vmThreadObj = dvmAllocObject(gDvm.classJavaLangVMThread, ALLOC_DEFAULT);
     if (vmThreadObj == NULL) {
-        LOGE("unable to allocate main vmthread object\n");
+        LOGE("unable to allocate main vmthread object");
         return false;
     }
     dvmReleaseTrackedAlloc(vmThreadObj, NULL);
@@ -753,7 +753,7 @@ bool dvmPrepMainThread()
             "(Ljava/lang/Thread;)V");
     dvmCallMethod(thread, init, vmThreadObj, &unused, threadObj);
     if (dvmCheckException(thread)) {
-        LOGE("exception thrown while constructing main vmthread object\n");
+        LOGE("exception thrown while constructing main vmthread object");
         return false;
     }
 
@@ -781,7 +781,7 @@ bool dvmPrepMainThread()
      */
     Object* systemLoader = dvmGetSystemClassLoader();
     if (systemLoader == NULL) {
-        LOGW("WARNING: system class loader is NULL (setting main ctxt)\n");
+        LOGW("WARNING: system class loader is NULL (setting main ctxt)");
         /* keep going? */
     } else {
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_contextClassLoader,
@@ -902,7 +902,7 @@ static bool prepareThread(Thread* thread)
     thread->handle = pthread_self();
     thread->systemTid = dvmGetSysThreadId();
 
-    //LOGI("SYSTEM TID IS %d (pid is %d)\n", (int) thread->systemTid,
+    //LOGI("SYSTEM TID IS %d (pid is %d)", (int) thread->systemTid,
     //    (int) getpid());
     /*
      * If we were called by dvmAttachCurrentThread, the self value is
@@ -910,7 +910,7 @@ static bool prepareThread(Thread* thread)
      */
     setThreadSelf(thread);
 
-    LOGV("threadid=%d: interp stack at %p\n",
+    LOGV("threadid=%d: interp stack at %p",
         thread->threadId, thread->interpStackStart - thread->interpStackSize);
 
     /*
@@ -950,7 +950,7 @@ static bool prepareThread(Thread* thread)
  */
 static void unlinkThread(Thread* thread)
 {
-    LOG_THREAD("threadid=%d: removing from list\n", thread->threadId);
+    LOG_THREAD("threadid=%d: removing from list", thread->threadId);
     if (thread == gDvm.threadList) {
         assert(thread->prev == NULL);
         gDvm.threadList = thread->next;
@@ -972,7 +972,7 @@ static void freeThread(Thread* thread)
         return;
 
     /* thread->threadId is zero at this point */
-    LOGVV("threadid=%d: freeing\n", thread->threadId);
+    LOGVV("threadid=%d: freeing", thread->threadId);
 
     if (thread->interpStackStart != NULL) {
         u1* interpStackBottom;
@@ -983,7 +983,7 @@ static void freeThread(Thread* thread)
         free(interpStackBottom);
 #else
         if (munmap(interpStackBottom, thread->interpStackSize) != 0)
-            LOGW("munmap(thread stack) failed\n");
+            LOGW("munmap(thread stack) failed");
 #endif
     }
 
@@ -1022,7 +1022,7 @@ static void setThreadSelf(Thread* thread)
          * here to ensure we clean up after ourselves.
          */
         if (thread != NULL) {
-            LOGE("pthread_setspecific(%p) failed, err=%d\n", thread, cc);
+            LOGE("pthread_setspecific(%p) failed, err=%d", thread, cc);
             dvmAbort();     /* the world is fundamentally hosed */
         }
     }
@@ -1055,11 +1055,11 @@ static void threadExitCheck(void* arg)
     Thread* self = (Thread*) arg;
     assert(self != NULL);
 
-    LOGV("threadid=%d: threadExitCheck(%p) count=%d\n",
+    LOGV("threadid=%d: threadExitCheck(%p) count=%d",
         self->threadId, arg, self->threadExitCheckCount);
 
     if (self->status == THREAD_ZOMBIE) {
-        LOGW("threadid=%d: Weird -- shouldn't be in threadExitCheck\n",
+        LOGW("threadid=%d: Weird -- shouldn't be in threadExitCheck",
             self->threadId);
         return;
     }
@@ -1068,17 +1068,17 @@ static void threadExitCheck(void* arg)
         /*
          * Spin a couple of times to let other destructors fire.
          */
-        LOGD("threadid=%d: thread exiting, not yet detached (count=%d)\n",
+        LOGD("threadid=%d: thread exiting, not yet detached (count=%d)",
             self->threadId, self->threadExitCheckCount);
         self->threadExitCheckCount++;
         int cc = pthread_setspecific(gDvm.pthreadKeySelf, self);
         if (cc != 0) {
-            LOGE("threadid=%d: unable to re-add thread to TLS\n",
+            LOGE("threadid=%d: unable to re-add thread to TLS",
                 self->threadId);
             dvmAbort();
         }
     } else {
-        LOGE("threadid=%d: native thread exited without detaching\n",
+        LOGE("threadid=%d: native thread exited without detaching",
             self->threadId);
         dvmAbort();
     }
@@ -1102,7 +1102,7 @@ static void assignThreadId(Thread* thread)
      */
     int num = dvmAllocBit(gDvm.threadIdMap);
     if (num < 0) {
-        LOGE("Ran out of thread IDs\n");
+        LOGE("Ran out of thread IDs");
         dvmAbort();     // TODO: make this a non-fatal error result
     }
 
@@ -1199,13 +1199,13 @@ static void setThreadName(const char *threadName)
     buf[sizeof(buf)-1] = '\0';
     int err = pthread_setname_np(pthread_self(), buf);
     if (err != 0) {
-        LOGW("Unable to set the name of current thread to '%s': %s\n",
+        LOGW("Unable to set the name of current thread to '%s': %s",
             buf, strerror(err));
     }
 #elif defined(HAVE_PRCTL)
     prctl(PR_SET_NAME, (unsigned long) s, 0, 0, 0);
 #else
-    LOGD("No way to set current thread's name (%s)\n", s);
+    LOGD("No way to set current thread's name (%s)", s);
 #endif
 }
 
@@ -1309,7 +1309,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
          * resource limits.  VirtualMachineError is probably too severe,
          * so use OutOfMemoryError.
          */
-        LOGE("Thread creation failed (err=%s)\n", strerror(errno));
+        LOGE("Thread creation failed (err=%s)", strerror(errno));
 
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, NULL);
 
@@ -1402,7 +1402,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
     while (newThread->status != THREAD_STARTING)
         pthread_cond_wait(&gDvm.threadStartCond, &gDvm.threadListLock);
 
-    LOG_THREAD("threadid=%d: adding to list\n", newThread->threadId);
+    LOG_THREAD("threadid=%d: adding to list", newThread->threadId);
     newThread->next = gDvm.threadList->next;
     if (newThread->next != NULL)
         newThread->next->prev = newThread;
@@ -1465,7 +1465,7 @@ static void* interpThreadStart(void* arg)
     dvmLockThreadList(self);
     prepareThread(self);
 
-    LOG_THREAD("threadid=%d: created from interp\n", self->threadId);
+    LOG_THREAD("threadid=%d: created from interp", self->threadId);
 
     /*
      * Change our status and wake our parent, who will add us to the
@@ -1532,10 +1532,10 @@ static void* interpThreadStart(void* arg)
     Method* run = self->threadObj->clazz->vtable[gDvm.voffJavaLangThread_run];
     JValue unused;
 
-    LOGV("threadid=%d: calling run()\n", self->threadId);
+    LOGV("threadid=%d: calling run()", self->threadId);
     assert(strcmp(run->name, "run") == 0);
     dvmCallMethod(self, run, self->threadObj, &unused);
-    LOGV("threadid=%d: exiting\n", self->threadId);
+    LOGV("threadid=%d: exiting", self->threadId);
 
     /*
      * Remove the thread from various lists, report its death, and free
@@ -1565,7 +1565,7 @@ static void threadExitUncaughtException(Thread* self, Object* group)
     Object* handlerObj;
     Method* uncaughtHandler;
 
-    LOGW("threadid=%d: thread exiting with uncaught exception (group=%p)\n",
+    LOGW("threadid=%d: thread exiting with uncaught exception (group=%p)",
         self->threadId, group);
     assert(group != NULL);
 
@@ -1597,14 +1597,14 @@ static void threadExitUncaughtException(Thread* self, Object* group)
             "uncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
 
     if (uncaughtHandler != NULL) {
-        //LOGI("+++ calling %s.uncaughtException\n",
+        //LOGI("+++ calling %s.uncaughtException",
         //     handlerObj->clazz->descriptor);
         JValue unused;
         dvmCallMethod(self, uncaughtHandler, handlerObj, &unused,
             self->threadObj, exception);
     } else {
         /* should be impossible, but handle it anyway */
-        LOGW("WARNING: no 'uncaughtException' method in class %s\n",
+        LOGW("WARNING: no 'uncaughtException' method in class %s",
             handlerObj->clazz->descriptor);
         dvmSetException(self, exception);
         dvmLogExceptionStackTrace();
@@ -1658,7 +1658,7 @@ bool dvmCreateInternalThread(pthread_t* pHandle, const char* name,
     if (pthread_create(pHandle, &threadAttr, internalThreadStart,
             pArgs) != 0)
     {
-        LOGE("internal thread creation failed\n");
+        LOGE("internal thread creation failed");
         free(pArgs->name);
         free(pArgs);
         return false;
@@ -1686,7 +1686,7 @@ bool dvmCreateInternalThread(pthread_t* pHandle, const char* name,
         pthread_cond_wait(&gDvm.threadStartCond, &gDvm.threadListLock);
 
     if (newThread == NULL) {
-        LOGW("internal thread create failed (createStatus=%d)\n", createStatus);
+        LOGW("internal thread create failed (createStatus=%d)", createStatus);
         assert(createStatus < 0);
         /* don't free pArgs -- if pthread_create succeeded, child owns it */
         dvmUnlockThreadList();
@@ -1735,7 +1735,7 @@ static void* internalThreadStart(void* arg)
         pthread_cond_broadcast(&gDvm.threadStartCond);
         dvmUnlockThreadList();
 
-        LOG_THREAD("threadid=%d: internal '%s'\n",
+        LOG_THREAD("threadid=%d: internal '%s'",
             dvmThreadSelf()->threadId, pArgs->name);
 
         /* execute */
@@ -1811,7 +1811,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      * The native side of the thread is ready; add it to the list.  Once
      * it's on the list the thread is visible to the JDWP code and the GC.
      */
-    LOG_THREAD("threadid=%d: adding to list (attached)\n", self->threadId);
+    LOG_THREAD("threadid=%d: adding to list (attached)", self->threadId);
 
     dvmLockThreadList(self);
 
@@ -1893,7 +1893,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
     dvmCallMethod(self, init, threadObj, &unused, (Object*)pArgs->group,
         threadNameStr, getThreadPriorityFromSystem(), isDaemon);
     if (dvmCheckException(self)) {
-        LOGE("exception thrown while constructing attached thread object\n");
+        LOGE("exception thrown while constructing attached thread object");
         goto fail_unlink;
     }
 
@@ -1912,7 +1912,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      * way that ensures another thread can't call start() on it.
      */
     if (dvmGetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread) != NULL) {
-        LOGW("WOW: thread start hijack\n");
+        LOGW("WOW: thread start hijack");
         dvmThrowIllegalThreadStateException(
             "thread has already been started");
         /* We don't want to free anything associated with the thread
@@ -1938,7 +1938,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
     dvmReleaseTrackedAlloc(vmThreadObj, self);
     dvmReleaseTrackedAlloc((Object*)threadNameStr, self);
 
-    LOG_THREAD("threadid=%d: attached from native, name=%s\n",
+    LOG_THREAD("threadid=%d: attached from native, name=%s",
         self->threadId, pArgs->name);
 
     /* tell the debugger & DDM */
@@ -2019,7 +2019,7 @@ void dvmDetachCurrentThread()
         }
 
         if (!topIsNative) {
-            LOGE("ERROR: detaching thread with interp frames (count=%d)\n",
+            LOGE("ERROR: detaching thread with interp frames (count=%d)",
                 curDepth);
             dvmDumpThread(self, false);
             dvmAbort();
@@ -2027,7 +2027,7 @@ void dvmDetachCurrentThread()
     }
 
     group = dvmGetFieldObject(self->threadObj, gDvm.offJavaLangThread_group);
-    LOG_THREAD("threadid=%d: detach (group=%p)\n", self->threadId, group);
+    LOG_THREAD("threadid=%d: detach (group=%p)", self->threadId, group);
 
     /*
      * Release any held monitors.  Since there are no interpreted stack
@@ -2113,7 +2113,7 @@ void dvmDetachCurrentThread()
 
     dvmLockMutex(&traceState->startStopLock);
     if (traceState->traceEnabled) {
-        LOGI("threadid=%d: waiting for method trace to finish\n",
+        LOGI("threadid=%d: waiting for method trace to finish",
             self->threadId);
         while (traceState->traceEnabled) {
             dvmWaitCond(&traceState->threadExitCond,
@@ -2147,7 +2147,7 @@ void dvmDetachCurrentThread()
         if (gDvm.nonDaemonThreadCount == 0) {
             int cc;
 
-            LOGV("threadid=%d: last non-daemon thread\n", self->threadId);
+            LOGV("threadid=%d: last non-daemon thread", self->threadId);
             //dvmDumpAllThreads(false);
             // cond var guarded by threadListLock, which we already hold
             cc = pthread_cond_signal(&gDvm.vmExitCond);
@@ -2155,7 +2155,7 @@ void dvmDetachCurrentThread()
         }
     }
 
-    LOGV("threadid=%d: bye!\n", self->threadId);
+    LOGV("threadid=%d: bye!", self->threadId);
     releaseThreadId(self);
     dvmUnlockThreadList();
 
@@ -2185,7 +2185,7 @@ void dvmSuspendThread(Thread* thread)
     lockThreadSuspendCount();
     dvmAddToSuspendCounts(thread, 1, 1);
 
-    LOG_THREAD("threadid=%d: suspend++, now=%d\n",
+    LOG_THREAD("threadid=%d: suspend++, now=%d",
         thread->threadId, thread->suspendCount);
     unlockThreadSuspendCount();
 
@@ -2213,11 +2213,11 @@ void dvmResumeThread(Thread* thread)
     if (thread->suspendCount > 0) {
         dvmAddToSuspendCounts(thread, -1, -1);
     } else {
-        LOG_THREAD("threadid=%d:  suspendCount already zero\n",
+        LOG_THREAD("threadid=%d:  suspendCount already zero",
             thread->threadId);
     }
 
-    LOG_THREAD("threadid=%d: suspend--, now=%d\n",
+    LOG_THREAD("threadid=%d: suspend--, now=%d",
         thread->threadId, thread->suspendCount);
 
     if (thread->suspendCount == 0) {
@@ -2254,7 +2254,7 @@ void dvmSuspendSelf(bool jdwpActivity)
      */
     assert(self->suspendCount > 0);
     self->status = THREAD_SUSPENDED;
-    LOG_THREAD("threadid=%d: self-suspending (dbg)\n", self->threadId);
+    LOG_THREAD("threadid=%d: self-suspending (dbg)", self->threadId);
 
     /*
      * Tell JDWP that we've completed suspension.  The JDWP thread can't
@@ -2264,7 +2264,7 @@ void dvmSuspendSelf(bool jdwpActivity)
      * If we got here via waitForDebugger(), don't do this part.
      */
     if (jdwpActivity) {
-        //LOGI("threadid=%d: clearing wait-for-event (my handle=%08x)\n",
+        //LOGI("threadid=%d: clearing wait-for-event (my handle=%08x)",
         //    self->threadId, (int) self->handle);
         dvmJdwpClearWaitForEventThread(gDvm.jdwpState);
     }
@@ -2279,13 +2279,13 @@ void dvmSuspendSelf(bool jdwpActivity)
              * dump event is pending (assuming SignalCatcher was resumed for
              * just long enough to try to grab the thread-suspend lock).
              */
-            LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d)\n",
+            LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d)",
                 self->threadId, self->suspendCount, self->dbgSuspendCount);
         }
     }
     assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
     self->status = THREAD_RUNNING;
-    LOG_THREAD("threadid=%d: self-reviving (dbg), status=%d\n",
+    LOG_THREAD("threadid=%d: self-reviving (dbg), status=%d",
         self->threadId, self->status);
 
     unlockThreadSuspendCount();
@@ -2321,12 +2321,12 @@ int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
     errno = 0;
     *pSavedThreadPrio = getpriority(PRIO_PROCESS, thread->systemTid);
     if (errno != 0) {
-        LOGW("Unable to get priority for threadid=%d sysTid=%d\n",
+        LOGW("Unable to get priority for threadid=%d sysTid=%d",
             thread->threadId, thread->systemTid);
         return 0;
     }
     if (get_sched_policy(thread->systemTid, pSavedThreadPolicy) != 0) {
-        LOGW("Unable to get policy for threadid=%d sysTid=%d\n",
+        LOGW("Unable to get policy for threadid=%d sysTid=%d",
             thread->threadId, thread->systemTid);
         return 0;
     }
@@ -2338,10 +2338,10 @@ int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
      */
     if (*pSavedThreadPolicy == SP_BACKGROUND) {
         if (set_sched_policy(thread->systemTid, SP_FOREGROUND) != 0) {
-            LOGW("Couldn't set fg policy on tid %d\n", thread->systemTid);
+            LOGW("Couldn't set fg policy on tid %d", thread->systemTid);
         } else {
             changeFlags |= kChangedPolicy;
-            LOGD("Temporarily moving tid %d to fg (was %d)\n",
+            LOGD("Temporarily moving tid %d to fg (was %d)",
                 thread->systemTid, *pSavedThreadPolicy);
         }
     }
@@ -2353,11 +2353,11 @@ int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
     if (*pSavedThreadPrio > 0) {
         const int kHigher = 0;
         if (setpriority(PRIO_PROCESS, thread->systemTid, kHigher) != 0) {
-            LOGW("Couldn't raise priority on tid %d to %d\n",
+            LOGW("Couldn't raise priority on tid %d to %d",
                 thread->systemTid, kHigher);
         } else {
             changeFlags |= kChangedPriority;
-            LOGD("Temporarily raised priority on tid %d (%d -> %d)\n",
+            LOGD("Temporarily raised priority on tid %d (%d -> %d)",
                 thread->systemTid, *pSavedThreadPrio, kHigher);
         }
     }
@@ -2373,10 +2373,10 @@ void dvmResetThreadPriority(Thread* thread, int changeFlags,
 {
     if ((changeFlags & kChangedPolicy) != 0) {
         if (set_sched_policy(thread->systemTid, savedThreadPolicy) != 0) {
-            LOGW("NOTE: couldn't reset tid %d to (%d)\n",
+            LOGW("NOTE: couldn't reset tid %d to (%d)",
                 thread->systemTid, savedThreadPolicy);
         } else {
-            LOGD("Restored policy of %d to %d\n",
+            LOGD("Restored policy of %d to %d",
                 thread->systemTid, savedThreadPolicy);
         }
     }
@@ -2384,10 +2384,10 @@ void dvmResetThreadPriority(Thread* thread, int changeFlags,
     if ((changeFlags & kChangedPriority) != 0) {
         if (setpriority(PRIO_PROCESS, thread->systemTid, savedThreadPrio) != 0)
         {
-            LOGW("NOTE: couldn't reset priority on thread %d to %d\n",
+            LOGW("NOTE: couldn't reset priority on thread %d to %d",
                 thread->systemTid, savedThreadPrio);
         } else {
-            LOGD("Restored priority on %d to %d\n",
+            LOGD("Restored priority on %d to %d",
                 thread->systemTid, savedThreadPrio);
         }
     }
@@ -2471,7 +2471,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
          */
         if (!dvmIterativeSleep(sleepIter++, spinSleepTime, startWhen)) {
             if (spinSleepTime != FIRST_SLEEP) {
-                LOGW("threadid=%d: spin on suspend #%d threadid=%d (pcf=%d)\n",
+                LOGW("threadid=%d: spin on suspend #%d threadid=%d (pcf=%d)",
                     self->threadId, retryCount,
                     thread->threadId, priChangeFlags);
                 if (retryCount > 1) {
@@ -2486,11 +2486,11 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
             spinSleepTime = MORE_SLEEP;
 
             if (retryCount++ == kMaxRetries) {
-                LOGE("Fatal spin-on-suspend, dumping threads\n");
+                LOGE("Fatal spin-on-suspend, dumping threads");
                 dvmDumpAllThreads(false);
 
                 /* log this after -- long traces will scroll off log */
-                LOGE("threadid=%d: stuck on threadid=%d, giving up\n",
+                LOGE("threadid=%d: stuck on threadid=%d, giving up",
                     self->threadId, thread->threadId);
 
                 /* try to get a debuggerd dump from the spinning thread */
@@ -2502,7 +2502,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
     }
 
     if (complained) {
-        LOGW("threadid=%d: spin on suspend resolved in %lld msec\n",
+        LOGW("threadid=%d: spin on suspend resolved in %lld msec",
             self->threadId,
             (dvmGetRelativeTimeUsec() - firstStartWhen) / 1000);
         //dvmDumpThread(thread, false);   /* suspended, so dump is safe */
@@ -2551,7 +2551,7 @@ void dvmSuspendAllThreads(SuspendCause why)
      */
     lockThreadSuspend("susp-all", why);
 
-    LOG_THREAD("threadid=%d: SuspendAll starting\n", self->threadId);
+    LOG_THREAD("threadid=%d: SuspendAll starting", self->threadId);
 
     /*
      * This is possible if the current thread was in VMWAIT mode when a
@@ -2609,7 +2609,7 @@ void dvmSuspendAllThreads(SuspendCause why)
         /* wait for the other thread to see the pending suspend */
         waitForThreadSuspend(self, thread);
 
-        LOG_THREAD("threadid=%d:   threadid=%d status=%d sc=%d dc=%d\n",
+        LOG_THREAD("threadid=%d:   threadid=%d status=%d sc=%d dc=%d",
             self->threadId, thread->threadId, thread->status,
             thread->suspendCount, thread->dbgSuspendCount);
     }
@@ -2617,7 +2617,7 @@ void dvmSuspendAllThreads(SuspendCause why)
     dvmUnlockThreadList();
     unlockThreadSuspend();
 
-    LOG_THREAD("threadid=%d: SuspendAll complete\n", self->threadId);
+    LOG_THREAD("threadid=%d: SuspendAll complete", self->threadId);
 }
 
 /*
@@ -2632,7 +2632,7 @@ void dvmResumeAllThreads(SuspendCause why)
     int cc;
 
     lockThreadSuspend("res-all", why);  /* one suspend/resume at a time */
-    LOG_THREAD("threadid=%d: ResumeAll starting\n", self->threadId);
+    LOG_THREAD("threadid=%d: ResumeAll starting", self->threadId);
 
     /*
      * Decrement the suspend counts for all threads.  No need for atomic
@@ -2658,7 +2658,7 @@ void dvmResumeAllThreads(SuspendCause why)
                                   why == SUSPEND_FOR_DEBUG_EVENT)
                                   ? -1 : 0);
         } else {
-            LOG_THREAD("threadid=%d:  suspendCount already zero\n",
+            LOG_THREAD("threadid=%d:  suspendCount already zero",
                 thread->threadId);
         }
     }
@@ -2699,7 +2699,7 @@ void dvmResumeAllThreads(SuspendCause why)
      * the correct order of acquisition, but it feels weird.)
      */
 
-    LOG_THREAD("threadid=%d: ResumeAll waking others\n", self->threadId);
+    LOG_THREAD("threadid=%d: ResumeAll waking others", self->threadId);
     unlockThreadSuspend();
 
     /*
@@ -2711,7 +2711,7 @@ void dvmResumeAllThreads(SuspendCause why)
     assert(cc == 0);
     unlockThreadSuspendCount();
 
-    LOG_THREAD("threadid=%d: ResumeAll complete\n", self->threadId);
+    LOG_THREAD("threadid=%d: ResumeAll complete", self->threadId);
 }
 
 /*
@@ -2725,7 +2725,7 @@ void dvmUndoDebuggerSuspensions()
     int cc;
 
     lockThreadSuspend("undo", SUSPEND_FOR_DEBUG);
-    LOG_THREAD("threadid=%d: UndoDebuggerSusp starting\n", self->threadId);
+    LOG_THREAD("threadid=%d: UndoDebuggerSusp starting", self->threadId);
 
     /*
      * Decrement the suspend counts for all threads.  No need for atomic
@@ -2762,7 +2762,7 @@ void dvmUndoDebuggerSuspensions()
 
     unlockThreadSuspend();
 
-    LOG_THREAD("threadid=%d: UndoDebuggerSusp complete\n", self->threadId);
+    LOG_THREAD("threadid=%d: UndoDebuggerSusp complete", self->threadId);
 }
 
 /*
@@ -2814,7 +2814,7 @@ void dvmWaitForSuspend(Thread* thread)
 {
     Thread* self = dvmThreadSelf();
 
-    LOG_THREAD("threadid=%d: waiting for threadid=%d to sleep\n",
+    LOG_THREAD("threadid=%d: waiting for threadid=%d to sleep",
         self->threadId, thread->threadId);
 
     assert(thread->handle != dvmJdwpGetDebugThread(gDvm.jdwpState));
@@ -2823,7 +2823,7 @@ void dvmWaitForSuspend(Thread* thread)
 
     waitForThreadSuspend(self, thread);
 
-    LOG_THREAD("threadid=%d: threadid=%d is now asleep\n",
+    LOG_THREAD("threadid=%d: threadid=%d is now asleep",
         self->threadId, thread->threadId);
 }
 
@@ -2846,7 +2846,7 @@ static bool fullSuspendCheck(Thread* self)
 
     bool needSuspend = (self->suspendCount != 0);
     if (needSuspend) {
-        LOG_THREAD("threadid=%d: self-suspending\n", self->threadId);
+        LOG_THREAD("threadid=%d: self-suspending", self->threadId);
         ThreadStatus oldStatus = self->status;      /* should be RUNNING */
         self->status = THREAD_SUSPENDED;
 
@@ -2861,7 +2861,7 @@ static bool fullSuspendCheck(Thread* self)
         }
         assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
         self->status = oldStatus;
-        LOG_THREAD("threadid=%d: self-reviving, status=%d\n",
+        LOG_THREAD("threadid=%d: self-reviving, status=%d",
             self->threadId, self->status);
     }
 
@@ -2898,7 +2898,7 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
     if (self == NULL)
         self = dvmThreadSelf();
 
-    LOGVV("threadid=%d: (status %d -> %d)\n",
+    LOGVV("threadid=%d: (status %d -> %d)",
         self->threadId, self->status, newStatus);
 
     oldStatus = self->status;
@@ -2991,13 +2991,13 @@ static Object* getStaticThreadGroup(const char* fieldName)
     groupField = dvmFindStaticField(gDvm.classJavaLangThreadGroup,
         fieldName, "Ljava/lang/ThreadGroup;");
     if (groupField == NULL) {
-        LOGE("java.lang.ThreadGroup does not have an '%s' field\n", fieldName);
+        LOGE("java.lang.ThreadGroup does not have an '%s' field", fieldName);
         dvmThrowInternalError("bad definition for ThreadGroup");
         return NULL;
     }
     groupObj = dvmGetStaticFieldObject(groupField);
     if (groupObj == NULL) {
-        LOGE("java.lang.ThreadGroup.%s not initialized\n", fieldName);
+        LOGE("java.lang.ThreadGroup.%s not initialized", fieldName);
         dvmThrowInternalError(NULL);
         return NULL;
     }
@@ -3036,7 +3036,7 @@ Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj)
         }
 
         if (thread == NULL) {
-            LOGW("WARNING: vmThreadObj=%p has thread=%p, not in thread list\n",
+            LOGW("WARNING: vmThreadObj=%p has thread=%p, not in thread list",
                 vmThreadObj, (Thread*)vmData);
             vmData = 0;
         }
@@ -3109,7 +3109,7 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
     int newNice;
 
     if (newPriority < 1 || newPriority > 10) {
-        LOGW("bad priority %d\n", newPriority);
+        LOGW("bad priority %d", newPriority);
         newPriority = 5;
     }
     newNice = kNiceValues[newPriority-1];
@@ -3122,11 +3122,11 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
 
     if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
         char* str = dvmGetThreadName(thread);
-        LOGI("setPriority(%d) '%s' to prio=%d(n=%d) failed: %s\n",
+        LOGI("setPriority(%d) '%s' to prio=%d(n=%d) failed: %s",
             pid, str, newPriority, newNice, strerror(errno));
         free(str);
     } else {
-        LOGV("setPriority(%d) to prio=%d(n=%d)\n",
+        LOGV("setPriority(%d) to prio=%d(n=%d)",
             pid, newPriority, newNice);
     }
 }
@@ -3144,7 +3144,7 @@ static int getThreadPriorityFromSystem()
     errno = 0;
     sysprio = getpriority(PRIO_PROCESS, 0);
     if (sysprio == -1 && errno != 0) {
-        LOGW("getpriority() failed: %s\n", strerror(errno));
+        LOGW("getpriority() failed: %s", strerror(errno));
         return THREAD_NORM_PRIORITY;
     }
 
@@ -3324,7 +3324,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
      */
     threadObj = thread->threadObj;
     if (threadObj == NULL) {
-        LOGI("Can't dump thread %d: threadObj not set\n", thread->threadId);
+        LOGI("Can't dump thread %d: threadObj not set", thread->threadId);
         return;
     }
     dvmAddTrackedAlloc(threadObj, NULL);
@@ -3337,7 +3337,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     isDaemon = dvmGetFieldBoolean(threadObj, gDvm.offJavaLangThread_daemon);
 
     if (pthread_getschedparam(pthread_self(), &policy, &sp) != 0) {
-        LOGW("Warning: pthread_getschedparam failed\n");
+        LOGW("Warning: pthread_getschedparam failed");
         policy = -1;
         sp.sched_priority = -1;
     }
@@ -3427,7 +3427,7 @@ char* dvmGetThreadName(Thread* thread)
     StringObject* nameObj;
 
     if (thread->threadObj == NULL) {
-        LOGW("threadObj is NULL, name not available\n");
+        LOGW("threadObj is NULL, name not available");
         return strdup("-unknown-");
     }
 
@@ -3529,17 +3529,17 @@ void dvmNukeThread(Thread* thread)
         dvmThreadSelf()->threadId, thread->threadId, thread->systemTid);
     killResult = pthread_kill(thread->handle, SIGSTKFLT);
     if (killResult != 0) {
-        LOGD("NOTE: pthread_kill #1 failed: %s\n", strerror(killResult));
+        LOGD("NOTE: pthread_kill #1 failed: %s", strerror(killResult));
     }
     usleep(2 * 1000 * 1000);    // TODO: timed-wait until debuggerd attaches
     killResult = pthread_kill(thread->handle, SIGSTKFLT);
     if (killResult != 0) {
-        LOGD("NOTE: pthread_kill #2 failed: %s\n", strerror(killResult));
+        LOGD("NOTE: pthread_kill #2 failed: %s", strerror(killResult));
     }
-    LOGD("Sent, pausing to let debuggerd run\n");
+    LOGD("Sent, pausing to let debuggerd run");
     usleep(8 * 1000 * 1000);    // TODO: timed-wait until debuggerd finishes
 
     /* ignore SIGSEGV so the eventual dmvAbort() doesn't notify debuggerd */
     signal(SIGSEGV, SIG_IGN);
-    LOGD("Continuing\n");
+    LOGD("Continuing");
 }

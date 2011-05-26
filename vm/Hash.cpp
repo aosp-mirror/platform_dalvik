@@ -136,7 +136,7 @@ static bool resizeHash(HashTable* pHashTable, int newSize)
     int i;
 
     assert(countTombStones(pHashTable) == pHashTable->numDeadEntries);
-    //LOGI("before: dead=%d\n", pHashTable->numDeadEntries);
+    //LOGI("before: dead=%d", pHashTable->numDeadEntries);
 
     pNewEntries = (HashEntry*) calloc(newSize, sizeof(HashEntry));
     if (pNewEntries == NULL)
@@ -192,7 +192,7 @@ void* dvmHashTableLookup(HashTable* pHashTable, u4 itemHash, void* item,
             (*cmpFunc)(pEntry->data, item) == 0)
         {
             /* match */
-            //LOGD("+++ match on entry %d\n", pEntry - pHashTable->pEntries);
+            //LOGD("+++ match on entry %d", pEntry - pHashTable->pEntries);
             break;
         }
 
@@ -203,7 +203,7 @@ void* dvmHashTableLookup(HashTable* pHashTable, u4 itemHash, void* item,
             pEntry = pHashTable->pEntries;
         }
 
-        //LOGI("+++ look probing %d...\n", pEntry - pHashTable->pEntries);
+        //LOGI("+++ look probing %d...", pEntry - pHashTable->pEntries);
     }
 
     if (pEntry->data == NULL) {
@@ -220,12 +220,12 @@ void* dvmHashTableLookup(HashTable* pHashTable, u4 itemHash, void* item,
             {
                 if (!resizeHash(pHashTable, pHashTable->tableSize * 2)) {
                     /* don't really have a way to indicate failure */
-                    LOGE("Dalvik hash resize failure\n");
+                    LOGE("Dalvik hash resize failure");
                     dvmAbort();
                 }
                 /* note "pEntry" is now invalid */
             } else {
-                //LOGW("okay %d/%d/%d\n",
+                //LOGW("okay %d/%d/%d",
                 //    pHashTable->numEntries, pHashTable->tableSize,
                 //    (pHashTable->tableSize * LOAD_NUMER) / LOAD_DENOM);
             }
@@ -260,7 +260,7 @@ bool dvmHashTableRemove(HashTable* pHashTable, u4 itemHash, void* item)
     pEnd = &pHashTable->pEntries[pHashTable->tableSize];
     while (pEntry->data != NULL) {
         if (pEntry->data == item) {
-            //LOGI("+++ stepping on entry %d\n", pEntry - pHashTable->pEntries);
+            //LOGI("+++ stepping on entry %d", pEntry - pHashTable->pEntries);
             pEntry->data = HASH_TOMBSTONE;
             pHashTable->numEntries--;
             pHashTable->numDeadEntries++;
@@ -274,7 +274,7 @@ bool dvmHashTableRemove(HashTable* pHashTable, u4 itemHash, void* item)
             pEntry = pHashTable->pEntries;
         }
 
-        //LOGI("+++ del probing %d...\n", pEntry - pHashTable->pEntries);
+        //LOGI("+++ del probing %d...", pEntry - pHashTable->pEntries);
     }
 
     return false;
@@ -412,7 +412,7 @@ void dvmHashTableProbeCount(HashTable* pHashTable, HashCalcFunc calcFunc,
         totalProbe += count;
     }
 
-    LOGI("Probe: min=%d max=%d, total=%d in %d (%d), avg=%.3f\n",
+    LOGI("Probe: min=%d max=%d, total=%d in %d (%d), avg=%.3f",
         minProbe, maxProbe, totalProbe, numEntries, pHashTable->tableSize,
         (float) totalProbe / (float) numEntries);
 }

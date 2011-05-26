@@ -33,7 +33,7 @@ static bool initClassReference(ClassObject** pClass, const char* name) {
     }
 
     if (result == NULL) {
-        LOGE("Could not find essential class %s\n", name);
+        LOGE("Could not find essential class %s", name);
         return false;
     }
 
@@ -156,7 +156,7 @@ static bool initFieldOffset(ClassObject* clazz, int *pOffset,
         const char* name, const char* type) {
     int offset = dvmFindFieldOffset(clazz, name, type);
     if (offset < 0) {
-        LOGE("Could not find essential field %s.%s of type %s\n", clazz->descriptor, name, type);
+        LOGE("Could not find essential field %s.%s of type %s", clazz->descriptor, name, type);
         return false;
     }
 
@@ -279,7 +279,7 @@ static bool initFieldOffsets() {
         const struct FieldInfo* fields = classes[i].fields;
 
         if (clazz == NULL) {
-            LOGE("Could not find essential class %s for field lookup\n", className);
+            LOGE("Could not find essential class %s for field lookup", className);
             return false;
         }
 
@@ -299,7 +299,7 @@ static bool initDirectMethodReferenceByClass(Method** pMethod, ClassObject* claz
     Method* method = dvmFindDirectMethodByDescriptor(clazz, name, descriptor);
 
     if (method == NULL) {
-        LOGE("Could not find essential direct method %s.%s with descriptor %s\n",
+        LOGE("Could not find essential direct method %s.%s with descriptor %s",
                 clazz->descriptor, name, descriptor);
         return false;
     }
@@ -313,7 +313,7 @@ static bool initDirectMethodReference(Method** pMethod, const char* className,
     ClassObject* clazz = dvmFindSystemClassNoInit(className);
 
     if (clazz == NULL) {
-        LOGE("Could not find essential class %s for direct method lookup\n", className);
+        LOGE("Could not find essential class %s for direct method lookup", className);
         return false;
     }
 
@@ -396,14 +396,14 @@ static bool initVirtualMethodOffset(int* pOffset, const char* className,
     ClassObject* clazz = dvmFindSystemClassNoInit(className);
 
     if (clazz == NULL) {
-        LOGE("Could not find essential class %s for virtual method lookup\n", className);
+        LOGE("Could not find essential class %s for virtual method lookup", className);
         return false;
     }
 
     Method* method = dvmFindVirtualMethodByDescriptor(clazz, name, descriptor);
 
     if (method == NULL) {
-        LOGE("Could not find essential virtual method %s.%s with descriptor %s\n",
+        LOGE("Could not find essential virtual method %s.%s with descriptor %s",
                 clazz->descriptor, name, descriptor);
         return false;
     }
@@ -452,7 +452,7 @@ static bool initFinalizerReference()
 
 static bool verifyStringOffset(const char* name, int actual, int expected) {
     if (actual != expected) {
-        LOGE("InitRefs: String.%s offset = %d; expected %d\n", name, actual, expected);
+        LOGE("InitRefs: String.%s offset = %d; expected %d", name, actual, expected);
         return false;
     }
 
@@ -497,7 +497,7 @@ bool dvmFindRequiredClassesAndMembers() {
 /* (documented in header) */
 bool dvmFindReferenceMembers(ClassObject* classReference) {
     if (strcmp(classReference->descriptor, "Ljava/lang/ref/Reference;") != 0) {
-        LOGE("Attempt to set up the wrong class as Reference\n");
+        LOGE("Attempt to set up the wrong class as Reference");
         return false;
     }
     return initFieldOffset(classReference, &gDvm.offJavaLangRefReference_pendingNext,

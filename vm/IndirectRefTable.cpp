@@ -76,17 +76,17 @@ bool dvmPopIndirectRefTableSegmentCheck(IndirectRefTable* pRef, u4 cookie)
      */
     sst.all = cookie;
     if (sst.parts.topIndex > pRef->segmentState.parts.topIndex) {
-        LOGE("Attempt to expand table with segment pop (%d to %d)\n",
+        LOGE("Attempt to expand table with segment pop (%d to %d)",
             pRef->segmentState.parts.topIndex, sst.parts.topIndex);
         return false;
     }
     if (sst.parts.numHoles >= sst.parts.topIndex) {
-        LOGE("Absurd numHoles in cookie (%d bi=%d)\n",
+        LOGE("Absurd numHoles in cookie (%d bi=%d)",
             sst.parts.numHoles, sst.parts.topIndex);
         return false;
     }
 
-    LOGV("IRT %p[%d]: pop, top=%d holes=%d\n",
+    LOGV("IRT %p[%d]: pop, top=%d holes=%d",
         pRef, pRef->kind, sst.parts.topIndex, sst.parts.numHoles);
 
     return true;
@@ -100,7 +100,7 @@ static bool checkEntry(IndirectRefTable* pRef, IndirectRef iref, int idx)
     Object* obj = pRef->table[idx];
     IndirectRef checkRef = dvmObjectToIndirectRef(pRef, obj, idx, pRef->kind);
     if (checkRef != iref) {
-        LOGW("IRT %p[%d]: iref mismatch (req=%p vs cur=%p)\n",
+        LOGW("IRT %p[%d]: iref mismatch (req=%p vs cur=%p)",
             pRef, pRef->kind, iref, checkRef);
         return false;
     }
@@ -118,7 +118,7 @@ static inline void updateSlotAdd(IndirectRefTable* pRef, Object* obj, int slot)
     if (pRef->slotData != NULL) {
         IndirectRefSlot* pSlot = &pRef->slotData[slot];
         pSlot->serial++;
-        //LOGI("+++ add [%d] slot %d (%p->%p), serial=%d\n",
+        //LOGI("+++ add [%d] slot %d (%p->%p), serial=%d",
         //    pRef->kind, slot, obj, iref, pSlot->serial);
         pSlot->previous[pSlot->serial % kIRTPrevCount] = obj;
     }
@@ -131,7 +131,7 @@ static inline void updateSlotRemove(IndirectRefTable* pRef, int slot)
 {
     if (pRef->slotData != NULL) {
         //IndirectRefSlot* pSlot = &pRef->slotData[slot];
-        //LOGI("+++ remove [%d] slot %d, serial now %d\n",
+        //LOGI("+++ remove [%d] slot %d, serial now %d",
         //    pRef->kind, slot, pSlot->serial);
     }
 }
@@ -155,7 +155,7 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
     if (topIndex == pRef->allocEntries) {
         /* reached end of allocated space; did we hit buffer max? */
         if (topIndex == pRef->maxEntries) {
-            LOGW("IndirectRefTable overflow (max=%d)\n", pRef->maxEntries);
+            LOGW("IndirectRefTable overflow (max=%d)", pRef->maxEntries);
             return NULL;
         }
 
@@ -169,11 +169,11 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
 
         newTable = (Object**) realloc(pRef->table, newSize * sizeof(Object*));
         if (newTable == NULL) {
-            LOGE("Unable to expand iref table (from %d to %d, max=%d)\n",
+            LOGE("Unable to expand iref table (from %d to %d, max=%d)",
                 pRef->allocEntries, newSize, pRef->maxEntries);
             return false;
         }
-        LOGV("Growing ireftab %p from %d to %d (max=%d)\n",
+        LOGV("Growing ireftab %p from %d to %d (max=%d)",
             pRef, pRef->allocEntries, newSize, pRef->maxEntries);
 
         /* update entries; adjust "nextEntry" in case memory moved */
@@ -222,7 +222,7 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
 bool dvmGetFromIndirectRefTableCheck(IndirectRefTable* pRef, IndirectRef iref)
 {
     if (dvmGetIndirectRefType(iref) == kIndirectKindInvalid) {
-        LOGW("Invalid indirect reference 0x%08x\n", (u4) iref);
+        LOGW("Invalid indirect reference 0x%08x", (u4) iref);
         return false;
     }
 
@@ -230,19 +230,19 @@ bool dvmGetFromIndirectRefTableCheck(IndirectRefTable* pRef, IndirectRef iref)
     int idx = dvmIndirectRefToIndex(iref);
 
     if (iref == NULL) {
-        LOGD("Attempt to look up NULL iref\n");
+        LOGD("Attempt to look up NULL iref");
         return false;
     }
     if (idx >= topIndex) {
         /* bad -- stale reference? */
-        LOGD("Attempt to access invalid index %d (top=%d)\n",
+        LOGD("Attempt to access invalid index %d (top=%d)",
             idx, topIndex);
         return false;
     }
 
     Object* obj = pRef->table[idx];
     if (obj == NULL) {
-        LOGD("Attempt to read from hole, iref=%p\n", iref);
+        LOGD("Attempt to read from hole, iref=%p", iref);
         return false;
     }
     if (!checkEntry(pRef, iref, idx))
@@ -279,13 +279,13 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
     int idx = dvmIndirectRefToIndex(iref);
     if (idx < bottomIndex) {
         /* wrong segment */
-        LOGV("Attempt to remove index outside index area (%d vs %d-%d)\n",
+        LOGV("Attempt to remove index outside index area (%d vs %d-%d)",
             idx, bottomIndex, topIndex);
         return false;
     }
     if (idx >= topIndex) {
         /* bad -- stale reference? */
-        LOGD("Attempt to remove invalid index %d (bottom=%d top=%d)\n",
+        LOGD("Attempt to remove invalid index %d (bottom=%d top=%d)",
             idx, bottomIndex, topIndex);
         return false;
     }
@@ -307,11 +307,11 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
             pRef->segmentState.parts.numHoles - prevState.parts.numHoles;
         if (numHoles != 0) {
             while (--topIndex > bottomIndex && numHoles != 0) {
-                LOGV("+++ checking for hole at %d (cookie=0x%08x) val=%p\n",
+                LOGV("+++ checking for hole at %d (cookie=0x%08x) val=%p",
                     topIndex-1, cookie, pRef->table[topIndex-1]);
                 if (pRef->table[topIndex-1] != NULL)
                     break;
-                LOGV("+++ ate hole at %d\n", topIndex-1);
+                LOGV("+++ ate hole at %d", topIndex-1);
                 numHoles--;
             }
             pRef->segmentState.parts.numHoles =
@@ -319,7 +319,7 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
             pRef->segmentState.parts.topIndex = topIndex;
         } else {
             pRef->segmentState.parts.topIndex = topIndex-1;
-            LOGV("+++ ate last entry %d\n", topIndex-1);
+            LOGV("+++ ate last entry %d", topIndex-1);
         }
     } else {
         /*
@@ -328,7 +328,7 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
          * the hole count.
          */
         if (pRef->table[idx] == NULL) {
-            LOGV("--- WEIRD: removing null entry %d\n", idx);
+            LOGV("--- WEIRD: removing null entry %d", idx);
             return false;
         }
         if (!checkEntry(pRef, iref, idx))
@@ -337,7 +337,7 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
 
         pRef->table[idx] = NULL;
         pRef->segmentState.parts.numHoles++;
-        LOGV("+++ left hole at %d, holes=%d\n",
+        LOGV("+++ left hole at %d, holes=%d",
             idx, pRef->segmentState.parts.numHoles);
     }
 

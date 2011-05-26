@@ -102,7 +102,7 @@
         {                                                                   \
             char* desc;                                                     \
             desc = dexProtoCopyMethodDescriptor(&curMethod->prototype);     \
-            LOGE("Invalid branch %d at 0x%04x in %s.%s %s\n",               \
+            LOGE("Invalid branch %d at 0x%04x in %s.%s %s",                 \
                 myoff, (int) (pc - curMethod->insns),                       \
                 curMethod->clazz->descriptor, curMethod->name, desc);       \
             free(desc);                                                     \
@@ -127,11 +127,11 @@
 # define ILOG(_level, ...) do {                                             \
         char debugStrBuf[128];                                              \
         snprintf(debugStrBuf, sizeof(debugStrBuf), __VA_ARGS__);            \
-        if (curMethod != NULL)                                                 \
-            LOG(_level, LOG_TAG"i", "%-2d|%04x%s\n",                        \
+        if (curMethod != NULL)                                              \
+            LOG(_level, LOG_TAG"i", "%-2d|%04x%s",                          \
                 self->threadId, (int)(pc - curMethod->insns), debugStrBuf); \
         else                                                                \
-            LOG(_level, LOG_TAG"i", "%-2d|####%s\n",                        \
+            LOG(_level, LOG_TAG"i", "%-2d|####%s",                          \
                 self->threadId, debugStrBuf);                               \
     } while(false)
 void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly);
@@ -321,14 +321,14 @@ static inline bool checkForNull(Object* obj)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsValidObject(obj)) {
-        LOGE("Invalid object %p\n", obj);
+        LOGE("Invalid object %p", obj);
         dvmAbort();
     }
 #endif
 #ifndef NDEBUG
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
         /* probable heap corruption */
-        LOGE("Invalid object class %p (in %p)\n", obj->clazz, obj);
+        LOGE("Invalid object class %p (in %p)", obj->clazz, obj);
         dvmAbort();
     }
 #endif
@@ -353,14 +353,14 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsValidObject(obj)) {
-        LOGE("Invalid object %p\n", obj);
+        LOGE("Invalid object %p", obj);
         dvmAbort();
     }
 #endif
 #ifndef NDEBUG
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
         /* probable heap corruption */
-        LOGE("Invalid object class %p (in %p)\n", obj->clazz, obj);
+        LOGE("Invalid object class %p (in %p)", obj->clazz, obj);
         dvmAbort();
     }
 #endif
@@ -595,7 +595,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             result = 1;                                                     \
         else                                                                \
             result = (_nanVal);                                             \
-        ILOGV("+ result=%d\n", result);                                     \
+        ILOGV("+ result=%d", result);                                       \
         SET_REGISTER(vdst, result);                                         \
     }                                                                       \
     FINISH(2);
@@ -1174,7 +1174,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1197,7 +1197,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1220,7 +1220,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1243,7 +1243,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1604,7 +1604,7 @@ HANDLE_OPCODE(OP_MONITOR_ENTER /*vAA*/)
         obj = (Object*)GET_REGISTER(vsrc1);
         if (!checkForNullExportPC(obj, fp, pc))
             GOTO_exceptionThrown();
-        ILOGV("+ locking %p %s\n", obj, obj->clazz->descriptor);
+        ILOGV("+ locking %p %s", obj, obj->clazz->descriptor);
         EXPORT_PC();    /* need for precise GC */
         dvmLockObject(self, obj);
     }
@@ -1633,7 +1633,7 @@ HANDLE_OPCODE(OP_MONITOR_EXIT /*vAA*/)
             ADJUST_PC(1);           /* monitor-exit width is 1 */
             GOTO_exceptionThrown();
         }
-        ILOGV("+ unlocking %p %s\n", obj, obj->clazz->descriptor);
+        ILOGV("+ unlocking %p %s", obj, obj->clazz->descriptor);
         if (!dvmUnlockObject(self, obj)) {
             assert(dvmCheckException(self));
             ADJUST_PC(1);
@@ -1868,7 +1868,7 @@ HANDLE_OPCODE(OP_THROW /*vAA*/)
         obj = (Object*) GET_REGISTER(vsrc1);
         if (!checkForNull(obj)) {
             /* will throw a null pointer exception */
-            LOGVV("Bad exception\n");
+            LOGVV("Bad exception");
         } else {
             /* use the requested exception */
             dvmSetException(self, obj);
@@ -1947,7 +1947,7 @@ HANDLE_OPCODE(OP_PACKED_SWITCH /*vAA, +BBBB*/)
         testVal = GET_REGISTER(vsrc1);
 
         offset = dvmInterpHandlePackedSwitch(switchData, testVal);
-        ILOGV("> branch taken (0x%04x)\n", offset);
+        ILOGV("> branch taken (0x%04x)", offset);
         if (offset <= 0)  /* uncommon */
             PERIODIC_CHECKS(offset);
         FINISH(offset);
@@ -1978,7 +1978,7 @@ HANDLE_OPCODE(OP_SPARSE_SWITCH /*vAA, +BBBB*/)
         testVal = GET_REGISTER(vsrc1);
 
         offset = dvmInterpHandleSparseSwitch(switchData, testVal);
-        ILOGV("> branch taken (0x%04x)\n", offset);
+        ILOGV("> branch taken (0x%04x)", offset);
         if (offset <= 0)  /* uncommon */
             PERIODIC_CHECKS(offset);
         FINISH(offset);
@@ -2138,7 +2138,7 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
             if (!checkForNull(obj))
                 GOTO_exceptionThrown();
             if (!dvmCanPutArrayElement(obj->clazz, arrayObj->clazz)) {
-                LOGV("Can't put a '%s'(%p) into array type='%s'(%p)\n",
+                LOGV("Can't put a '%s'(%p) into array type='%s'(%p)",
                     obj->clazz->descriptor, obj,
                     arrayObj->obj.clazz->descriptor, arrayObj);
                 dvmThrowArrayStoreExceptionIncompatibleElement(obj->clazz, arrayObj->clazz);
@@ -2881,7 +2881,7 @@ HANDLE_OPCODE(OP_BREAKPOINT)
          * the thread resumed.
          */
         u1 originalOpcode = dvmGetOriginalOpcode(pc);
-        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)\n", originalOpcode, inst,
+        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)", originalOpcode, inst,
             INST_REPLACE_OP(inst, originalOpcode));
         inst = INST_REPLACE_OP(inst, originalOpcode);
         FINISH_BKPT(originalOpcode);
@@ -4246,7 +4246,7 @@ HANDLE_OPCODE(OP_UNUSED_F1FF)
     /*
      * In portable interp, most unused opcodes will fall through to here.
      */
-    LOGE("unknown opcode 0x%04x\n", inst);
+    LOGE("unknown opcode 0x%04x", inst);
     dvmAbort();
     FINISH(1);
 OP_END
@@ -4367,7 +4367,7 @@ void dvmMterpStdRun(Thread* self)
 
     /* We exit via a longjmp */
     if (setjmp(jmpBuf)) {
-        LOGVV("mterp threadid=%d returning\n", dvmThreadSelf()->threadId);
+        LOGVV("mterp threadid=%d returning", dvmThreadSelf()->threadId);
         return
     }
 
@@ -4387,7 +4387,7 @@ void dvmMterpStdRun(Thread* self)
         }
         Handler handler = (Handler) gDvmMterpHandlers[inst & 0xff];
         (void) gDvmMterpHandlerNames;   /* avoid gcc "defined but not used" */
-        LOGVV("handler %p %s\n",
+        LOGVV("handler %p %s",
             handler, (const char*) gDvmMterpHandlerNames[inst & 0xff]);
         (*handler)(self);
     }
@@ -4471,7 +4471,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         /*
          * Create an array of the specified type.
          */
-        LOGVV("+++ filled-new-array type is '%s'\n", arrayClass->descriptor);
+        LOGVV("+++ filled-new-array type is '%s'", arrayClass->descriptor);
         typeCh = arrayClass->descriptor[1];
         if (typeCh == 'D' || typeCh == 'J') {
             /* category 2 primitives not allowed */
@@ -4479,7 +4479,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
             GOTO_exceptionThrown();
         } else if (typeCh != 'L' && typeCh != '[' && typeCh != 'I') {
             /* TODO: requires multiple "fill in" loops with different widths */
-            LOGE("non-int primitives not implemented\n");
+            LOGE("non-int primitives not implemented");
             dvmThrowInternalError(
                 "filled-new-array not implemented for anything but 'int'");
             GOTO_exceptionThrown();
@@ -4569,7 +4569,7 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
         if (baseMethod == NULL) {
             baseMethod = dvmResolveMethod(curMethod->clazz, ref,METHOD_VIRTUAL);
             if (baseMethod == NULL) {
-                ILOGV("+ unknown method or access denied\n");
+                ILOGV("+ unknown method or access denied");
                 GOTO_exceptionThrown();
             }
         }
@@ -4605,7 +4605,7 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
             methodToCall->nativeFunc != NULL);
 #endif
 
-        LOGVV("+++ base=%s.%s virtual[%d]=%s.%s\n",
+        LOGVV("+++ base=%s.%s virtual[%d]=%s.%s",
             baseMethod->clazz->descriptor, baseMethod->name,
             (u4) baseMethod->methodIndex,
             methodToCall->clazz->descriptor, methodToCall->name);
@@ -4613,7 +4613,7 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
 
 #if 0
         if (vsrc1 != methodToCall->insSize) {
-            LOGW("WRONG METHOD: base=%s.%s virtual[%d]=%s.%s\n",
+            LOGW("WRONG METHOD: base=%s.%s virtual[%d]=%s.%s",
                 baseMethod->clazz->descriptor, baseMethod->name,
                 (u4) baseMethod->methodIndex,
                 methodToCall->clazz->descriptor, methodToCall->name);
@@ -4673,7 +4673,7 @@ GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
         if (baseMethod == NULL) {
             baseMethod = dvmResolveMethod(curMethod->clazz, ref,METHOD_VIRTUAL);
             if (baseMethod == NULL) {
-                ILOGV("+ unknown method or access denied\n");
+                ILOGV("+ unknown method or access denied");
                 GOTO_exceptionThrown();
             }
         }
@@ -4706,7 +4706,7 @@ GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
         assert(!dvmIsAbstractMethod(methodToCall) ||
             methodToCall->nativeFunc != NULL);
 #endif
-        LOGVV("+++ base=%s.%s super-virtual=%s.%s\n",
+        LOGVV("+++ base=%s.%s super-virtual=%s.%s",
             baseMethod->clazz->descriptor, baseMethod->name,
             methodToCall->clazz->descriptor, methodToCall->name);
         assert(methodToCall != NULL);
@@ -4815,7 +4815,7 @@ GOTO_TARGET(invokeDirect, bool methodCallRange, bool jumboFormat)
             methodToCall = dvmResolveMethod(curMethod->clazz, ref,
                             METHOD_DIRECT);
             if (methodToCall == NULL) {
-                ILOGV("+ unknown direct method\n");     // should be impossible
+                ILOGV("+ unknown direct method");     // should be impossible
                 GOTO_exceptionThrown();
             }
         }
@@ -4850,7 +4850,7 @@ GOTO_TARGET(invokeStatic, bool methodCallRange, bool jumboFormat)
     if (methodToCall == NULL) {
         methodToCall = dvmResolveMethod(curMethod->clazz, ref, METHOD_STATIC);
         if (methodToCall == NULL) {
-            ILOGV("+ unknown method\n");
+            ILOGV("+ unknown method");
             GOTO_exceptionThrown();
         }
 
@@ -4921,7 +4921,7 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
             methodToCall->nativeFunc != NULL);
 #endif
 
-        LOGVV("+++ virtual[%d]=%s.%s\n",
+        LOGVV("+++ virtual[%d]=%s.%s",
             ref, methodToCall->clazz->descriptor, methodToCall->name);
         assert(methodToCall != NULL);
 
@@ -4981,7 +4981,7 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
         assert(!dvmIsAbstractMethod(methodToCall) ||
             methodToCall->nativeFunc != NULL);
 #endif
-        LOGVV("+++ super-virtual[%d]=%s.%s\n",
+        LOGVV("+++ super-virtual[%d]=%s.%s",
             ref, methodToCall->clazz->descriptor, methodToCall->name);
         assert(methodToCall != NULL);
         GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
@@ -5029,7 +5029,7 @@ GOTO_TARGET(returnFromMethod)
 
         if (dvmIsBreakFrame(fp)) {
             /* bail without popping the method frame from stack */
-            LOGVV("+++ returned into break frame\n");
+            LOGVV("+++ returned into break frame");
             GOTO_bail();
         }
 
@@ -5050,7 +5050,7 @@ GOTO_TARGET(returnFromMethod)
         {
             FINISH(3);
         } else {
-            //LOGE("Unknown invoke instr %02x at %d\n",
+            //LOGE("Unknown invoke instr %02x at %d",
             //    invokeInstr, (int) (pc - curMethod->insns));
             assert(false);
         }
@@ -5082,7 +5082,7 @@ GOTO_TARGET(exceptionThrown)
         dvmAddTrackedAlloc(exception, self);
         dvmClearException(self);
 
-        LOGV("Handling exception %s at %s:%d\n",
+        LOGV("Handling exception %s at %s:%d",
             exception->clazz->descriptor, curMethod->name,
             dvmLineNumFromPC(curMethod, pc - curMethod->insns));
 
@@ -5150,7 +5150,7 @@ GOTO_TARGET(exceptionThrown)
         if (catchRelPc < 0) {
             /* falling through to JNI code or off the bottom of the stack */
 #if DVM_SHOW_EXCEPTION >= 2
-            LOGD("Exception %s from %s:%d not caught locally\n",
+            LOGD("Exception %s from %s:%d not caught locally",
                 exception->clazz->descriptor, dvmGetMethodSourceFile(curMethod),
                 dvmLineNumFromPC(curMethod, pc - curMethod->insns));
 #endif
@@ -5162,7 +5162,7 @@ GOTO_TARGET(exceptionThrown)
 #if DVM_SHOW_EXCEPTION >= 3
         {
             const Method* catchMethod = SAVEAREA_FROM_FP(fp)->method;
-            LOGD("Exception %s thrown from %s:%d to %s:%d\n",
+            LOGD("Exception %s thrown from %s:%d to %s:%d",
                 exception->clazz->descriptor, dvmGetMethodSourceFile(curMethod),
                 dvmLineNumFromPC(curMethod, pc - curMethod->insns),
                 dvmGetMethodSourceFile(catchMethod),
@@ -5312,7 +5312,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             bottom = (u1*) newSaveArea - methodToCall->outsSize * sizeof(u4);
             if (bottom < self->interpStackEnd) {
                 /* stack overflow */
-                LOGV("Stack overflow on method call (start=%p end=%p newBot=%p(%d) size=%d '%s')\n",
+                LOGV("Stack overflow on method call (start=%p end=%p newBot=%p(%d) size=%d '%s')",
                     self->interpStackStart, self->interpStackEnd, bottom,
                     (u1*) fp - bottom, self->interpStackSize,
                     methodToCall->name);
@@ -5320,7 +5320,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
                 assert(dvmCheckException(self));
                 GOTO_exceptionThrown();
             }
-            //LOGD("+++ fp=%p newFp=%p newSave=%p bottom=%p\n",
+            //LOGD("+++ fp=%p newFp=%p newSave=%p bottom=%p",
             //    fp, newFp, newSaveArea, bottom);
         }
 
@@ -5411,7 +5411,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              * it, jump to our local exception handling.
              */
             if (dvmCheckException(self)) {
-                LOGV("Exception thrown by/below native code\n");
+                LOGV("Exception thrown by/below native code");
                 GOTO_exceptionThrown();
             }
 
@@ -5427,7 +5427,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             {
                 FINISH(3);
             } else {
-                //LOGE("Unknown invoke instr %02x at %d\n",
+                //LOGE("Unknown invoke instr %02x at %d",
                 //    invokeInstr, (int) (pc - curMethod->insns));
                 assert(false);
             }
