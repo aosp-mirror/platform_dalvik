@@ -107,7 +107,7 @@ struct InterpSaveState {
     int             unused;        // Keep struct size constant
 #endif
     struct InterpSaveState* prev;  // To follow nested activations
-};
+} __attribute__ ((__packed__));
 
 #ifdef WITH_JIT
 /*
