@@ -4122,7 +4122,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
 
                 if (!checkMethodDescriptorClasses(meth, iface, meth->clazz)) {
                     LOGW("Method mismatch: %s in %s (cl=%p) and "
-                            "iface %s (cl=%p)\n",
+                            "iface %s (cl=%p)",
                         meth->name, clazz->descriptor, clazz->classLoader,
                         iface->descriptor, iface->classLoader);
                     dvmThrowLinkageError(
@@ -4276,7 +4276,7 @@ bool dvmInitClass(ClassObject* clazz)
          */
         if (IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED)) {
             LOGW("Class '%s' was optimized without verification; "
-                 "not verifying now\n",
+                 "not verifying now",
                 clazz->descriptor);
             LOGW("  ('rm /data/dalvik-cache/*' and restart to fix this)");
             goto verify_failed;

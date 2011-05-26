@@ -2556,7 +2556,7 @@ static bool updateRegisters(const Method* meth, InsnFlags* insnFlags,
              */
             if (targetLine->monitorStackTop != workLine->monitorStackTop) {
                 LOG_VFY_METH(meth,
-                    "VFY: mismatched stack depth %d vs. %d at 0x%04x\n",
+                    "VFY: mismatched stack depth %d vs. %d at 0x%04x",
                     targetLine->monitorStackTop, workLine->monitorStackTop,
                     nextInsn);
                 return false;
@@ -2746,13 +2746,13 @@ static void checkFinalFieldAccess(const Method* meth, const Field* field,
     if (dvmIsStaticField(field)) {
         if (!isClassInitMethod(meth)) {
             LOG_VFY_METH(meth,
-                "VFY: can't modify final static field outside <clinit>\n");
+                "VFY: can't modify final static field outside <clinit>");
             *pFailure = VERIFY_ERROR_GENERIC;
         }
     } else {
         if (!isInitMethod(meth)) {
             LOG_VFY_METH(meth,
-                "VFY: can't modify final field outside <init>\n");
+                "VFY: can't modify final field outside <init>");
             *pFailure = VERIFY_ERROR_GENERIC;
         }
     }
@@ -2910,7 +2910,7 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx,
     if (commonSuper == NULL) {
         /* no catch blocks, or no catches with classes we can find */
         LOG_VFY_METH(meth,
-            "VFY: unable to find exception handler at addr %#x\n", insnIdx);
+            "VFY: unable to find exception handler at addr %#x", insnIdx);
         *pFailure = VERIFY_ERROR_GENERIC;
     } else {
         // TODO: verify the class is an instance of Throwable?
@@ -3460,7 +3460,7 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
 
     if (meth->registersSize * insnsSize > 4*1024*1024) {
         LOG_VFY_METH(meth,
-            "VFY: warning: method is huge (regs=%d insnsSize=%d)\n",
+            "VFY: warning: method is huge (regs=%d insnsSize=%d)",
             meth->registersSize, insnsSize);
         /* might be bogus data, might be some huge generated method */
     }
@@ -4456,7 +4456,7 @@ aget_1nr_common:
 
                 if (!checkFieldArrayStore1nr(tmpType, srcType)) {
                     LOG_VFY("VFY: invalid aget-1nr, array type=%d with"
-                            " inst type=%d (on %s)\n",
+                            " inst type=%d (on %s)",
                         srcType, tmpType, resClass->descriptor);
                     failure = VERIFY_ERROR_GENERIC;
                     break;
@@ -5338,7 +5338,7 @@ sput_1nr_common:
                     }
                 }  else if (calledMethod->clazz != thisClass) {
                     LOG_VFY("VFY: invoke-direct <init> must be on current "
-                            "class or super\n");
+                            "class or super");
                     failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
@@ -6039,7 +6039,7 @@ sput_1nr_common:
         int insnWidth = dvmInsnGetWidth(insnFlags, insnIdx);
         if (insnIdx+insnWidth >= insnsSize) {
             LOG_VFY_METH(meth,
-                "VFY: execution can walk off end of code area (from %#x)\n",
+                "VFY: execution can walk off end of code area (from %#x)",
                 insnIdx);
             goto bail;
         }
@@ -6194,7 +6194,7 @@ sput_1nr_common:
                   workLine->monitorStackTop == 1))
             {
                 LOG_VFY_METH(meth,
-                    "VFY: no catch-all for instruction at 0x%04x\n", insnIdx);
+                    "VFY: no catch-all for instruction at 0x%04x", insnIdx);
                 goto bail;
             }
         }

@@ -134,7 +134,7 @@ static bool addToPredecessor(VerifierData* vdata, VfyBasicBlock* curBlock,
          * trip over this.
          */
         LOGV("ODD: point set for targ=0x%04x (%p) already had block "
-             "fir=0x%04x (%p)\n",
+             "fir=0x%04x (%p)",
             targetIdx, targetBlock, curBlock->firstAddr, curBlock);
     }
 

@@ -437,7 +437,7 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
              */
             if (icount > dataItemsLeft) {
                 LOGE("Unrealistically many items in the data section: "
-                        "at least %d\n", dataItemCount + icount);
+                        "at least %d", dataItemCount + icount);
                 return false;
             }
 

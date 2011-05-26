@@ -246,7 +246,7 @@ static void *tryMalloc(size_t size)
 //      space is equal to the old free space + the utilization slop for
 //      the new allocation.
         LOGI_HEAP("Grow heap (frag case) to "
-                "%zu.%03zuMB for %zu-byte allocation\n",
+                "%zu.%03zuMB for %zu-byte allocation",
                 FRACTIONAL_MB(newHeapSize), size);
         return ptr;
     }

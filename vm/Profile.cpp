@@ -575,7 +575,7 @@ void dvmMethodTraceStop()
         (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
     if (gDvm.debuggerActive) {
         LOGW("WARNING: a debugger is active; method-tracing results "
-             "will be skewed\n");
+             "will be skewed");
     }
 
     /*

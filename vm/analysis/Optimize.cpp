@@ -762,7 +762,7 @@ static void rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
     instField = dvmOptResolveInstField(clazz, fieldIdx, NULL);
     if (instField == NULL) {
         LOGI("DexOpt: unable to optimize instance field ref "
-             "0x%04x at 0x%02x in %s.%s\n",
+             "0x%04x at 0x%02x in %s.%s",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
             method->name);
         return;
@@ -803,7 +803,7 @@ static void rewriteJumboInstField(Method* method, u2* insns, Opcode volatileOpc)
     instField = dvmOptResolveInstField(clazz, fieldIdx, NULL);
     if (instField == NULL) {
         LOGI("DexOpt: unable to optimize instance field ref "
-             "0x%04x at 0x%02x in %s.%s\n",
+             "0x%04x at 0x%02x in %s.%s",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
             method->name);
         return;
@@ -836,7 +836,7 @@ static void rewriteStaticField0(Method* method, u2* insns, Opcode volatileOpc,
     staticField = dvmOptResolveStaticField(clazz, fieldIdx, NULL);
     if (staticField == NULL) {
         LOGI("DexOpt: unable to optimize static field ref "
-             "0x%04x at 0x%02x in %s.%s\n",
+             "0x%04x at 0x%02x in %s.%s",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
             method->name);
         return;

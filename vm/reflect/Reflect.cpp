@@ -536,7 +536,7 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
 
     if (dvmCheckException(dvmThreadSelf())) {
         LOGW("WARNING: dvmCreateReflectMethodObject called with "
-             "exception pending\n");
+             "exception pending");
         return NULL;
     }
 

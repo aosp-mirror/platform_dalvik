@@ -253,7 +253,7 @@ DexClassLookup* dexCreateClassLookup(DexFile* pDexFile)
     }
 
     LOGV("Class lookup: classes=%d slots=%d (%d%% occ) alloc=%d"
-         " total=%d max=%d\n",
+         " total=%d max=%d",
         pDexFile->pHeader->classDefsSize, numEntries,
         (100 * pDexFile->pHeader->classDefsSize) / numEntries,
         allocSize, totalProbes, maxProbes);

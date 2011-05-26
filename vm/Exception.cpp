@@ -270,7 +270,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
         msgStr = dvmCreateStringFromCstr(msg);
         if (msgStr == NULL) {
             LOGW("Could not allocate message string \"%s\" while "
-                    "throwing internal exception (%s)\n",
+                    "throwing internal exception (%s)",
                     msg, excepClass->descriptor);
             goto bail;
         }
@@ -367,7 +367,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
          * when a message has been provided.
          */
         LOGW("WARNING: exception class '%s' missing constructor "
-            "(msg='%s' kind=%d)\n",
+            "(msg='%s' kind=%d)",
             excepClass->descriptor, msg, initKind);
         assert(strcmp(excepClass->descriptor,
                       "Ljava/lang/RuntimeException;") != 0);
@@ -430,7 +430,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
                  * let the caller deal with it.
                  */
                 LOGW("Exception thrown (%s) during initCause() "
-                        "of internal exception (%s)\n",
+                        "of internal exception (%s)",
                         self->exception->clazz->descriptor,
                         exception->clazz->descriptor);
                 goto bail;
@@ -672,7 +672,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
                      * Keep the exception status clear.
                      */
                     LOGW("Could not resolve class ref'ed in exception "
-                            "catch list (class index %d, exception %s)\n",
+                            "catch list (class index %d, exception %s)",
                             handler->typeIdx,
                             (self->exception != NULL) ?
                             self->exception->clazz->descriptor : "(none)");

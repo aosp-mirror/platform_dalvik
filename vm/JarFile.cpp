@@ -151,7 +151,7 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
         fd = openAlternateSuffix(fileName, "odex", O_RDONLY, &cachedName);
         if (fd < 0) {
             LOGI("Zip is good, but no %s inside, and no .odex "
-                    "file in the same directory\n", kDexInJarName);
+                    "file in the same directory", kDexInJarName);
             result = DEX_CACHE_BAD_ARCHIVE;
             goto bail;
         }
@@ -317,7 +317,7 @@ tryArchive:
             }
         } else {
             LOGI("Zip is good, but no %s inside, and no valid .odex "
-                    "file in the same directory\n", kDexInJarName);
+                    "file in the same directory", kDexInJarName);
             goto bail;
         }
     }

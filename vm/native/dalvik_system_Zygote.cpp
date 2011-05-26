@@ -65,19 +65,19 @@ static void sigchldHandler(int s)
             } else {
                 IF_LOGV(/*should use ZYGOTE_LOG_TAG*/) {
                     LOG(LOG_VERBOSE, ZYGOTE_LOG_TAG,
-                        "Process %d exited cleanly (%d)\n",
+                        "Process %d exited cleanly (%d)",
                         (int) pid, WEXITSTATUS(status));
                 }
             }
         } else if (WIFSIGNALED(status)) {
             if (WTERMSIG(status) != SIGKILL) {
                 LOG(LOG_DEBUG, ZYGOTE_LOG_TAG,
-                    "Process %d terminated by signal (%d)\n",
+                    "Process %d terminated by signal (%d)",
                     (int) pid, WTERMSIG(status));
             } else {
                 IF_LOGV(/*should use ZYGOTE_LOG_TAG*/) {
                     LOG(LOG_VERBOSE, ZYGOTE_LOG_TAG,
-                        "Process %d terminated by signal (%d)\n",
+                        "Process %d terminated by signal (%d)",
                         (int) pid, WTERMSIG(status));
                 }
             }
@@ -96,7 +96,7 @@ static void sigchldHandler(int s)
          */
         if (pid == gDvm.systemServerPid) {
             LOG(LOG_INFO, ZYGOTE_LOG_TAG,
-                "Exit zygote because system server (%d) has terminated\n",
+                "Exit zygote because system server (%d) has terminated",
                 (int) pid);
             kill(getpid(), SIGKILL);
         }
@@ -104,7 +104,7 @@ static void sigchldHandler(int s)
 
     if (pid < 0) {
         LOG(LOG_WARN, ZYGOTE_LOG_TAG,
-            "Zygote SIGCHLD error in waitpid: %s\n",strerror(errno));
+            "Zygote SIGCHLD error in waitpid: %s",strerror(errno));
     }
 }
 

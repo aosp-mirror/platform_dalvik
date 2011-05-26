@@ -126,7 +126,7 @@ ClassObject* dvmResolveClass(const ClassObject* referrer, u4 classIdx,
                 resClassCheck->classLoader != NULL)
             {
                 LOGW("Class resolved by unexpected DEX:"
-                     " %s(%p):%p ref [%s] %s(%p):%p\n",
+                     " %s(%p):%p ref [%s] %s(%p):%p",
                     referrer->descriptor, referrer->classLoader,
                     referrer->pDvmDex,
                     resClass->descriptor, resClassCheck->descriptor,

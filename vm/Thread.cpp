@@ -475,7 +475,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
                  * chaining cells around the same time.
                  */
                 LOGI("threadid=%d ODD: want thread-suspend lock (%s:%s),"
-                     " it's held, no suspend pending\n",
+                     " it's held, no suspend pending",
                     self->threadId, who, getSuspendCauseStr(why));
             } else {
                 /* we suspended; reset timeout */
@@ -487,7 +487,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
                 startWhen = dvmGetRelativeTimeUsec();
             if (!dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
                 LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%s),"
-                     " bailing\n",
+                     " bailing",
                     self->threadId, who, getSuspendCauseStr(why));
                 /* threads are not suspended, thread dump could crash */
                 dvmDumpAllThreads(false);
@@ -3525,7 +3525,7 @@ void dvmNukeThread(Thread* thread)
      * (The first just causes debuggerd to attach to it.)
      */
     LOGD("threadid=%d: sending two SIGSTKFLTs to threadid=%d (tid=%d) to"
-         " cause debuggerd dump\n",
+         " cause debuggerd dump",
         dvmThreadSelf()->threadId, thread->threadId, thread->systemTid);
     killResult = pthread_kill(thread->handle, SIGSTKFLT);
     if (killResult != 0) {

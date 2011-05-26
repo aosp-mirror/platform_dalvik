@@ -2660,7 +2660,7 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
      */
     if (targetThread->suspendCount > 1) {
         LOGW("threadid=%d: suspend count on threadid=%d is %d, too deep "
-             "for method exec\n",
+             "for method exec",
             dvmThreadSelf()->threadId, targetThread->threadId,
             targetThread->suspendCount);
         dvmUnlockThreadList();

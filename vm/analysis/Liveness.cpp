@@ -250,12 +250,12 @@ bool dvmComputeLiveness(VerifierData* vdata)
         if (dvmInsnIsGcPoint(insnFlags, checkIdx)) {
             if (vdata->registerLines[checkIdx].liveRegs == NULL) {
                 LOG_VFY_METH(vdata->method,
-                    "GLITCH: no liveRegs for GC point 0x%04x\n", checkIdx);
+                    "GLITCH: no liveRegs for GC point 0x%04x", checkIdx);
                 dvmAbort();
             }
         } else if (vdata->registerLines[checkIdx].liveRegs != NULL) {
             LOG_VFY_METH(vdata->method,
-                "GLITCH: liveRegs for non-GC point 0x%04x\n", checkIdx);
+                "GLITCH: liveRegs for non-GC point 0x%04x", checkIdx);
             dvmAbort();
         }
         u4 insnWidth = dvmInsnGetWidth(insnFlags, checkIdx);

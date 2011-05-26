@@ -98,7 +98,7 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
             goto bail;
         } else if (width > 65535) {
             LOG_VFY_METH(meth,
-                "VFY: warning: unusually large instr width (%d)\n", width);
+                "VFY: warning: unusually large instr width (%d)", width);
         }
 
         Opcode opcode = dexOpcodeFromCodeUnit(*insns);
@@ -156,14 +156,14 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
 
         if ((start >= end) || (start >= insnsSize) || (end > insnsSize)) {
             LOG_VFY_METH(meth,
-                "VFY: bad exception entry: startAddr=%d endAddr=%d (size=%d)\n",
+                "VFY: bad exception entry: startAddr=%d endAddr=%d (size=%d)",
                 start, end, insnsSize);
             return false;
         }
 
         if (dvmInsnGetWidth(insnFlags, start) == 0) {
             LOG_VFY_METH(meth,
-                "VFY: 'try' block starts inside an instruction (%d)\n",
+                "VFY: 'try' block starts inside an instruction (%d)",
                 start);
             return false;
         }
@@ -194,7 +194,7 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
             addr = handler->address;
             if (dvmInsnGetWidth(insnFlags, addr) == 0) {
                 LOG_VFY_METH(meth,
-                    "VFY: exception handler starts at bad address (%d)\n",
+                    "VFY: exception handler starts at bad address (%d)",
                     addr);
                 return false;
             }
@@ -261,7 +261,7 @@ static bool verifyMethod(Method* meth)
     if (vdata.insnsSize == 0) {
         if (!dvmIsNativeMethod(meth) && !dvmIsAbstractMethod(meth)) {
             LOG_VFY_METH(meth,
-                "VFY: zero-length code in concrete non-native method\n");
+                "VFY: zero-length code in concrete non-native method");
             goto bail;
         }
 
@@ -359,7 +359,7 @@ static bool checkArrayData(const Method* meth, u4 curOffset)
         curOffset + offsetToArrayData + 2 >= insnCount)
     {
         LOG_VFY("VFY: invalid array data start: at %d, data offset %d, "
-                "count %d\n",
+                "count %d",
             curOffset, offsetToArrayData, insnCount);
         return false;
     }
@@ -382,7 +382,7 @@ static bool checkArrayData(const Method* meth, u4 curOffset)
     /* make sure the end of the switch is in range */
     if (curOffset + offsetToArrayData + tableSize > insnCount) {
         LOG_VFY("VFY: invalid array data end: at %d, data offset %d, end %d, "
-                "count %d\n",
+                "count %d",
             curOffset, offsetToArrayData,
             curOffset + offsetToArrayData + tableSize, insnCount);
         return false;
@@ -619,7 +619,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
         curOffset + offsetToSwitch + 2 >= insnCount)
     {
         LOG_VFY("VFY: invalid switch start: at %d, switch offset %d, "
-                "count %d\n",
+                "count %d",
             curOffset, offsetToSwitch, insnCount);
         return false;
     }
@@ -658,7 +658,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
     /* make sure the end of the switch is in range */
     if (curOffset + offsetToSwitch + tableSize > (u4) insnCount) {
         LOG_VFY("VFY: invalid switch end: at %d, switch offset %d, end %d, "
-                "count %d\n",
+                "count %d",
             curOffset, offsetToSwitch, curOffset + offsetToSwitch + tableSize,
             insnCount);
         return false;
@@ -746,7 +746,7 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
         !dvmInsnIsOpcode(insnFlags, absOffset))
     {
         LOG_VFY_METH(meth,
-            "VFY: invalid branch target %d (-> %#x) at %#x\n",
+            "VFY: invalid branch target %d (-> %#x) at %#x",
             offset, absOffset, curOffset);
         return false;
     }
@@ -1473,7 +1473,7 @@ static bool verifyInstructions(VerifierData* vdata)
     /* make sure the last instruction ends at the end of the insn area */
     if (codeOffset != vdata->insnsSize) {
         LOG_VFY_METH(meth,
-            "VFY: code did not end when expected (end at %d, count %d)\n",
+            "VFY: code did not end when expected (end at %d, count %d)",
             codeOffset, vdata->insnsSize);
         return false;
     }

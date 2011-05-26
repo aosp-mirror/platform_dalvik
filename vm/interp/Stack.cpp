@@ -78,7 +78,7 @@ static bool dvmPushInterpFrame(Thread* self, const Method* method)
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space */
         LOGW("Stack overflow on call to interp "
-             "(req=%d top=%p cur=%p size=%d %s.%s)\n",
+             "(req=%d top=%p cur=%p size=%d %s.%s)",
             stackReq, self->interpStackStart, self->interpSave.curFrame,
             self->interpStackSize, method->clazz->descriptor, method->name);
         dvmHandleStackOverflow(self, method);
@@ -152,7 +152,7 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space */
         LOGW("Stack overflow on call to native "
-             "(req=%d top=%p cur=%p size=%d '%s')\n",
+             "(req=%d top=%p cur=%p size=%d '%s')",
             stackReq, self->interpStackStart, self->interpSave.curFrame,
             self->interpStackSize, method->name);
         dvmHandleStackOverflow(self, method);
@@ -224,7 +224,7 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space; let JNI throw the exception */
         LOGW("Stack overflow on PushLocal "
-             "(req=%d top=%p cur=%p size=%d '%s')\n",
+             "(req=%d top=%p cur=%p size=%d '%s')",
             stackReq, self->interpStackStart, self->interpSave.curFrame,
             self->interpStackSize, method->name);
         dvmHandleStackOverflow(self, method);
