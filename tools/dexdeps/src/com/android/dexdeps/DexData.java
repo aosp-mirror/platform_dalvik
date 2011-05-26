@@ -62,6 +62,13 @@ public class DexData {
         markInternalClasses();
     }
 
+    /**
+     * Verifies the given magic number.
+     */
+    private static boolean verifyMagic(byte[] magic) {
+        return Arrays.equals(magic, HeaderItem.DEX_FILE_MAGIC) ||
+            Arrays.equals(magic, HeaderItem.DEX_FILE_MAGIC_API_13);
+    }
 
     /**
      * Parses the interesting bits out of the header.
@@ -73,7 +80,7 @@ public class DexData {
 
         byte[] magic = new byte[8];
         readBytes(magic);
-        if (!Arrays.equals(magic, HeaderItem.DEX_FILE_MAGIC)) {
+        if (!verifyMagic(magic)) {
             System.err.println("Magic number is wrong -- are you sure " +
                 "this is a DEX file?");
             throw new DexDataException();
@@ -532,6 +539,8 @@ public class DexData {
 
         /* expected magic values */
         public static final byte[] DEX_FILE_MAGIC = {
+            0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x36, 0x00 };
+        public static final byte[] DEX_FILE_MAGIC_API_13 = {
             0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x35, 0x00 };
         public static final int ENDIAN_CONSTANT = 0x12345678;
         public static final int REVERSE_ENDIAN_CONSTANT = 0x78563412;
