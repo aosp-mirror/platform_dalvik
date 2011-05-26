@@ -62,7 +62,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
          * the leading "./" out, but it'll do.
          */
         if (getcwd(absoluteFile, kBufLen) == NULL) {
-            LOGE("Can't get CWD while opening jar file\n");
+            LOGE("Can't get CWD while opening jar file");
             return NULL;
         }
         strncat(absoluteFile, "/", kBufLen);
@@ -101,7 +101,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
      */
     strncat(nameBuf, absoluteFile, kBufLen);
 
-    LOGV("Cache file for '%s' '%s' is '%s'\n", fileName, subFileName, nameBuf);
+    LOGV("Cache file for '%s' '%s' is '%s'", fileName, subFileName, nameBuf);
     return strdup(nameBuf);
 }
 
