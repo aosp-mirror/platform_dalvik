@@ -1004,7 +1004,7 @@ void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
             case 5: {
                 if (format == kFmt35mi) {
                     /* A fifth arg is verboten for inline invokes. */
-                    LOGW("Invalid arg count in 35mi (5)\n");
+                    LOGW("Invalid arg count in 35mi (5)");
                     goto bail;
                 }
                 /*
@@ -1020,7 +1020,7 @@ void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
             case 1: pDec->vC = pDec->arg[0] = regList & 0x0f; break;
             case 0: break; // Valid, but no need to do anything.
             default:
-                LOGW("Invalid arg count in 35c/35ms/35mi (%d)\n", count);
+                LOGW("Invalid arg count in 35c/35ms/35mi (%d)", count);
                 goto bail;
             }
         }
@@ -1074,7 +1074,7 @@ void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
         pDec->vC = FETCH(4);
         break;
     default:
-        LOGW("Can't decode unexpected format %d (op=%d)\n", format, opcode);
+        LOGW("Can't decode unexpected format %d (op=%d)", format, opcode);
         assert(false);
         break;
     }

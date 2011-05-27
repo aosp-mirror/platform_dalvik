@@ -30,7 +30,7 @@
 bool dvmGcStartup()
 {
     dvmInitMutex(&gDvm.gcHeapLock);
-
+    pthread_cond_init(&gDvm.gcHeapCond, NULL);
     return dvmHeapStartup();
 }
 
@@ -109,14 +109,14 @@ static Object* createStockException(const char* descriptor, const char* msg)
     /* find class, initialize if necessary */
     clazz = dvmFindSystemClass(descriptor);
     if (clazz == NULL) {
-        LOGE("Unable to find %s\n", descriptor);
+        LOGE("Unable to find %s", descriptor);
         return NULL;
     }
 
     init = dvmFindDirectMethodByDescriptor(clazz, "<init>",
             "(Ljava/lang/String;)V");
     if (init == NULL) {
-        LOGE("Unable to find String-arg constructor for %s\n", descriptor);
+        LOGE("Unable to find String-arg constructor for %s", descriptor);
         return NULL;
     }
 
@@ -129,7 +129,7 @@ static Object* createStockException(const char* descriptor, const char* msg)
     } else {
         msgStr = dvmCreateStringFromCstr(msg);
         if (msgStr == NULL) {
-            LOGW("Could not allocate message string \"%s\"\n", msg);
+            LOGW("Could not allocate message string \"%s\"", msg);
             dvmReleaseTrackedAlloc(obj, self);
             return NULL;
         }
@@ -175,7 +175,7 @@ bool dvmCreateStockExceptions()
     if (gDvm.outOfMemoryObj == NULL || gDvm.internalErrorObj == NULL ||
         gDvm.noClassDefFoundErrorObj == NULL)
     {
-        LOGW("Unable to create stock exceptions\n");
+        LOGW("Unable to create stock exceptions");
         return false;
     }
 
@@ -269,7 +269,7 @@ void dvmAddTrackedAlloc(Object* obj, Thread* self)
     assert(obj != NULL);
     assert(self != NULL);
     if (!dvmAddToReferenceTable(&self->internalLocalRefTable, obj)) {
-        LOGE("threadid=%d: unable to add %p to internal ref table\n",
+        LOGE("threadid=%d: unable to add %p to internal ref table",
             self->threadId, obj);
         dvmDumpThread(self, false);
         dvmAbort();
@@ -294,7 +294,7 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self)
     if (!dvmRemoveFromReferenceTable(&self->internalLocalRefTable,
             self->internalLocalRefTable.table, obj))
     {
-        LOGE("threadid=%d: failed to remove %p from internal ref table\n",
+        LOGE("threadid=%d: failed to remove %p from internal ref table",
             self->threadId, obj);
         dvmAbort();
     }
@@ -365,4 +365,9 @@ size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz)
 bool dvmIsHeapAddress(void *address)
 {
     return dvmHeapSourceContainsAddress(address);
+}
+
+bool dvmIsNonMovingObject(const Object* object)
+{
+    return true;
 }

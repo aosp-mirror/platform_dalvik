@@ -243,7 +243,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
             int newSize = pSet->alloc + kBreakpointGrowth;
             Breakpoint* newVec;
 
-            LOGV("+++ increasing breakpoint set size to %d\n", newSize);
+            LOGV("+++ increasing breakpoint set size to %d", newSize);
 
             /* pSet->breakpoints will be NULL on first entry */
             newVec = (Breakpoint*)realloc(pSet->breakpoints, newSize * sizeof(Breakpoint));
@@ -275,10 +275,10 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
          */
         assert(*(u1*)addr != OP_BREAKPOINT);
         if (dvmIsClassVerified(method->clazz)) {
-            LOGV("Class %s verified, adding breakpoint at %p\n",
+            LOGV("Class %s verified, adding breakpoint at %p",
                 method->clazz->descriptor, addr);
             if (instructionIsMagicNop(addr)) {
-                LOGV("Refusing to set breakpoint on %04x at %s.%s + 0x%x\n",
+                LOGV("Refusing to set breakpoint on %04x at %s.%s + %#x",
                     *addr, method->clazz->descriptor, method->name,
                     instrOffset);
             } else {
@@ -287,7 +287,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
                     OP_BREAKPOINT);
             }
         } else {
-            LOGV("Class %s NOT verified, deferring breakpoint at %p\n",
+            LOGV("Class %s NOT verified, deferring breakpoint at %p",
                 method->clazz->descriptor, addr);
         }
     } else {
@@ -317,11 +317,11 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
     if (idx < 0) {
         /* breakpoint not found in set -- unexpected */
         if (*(u1*)addr == OP_BREAKPOINT) {
-            LOGE("Unable to restore breakpoint opcode (%s.%s +0x%x)\n",
+            LOGE("Unable to restore breakpoint opcode (%s.%s +%#x)",
                 method->clazz->descriptor, method->name, instrOffset);
             dvmAbort();
         } else {
-            LOGW("Breakpoint was already restored? (%s.%s +0x%x)\n",
+            LOGW("Breakpoint was already restored? (%s.%s +%#x)",
                 method->clazz->descriptor, method->name, instrOffset);
         }
     } else {
@@ -372,10 +372,10 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
              * It might already be there or it might not; either way,
              * flush it out.
              */
-            LOGV("Flushing breakpoint at %p for %s\n",
+            LOGV("Flushing breakpoint at %p for %s",
                 pBreak->addr, clazz->descriptor);
             if (instructionIsMagicNop(pBreak->addr)) {
-                LOGV("Refusing to flush breakpoint on %04x at %s.%s + 0x%x\n",
+                LOGV("Refusing to flush breakpoint on %04x at %s.%s + %#x",
                     *pBreak->addr, pBreak->method->clazz->descriptor,
                     pBreak->method->name, pBreak->addr - pBreak->method->insns);
             } else {
@@ -396,7 +396,7 @@ void dvmInitBreakpoints()
     BreakpointSet* pSet = gDvm.breakpointSet;
     dvmBreakpointSetLock(pSet);
     if (dvmBreakpointSetCount(pSet) != 0) {
-        LOGW("WARNING: %d leftover breakpoints\n", dvmBreakpointSetCount(pSet));
+        LOGW("WARNING: %d leftover breakpoints", dvmBreakpointSetCount(pSet));
         /* generally not good, but we can keep going */
     }
     dvmBreakpointSetUnlock(pSet);
@@ -462,7 +462,7 @@ u1 dvmGetOriginalOpcode(const u2* addr)
     if (!dvmBreakpointSetOriginalOpcode(pSet, addr, &orig)) {
         orig = *(u1*)addr;
         if (orig == OP_BREAKPOINT) {
-            LOGE("GLITCH: can't find breakpoint, opcode is still set\n");
+            LOGE("GLITCH: can't find breakpoint, opcode is still set");
             dvmAbort();
         }
     }
@@ -505,7 +505,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
     StepControl* pCtrl = &gDvm.stepControl;
 
     if (pCtrl->active && thread != pCtrl->thread) {
-        LOGW("WARNING: single-step active for %p; adding %p\n",
+        LOGW("WARNING: single-step active for %p; adding %p",
             pCtrl->thread, thread);
 
         /*
@@ -552,7 +552,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
         prevFp = fp;
     }
     if (fp == NULL) {
-        LOGW("Unexpected: step req in native-only threadid=%d\n",
+        LOGW("Unexpected: step req in native-only threadid=%d",
             thread->threadId);
         return false;
     }
@@ -562,7 +562,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
          * frames are only inserted when calling from native->interp, so we
          * don't need to worry about one being here.
          */
-        LOGV("##### init step while in native method\n");
+        LOGV("##### init step while in native method");
         fp = prevFp;
         assert(!dvmIsBreakFrame((u4*)fp));
         assert(dvmIsNativeMethod(SAVEAREA_FROM_FP(fp)->method));
@@ -592,7 +592,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
         dvmComputeVagueFrameDepth(thread, thread->interpSave.curFrame);
     pCtrl->active = true;
 
-    LOGV("##### step init: thread=%p meth=%p '%s' line=%d frameDepth=%d depth=%s size=%s\n",
+    LOGV("##### step init: thread=%p meth=%p '%s' line=%d frameDepth=%d depth=%s size=%s",
         pCtrl->thread, pCtrl->method, pCtrl->method->name,
         pCtrl->line, pCtrl->frameDepth,
         dvmJdwpStepDepthStr(pCtrl->depth),
@@ -754,7 +754,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      * we may or may not actually send a message to the debugger.
      */
     if (GET_OPCODE(*pc) == OP_BREAKPOINT) {
-        LOGV("+++ breakpoint hit at %p\n", pc);
+        LOGV("+++ breakpoint hit at %p", pc);
         eventFlags |= DBG_BREAKPOINT;
     }
 
@@ -829,7 +829,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
         }
 
         if (doStop) {
-            LOGV("#####S %s\n", msg);
+            LOGV("#####S %s", msg);
             eventFlags |= DBG_SINGLE_STEP;
         }
     }
@@ -865,7 +865,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
              * during single-step.
              */
             char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-            LOGE("HEY: invalid 'this' ptr %p (%s.%s %s)\n", thisPtr,
+            LOGE("HEY: invalid 'this' ptr %p (%s.%s %s)", thisPtr,
                 method->clazz->descriptor, method->name, desc);
             free(desc);
             dvmAbort();
@@ -920,15 +920,15 @@ void dvmInterpCheckTrackedRefs(Thread* self, const Method* method,
 
         count = dvmReferenceTableEntries(&self->internalLocalRefTable);
 
-        LOGE("TRACK: unreleased internal reference (prev=%d total=%d)\n",
+        LOGE("TRACK: unreleased internal reference (prev=%d total=%d)",
             debugTrackedRefStart, count);
         desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGE("       current method is %s.%s %s\n", method->clazz->descriptor,
+        LOGE("       current method is %s.%s %s", method->clazz->descriptor,
             method->name, desc);
         free(desc);
         top = self->internalLocalRefTable.table + debugTrackedRefStart;
         while (top < self->internalLocalRefTable.nextEntry) {
-            LOGE("  %p (%s)\n",
+            LOGE("  %p (%s)",
                  *top,
                  ((*top)->clazz != NULL) ? (*top)->clazz->descriptor : "");
             top++;
@@ -937,7 +937,7 @@ void dvmInterpCheckTrackedRefs(Thread* self, const Method* method,
 
         dvmAbort();
     }
-    //LOGI("TRACK OK\n");
+    //LOGI("TRACK OK");
 }
 #endif
 
@@ -952,14 +952,14 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
 
     localCount = method->registersSize - method->insSize;
 
-    LOG(LOG_VERBOSE, LOG_TAG"i", "Registers (fp=%p):\n", framePtr);
+    LOG(LOG_VERBOSE, LOG_TAG"i", "Registers (fp=%p):", framePtr);
     for (i = method->registersSize-1; i >= 0; i--) {
         if (i >= localCount) {
-            LOG(LOG_VERBOSE, LOG_TAG"i", "  v%-2d in%-2d : 0x%08x\n",
+            LOG(LOG_VERBOSE, LOG_TAG"i", "  v%-2d in%-2d : 0x%08x",
                 i, i-localCount, framePtr[i]);
         } else {
             if (inOnly) {
-                LOG(LOG_VERBOSE, LOG_TAG"i", "  [...]\n");
+                LOG(LOG_VERBOSE, LOG_TAG"i", "  [...]");
                 break;
             }
             const char* name = "";
@@ -976,7 +976,7 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
                 }
             }
 #endif
-            LOG(LOG_VERBOSE, LOG_TAG"i", "  v%-2d      : 0x%08x %s\n",
+            LOG(LOG_VERBOSE, LOG_TAG"i", "  v%-2d      : 0x%08x %s",
                 i, framePtr[i], name);
         }
     }
@@ -1043,7 +1043,7 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
     firstKey |= (*switchData++) << 16;
 
     if (testVal < firstKey || testVal >= firstKey + size) {
-        LOGVV("Value %d not found in switch (%d-%d)\n",
+        LOGVV("Value %d not found in switch (%d-%d)",
             testVal, firstKey, firstKey+size-1);
         return kInstrLen;
     }
@@ -1055,7 +1055,7 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
     assert(((u4)entries & 0x3) == 0);
 
     assert(testVal - firstKey >= 0 && testVal - firstKey < size);
-    LOGVV("Value %d found in slot %d (goto 0x%02x)\n",
+    LOGVV("Value %d found in slot %d (goto 0x%02x)",
         testVal, testVal - firstKey,
         s4FromSwitchData(&entries[testVal - firstKey]));
     return s4FromSwitchData(&entries[testVal - firstKey]);
@@ -1120,13 +1120,13 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
         } else if (testVal > foundVal) {
             lo = mid + 1;
         } else {
-            LOGVV("Value %d found in entry %d (goto 0x%02x)\n",
+            LOGVV("Value %d found in entry %d (goto 0x%02x)",
                 testVal, mid, s4FromSwitchData(&entries[mid]));
             return s4FromSwitchData(&entries[mid]);
         }
     }
 
-    LOGVV("Value %d not found in switch\n", testVal);
+    LOGVV("Value %d not found in switch", testVal);
     return kInstrLen;
 }
 
@@ -1179,7 +1179,7 @@ static void copySwappedArrayData(void* dest, const u2* src, u4 size, u2 width)
         }
         break;
     default:
-        LOGE("Unexpected width %d in copySwappedArrayData\n", width);
+        LOGE("Unexpected width %d in copySwappedArrayData", width);
         dvmAbort();
         break;
     }
@@ -1251,7 +1251,7 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
     if (absMethod == NULL) {
         absMethod = dvmResolveInterfaceMethod(method->clazz, methodIdx);
         if (absMethod == NULL) {
-            LOGV("+ unknown method\n");
+            LOGV("+ unknown method");
             return NULL;
         }
     }
@@ -1298,7 +1298,7 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
         methodToCall->nativeFunc != NULL);
 #endif
 
-    LOGVV("+++ interface=%s.%s concrete=%s.%s\n",
+    LOGVV("+++ interface=%s.%s concrete=%s.%s",
         absMethod->clazz->descriptor, absMethod->name,
         methodToCall->clazz->descriptor, methodToCall->name);
     assert(methodToCall != NULL);
@@ -1361,7 +1361,7 @@ static char* fieldNameFromIndex(const Method* method, int ref,
     const char* fieldName;
 
     if (refType != VERIFY_ERROR_REF_FIELD) {
-        LOGW("Expected ref type %d, got %d\n", VERIFY_ERROR_REF_FIELD, refType);
+        LOGW("Expected ref type %d, got %d", VERIFY_ERROR_REF_FIELD, refType);
         return NULL;    /* no message */
     }
 
@@ -1395,7 +1395,7 @@ static char* methodNameFromIndex(const Method* method, int ref,
     const char* methodName;
 
     if (refType != VERIFY_ERROR_REF_METHOD) {
-        LOGW("Expected ref type %d, got %d\n", VERIFY_ERROR_REF_METHOD,refType);
+        LOGW("Expected ref type %d, got %d", VERIFY_ERROR_REF_METHOD,refType);
         return NULL;    /* no message */
     }
 
@@ -1592,26 +1592,26 @@ void dvmCheckInterpStateConsistency()
     handlerTable = self->interpBreak.ctl.curHandlerTable;
     for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
         if (subMode != thread->interpBreak.ctl.subMode) {
-            LOGD("Warning: subMode mismatch - 0x%x:0x%x, tid[%d]",
+            LOGD("Warning: subMode mismatch - %#x:%#x, tid[%d]",
                 subMode,thread->interpBreak.ctl.subMode,thread->threadId);
          }
         if (breakFlags != thread->interpBreak.ctl.breakFlags) {
-            LOGD("Warning: breakFlags mismatch - 0x%x:0x%x, tid[%d]",
+            LOGD("Warning: breakFlags mismatch - %#x:%#x, tid[%d]",
                 breakFlags,thread->interpBreak.ctl.breakFlags,thread->threadId);
          }
         if (handlerTable != thread->interpBreak.ctl.curHandlerTable) {
-            LOGD("Warning: curHandlerTable mismatch - 0x%x:0x%x, tid[%d]",
+            LOGD("Warning: curHandlerTable mismatch - %#x:%#x, tid[%d]",
                 (int)handlerTable,(int)thread->interpBreak.ctl.curHandlerTable,
                 thread->threadId);
          }
 #if defined(WITH_JIT)
          if (thread->pJitProfTable != gDvmJit.pProfTable) {
-             LOGD("Warning: pJitProfTable mismatch - 0x%x:0x%x, tid[%d]",
+             LOGD("Warning: pJitProfTable mismatch - %#x:%#x, tid[%d]",
                   (int)thread->pJitProfTable,(int)gDvmJit.pProfTable,
                   thread->threadId);
          }
          if (thread->jitThreshold != gDvmJit.threshold) {
-             LOGD("Warning: jitThreshold mismatch - 0x%x:0x%x, tid[%d]",
+             LOGD("Warning: jitThreshold mismatch - %#x:%#x, tid[%d]",
                   (int)thread->jitThreshold,(int)gDvmJit.threshold,
                   thread->threadId);
          }
@@ -1743,7 +1743,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
             strcmp(method->name, mn) == 0 &&
             strcmp(method->shorty, sg) == 0)
         {
-            LOGW("Reached %s.%s, enabling verbose mode\n",
+            LOGW("Reached %s.%s, enabling verbose mode",
                 method->clazz->descriptor, method->name);
             android_setMinPriority(LOG_TAG"i", ANDROID_LOG_VERBOSE);
             dumpRegs(method, fp, true);
@@ -1846,13 +1846,13 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
             if (self->jitResumeDPC != NULL) {
                 if (self->jitResumeDPC == pc) {
                     if (self->jitResumeNPC != NULL) {
-                        LOGD("SS return to trace - pc:0x%x to 0x:%x",
+                        LOGD("SS return to trace - pc:%#x to 0x:%x",
                              (int)pc, (int)self->jitResumeNPC);
                     } else {
-                        LOGD("SS return to interp - pc:0x%x",(int)pc);
+                        LOGD("SS return to interp - pc:%#x",(int)pc);
                     }
                 } else {
-                    LOGD("SS failed to return.  Expected 0x%x, now at 0x%x",
+                    LOGD("SS failed to return.  Expected %#x, now at %#x",
                          (int)self->jitResumeDPC, (int)pc);
                 }
             }
@@ -1964,7 +1964,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     if (method->clazz->status < CLASS_INITIALIZING ||
         method->clazz->status == CLASS_ERROR)
     {
-        LOGE("ERROR: tried to execute code in unprepared class '%s' (%d)\n",
+        LOGE("ERROR: tried to execute code in unprepared class '%s' (%d)",
             method->clazz->descriptor, method->clazz->status);
         dvmDumpThread(self, false);
         dvmAbort();

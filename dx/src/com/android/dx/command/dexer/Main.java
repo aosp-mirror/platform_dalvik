@@ -307,7 +307,7 @@ public class Main {
      * @return whether processing was successful
      */
     private static boolean processAllFiles() {
-        outputDex = new DexFile();
+        outputDex = new DexFile(args.dexOptions);
 
         if (args.jarOutput) {
             outputResources = new TreeMap<String, byte[]>();
@@ -919,7 +919,7 @@ public class Main {
         public boolean keepClassesInJar = false;
 
         /** what API level to target */
-        public int targetApiLevel = Integer.MAX_VALUE;
+        public int targetApiLevel = DexFormat.API_CURRENT;
 
         /** how much source position info to preserve */
         public int positionInfo = PositionList.LINES;
@@ -1098,12 +1098,7 @@ public class Main {
             cfOptions.warn = DxConsole.err;
 
             dexOptions = new DexOptions();
-
-            /*
-             * The new extended opcodes were introduced to the dex format
-             * as of API level 13 (aka Ice Cream Sandwich).
-             */
-            dexOptions.enableExtendedOpcodes = targetApiLevel >= 13;
+            dexOptions.targetApiLevel = targetApiLevel;
         }
     }
 

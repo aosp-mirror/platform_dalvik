@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "jdwp/JdwpPriv.h"
 #include "jdwp/JdwpHandler.h"
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <errno.h>
 #include <unistd.h>
+#include <cutils/sockets.h>
 
-/* the JDWP <-> ADB transport protocol is explained in details
- * in //device/tools/adb/jdwp_service.c, here's a summary.
+/*
+ * The JDWP <-> ADB transport protocol is explained in detail
+ * in system/core/adb/jdwp_service.c. Here's a summary.
  *
  * 1/ when the JDWP thread starts, it tries to connect to a Unix
  *    domain stream socket (@jdwp-control) that is opened by the
@@ -34,7 +37,6 @@
  *    daemon. each incoming file descriptor is a pass-through to
  *    a given JDWP debugger, that can be used to read the usual
  *    JDWP-handshake, etc...
- *
  */
 
 #define kInputBufferSize    8192
@@ -120,7 +122,7 @@ static bool startup(struct JdwpState* state, const JdwpStartupParams* pParams)
 {
     JdwpNetState*  netState;
 
-    LOGV("ADB transport startup\n");
+    LOGV("ADB transport startup");
 
     state->netState = netState = adbStateAlloc();
     if (netState == NULL)
@@ -170,10 +172,10 @@ static int  receiveClientFd(JdwpNetState*  netState)
 
     if (ret <= 0) {
         if (ret < 0) {
-            LOGW("receiving file descriptor from ADB failed (socket %d): %s\n",
+            LOGW("receiving file descriptor from ADB failed (socket %d): %s",
                  netState->controlSock, strerror(errno));
         } else {
-            LOGD("adbd disconnected\n");
+            LOGD("adbd disconnected");
         }
         close(netState->controlSock);
         netState->controlSock = -1;
@@ -208,7 +210,7 @@ retry:
 
         netState->controlSock = socket(PF_UNIX, SOCK_STREAM, 0);
         if (netState->controlSock < 0) {
-            LOGE("Could not create ADB control socket:%s\n",
+            LOGE("Could not create ADB control socket:%s",
                  strerror(errno));
             return false;
         }
@@ -239,21 +241,28 @@ retry:
                                &netState->controlAddr.controlAddrPlain,
                                netState->controlAddrLen);
             if (!ret) {
+                if (!socket_peer_is_trusted(netState->controlSock)) {
+                    if (shutdown(netState->controlSock, SHUT_RDWR)) {
+                        LOGE("trouble shutting down socket: %s", strerror(errno));
+                    }
+                    return false;
+                }
+
                 /* now try to send our pid to the ADB daemon */
                 do {
                     ret = send( netState->controlSock, buff, 4, 0 );
                 } while (ret < 0 && errno == EINTR);
 
                 if (ret >= 0) {
-                    LOGV("PID sent as '%.*s' to ADB\n", 4, buff);
+                    LOGV("PID sent as '%.*s' to ADB", 4, buff);
                     break;
                 }
 
-                LOGE("Weird, can't send JDWP process pid to ADB: %s\n",
+                LOGE("Weird, can't send JDWP process pid to ADB: %s",
                      strerror(errno));
                 return false;
             }
-            LOGV("Can't connect to ADB control socket:%s\n",
+            LOGV("Can't connect to ADB control socket:%s",
                  strerror(errno));
 
             usleep( sleep_ms*1000 );
@@ -264,7 +273,7 @@ retry:
         }
     }
 
-    LOGV("trying to receive file descriptor from ADB\n");
+    LOGV("trying to receive file descriptor from ADB");
     /* now we can receive a client file descriptor */
     netState->clientSock = receiveClientFd(netState);
     if (netState->shuttingDown)
@@ -272,12 +281,12 @@ retry:
 
     if (netState->clientSock < 0) {
         if (++retryCount > 5) {
-            LOGE("adb connection max retries exceeded\n");
+            LOGE("adb connection max retries exceeded");
             return false;
         }
         goto retry;
     } else {
-        LOGV("received file descriptor %d from ADB\n", netState->clientSock);
+        LOGV("received file descriptor %d from ADB", netState->clientSock);
         netState->awaitingHandshake = 1;
         netState->inputCount = 0;
         return true;
@@ -306,7 +315,7 @@ static void closeConnection(struct JdwpState* state)
     if (netState->clientSock < 0)
         return;
 
-    LOGV("+++ closed JDWP <-> ADB connection\n");
+    LOGV("+++ closed JDWP <-> ADB connection");
 
     close(netState->clientSock);
     netState->clientSock = -1;
@@ -341,7 +350,7 @@ static void adbStateShutdown(struct JdwpNetState* netState)
     }
 
     if (netState->wakeFds[1] >= 0) {
-        LOGV("+++ writing to wakePipe\n");
+        LOGV("+++ writing to wakePipe");
         write(netState->wakeFds[1], "", 1);
     }
 }
@@ -467,20 +476,20 @@ static bool handlePacket(JdwpState* state)
             cc = write(netState->clientSock, expandBufGetBuffer(pReply),
                     expandBufGetLength(pReply));
             if (cc != (int) expandBufGetLength(pReply)) {
-                LOGE("Failed sending reply to debugger: %s\n", strerror(errno));
+                LOGE("Failed sending reply to debugger: %s", strerror(errno));
                 expandBufFree(pReply);
                 return false;
             }
         } else {
-            LOGW("No reply created for set=%d cmd=%d\n", cmdSet, cmd);
+            LOGW("No reply created for set=%d cmd=%d", cmdSet, cmd);
         }
         expandBufFree(pReply);
     } else {
-        LOGV("reply?!\n");
+        LOGV("reply?!");
         assert(false);
     }
 
-    LOGV("----------\n");
+    LOGV("----------");
 
     consumeBytes(netState, length);
     return true;
@@ -538,11 +547,11 @@ static bool processIncoming(JdwpState* state)
                 if (maxfd < fd)
                     maxfd = fd;
             } else {
-                LOGI("NOTE: entering select w/o wakepipe\n");
+                LOGI("NOTE: entering select w/o wakepipe");
             }
 
             if (maxfd < 0) {
-                LOGV("+++ all fds are closed\n");
+                LOGV("+++ all fds are closed");
                 return false;
             }
 
@@ -562,14 +571,14 @@ static bool processIncoming(JdwpState* state)
             if (selCount < 0) {
                 if (errno == EINTR)
                     continue;
-                LOGE("select failed: %s\n", strerror(errno));
+                LOGE("select failed: %s", strerror(errno));
                 goto fail;
             }
 
             if (netState->wakeFds[0] >= 0 &&
                 FD_ISSET(netState->wakeFds[0], &readfds))
             {
-                LOGD("Got wake-up signal, bailing out of select\n");
+                LOGD("Got wake-up signal, bailing out of select");
                 goto fail;
             }
             if (netState->controlSock >= 0 &&
@@ -577,7 +586,7 @@ static bool processIncoming(JdwpState* state)
             {
                 int  sock = receiveClientFd(netState);
                 if (sock >= 0) {
-                    LOGI("Ignoring second debugger -- accepting and dropping\n");
+                    LOGI("Ignoring second debugger -- accepting and dropping");
                     close(sock);
                 } else {
                     assert(netState->controlSock < 0);
@@ -598,11 +607,11 @@ static bool processIncoming(JdwpState* state)
                     /* read failed */
                     if (errno != EINTR)
                         goto fail;
-                    LOGD("+++ EINTR hit\n");
+                    LOGD("+++ EINTR hit");
                     return true;
                 } else if (readCount == 0) {
                     /* EOF hit -- far end went away */
-                    LOGV("+++ peer disconnected\n");
+                    LOGV("+++ peer disconnected");
                     goto fail;
                 } else
                     break;
@@ -628,7 +637,7 @@ static bool processIncoming(JdwpState* state)
         if (memcmp(netState->inputBuffer,
                 kMagicHandshake, kMagicHandshakeLen) != 0)
         {
-            LOGE("ERROR: bad handshake '%.14s'\n", netState->inputBuffer);
+            LOGE("ERROR: bad handshake '%.14s'", netState->inputBuffer);
             goto fail;
         }
 
@@ -636,14 +645,14 @@ static bool processIncoming(JdwpState* state)
         cc = write(netState->clientSock, netState->inputBuffer,
                 kMagicHandshakeLen);
         if (cc != kMagicHandshakeLen) {
-            LOGE("Failed writing handshake bytes: %s (%d of %d)\n",
+            LOGE("Failed writing handshake bytes: %s (%d of %d)",
                 strerror(errno), cc, (int) kMagicHandshakeLen);
             goto fail;
         }
 
         consumeBytes(netState, kMagicHandshakeLen);
         netState->awaitingHandshake = false;
-        LOGV("+++ handshake complete\n");
+        LOGV("+++ handshake complete");
         return true;
     }
 
@@ -672,7 +681,7 @@ static bool sendRequest(JdwpState* state, ExpandBuf* pReq)
 
     if (netState->clientSock < 0) {
         /* can happen with some DDMS events */
-        LOGV("NOT sending request -- no debugger is attached\n");
+        LOGV("NOT sending request -- no debugger is attached");
         return false;
     }
 
@@ -685,7 +694,7 @@ static bool sendRequest(JdwpState* state, ExpandBuf* pReq)
     cc = write(netState->clientSock, expandBufGetBuffer(pReq),
             expandBufGetLength(pReq));
     if (cc != (int) expandBufGetLength(pReq)) {
-        LOGE("Failed sending req to debugger: %s (%d of %d)\n",
+        LOGE("Failed sending req to debugger: %s (%d of %d)",
             strerror(errno), cc, (int) expandBufGetLength(pReq));
         return false;
     }
@@ -708,7 +717,7 @@ static bool sendBufferedRequest(JdwpState* state, const struct iovec* iov,
 
     if (netState->clientSock < 0) {
         /* can happen with some DDMS events */
-        LOGV("NOT sending request -- no debugger is attached\n");
+        LOGV("NOT sending request -- no debugger is attached");
         return false;
     }
 
@@ -725,7 +734,7 @@ static bool sendBufferedRequest(JdwpState* state, const struct iovec* iov,
     ssize_t actual;
     actual = writev(netState->clientSock, iov, iovcnt);
     if ((size_t)actual != expected) {
-        LOGE("Failed sending b-req to debugger: %s (%d of %zu)\n",
+        LOGE("Failed sending b-req to debugger: %s (%d of %zu)",
             strerror(errno), (int) actual, expected);
         return false;
     }

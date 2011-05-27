@@ -108,12 +108,12 @@ static JdwpError finishInvoke(JdwpState* state,
 
     u4 numArgs = read4BE(&buf);
 
-    LOGV("    --> threadId=%llx objectId=%llx\n", threadId, objectId);
-    LOGV("        classId=%llx methodId=%x %s.%s\n",
+    LOGV("    --> threadId=%llx objectId=%llx", threadId, objectId);
+    LOGV("        classId=%llx methodId=%x %s.%s",
         classId, methodId,
         dvmDbgGetClassDescriptor(classId),
         dvmDbgGetMethodName(classId, methodId));
-    LOGV("        %d args:\n", numArgs);
+    LOGV("        %d args:", numArgs);
 
     u8* argArray = NULL;
     if (numArgs > 0)
@@ -124,12 +124,12 @@ static JdwpError finishInvoke(JdwpState* state,
         int width = dvmDbgGetTagWidth(typeTag);
         u8 value = jdwpReadValue(&buf, width);
 
-        LOGV("          '%c'(%d): 0x%llx\n", typeTag, width, value);
+        LOGV("          '%c'(%d): 0x%llx", typeTag, width, value);
         argArray[i] = value;
     }
 
     u4 options = read4BE(&buf);  /* enum InvokeOptions bit flags */
-    LOGV("        options=0x%04x%s%s\n", options,
+    LOGV("        options=0x%04x%s%s", options,
         (options & INVOKE_SINGLE_THREADED) ? " (SINGLE_THREADED)" : "",
         (options & INVOKE_NONVIRTUAL) ? " (NONVIRTUAL)" : "");
 
@@ -157,17 +157,17 @@ static JdwpError finishInvoke(JdwpState* state,
         expandBufAdd1(pReply, JT_OBJECT);
         expandBufAddObjectId(pReply, exceptObjId);
 
-        LOGV("  --> returned '%c' 0x%llx (except=%08llx)\n",
+        LOGV("  --> returned '%c' 0x%llx (except=%08llx)",
             resultTag, resultValue, exceptObjId);
 
         /* show detailed debug output */
         if (resultTag == JT_STRING && exceptObjId == 0) {
             if (resultValue != 0) {
                 char* str = dvmDbgStringToUtf8(resultValue);
-                LOGV("      string '%s'\n", str);
+                LOGV("      string '%s'", str);
                 free(str);
             } else {
-                LOGV("      string (null)\n");
+                LOGV("      string (null)");
             }
         }
     }
@@ -211,7 +211,7 @@ static JdwpError handleVM_ClassesBySignature(JdwpState* state,
 {
     size_t strLen;
     char* classDescriptor = readNewUtf8String(&buf, &strLen);
-    LOGV("  Req for class by signature '%s'\n", classDescriptor);
+    LOGV("  Req for class by signature '%s'", classDescriptor);
 
     /*
      * TODO: if a class with the same name has been loaded multiple times
@@ -223,7 +223,7 @@ static JdwpError handleVM_ClassesBySignature(JdwpState* state,
     RefTypeId refTypeId;
     if (!dvmDbgFindLoadedClassBySignature(classDescriptor, &refTypeId)) {
         /* not currently loaded */
-        LOGV("    --> no match!\n");
+        LOGV("    --> no match!");
         numClasses = 0;
     } else {
         /* just the one */
@@ -355,7 +355,7 @@ static JdwpError handleVM_Exit(JdwpState* state,
 {
     u4 exitCode = get4BE(buf);
 
-    LOGW("Debugger is telling the VM to exit with code=%d\n", exitCode);
+    LOGW("Debugger is telling the VM to exit with code=%d", exitCode);
 
     dvmDbgExit(exitCode);
     return ERR_NOT_IMPLEMENTED;     // shouldn't get here
@@ -373,7 +373,7 @@ static JdwpError handleVM_CreateString(JdwpState* state,
     size_t strLen;
     char* str = readNewUtf8String(&buf, &strLen);
 
-    LOGV("  Req to create string '%s'\n", str);
+    LOGV("  Req to create string '%s'", str);
 
     ObjectId stringId = dvmDbgCreateString(str);
     if (stringId == 0)
@@ -515,7 +515,7 @@ static JdwpError handleRT_Signature(JdwpState* state,
 {
     RefTypeId refTypeId = dvmReadRefTypeId(&buf);
 
-    LOGV("  Req for signature of refTypeId=0x%llx\n", refTypeId);
+    LOGV("  Req for signature of refTypeId=0x%llx", refTypeId);
     const char* signature = dvmDbgGetSignature(refTypeId);
     expandBufAddUtf8String(pReply, (const u1*) signature);
 
@@ -545,7 +545,7 @@ static JdwpError handleRT_GetValues(JdwpState* state,
     RefTypeId refTypeId = dvmReadRefTypeId(&buf);
     u4 numFields = read4BE(&buf);
 
-    LOGV("  RT_GetValues %u:\n", numFields);
+    LOGV("  RT_GetValues %u:", numFields);
 
     expandBufAdd4BE(pReply, numFields);
     for (u4 i = 0; i < numFields; i++) {
@@ -597,7 +597,7 @@ static JdwpError handleRT_Interfaces(JdwpState* state,
 {
     RefTypeId refTypeId = dvmReadRefTypeId(&buf);
 
-    LOGV("  Req for interfaces in %llx (%s)\n", refTypeId,
+    LOGV("  Req for interfaces in %llx (%s)", refTypeId,
         dvmDbgGetClassDescriptor(refTypeId));
 
     dvmDbgOutputAllInterfaces(refTypeId, pReply);
@@ -614,7 +614,7 @@ static JdwpError handleRT_ClassObject(JdwpState* state,
     RefTypeId refTypeId = dvmReadRefTypeId(&buf);
     ObjectId classObjId = dvmDbgGetClassObject(refTypeId);
 
-    LOGV("  RefTypeId %llx -> ObjectId %llx\n", refTypeId, classObjId);
+    LOGV("  RefTypeId %llx -> ObjectId %llx", refTypeId, classObjId);
 
     expandBufAddObjectId(pReply, classObjId);
 
@@ -643,12 +643,12 @@ static JdwpError handleRT_SignatureWithGeneric(JdwpState* state,
 
     RefTypeId refTypeId = dvmReadRefTypeId(&buf);
 
-    LOGV("  Req for signature of refTypeId=0x%llx\n", refTypeId);
+    LOGV("  Req for signature of refTypeId=0x%llx", refTypeId);
     const char* signature = dvmDbgGetSignature(refTypeId);
     if (signature != NULL) {
         expandBufAddUtf8String(pReply, (const u1*) signature);
     } else {
-        LOGW("No signature for refTypeId=0x%llx\n", refTypeId);
+        LOGW("No signature for refTypeId=0x%llx", refTypeId);
         expandBufAddUtf8String(pReply, (const u1*) "Lunknown;");
     }
     expandBufAddUtf8String(pReply, genericSignature);
@@ -678,8 +678,8 @@ static JdwpError handleRT_FieldsWithGeneric(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     RefTypeId refTypeId = dvmReadRefTypeId(&buf);
-    LOGV("  Req for fields in refTypeId=0x%llx\n", refTypeId);
-    LOGV("  --> '%s'\n", dvmDbgGetSignature(refTypeId));
+    LOGV("  Req for fields in refTypeId=0x%llx", refTypeId);
+    LOGV("  --> '%s'", dvmDbgGetSignature(refTypeId));
 
     dvmDbgOutputAllFields(refTypeId, true, pReply);
 
@@ -695,8 +695,8 @@ static JdwpError handleRT_MethodsWithGeneric(JdwpState* state,
 {
     RefTypeId refTypeId = dvmReadRefTypeId(&buf);
 
-    LOGV("  Req for methods in refTypeId=0x%llx\n", refTypeId);
-    LOGV("  --> '%s'\n", dvmDbgGetSignature(refTypeId));
+    LOGV("  Req for methods in refTypeId=0x%llx", refTypeId);
+    LOGV("  --> '%s'", dvmDbgGetSignature(refTypeId));
 
     dvmDbgOutputAllMethods(refTypeId, true, pReply);
 
@@ -727,7 +727,7 @@ static JdwpError handleCT_SetValues(JdwpState* state,
     RefTypeId classId = dvmReadRefTypeId(&buf);
     u4 values = read4BE(&buf);
 
-    LOGV("  Req to set %d values in classId=%llx\n", values, classId);
+    LOGV("  Req to set %d values in classId=%llx", values, classId);
 
     for (u4 i = 0; i < values; i++) {
         FieldId fieldId = dvmReadFieldId(&buf);
@@ -735,7 +735,7 @@ static JdwpError handleCT_SetValues(JdwpState* state,
         int width = dvmDbgGetTagWidth(fieldTag);
         u8 value = jdwpReadValue(&buf, width);
 
-        LOGV("    --> field=%x tag=%c -> %lld\n", fieldId, fieldTag, value);
+        LOGV("    --> field=%x tag=%c -> %lld", fieldId, fieldTag, value);
         dvmDbgSetStaticFieldValue(classId, fieldId, value, width);
     }
 
@@ -773,7 +773,7 @@ static JdwpError handleCT_NewInstance(JdwpState* state,
     ObjectId threadId = dvmReadObjectId(&buf);
     MethodId methodId = dvmReadMethodId(&buf);
 
-    LOGV("Creating instance of %s\n", dvmDbgGetClassDescriptor(classId));
+    LOGV("Creating instance of %s", dvmDbgGetClassDescriptor(classId));
     ObjectId objectId = dvmDbgCreateObject(classId);
     if (objectId == 0)
         return ERR_OUT_OF_MEMORY;
@@ -791,7 +791,7 @@ static JdwpError handleAT_newInstance(JdwpState* state,
     RefTypeId arrayTypeId = dvmReadRefTypeId(&buf);
     u4 length = read4BE(&buf);
 
-    LOGV("Creating array %s[%u]\n",
+    LOGV("Creating array %s[%u]",
         dvmDbgGetClassDescriptor(arrayTypeId), length);
     ObjectId objectId = dvmDbgCreateArrayObject(arrayTypeId, length);
     if (objectId == 0)
@@ -811,7 +811,7 @@ static JdwpError handleM_LineTable(JdwpState* state,
     RefTypeId refTypeId = dvmReadRefTypeId(&buf);
     MethodId methodId = dvmReadMethodId(&buf);
 
-    LOGV("  Req for line table in %s.%s\n",
+    LOGV("  Req for line table in %s.%s",
         dvmDbgGetClassDescriptor(refTypeId),
         dvmDbgGetMethodName(refTypeId,methodId));
 
@@ -829,7 +829,7 @@ static JdwpError handleM_VariableTableWithGeneric(JdwpState* state,
     RefTypeId classId = dvmReadRefTypeId(&buf);
     MethodId methodId = dvmReadMethodId(&buf);
 
-    LOGV("  Req for LocalVarTab in class=%s method=%s\n",
+    LOGV("  Req for LocalVarTab in class=%s method=%s",
         dvmDbgGetClassDescriptor(classId),
         dvmDbgGetMethodName(classId, methodId));
 
@@ -855,7 +855,7 @@ static JdwpError handleOR_ReferenceType(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     ObjectId objectId = dvmReadObjectId(&buf);
-    LOGV("  Req for type of objectId=0x%llx\n", objectId);
+    LOGV("  Req for type of objectId=0x%llx", objectId);
 
     u1 refTypeTag;
     RefTypeId typeId;
@@ -876,7 +876,7 @@ static JdwpError handleOR_GetValues(JdwpState* state,
     ObjectId objectId = dvmReadObjectId(&buf);
     u4 numFields = read4BE(&buf);
 
-    LOGV("  Req for %d fields from objectId=0x%llx\n", numFields, objectId);
+    LOGV("  Req for %d fields from objectId=0x%llx", numFields, objectId);
 
     expandBufAdd4BE(pReply, numFields);
 
@@ -897,7 +897,7 @@ static JdwpError handleOR_SetValues(JdwpState* state,
     ObjectId objectId = dvmReadObjectId(&buf);
     u4 numFields = read4BE(&buf);
 
-    LOGV("  Req to set %d fields in objectId=0x%llx\n", numFields, objectId);
+    LOGV("  Req to set %d fields in objectId=0x%llx", numFields, objectId);
 
     for (u4 i = 0; i < numFields; i++) {
         FieldId fieldId = dvmReadFieldId(&buf);
@@ -906,7 +906,7 @@ static JdwpError handleOR_SetValues(JdwpState* state,
         int width = dvmDbgGetTagWidth(fieldTag);
         u8 value = jdwpReadValue(&buf, width);
 
-        LOGV("    --> fieldId=%x tag='%c'(%d) value=%lld\n",
+        LOGV("    --> fieldId=%x tag='%c'(%d) value=%lld",
             fieldId, fieldTag, width, value);
 
         dvmDbgSetFieldValue(objectId, fieldId, value, width);
@@ -967,7 +967,7 @@ static JdwpError handleOR_IsCollected(JdwpState* state,
     ObjectId objectId;
 
     objectId = dvmReadObjectId(&buf);
-    LOGV("  Req IsCollected(0x%llx)\n", objectId);
+    LOGV("  Req IsCollected(0x%llx)", objectId);
 
     // TODO: currently returning false; must integrate with GC
     expandBufAdd1(pReply, 0);
@@ -984,7 +984,7 @@ static JdwpError handleSR_Value(JdwpState* state,
     ObjectId stringObject = dvmReadObjectId(&buf);
     char* str = dvmDbgStringToUtf8(stringObject);
 
-    LOGV("  Req for str %llx --> '%s'\n", stringObject, str);
+    LOGV("  Req for str %llx --> '%s'", stringObject, str);
 
     expandBufAddUtf8String(pReply, (u1*) str);
     free(str);
@@ -1000,7 +1000,7 @@ static JdwpError handleTR_Name(JdwpState* state,
 {
     ObjectId threadId = dvmReadObjectId(&buf);
 
-    LOGV("  Req for name of thread 0x%llx\n", threadId);
+    LOGV("  Req for name of thread 0x%llx", threadId);
     char* name = dvmDbgGetThreadName(threadId);
     if (name == NULL)
         return ERR_INVALID_THREAD;
@@ -1023,10 +1023,10 @@ static JdwpError handleTR_Suspend(JdwpState* state,
     ObjectId threadId = dvmReadObjectId(&buf);
 
     if (threadId == dvmDbgGetThreadSelfId()) {
-        LOGI("  Warning: ignoring request to suspend self\n");
+        LOGI("  Warning: ignoring request to suspend self");
         return ERR_THREAD_NOT_SUSPENDED;
     }
-    LOGV("  Req to suspend thread 0x%llx\n", threadId);
+    LOGV("  Req to suspend thread 0x%llx", threadId);
 
     dvmDbgSuspendThread(threadId);
 
@@ -1042,10 +1042,10 @@ static JdwpError handleTR_Resume(JdwpState* state,
     ObjectId threadId = dvmReadObjectId(&buf);
 
     if (threadId == dvmDbgGetThreadSelfId()) {
-        LOGI("  Warning: ignoring request to resume self\n");
+        LOGI("  Warning: ignoring request to resume self");
         return ERR_NONE;
     }
-    LOGV("  Req to resume thread 0x%llx\n", threadId);
+    LOGV("  Req to resume thread 0x%llx", threadId);
 
     dvmDbgResumeThread(threadId);
 
@@ -1060,14 +1060,14 @@ static JdwpError handleTR_Status(JdwpState* state,
 {
     ObjectId threadId = dvmReadObjectId(&buf);
 
-    LOGV("  Req for status of thread 0x%llx\n", threadId);
+    LOGV("  Req for status of thread 0x%llx", threadId);
 
     u4 threadStatus;
     u4 suspendStatus;
     if (!dvmDbgGetThreadStatus(threadId, &threadStatus, &suspendStatus))
         return ERR_INVALID_THREAD;
 
-    LOGV("    --> %s, %s\n", dvmJdwpThreadStatusStr(threadStatus),
+    LOGV("    --> %s, %s", dvmJdwpThreadStatusStr(threadStatus),
         dvmJdwpSuspendStatusStr(suspendStatus));
 
     expandBufAdd4BE(pReply, threadStatus);
@@ -1107,14 +1107,14 @@ static JdwpError handleTR_Frames(JdwpState* state,
     if (!dvmDbgThreadExists(threadId))
         return ERR_INVALID_THREAD;
     if (!dvmDbgIsSuspended(threadId)) {
-        LOGV("  Rejecting req for frames in running thread '%s' (%llx)\n",
+        LOGV("  Rejecting req for frames in running thread '%s' (%llx)",
             dvmDbgGetThreadName(threadId), threadId);
         return ERR_THREAD_NOT_SUSPENDED;
     }
 
     int frameCount = dvmDbgGetThreadFrameCount(threadId);
 
-    LOGV("  Request for frames: threadId=%llx start=%d length=%d [count=%d]\n",
+    LOGV("  Request for frames: threadId=%llx start=%d length=%d [count=%d]",
         threadId, startFrame, length, frameCount);
     if (frameCount <= 0)
         return ERR_THREAD_NOT_SUSPENDED;    /* == 0 means 100% native */
@@ -1135,7 +1135,7 @@ static JdwpError handleTR_Frames(JdwpState* state,
         expandBufAdd8BE(pReply, frameId);
         dvmJdwpAddLocation(pReply, &loc);
 
-        LOGVV("    Frame %d: id=%llx loc={type=%d cls=%llx mth=%x loc=%llx}\n",
+        LOGVV("    Frame %d: id=%llx loc={type=%d cls=%llx mth=%x loc=%llx}",
             i, frameId, loc.typeTag, loc.classId, loc.methodId, loc.idx);
     }
 
@@ -1153,7 +1153,7 @@ static JdwpError handleTR_FrameCount(JdwpState* state,
     if (!dvmDbgThreadExists(threadId))
         return ERR_INVALID_THREAD;
     if (!dvmDbgIsSuspended(threadId)) {
-        LOGV("  Rejecting req for frames in running thread '%s' (%llx)\n",
+        LOGV("  Rejecting req for frames in running thread '%s' (%llx)",
             dvmDbgGetThreadName(threadId), threadId);
         return ERR_THREAD_NOT_SUSPENDED;
     }
@@ -1208,14 +1208,14 @@ static JdwpError handleTGR_Name(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     ObjectId threadGroupId = dvmReadObjectId(&buf);
-    LOGV("  Req for name of threadGroupId=0x%llx\n", threadGroupId);
+    LOGV("  Req for name of threadGroupId=0x%llx", threadGroupId);
 
     char* name = dvmDbgGetThreadGroupName(threadGroupId);
     if (name != NULL)
         expandBufAddUtf8String(pReply, (u1*) name);
     else {
         expandBufAddUtf8String(pReply, (u1*) "BAD-GROUP-ID");
-        LOGW("bad thread group ID\n");
+        LOGW("bad thread group ID");
     }
 
     free(name);
@@ -1246,7 +1246,7 @@ static JdwpError handleTGR_Children(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     ObjectId threadGroupId = dvmReadObjectId(&buf);
-    LOGV("  Req for threads in threadGroupId=0x%llx\n", threadGroupId);
+    LOGV("  Req for threads in threadGroupId=0x%llx", threadGroupId);
 
     ObjectId* pThreadIds;
     u4 threadCount;
@@ -1280,11 +1280,11 @@ static JdwpError handleAR_Length(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     ObjectId arrayId = dvmReadObjectId(&buf);
-    LOGV("  Req for length of array 0x%llx\n", arrayId);
+    LOGV("  Req for length of array 0x%llx", arrayId);
 
     u4 arrayLength = dvmDbgGetArrayLength(arrayId);
 
-    LOGV("    --> %d\n", arrayLength);
+    LOGV("    --> %d", arrayLength);
 
     expandBufAdd4BE(pReply, arrayLength);
 
@@ -1302,7 +1302,7 @@ static JdwpError handleAR_GetValues(JdwpState* state,
     u4 length = read4BE(&buf);
 
     u1 tag = dvmDbgGetArrayElementTag(arrayId);
-    LOGV("  Req for array values 0x%llx first=%d len=%d (elem tag=%c)\n",
+    LOGV("  Req for array values 0x%llx first=%d len=%d (elem tag=%c)",
         arrayId, firstIndex, length, tag);
 
     expandBufAdd1(pReply, tag);
@@ -1324,7 +1324,7 @@ static JdwpError handleAR_SetValues(JdwpState* state,
     u4 firstIndex = read4BE(&buf);
     u4 values = read4BE(&buf);
 
-    LOGV("  Req to set array values 0x%llx first=%d count=%d\n",
+    LOGV("  Req to set array values 0x%llx first=%d count=%d",
         arrayId, firstIndex, values);
 
     if (!dvmDbgSetArrayElements(arrayId, firstIndex, values, buf))
@@ -1376,7 +1376,7 @@ static JdwpError handleER_Set(JdwpState* state,
     u1 suspendPolicy = read1(&buf);
     u4 modifierCount = read4BE(&buf);
 
-    LOGVV("  Set(kind=%s(%u) suspend=%s(%u) mods=%u)\n",
+    LOGVV("  Set(kind=%s(%u) suspend=%s(%u) mods=%u)",
         dvmJdwpEventKindStr(eventKind), eventKind,
         dvmJdwpSuspendPolicyStr(suspendPolicy), suspendPolicy,
         modifierCount);
@@ -1401,7 +1401,7 @@ static JdwpError handleER_Set(JdwpState* state,
         case MK_COUNT:          /* report once, when "--count" reaches 0 */
             {
                 u4 count = read4BE(&buf);
-                LOGVV("    Count: %u\n", count);
+                LOGVV("    Count: %u", count);
                 if (count == 0)
                     return ERR_INVALID_COUNT;
                 pEvent->mods[idx].count.count = count;
@@ -1410,21 +1410,21 @@ static JdwpError handleER_Set(JdwpState* state,
         case MK_CONDITIONAL:    /* conditional on expression) */
             {
                 u4 exprId = read4BE(&buf);
-                LOGVV("    Conditional: %d\n", exprId);
+                LOGVV("    Conditional: %d", exprId);
                 pEvent->mods[idx].conditional.exprId = exprId;
             }
             break;
         case MK_THREAD_ONLY:    /* only report events in specified thread */
             {
                 ObjectId threadId = dvmReadObjectId(&buf);
-                LOGVV("    ThreadOnly: %llx\n", threadId);
+                LOGVV("    ThreadOnly: %llx", threadId);
                 pEvent->mods[idx].threadOnly.threadId = threadId;
             }
             break;
         case MK_CLASS_ONLY:     /* for ClassPrepare, MethodEntry */
             {
                 RefTypeId clazzId = dvmReadRefTypeId(&buf);
-                LOGVV("    ClassOnly: %llx (%s)\n",
+                LOGVV("    ClassOnly: %llx (%s)",
                     clazzId, dvmDbgGetClassDescriptor(clazzId));
                 pEvent->mods[idx].classOnly.refTypeId = clazzId;
             }
@@ -1435,7 +1435,7 @@ static JdwpError handleER_Set(JdwpState* state,
                 size_t strLen;
 
                 pattern = readNewUtf8String(&buf, &strLen);
-                LOGVV("    ClassMatch: '%s'\n", pattern);
+                LOGVV("    ClassMatch: '%s'", pattern);
                 /* pattern is "java.foo.*", we want "java/foo/ *" */
                 pEvent->mods[idx].classMatch.classPattern =
                     dvmDotToSlash(pattern);
@@ -1448,7 +1448,7 @@ static JdwpError handleER_Set(JdwpState* state,
                 size_t strLen;
 
                 pattern = readNewUtf8String(&buf, &strLen);
-                LOGVV("    ClassExclude: '%s'\n", pattern);
+                LOGVV("    ClassExclude: '%s'", pattern);
                 pEvent->mods[idx].classExclude.classPattern =
                     dvmDotToSlash(pattern);
                 free(pattern);
@@ -1459,7 +1459,7 @@ static JdwpError handleER_Set(JdwpState* state,
                 JdwpLocation loc;
 
                 jdwpReadLocation(&buf, &loc);
-                LOGVV("    LocationOnly: typeTag=%d classId=%llx methodId=%x idx=%llx\n",
+                LOGVV("    LocationOnly: typeTag=%d classId=%llx methodId=%x idx=%llx",
                     loc.typeTag, loc.classId, loc.methodId, loc.idx);
                 pEvent->mods[idx].locationOnly.loc = loc;
             }
@@ -1472,7 +1472,7 @@ static JdwpError handleER_Set(JdwpState* state,
                 exceptionOrNull = dvmReadRefTypeId(&buf);
                 caught = read1(&buf);
                 uncaught = read1(&buf);
-                LOGVV("    ExceptionOnly: type=%llx(%s) caught=%d uncaught=%d\n",
+                LOGVV("    ExceptionOnly: type=%llx(%s) caught=%d uncaught=%d",
                     exceptionOrNull, (exceptionOrNull == 0) ? "null"
                         : dvmDbgGetClassDescriptor(exceptionOrNull),
                     caught, uncaught);
@@ -1486,7 +1486,7 @@ static JdwpError handleER_Set(JdwpState* state,
             {
                 RefTypeId declaring = dvmReadRefTypeId(&buf);
                 FieldId fieldId = dvmReadFieldId(&buf);
-                LOGVV("    FieldOnly: %llx %x\n", declaring, fieldId);
+                LOGVV("    FieldOnly: %llx %x", declaring, fieldId);
                 pEvent->mods[idx].fieldOnly.refTypeId = declaring;
                 pEvent->mods[idx].fieldOnly.fieldId = fieldId;
             }
@@ -1499,7 +1499,7 @@ static JdwpError handleER_Set(JdwpState* state,
                 threadId = dvmReadObjectId(&buf);
                 size = read4BE(&buf);
                 depth = read4BE(&buf);
-                LOGVV("    Step: thread=%llx size=%s depth=%s\n",
+                LOGVV("    Step: thread=%llx size=%s depth=%s",
                     threadId, dvmJdwpStepSizeStr(size),
                     dvmJdwpStepDepthStr(depth));
 
@@ -1511,12 +1511,12 @@ static JdwpError handleER_Set(JdwpState* state,
         case MK_INSTANCE_ONLY:  /* report events related to a specific obj */
             {
                 ObjectId instance = dvmReadObjectId(&buf);
-                LOGVV("    InstanceOnly: %llx\n", instance);
+                LOGVV("    InstanceOnly: %llx", instance);
                 pEvent->mods[idx].instanceOnly.objectId = instance;
             }
             break;
         default:
-            LOGW("GLITCH: unsupported modKind=%d\n", modKind);
+            LOGW("GLITCH: unsupported modKind=%d", modKind);
             break;
         }
     }
@@ -1526,7 +1526,7 @@ static JdwpError handleER_Set(JdwpState* state,
      * has sent us bad stuff, but for now we blame ourselves.
      */
     if (buf != origBuf + dataLen) {
-        LOGW("GLITCH: dataLen is %d, we have consumed %d\n", dataLen,
+        LOGW("GLITCH: dataLen is %d, we have consumed %d", dataLen,
             (int) (buf - origBuf));
     }
 
@@ -1538,14 +1538,14 @@ static JdwpError handleER_Set(JdwpState* state,
 
     pEvent->requestId = requestId;
 
-    LOGV("    --> event requestId=0x%x\n", requestId);
+    LOGV("    --> event requestId=%#x", requestId);
 
     /* add it to the list */
     JdwpError err = dvmJdwpRegisterEvent(state, pEvent);
     if (err != ERR_NONE) {
         /* registration failed, probably because event is bogus */
         dvmJdwpEventFree(pEvent);
-        LOGW("WARNING: event request rejected\n");
+        LOGW("WARNING: event request rejected");
     }
     return err;
 }
@@ -1578,7 +1578,7 @@ static JdwpError handleSF_GetValues(JdwpState* state,
     FrameId frameId = dvmReadFrameId(&buf);
     u4 slots = read4BE(&buf);
 
-    LOGV("  Req for %d slots in threadId=%llx frameId=%llx\n",
+    LOGV("  Req for %d slots in threadId=%llx frameId=%llx",
         slots, threadId, frameId);
 
     expandBufAdd4BE(pReply, slots);     /* "int values" */
@@ -1586,7 +1586,7 @@ static JdwpError handleSF_GetValues(JdwpState* state,
         u4 slot = read4BE(&buf);
         u1 reqSigByte = read1(&buf);
 
-        LOGV("    --> slot %d '%c'\n", slot, reqSigByte);
+        LOGV("    --> slot %d '%c'", slot, reqSigByte);
 
         int width = dvmDbgGetTagWidth(reqSigByte);
         u1* ptr = expandBufAddSpace(pReply, width+1);
@@ -1606,7 +1606,7 @@ static JdwpError handleSF_SetValues(JdwpState* state,
     FrameId frameId = dvmReadFrameId(&buf);
     u4 slots = read4BE(&buf);
 
-    LOGV("  Req to set %d slots in threadId=%llx frameId=%llx\n",
+    LOGV("  Req to set %d slots in threadId=%llx frameId=%llx",
         slots, threadId, frameId);
 
     for (u4 i = 0; i < slots; i++) {
@@ -1615,7 +1615,7 @@ static JdwpError handleSF_SetValues(JdwpState* state,
         int width = dvmDbgGetTagWidth(sigByte);
         u8 value = jdwpReadValue(&buf, width);
 
-        LOGV("    --> slot %d '%c' %llx\n", slot, sigByte, value);
+        LOGV("    --> slot %d '%c' %llx", slot, sigByte, value);
         dvmDbgSetLocalValue(threadId, frameId, slot, sigByte, value, width);
     }
 
@@ -1636,7 +1636,7 @@ static JdwpError handleSF_ThisObject(JdwpState* state,
         return ERR_INVALID_FRAMEID;
 
     u1 objectTag = dvmDbgGetObjectTag(objectId);
-    LOGV("  Req for 'this' in thread=%llx frame=%llx --> %llx %s '%c'\n",
+    LOGV("  Req for 'this' in thread=%llx frame=%llx --> %llx %s '%c'",
         threadId, frameId, objectId, dvmDbgGetObjectTypeName(objectId),
         (char)objectTag);
 
@@ -1658,7 +1658,7 @@ static JdwpError handleCOR_ReflectedType(JdwpState* state,
 {
     RefTypeId classObjectId = dvmReadRefTypeId(&buf);
 
-    LOGV("  Req for refTypeId for class=%llx (%s)\n",
+    LOGV("  Req for refTypeId for class=%llx (%s)",
         classObjectId, dvmDbgGetClassDescriptor(classObjectId));
 
     /* just hand the type back to them */
@@ -1680,7 +1680,7 @@ static JdwpError handleDDM_Chunk(JdwpState* state,
     u1* replyBuf = NULL;
     int replyLen = -1;
 
-    LOGV("  Handling DDM packet (%.4s)\n", buf);
+    LOGV("  Handling DDM packet (%.4s)", buf);
 
     /*
      * On first DDM packet, notify all handlers that DDM is running.
@@ -1919,7 +1919,7 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
         if (gHandlerMap[i].cmdSet == pHeader->cmdSet &&
             gHandlerMap[i].cmd == pHeader->cmd)
         {
-            LOGV("REQ: %s (cmd=%d/%d dataLen=%d id=0x%06x)\n",
+            LOGV("REQ: %s (cmd=%d/%d dataLen=%d id=0x%06x)",
                 gHandlerMap[i].descr, pHeader->cmdSet, pHeader->cmd,
                 dataLen, pHeader->id);
             result = (*gHandlerMap[i].func)(state, buf, dataLen, pReply);
@@ -1927,7 +1927,7 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
         }
     }
     if (i == NELEM(gHandlerMap)) {
-        LOGE("REQ: UNSUPPORTED (cmd=%d/%d dataLen=%d id=0x%06x)\n",
+        LOGE("REQ: UNSUPPORTED (cmd=%d/%d dataLen=%d id=0x%06x)",
             pHeader->cmdSet, pHeader->cmd, dataLen, pHeader->id);
         if (dataLen > 0)
             dvmPrintHexDumpDbg(buf, dataLen, LOG_TAG);
@@ -1951,7 +1951,7 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
 
     respLen = expandBufGetLength(pReply) - kJDWPHeaderLen;
     IF_LOG(LOG_VERBOSE, LOG_TAG) {
-        LOGV("reply: dataLen=%d err=%s(%d)%s\n", respLen,
+        LOGV("reply: dataLen=%d err=%s(%d)%s", respLen,
             dvmJdwpErrorStr(result), result,
             result != ERR_NONE ? " **FAILED**" : "");
         if (respLen > 0)

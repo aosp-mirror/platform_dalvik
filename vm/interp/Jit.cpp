@@ -74,14 +74,14 @@ void* dvmSelfVerificationSaveState(const u2* pc, u4* fp,
         sizeof(StackSaveArea);
     unsigned postBytes = self->interpSave.method->registersSize*4;
 
-    //LOGD("### selfVerificationSaveState(%d) pc: 0x%x fp: 0x%x",
+    //LOGD("### selfVerificationSaveState(%d) pc: %#x fp: %#x",
     //    self->threadId, (int)pc, (int)fp);
 
     if (shadowSpace->selfVerificationState != kSVSIdle) {
         LOGD("~~~ Save: INCORRECT PREVIOUS STATE(%d): %d",
             self->threadId, shadowSpace->selfVerificationState);
         LOGD("********** SHADOW STATE DUMP **********");
-        LOGD("PC: 0x%x FP: 0x%x", (int)pc, (int)fp);
+        LOGD("PC: %#x FP: %#x", (int)pc, (int)fp);
     }
     shadowSpace->selfVerificationState = kSVSStart;
 
@@ -138,7 +138,7 @@ void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
     shadowSpace->endShadowFP = fp;
     shadowSpace->jitExitState = exitState;
 
-    //LOGD("### selfVerificationRestoreState(%d) pc: 0x%x fp: 0x%x endPC: 0x%x",
+    //LOGD("### selfVerificationRestoreState(%d) pc: %#x fp: %#x endPC: %#x",
     //    self->threadId, (int)shadowSpace->startPC, (int)shadowSpace->fp,
     //    (int)pc);
 
@@ -146,10 +146,10 @@ void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
         LOGD("~~~ Restore: INCORRECT PREVIOUS STATE(%d): %d",
             self->threadId, shadowSpace->selfVerificationState);
         LOGD("********** SHADOW STATE DUMP **********");
-        LOGD("Dalvik PC: 0x%x endPC: 0x%x", (int)shadowSpace->startPC,
+        LOGD("Dalvik PC: %#x endPC: %#x", (int)shadowSpace->startPC,
             (int)shadowSpace->endPC);
-        LOGD("Interp FP: 0x%x", (int)shadowSpace->fp);
-        LOGD("Shadow FP: 0x%x endFP: 0x%x", (int)shadowSpace->shadowFP,
+        LOGD("Interp FP: %#x", (int)shadowSpace->fp);
+        LOGD("Shadow FP: %#x endFP: %#x", (int)shadowSpace->shadowFP,
             (int)shadowSpace->endShadowFP);
     }
 
@@ -198,15 +198,15 @@ static void selfVerificationDumpState(const u2* pc, Thread* self)
                       (int)self->interpSave.curFrame - localRegs;
     }
     LOGD("********** SHADOW STATE DUMP **********");
-    LOGD("CurrentPC: 0x%x, Offset: 0x%04x", (int)pc,
+    LOGD("CurrentPC: %#x, Offset: 0x%04x", (int)pc,
         (int)(pc - stackSave->method->insns));
     LOGD("Class: %s", shadowSpace->method->clazz->descriptor);
     LOGD("Method: %s", shadowSpace->method->name);
-    LOGD("Dalvik PC: 0x%x endPC: 0x%x", (int)shadowSpace->startPC,
+    LOGD("Dalvik PC: %#x endPC: %#x", (int)shadowSpace->startPC,
         (int)shadowSpace->endPC);
-    LOGD("Interp FP: 0x%x endFP: 0x%x", (int)shadowSpace->fp,
+    LOGD("Interp FP: %#x endFP: %#x", (int)shadowSpace->fp,
         (int)self->interpSave.curFrame);
-    LOGD("Shadow FP: 0x%x endFP: 0x%x", (int)shadowSpace->shadowFP,
+    LOGD("Shadow FP: %#x endFP: %#x", (int)shadowSpace->shadowFP,
         (int)shadowSpace->endShadowFP);
     LOGD("Frame1 Bytes: %d Frame2 Local: %d Bytes: %d", frameBytes,
         localRegs, frameBytes2);
@@ -228,7 +228,7 @@ static void selfVerificationDumpTrace(const u2* pc, Thread* self)
         offset =  (int)((u2*)addr - stackSave->method->insns);
         decInsn = &(shadowSpace->trace[i].decInsn);
         /* Not properly decoding instruction, some registers may be garbage */
-        LOGD("0x%x: (0x%04x) %s",
+        LOGD("%#x: (0x%04x) %s",
             addr, offset, dexGetOpcodeName(decInsn->opcode));
     }
 }
@@ -269,7 +269,7 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
     DecodedInstruction decInsn;
     dexDecodeInstruction(pc, &decInsn);
 
-    //LOGD("### DbgIntp(%d): PC: 0x%x endPC: 0x%x state: %d len: %d %s",
+    //LOGD("### DbgIntp(%d): PC: %#x endPC: %#x state: %d len: %d %s",
     //    self->threadId, (int)pc, (int)shadowSpace->endPC, state,
     //    shadowSpace->traceLength, dexGetOpcodeName(decInsn.opcode));
 
@@ -311,12 +311,12 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
             LOGD("~~~ DbgIntp(%d): REGISTERS DIVERGENCE!", self->threadId);
             selfVerificationDumpState(pc, self);
             selfVerificationDumpTrace(pc, self);
-            LOGD("*** Interp Registers: addr: 0x%x bytes: %d",
+            LOGD("*** Interp Registers: addr: %#x bytes: %d",
                 (int)shadowSpace->fp, frameBytes);
             selfVerificationPrintRegisters((int*)shadowSpace->fp,
                                            (int*)shadowSpace->shadowFP,
                                            frameBytes/4);
-            LOGD("*** Shadow Registers: addr: 0x%x bytes: %d",
+            LOGD("*** Shadow Registers: addr: %#x bytes: %d",
                 (int)shadowSpace->shadowFP, frameBytes);
             selfVerificationPrintRegisters((int*)shadowSpace->shadowFP,
                                            (int*)shadowSpace->fp,
@@ -345,12 +345,12 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
                     self->threadId);
                 selfVerificationDumpState(pc, self);
                 selfVerificationDumpTrace(pc, self);
-                LOGD("*** Interp Registers: addr: 0x%x l: %d bytes: %d",
+                LOGD("*** Interp Registers: addr: %#x l: %d bytes: %d",
                     (int)self->interpSave.curFrame, localRegs, frameBytes2);
                 selfVerificationPrintRegisters((int*)self->interpSave.curFrame,
                                                (int*)shadowSpace->endShadowFP,
                                                (frameBytes2+localRegs)/4);
-                LOGD("*** Shadow Registers: addr: 0x%x l: %d bytes: %d",
+                LOGD("*** Shadow Registers: addr: %#x l: %d bytes: %d",
                     (int)shadowSpace->endShadowFP, localRegs, frameBytes2);
                 selfVerificationPrintRegisters((int*)shadowSpace->endShadowFP,
                                                (int*)self->interpSave.curFrame,
@@ -375,7 +375,7 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
                     goto log_and_continue;
                 }
                 LOGD("~~~ DbgIntp(%d): MEMORY DIVERGENCE!", self->threadId);
-                LOGD("Addr: 0x%x Intrp Data: 0x%x Jit Data: 0x%x",
+                LOGD("Addr: %#x Intrp Data: %#x Jit Data: %#x",
                     heapSpacePtr->addr, memData, heapSpacePtr->data);
                 selfVerificationDumpState(pc, self);
                 selfVerificationDumpTrace(pc, self);
@@ -410,7 +410,7 @@ log_and_continue:
     /* If end not been reached, make sure max length not exceeded */
     if (shadowSpace->traceLength >= JIT_MAX_TRACE_LEN) {
         LOGD("~~~ DbgIntp(%d): CONTROL DIVERGENCE!", self->threadId);
-        LOGD("startPC: 0x%x endPC: 0x%x currPC: 0x%x",
+        LOGD("startPC: %#x endPC: %#x currPC: %#x",
             (int)shadowSpace->startPC, (int)shadowSpace->endPC, (int)pc);
         selfVerificationDumpState(pc, self);
         selfVerificationDumpTrace(pc, self);
@@ -664,13 +664,13 @@ void dvmJitDumpTraceDesc(JitTraceDescription *trace)
     const u2* dpcBase;
     int curFrag = 0;
     LOGD("===========================================");
-    LOGD("Trace dump 0x%x, Method %s off 0x%x",(int)trace,
+    LOGD("Trace dump %#x, Method %s off %#x",(int)trace,
          trace->method->name,trace->trace[curFrag].info.frag.startOffset);
     dpcBase = trace->method->insns;
     while (!done) {
         DecodedInstruction decInsn;
         if (trace->trace[curFrag].isCode) {
-            LOGD("Frag[%d]- Insts: %d, start: 0x%x, hint: 0x%x, end: %d",
+            LOGD("Frag[%d]- Insts: %d, start: %#x, hint: %#x, end: %d",
                  curFrag, trace->trace[curFrag].info.frag.numInsts,
                  trace->trace[curFrag].info.frag.startOffset,
                  trace->trace[curFrag].info.frag.hint,
@@ -678,7 +678,7 @@ void dvmJitDumpTraceDesc(JitTraceDescription *trace)
             dpc = dpcBase + trace->trace[curFrag].info.frag.startOffset;
             for (i=0; i<trace->trace[curFrag].info.frag.numInsts; i++) {
                 dexDecodeInstruction(dpc, &decInsn);
-                LOGD("    0x%04x - %s 0x%x",(dpc-dpcBase),
+                LOGD("    0x%04x - %s %#x",(dpc-dpcBase),
                      dexGetOpcodeName(decInsn.opcode),(int)dpc);
                 dpc += dexGetWidthFromOpcode(decInsn.opcode);
             }
@@ -810,7 +810,7 @@ void dvmCheckJit(const u2* pc, Thread* self)
             }
 
 #if defined(SHOW_TRACE)
-            LOGD("TraceGen: adding %s. lpc:0x%x, pc:0x%x",
+            LOGD("TraceGen: adding %s. lpc:%#x, pc:%#x",
                  dexGetOpcodeName(decInsn.opcode), (int)lastPC, (int)pc);
 #endif
             flags = dexGetFlagsFromOpcode(decInsn.opcode);
@@ -1274,7 +1274,7 @@ void dvmJitCheckTraceRequest(Thread* self)
                 /* Turn on trace selection mode */
                 dvmEnableSubMode(self, kSubModeJitTraceBuild);
 #if defined(SHOW_TRACE)
-                LOGD("Starting trace for %s at 0x%x",
+                LOGD("Starting trace for %s at %#x",
                      self->interpSave.method->name, (int)self->interpSave.pc);
 #endif
                 break;

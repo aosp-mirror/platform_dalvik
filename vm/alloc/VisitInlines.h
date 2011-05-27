@@ -57,7 +57,7 @@ static void visitStaticFields(Visitor *visitor, ClassObject *clazz,
     assert(visitor != NULL);
     assert(clazz != NULL);
     for (int i = 0; i < clazz->sfieldCount; ++i) {
-        char ch = clazz->sfields[i].field.signature[0];
+        char ch = clazz->sfields[i].signature[0];
         if (ch == '[' || ch == 'L') {
             (*visitor)(&clazz->sfields[i].value.l, arg);
         }

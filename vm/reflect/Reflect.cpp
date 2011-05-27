@@ -49,12 +49,12 @@ bool dvmValidateBoxClasses()
 
         clazz = dvmFindClassNoInit(*ccp, NULL);
         if (clazz == NULL) {
-            LOGE("Couldn't find '%s'\n", *ccp);
+            LOGE("Couldn't find '%s'", *ccp);
             return false;
         }
 
         if (clazz->ifieldCount != 1) {
-            LOGE("Found %d instance fields in '%s'\n",
+            LOGE("Found %d instance fields in '%s'",
                 clazz->ifieldCount, *ccp);
             return false;
         }
@@ -107,7 +107,7 @@ static ClassObject* convertSignaturePartToClass(char** pSignature,
     }
 
     if (clazz == NULL) {
-        LOGW("Unable to match class for part: '%s'\n", *pSignature);
+        LOGW("Unable to match class for part: '%s'", *pSignature);
     }
     *pSignature = signature;
     return clazz;
@@ -146,7 +146,7 @@ static ArrayObject* convertSignatureToClassArray(char** pSignature,
         }
         cp++;
     }
-    LOGVV("REFLECT found %d parameters in '%s'\n", count, *pSignature);
+    LOGVV("REFLECT found %d parameters in '%s'", count, *pSignature);
 
     /* create an array to hold them */
     ArrayObject* classArray = dvmAllocArrayByClass(gDvm.classJavaLangClassArray,
@@ -162,7 +162,7 @@ static ArrayObject* convertSignatureToClassArray(char** pSignature,
             assert(dvmCheckException(dvmThreadSelf()));
             return NULL;
         }
-        LOGVV("REFLECT  %d: '%s'\n", i, clazz->descriptor);
+        LOGVV("REFLECT  %d: '%s'", i, clazz->descriptor);
         dvmSetObjectArrayElement(classArray, i, (Object *)clazz);
     }
 
@@ -250,7 +250,7 @@ static Object* createFieldObject(Field* field, const ClassObject* clazz)
     dvmCallMethod(dvmThreadSelf(), gDvm.methJavaLangReflectField_init,
         fieldObj, &unused, clazz, type, nameObj, slot);
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGD("Field class init threw exception\n");
+        LOGD("Field class init threw exception");
         goto bail;
     }
 
@@ -282,11 +282,11 @@ ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly)
     else {
         count = 0;
         for (int i = 0; i < clazz->sfieldCount; i++) {
-            if ((clazz->sfields[i].field.accessFlags & ACC_PUBLIC) != 0)
+            if ((clazz->sfields[i].accessFlags & ACC_PUBLIC) != 0)
                 count++;
         }
         for (int i = 0; i < clazz->ifieldCount; i++) {
-            if ((clazz->ifields[i].field.accessFlags & ACC_PUBLIC) != 0)
+            if ((clazz->ifields[i].accessFlags & ACC_PUBLIC) != 0)
                 count++;
         }
     }
@@ -301,9 +301,9 @@ ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly)
     size_t fieldCount = 0;
     for (int i = 0; i < clazz->sfieldCount; i++) {
         if (!publicOnly ||
-            (clazz->sfields[i].field.accessFlags & ACC_PUBLIC) != 0)
+            (clazz->sfields[i].accessFlags & ACC_PUBLIC) != 0)
         {
-            Object* field = createFieldObject(&clazz->sfields[i].field, clazz);
+            Object* field = createFieldObject(&clazz->sfields[i], clazz);
             if (field == NULL) {
                 goto fail;
             }
@@ -314,9 +314,9 @@ ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly)
     }
     for (int i = 0; i < clazz->ifieldCount; i++) {
         if (!publicOnly ||
-            (clazz->ifields[i].field.accessFlags & ACC_PUBLIC) != 0)
+            (clazz->ifields[i].accessFlags & ACC_PUBLIC) != 0)
         {
-            Object* field = createFieldObject(&clazz->ifields[i].field, clazz);
+            Object* field = createFieldObject(&clazz->ifields[i], clazz);
             if (field == NULL) {
                 goto fail;
             }
@@ -430,7 +430,7 @@ static Object* createConstructorObject(Method* meth)
     dvmCallMethod(dvmThreadSelf(), gDvm.methJavaLangReflectConstructor_init,
         consObj, &unused, meth->clazz, params, exceptions, slot);
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGD("Constructor class init threw exception\n");
+        LOGD("Constructor class init threw exception");
         goto bail;
     }
 
@@ -536,7 +536,7 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
 
     if (dvmCheckException(dvmThreadSelf())) {
         LOGW("WARNING: dvmCreateReflectMethodObject called with "
-             "exception pending\n");
+             "exception pending");
         return NULL;
     }
 
@@ -583,7 +583,7 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
         methObj, &unused, meth->clazz, params, exceptions, returnType,
         nameObj, slot);
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGD("Method class init threw exception\n");
+        LOGD("Method class init threw exception");
         goto bail;
     }
 
@@ -786,7 +786,7 @@ Object* dvmGetDeclaredField(ClassObject* clazz, StringObject* nameObj)
         dvmInitClass(gDvm.classJavaLangReflectField);
 
     for (i = 0; i < clazz->sfieldCount; i++) {
-        Field* field = &clazz->sfields[i].field;
+        Field* field = &clazz->sfields[i];
         if (strcmp(name, field->name) == 0) {
             fieldObj = createFieldObject(field, clazz);
             break;
@@ -794,7 +794,7 @@ Object* dvmGetDeclaredField(ClassObject* clazz, StringObject* nameObj)
     }
     if (fieldObj == NULL) {
         for (i = 0; i < clazz->ifieldCount; i++) {
-            Field* field = &clazz->ifields[i].field;
+            Field* field = &clazz->ifields[i];
             if (strcmp(name, field->name) == 0) {
                 fieldObj = createFieldObject(field, clazz);
                 break;
@@ -984,7 +984,7 @@ int dvmConvertPrimitiveValue(PrimitiveType srcType,
         case ItoF: *(float*) dstPtr = (float) (*(int*) srcPtr);         return 1;
         case JtoF: *(float*) dstPtr = (float) (*(long long*) srcPtr);   return 1;
         case bad: {
-            LOGV("illegal primitive conversion: '%s' to '%s'\n",
+            LOGV("illegal primitive conversion: '%s' to '%s'",
                     dexGetPrimitiveTypeDescriptor(srcType),
                     dexGetPrimitiveTypeDescriptor(dstType));
             return -1;
@@ -1013,7 +1013,7 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
 
         srcType = getBoxedType(arg);
         if (srcType == PRIM_NOT) {     // didn't pass a boxed primitive in
-            LOGVV("conv arg: type '%s' not boxed primitive\n",
+            LOGVV("conv arg: type '%s' not boxed primitive",
                 arg->clazz->descriptor);
             return -1;
         }
@@ -1029,7 +1029,7 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
             *destPtr = (s4) arg;
             retVal = 1;
         } else {
-            LOGVV("Arg %p (%s) not compatible with %s\n",
+            LOGVV("Arg %p (%s) not compatible with %s",
                 arg, arg->clazz->descriptor, type->descriptor);
             retVal = -1;
         }
@@ -1070,7 +1070,7 @@ DataObject* dvmBoxPrimitive(JValue value, ClassObject* returnType)
 
     wrapperClass = dvmFindSystemClass(classDescriptor);
     if (wrapperClass == NULL) {
-        LOGW("Unable to find '%s'\n", classDescriptor);
+        LOGW("Unable to find '%s'", classDescriptor);
         assert(dvmCheckException(dvmThreadSelf()));
         return NULL;
     }
@@ -1109,7 +1109,7 @@ bool dvmUnboxPrimitive(Object* value, ClassObject* returnType,
 
     if (typeIndex == PRIM_NOT) {
         if (value != NULL && !dvmInstanceof(value->clazz, returnType)) {
-            LOGD("wrong object type: %s %s\n",
+            LOGD("wrong object type: %s %s",
                 value->clazz->descriptor, returnType->descriptor);
             return false;
         }
@@ -1129,7 +1129,7 @@ bool dvmUnboxPrimitive(Object* value, ClassObject* returnType,
     if (dvmConvertPrimitiveValue(valueIndex, typeIndex,
             (s4*) ((DataObject*)value)->instanceData, (s4*)pResult) < 0)
     {
-        LOGV("Prim conversion failed\n");
+        LOGV("Prim conversion failed");
         return false;
     }
 
@@ -1165,7 +1165,7 @@ ClassObject* dvmGetBoxedReturnType(const Method* meth)
     default: {
         /* should not have passed verification */
         char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-        LOGE("Bad return type in signature '%s'\n", desc);
+        LOGE("Bad return type in signature '%s'", desc);
         free(desc);
         dvmThrowInternalError(NULL);
         return NULL;

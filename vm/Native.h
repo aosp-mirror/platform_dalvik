@@ -62,7 +62,6 @@ u4 dvmPlatformInvokeHints(const DexProto* proto);
  * ("libjpeg.so").  Returns a newly-allocated string.
  */
 char* dvmCreateSystemLibraryName(char* libName);
-//void dvmLoadNativeLibrary(StringObject* libNameObj, Object* classLoader);
 bool dvmLoadNativeCode(const char* fileName, Object* classLoader,
         char** detail);
 
@@ -84,7 +83,6 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
  */
 void dvmUnregisterJNINativeMethods(ClassObject* clazz);
 
-//#define GET_ARG_LONG(_args, _elem)          (*(s8*)(&(_args)[_elem]))
 #define GET_ARG_LONG(_args, _elem)          dvmGetArgLong(_args, _elem)
 
 /*
@@ -98,17 +96,9 @@ void dvmUnregisterJNINativeMethods(ClassObject* clazz);
  */
 INLINE s8 dvmGetArgLong(const u4* args, int elem)
 {
-#if 0
-    union { u4 parts[2]; s8 whole; } conv;
-    conv.parts[0] = args[elem];
-    conv.parts[1] = args[elem+1];
-    return conv.whole;
-#else
-    /* with gcc's optimizer, memcpy() turns into simpler assignments */
     s8 val;
-    memcpy(&val, &args[elem], 8);
+    memcpy(&val, &args[elem], sizeof(val));
     return val;
-#endif
 }
 
 /*

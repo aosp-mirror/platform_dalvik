@@ -221,7 +221,7 @@ struct Object {
  * void DVM_OBJECT_INIT(Object *obj, ClassObject *clazz_)
  */
 #define DVM_OBJECT_INIT(obj, clazz_) \
-    dvmSetFieldObject((Object *)obj, OFFSETOF_MEMBER(Object, clazz), (Object *)clazz_)
+    dvmSetFieldObject(obj, OFFSETOF_MEMBER(Object, clazz), clazz_)
 
 /*
  * Data objects have an Object header followed by their instance data.
@@ -242,9 +242,7 @@ struct DataObject : Object {
  * Currently this is just equal to DataObject, and we pull the fields out
  * like we do for any other object.
  */
-struct StringObject {
-    Object          obj;                /* MUST be first item */
-
+struct StringObject : Object {
     /* variable #of u4 slots; u8 uses 2 slots */
     u4              instanceData[1];
 };
@@ -296,17 +294,14 @@ struct Field {
 /*
  * Static field.
  */
-struct StaticField {
-    Field           field;          /* MUST be first item */
+struct StaticField : Field {
     JValue          value;          /* initially set from DEX for primitives */
 };
 
 /*
  * Instance field.
  */
-struct InstField {
-    Field           field;          /* MUST be first item */
-
+struct InstField : Field {
     /*
      * This field indicates the byte offset from the beginning of the
      * (Object *) to the actual instance data; e.g., byteOffset==0 is
@@ -337,9 +332,7 @@ struct InstField {
  * instance) used in Dalvik works out pretty well.  The only time it's
  * annoying is when enumerating or searching for things with reflection.
  */
-struct ClassObject {
-    Object          obj;                /* MUST be first item */
-
+struct ClassObject : Object {
     /* leave space for instance data; we could access fields directly if we
        freeze the definition of java/lang/Class */
     u4              instanceData[CLASS_FIELD_SLOTS];
@@ -600,7 +593,7 @@ const Method* dvmGetVirtualizedMethod(const ClassObject* clazz,
 /*
  * Get the source file associated with a method.
  */
-const char* dvmGetMethodSourceFile(const Method* meth);
+extern "C" const char* dvmGetMethodSourceFile(const Method* meth);
 
 /*
  * Find a field within a class.  The superclass is not searched.

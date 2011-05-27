@@ -178,7 +178,7 @@ bool dvmCompilerSetupCodeCache(void)
                              MAP_PRIVATE , fd, 0);
     close(fd);
     if (gDvmJit.codeCache == MAP_FAILED) {
-        LOGE("Failed to mmap the JIT code cache: %s\n", strerror(errno));
+        LOGE("Failed to mmap the JIT code cache: %s", strerror(errno));
         return false;
     }
 
@@ -418,7 +418,7 @@ static bool compilerThreadStartup(void)
     pJitTable = (JitEntry*)
                 calloc(gDvmJit.jitTableSize, sizeof(*pJitTable));
     if (!pJitTable) {
-        LOGE("jit table allocation failed\n");
+        LOGE("jit table allocation failed");
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
     }
@@ -432,7 +432,7 @@ static bool compilerThreadStartup(void)
      */
     pJitProfTable = (unsigned char *)malloc(JIT_PROF_SIZE);
     if (!pJitProfTable) {
-        LOGE("jit prof table allocation failed\n");
+        LOGE("jit prof table allocation failed");
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
     }
@@ -447,7 +447,7 @@ static bool compilerThreadStartup(void)
     pJitTraceProfCounters = (JitTraceProfCounters*)
                              calloc(1, sizeof(*pJitTraceProfCounters));
     if (!pJitTraceProfCounters) {
-        LOGE("jit trace prof counters allocation failed\n");
+        LOGE("jit trace prof counters allocation failed");
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
     }
@@ -720,7 +720,7 @@ static void *compilerThreadStart(void *arg)
     dvmChangeStatus(NULL, THREAD_RUNNING);
 
     if (gDvm.verboseShutdown)
-        LOGD("Compiler thread shutting down\n");
+        LOGD("Compiler thread shutting down");
     return NULL;
 }
 
@@ -773,9 +773,9 @@ void dvmCompilerShutdown(void)
         dvmUnlockMutex(&gDvmJit.compilerLock);
 
         if (pthread_join(gDvmJit.compilerHandle, &threadReturn) != 0)
-            LOGW("Compiler thread join failed\n");
+            LOGW("Compiler thread join failed");
         else if (gDvm.verboseShutdown)
-            LOGD("Compiler thread has shut down\n");
+            LOGD("Compiler thread has shut down");
     }
 
     /* Break loops within the translation cache */

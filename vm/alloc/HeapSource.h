@@ -35,11 +35,6 @@ enum HeapSourceValueSpec {
     HS_OBJECTS_ALLOCATED
 };
 
-enum HeapSourcePtrFlag {
-    HS_CONTAINS,    // identical to dvmHeapSourceContains()
-    HS_ALLOCATED_IN_ZYGOTE
-};
-
 /*
  * Initializes the heap source; must be called before any other
  * dvmHeapSource*() functions.
@@ -133,11 +128,6 @@ bool dvmHeapSourceContains(const void *ptr);
  * Returns true iff <ptr> is within the address space managed by heap source.
  */
 bool dvmHeapSourceContainsAddress(const void *ptr);
-
-/*
- * Returns the value of the requested flag.
- */
-bool dvmHeapSourceGetPtrFlag(const void *ptr, HeapSourcePtrFlag flag);
 
 /*
  * Returns the number of usable bytes in an allocated chunk; the size

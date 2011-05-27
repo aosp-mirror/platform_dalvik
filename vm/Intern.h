@@ -23,7 +23,7 @@ bool dvmStringInternStartup(void);
 void dvmStringInternShutdown(void);
 StringObject* dvmLookupInternedString(StringObject* strObj);
 StringObject* dvmLookupImmortalInternedString(StringObject* strObj);
-bool dvmIsWeakInternedString(const StringObject* strObj);
+bool dvmIsWeakInternedString(StringObject* strObj);
 void dvmGcDetachDeadInternedStrings(int (*isUnmarkedObject)(void *));
 
 #endif /*_DALVIK_INTERN*/

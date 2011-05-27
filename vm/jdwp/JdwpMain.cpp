@@ -62,16 +62,16 @@ JdwpState* dvmJdwpStartup(const JdwpStartupParams* pParams)
 
     switch (pParams->transport) {
     case kJdwpTransportSocket:
-        // LOGD("prepping for JDWP over TCP\n");
+        // LOGD("prepping for JDWP over TCP");
         state->transport = dvmJdwpSocketTransport();
         break;
     case kJdwpTransportAndroidAdb:
-        // LOGD("prepping for JDWP over ADB\n");
+        // LOGD("prepping for JDWP over ADB");
         state->transport = dvmJdwpAndroidAdbTransport();
         /* TODO */
         break;
     default:
-        LOGE("Unknown transport %d\n", pParams->transport);
+        LOGE("Unknown transport %d", pParams->transport);
         assert(false);
         goto fail;
     }
@@ -124,11 +124,11 @@ JdwpState* dvmJdwpStartup(const JdwpStartupParams* pParams)
         dvmChangeStatus(NULL, THREAD_RUNNING);
 
         if (!dvmJdwpIsActive(state)) {
-            LOGE("JDWP connection failed\n");
+            LOGE("JDWP connection failed");
             goto fail;
         }
 
-        LOGI("JDWP connected\n");
+        LOGI("JDWP connected");
 
         /*
          * Ordinarily we would pause briefly to allow the debugger to set
@@ -163,7 +163,7 @@ void dvmJdwpResetState(JdwpState* state)
      * mid-request, though, we could see this.
      */
     if (state->eventThreadId != 0) {
-        LOGW("WARNING: resetting state while event in progress\n");
+        LOGW("WARNING: resetting state while event in progress");
         assert(false);
     }
 }
@@ -186,18 +186,18 @@ void dvmJdwpShutdown(JdwpState* state)
          * Close down the network to inspire the thread to halt.
          */
         if (gDvm.verboseShutdown)
-            LOGD("JDWP shutting down net...\n");
+            LOGD("JDWP shutting down net...");
         dvmJdwpNetShutdown(state);
 
         if (state->debugThreadStarted) {
             state->run = false;
             if (pthread_join(state->debugThreadHandle, &threadReturn) != 0) {
-                LOGW("JDWP thread join failed\n");
+                LOGW("JDWP thread join failed");
             }
         }
 
         if (gDvm.verboseShutdown)
-            LOGD("JDWP freeing netstate...\n");
+            LOGD("JDWP freeing netstate...");
         dvmJdwpNetFree(state);
         state->netState = NULL;
     }
@@ -223,7 +223,7 @@ static void* jdwpThreadStart(void* arg)
 {
     JdwpState* state = (JdwpState*) arg;
 
-    LOGV("JDWP: thread running\n");
+    LOGV("JDWP: thread running");
 
     /*
      * Finish initializing "state", then notify the creating thread that
@@ -282,7 +282,7 @@ static void* jdwpThreadStart(void* arg)
         while (true) {
             // sanity check -- shouldn't happen?
             if (dvmThreadSelf()->status != THREAD_VMWAIT) {
-                LOGE("JDWP thread no longer in VMWAIT (now %d); resetting\n",
+                LOGE("JDWP thread no longer in VMWAIT (now %d); resetting",
                     dvmThreadSelf()->status);
                 dvmDbgThreadWaiting();
             }
@@ -332,7 +332,7 @@ static void* jdwpThreadStart(void* arg)
     /* back to running, for thread shutdown */
     dvmDbgThreadRunning();
 
-    LOGV("JDWP: thread exiting\n");
+    LOGV("JDWP: thread exiting");
     return NULL;
 }
 
@@ -394,7 +394,7 @@ s8 dvmJdwpGetNowMsec()
 s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
 {
     if (!gDvm.debuggerActive) {
-        LOGD("dvmJdwpLastDebuggerActivity: no active debugger\n");
+        LOGD("dvmJdwpLastDebuggerActivity: no active debugger");
         return -1;
     }
 
@@ -402,7 +402,7 @@ s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
 
     /* initializing or in the middle of something? */
     if (last == 0) {
-        LOGV("+++ last=busy\n");
+        LOGV("+++ last=busy");
         return 0;
     }
 
@@ -410,6 +410,6 @@ s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
     s8 now = dvmJdwpGetNowMsec();
     assert(now > last);
 
-    LOGV("+++ debugger interval=%lld\n", now - last);
+    LOGV("+++ debugger interval=%lld", now - last);
     return now - last;
 }

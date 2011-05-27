@@ -184,7 +184,7 @@ void dvmPrintDebugMessage(const DebugOutputTarget* target, const char* format,
         vfprintf(target->data.file.fp, format, args);
         break;
     default:
-        LOGE("unexpected 'which' %d\n", target->which);
+        LOGE("unexpected 'which' %d", target->which);
         break;
     }
 
@@ -488,7 +488,7 @@ bool dvmIterativeSleep(int iteration, int maxTotalSleep, u8 relStartTime)
      */
     curTime = dvmGetRelativeTimeUsec();
     if (curTime >= relStartTime + maxTotalSleep) {
-        LOGVV("exsl: sleep exceeded (start=%llu max=%d now=%llu)\n",
+        LOGVV("exsl: sleep exceeded (start=%llu max=%d now=%llu)",
             relStartTime, maxTotalSleep, curTime);
         return false;
     }
@@ -507,16 +507,16 @@ bool dvmIterativeSleep(int iteration, int maxTotalSleep, u8 relStartTime)
     assert(curDelay > 0);
 
     if (curTime + curDelay >= relStartTime + maxTotalSleep) {
-        LOGVV("exsl: reduced delay from %d to %d\n",
+        LOGVV("exsl: reduced delay from %d to %d",
             curDelay, (int) ((relStartTime + maxTotalSleep) - curTime));
         curDelay = (int) ((relStartTime + maxTotalSleep) - curTime);
     }
 
     if (iteration == 0) {
-        LOGVV("exsl: yield\n");
+        LOGVV("exsl: yield");
         sched_yield();
     } else {
-        LOGVV("exsl: sleep for %d\n", curDelay);
+        LOGVV("exsl: sleep for %d", curDelay);
         usleep(curDelay);
     }
     return true;
@@ -537,11 +537,11 @@ bool dvmSetCloseOnExec(int fd)
      */
     flags = fcntl(fd, F_GETFD);
     if (flags < 0) {
-        LOGW("Unable to get fd flags for fd %d\n", fd);
+        LOGW("Unable to get fd flags for fd %d", fd);
         return false;
     }
     if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) {
-        LOGW("Unable to set close-on-exec for fd %d\n", fd);
+        LOGW("Unable to set close-on-exec for fd %d", fd);
         return false;
     }
     return true;
@@ -637,7 +637,7 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
     sprintf(nameBuf, "/proc/self/task/%d/stat", (int) tid);
     fd = open(nameBuf, O_RDONLY);
     if (fd < 0) {
-        LOGV("Unable to open '%s': %s\n", nameBuf, strerror(errno));
+        LOGV("Unable to open '%s': %s", nameBuf, strerror(errno));
         return false;
     }
 
@@ -645,7 +645,7 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
     int cc = read(fd, lineBuf, sizeof(lineBuf)-1);
     if (cc <= 0) {
         const char* msg = (cc == 0) ? "unexpected EOF" : strerror(errno);
-        LOGI("Unable to read '%s': %s\n", nameBuf, msg);
+        LOGI("Unable to read '%s': %s", nameBuf, msg);
         close(fd);
         return false;
     }
@@ -674,7 +674,7 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
     char* endp;
     pData->utime = strtoul(cp+1, &endp, 10);
     if (endp == cp+1)
-        LOGI("Warning: strtoul failed on utime ('%.30s...')\n", cp);
+        LOGI("Warning: strtoul failed on utime ('%.30s...')", cp);
 
     cp = strchr(cp+1, ' ');
     if (cp == NULL)
@@ -682,7 +682,7 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
 
     pData->stime = strtoul(cp+1, &endp, 10);
     if (endp == cp+1)
-        LOGI("Warning: strtoul failed on stime ('%.30s...')\n", cp);
+        LOGI("Warning: strtoul failed on stime ('%.30s...')", cp);
 
     /*
      * Skip more stuff we don't care about.
@@ -698,12 +698,12 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
      */
     pData->processor = strtol(cp+1, &endp, 10);
     if (endp == cp+1)
-        LOGI("Warning: strtoul failed on processor ('%.30s...')\n", cp);
+        LOGI("Warning: strtoul failed on processor ('%.30s...')", cp);
 
     return true;
 
 parse_fail:
-    LOGI("stat parse failed (%s)\n", lineBuf);
+    LOGI("stat parse failed (%s)", lineBuf);
     return false;
 }
 

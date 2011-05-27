@@ -8,9 +8,6 @@ void dvmInterpretPortable(Thread* self)
 #if defined(EASY_GDB)
     StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->interpSave.curFrame);
 #endif
-#if defined(WITH_TRACKREF_CHECKS)
-    int debugTrackedRefStart = self->interpSave.debugTrackedRefStart;
-#endif
     DvmDex* methodClassDex;     // curMethod->clazz->pDvmDex
     JValue retval;
 
@@ -39,7 +36,7 @@ void dvmInterpretPortable(Thread* self)
 
     methodClassDex = curMethod->clazz->pDvmDex;
 
-    LOGVV("threadid=%d: %s.%s pc=0x%x fp=%p\n",
+    LOGVV("threadid=%d: %s.%s pc=%#x fp=%p",
         self->threadId, curMethod->clazz->descriptor, curMethod->name,
         pc - curMethod->insns, fp);
 

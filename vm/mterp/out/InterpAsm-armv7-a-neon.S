@@ -27380,7 +27380,7 @@ strPrintLong:
 .LstrSqueak:
     .asciz  "<%d>"
 .LstrPrintHex:
-    .asciz  "<0x%x>"
+    .asciz  "<%#x>"
 .LstrPrintLong:
     .asciz  "<%lld>"
 

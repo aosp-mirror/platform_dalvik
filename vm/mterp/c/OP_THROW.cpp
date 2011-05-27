@@ -14,7 +14,7 @@ HANDLE_OPCODE(OP_THROW /*vAA*/)
         obj = (Object*) GET_REGISTER(vsrc1);
         if (!checkForNull(obj)) {
             /* will throw a null pointer exception */
-            LOGVV("Bad exception\n");
+            LOGVV("Bad exception");
         } else {
             /* use the requested exception */
             dvmSetException(self, obj);

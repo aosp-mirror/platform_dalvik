@@ -19,7 +19,7 @@ HANDLE_OPCODE(OP_MONITOR_EXIT /*vAA*/)
             ADJUST_PC(1);           /* monitor-exit width is 1 */
             GOTO_exceptionThrown();
         }
-        ILOGV("+ unlocking %p %s\n", obj, obj->clazz->descriptor);
+        ILOGV("+ unlocking %p %s", obj, obj->clazz->descriptor);
         if (!dvmUnlockObject(self, obj)) {
             assert(dvmCheckException(self));
             ADJUST_PC(1);

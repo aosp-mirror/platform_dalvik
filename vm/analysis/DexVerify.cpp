@@ -42,19 +42,19 @@ bool dvmVerifyClass(ClassObject* clazz)
     int i;
 
     if (dvmIsClassVerified(clazz)) {
-        LOGD("Ignoring duplicate verify attempt on %s\n", clazz->descriptor);
+        LOGD("Ignoring duplicate verify attempt on %s", clazz->descriptor);
         return true;
     }
 
     for (i = 0; i < clazz->directMethodCount; i++) {
         if (!verifyMethod(&clazz->directMethods[i])) {
-            LOG_VFY("Verifier rejected class %s\n", clazz->descriptor);
+            LOG_VFY("Verifier rejected class %s", clazz->descriptor);
             return false;
         }
     }
     for (i = 0; i < clazz->virtualMethodCount; i++) {
         if (!verifyMethod(&clazz->virtualMethods[i])) {
-            LOG_VFY("Verifier rejected class %s\n", clazz->descriptor);
+            LOG_VFY("Verifier rejected class %s", clazz->descriptor);
             return false;
         }
     }
@@ -94,11 +94,11 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
     for (i = 0; i < (int) insnCount; /**/) {
         size_t width = dexGetWidthFromInstruction(insns);
         if (width == 0) {
-            LOG_VFY_METH(meth, "VFY: invalid instruction (0x%04x)\n", *insns);
+            LOG_VFY_METH(meth, "VFY: invalid instruction (0x%04x)", *insns);
             goto bail;
         } else if (width > 65535) {
             LOG_VFY_METH(meth,
-                "VFY: warning: unusually large instr width (%d)\n", width);
+                "VFY: warning: unusually large instr width (%d)", width);
         }
 
         Opcode opcode = dexOpcodeFromCodeUnit(*insns);
@@ -112,7 +112,7 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
         insns += width;
     }
     if (i != (int) vdata->insnsSize) {
-        LOG_VFY_METH(meth, "VFY: code did not end where expected (%d vs. %d)\n",
+        LOG_VFY_METH(meth, "VFY: code did not end where expected (%d vs. %d)",
             i, dvmGetMethodInsnsSize(meth));
         goto bail;
     }
@@ -156,14 +156,14 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
 
         if ((start >= end) || (start >= insnsSize) || (end > insnsSize)) {
             LOG_VFY_METH(meth,
-                "VFY: bad exception entry: startAddr=%d endAddr=%d (size=%d)\n",
+                "VFY: bad exception entry: startAddr=%d endAddr=%d (size=%d)",
                 start, end, insnsSize);
             return false;
         }
 
         if (dvmInsnGetWidth(insnFlags, start) == 0) {
             LOG_VFY_METH(meth,
-                "VFY: 'try' block starts inside an instruction (%d)\n",
+                "VFY: 'try' block starts inside an instruction (%d)",
                 start);
             return false;
         }
@@ -194,7 +194,7 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
             addr = handler->address;
             if (dvmInsnGetWidth(insnFlags, addr) == 0) {
                 LOG_VFY_METH(meth,
-                    "VFY: exception handler starts at bad address (%d)\n",
+                    "VFY: exception handler starts at bad address (%d)",
                     addr);
                 return false;
             }
@@ -261,7 +261,7 @@ static bool verifyMethod(Method* meth)
     if (vdata.insnsSize == 0) {
         if (!dvmIsNativeMethod(meth) && !dvmIsAbstractMethod(meth)) {
             LOG_VFY_METH(meth,
-                "VFY: zero-length code in concrete non-native method\n");
+                "VFY: zero-length code in concrete non-native method");
             goto bail;
         }
 
@@ -273,7 +273,7 @@ static bool verifyMethod(Method* meth)
      * sure that ins <= registers.
      */
     if (meth->insSize > meth->registersSize) {
-        LOG_VFY_METH(meth, "VFY: bad register counts (ins=%d regs=%d)\n",
+        LOG_VFY_METH(meth, "VFY: bad register counts (ins=%d regs=%d)",
             meth->insSize, meth->registersSize);
         goto bail;
     }
@@ -324,7 +324,7 @@ static bool verifyMethod(Method* meth)
      * that's so rare that there's little point in checking.
      */
     if (!dvmVerifyCodeFlow(&vdata)) {
-        //LOGD("+++ %s failed code flow\n", meth->name);
+        //LOGD("+++ %s failed code flow", meth->name);
         goto bail;
     }
 
@@ -359,7 +359,7 @@ static bool checkArrayData(const Method* meth, u4 curOffset)
         curOffset + offsetToArrayData + 2 >= insnCount)
     {
         LOG_VFY("VFY: invalid array data start: at %d, data offset %d, "
-                "count %d\n",
+                "count %d",
             curOffset, offsetToArrayData, insnCount);
         return false;
     }
@@ -369,7 +369,7 @@ static bool checkArrayData(const Method* meth, u4 curOffset)
 
     /* make sure the table is 32-bit aligned */
     if ((((u4) arrayData) & 0x03) != 0) {
-        LOG_VFY("VFY: unaligned array data table: at %d, data offset %d\n",
+        LOG_VFY("VFY: unaligned array data table: at %d, data offset %d",
             curOffset, offsetToArrayData);
         return false;
     }
@@ -382,7 +382,7 @@ static bool checkArrayData(const Method* meth, u4 curOffset)
     /* make sure the end of the switch is in range */
     if (curOffset + offsetToArrayData + tableSize > insnCount) {
         LOG_VFY("VFY: invalid array data end: at %d, data offset %d, end %d, "
-                "count %d\n",
+                "count %d",
             curOffset, offsetToArrayData,
             curOffset + offsetToArrayData + tableSize, insnCount);
         return false;
@@ -402,14 +402,14 @@ static bool checkNewInstance(const DvmDex* pDvmDex, u4 idx)
     const char* classDescriptor;
 
     if (idx >= pDvmDex->pHeader->typeIdsSize) {
-        LOG_VFY("VFY: bad type index %d (max %d)\n",
+        LOG_VFY("VFY: bad type index %d (max %d)",
             idx, pDvmDex->pHeader->typeIdsSize);
         return false;
     }
 
     classDescriptor = dexStringByTypeIdx(pDvmDex->pDexFile, idx);
     if (classDescriptor[0] != 'L') {
-        LOG_VFY("VFY: can't call new-instance on type '%s'\n",
+        LOG_VFY("VFY: can't call new-instance on type '%s'",
             classDescriptor);
         return false;
     }
@@ -427,7 +427,7 @@ static bool checkNewArray(const DvmDex* pDvmDex, u4 idx)
     const char* classDescriptor;
 
     if (idx >= pDvmDex->pHeader->typeIdsSize) {
-        LOG_VFY("VFY: bad type index %d (max %d)\n",
+        LOG_VFY("VFY: bad type index %d (max %d)",
             idx, pDvmDex->pHeader->typeIdsSize);
         return false;
     }
@@ -441,12 +441,12 @@ static bool checkNewArray(const DvmDex* pDvmDex, u4 idx)
 
     if (bracketCount == 0) {
         /* The given class must be an array type. */
-        LOG_VFY("VFY: can't new-array class '%s' (not an array)\n",
+        LOG_VFY("VFY: can't new-array class '%s' (not an array)",
             classDescriptor);
         return false;
     } else if (bracketCount > 255) {
         /* It is illegal to create an array of more than 255 dimensions. */
-        LOG_VFY("VFY: can't new-array class '%s' (exceeds limit)\n",
+        LOG_VFY("VFY: can't new-array class '%s' (exceeds limit)",
             classDescriptor);
         return false;
     }
@@ -461,7 +461,7 @@ static bool checkNewArray(const DvmDex* pDvmDex, u4 idx)
 static bool checkTypeIndex(const DvmDex* pDvmDex, u4 idx)
 {
     if (idx >= pDvmDex->pHeader->typeIdsSize) {
-        LOG_VFY("VFY: bad type index %d (max %d)\n",
+        LOG_VFY("VFY: bad type index %d (max %d)",
             idx, pDvmDex->pHeader->typeIdsSize);
         return false;
     }
@@ -475,7 +475,7 @@ static bool checkTypeIndex(const DvmDex* pDvmDex, u4 idx)
 static bool checkFieldIndex(const DvmDex* pDvmDex, u4 idx)
 {
     if (idx >= pDvmDex->pHeader->fieldIdsSize) {
-        LOG_VFY("VFY: bad field index %d (max %d)\n",
+        LOG_VFY("VFY: bad field index %d (max %d)",
             idx, pDvmDex->pHeader->fieldIdsSize);
         return false;
     }
@@ -489,7 +489,7 @@ static bool checkFieldIndex(const DvmDex* pDvmDex, u4 idx)
 static bool checkMethodIndex(const DvmDex* pDvmDex, u4 idx)
 {
     if (idx >= pDvmDex->pHeader->methodIdsSize) {
-        LOG_VFY("VFY: bad method index %d (max %d)\n",
+        LOG_VFY("VFY: bad method index %d (max %d)",
             idx, pDvmDex->pHeader->methodIdsSize);
         return false;
     }
@@ -502,7 +502,7 @@ static bool checkMethodIndex(const DvmDex* pDvmDex, u4 idx)
 static bool checkStringIndex(const DvmDex* pDvmDex, u4 idx)
 {
     if (idx >= pDvmDex->pHeader->stringIdsSize) {
-        LOG_VFY("VFY: bad string index %d (max %d)\n",
+        LOG_VFY("VFY: bad string index %d (max %d)",
             idx, pDvmDex->pHeader->stringIdsSize);
         return false;
     }
@@ -515,7 +515,7 @@ static bool checkStringIndex(const DvmDex* pDvmDex, u4 idx)
 static bool checkRegisterIndex(const Method* meth, u4 idx)
 {
     if (idx >= meth->registersSize) {
-        LOG_VFY("VFY: register index out of range (%d >= %d)\n",
+        LOG_VFY("VFY: register index out of range (%d >= %d)",
             idx, meth->registersSize);
         return false;
     }
@@ -528,7 +528,7 @@ static bool checkRegisterIndex(const Method* meth, u4 idx)
 static bool checkWideRegisterIndex(const Method* meth, u4 idx)
 {
     if (idx+1 >= meth->registersSize) {
-        LOG_VFY("VFY: wide register index out of range (%d+1 >= %d)\n",
+        LOG_VFY("VFY: wide register index out of range (%d+1 >= %d)",
             idx, meth->registersSize);
         return false;
     }
@@ -553,14 +553,14 @@ static bool checkVarargRegs(const Method* meth,
     unsigned int idx;
 
     if (pDecInsn->vA > 5) {
-        LOG_VFY("VFY: invalid arg count (%d) in non-range invoke)\n",
+        LOG_VFY("VFY: invalid arg count (%d) in non-range invoke)",
             pDecInsn->vA);
         return false;
     }
 
     for (idx = 0; idx < pDecInsn->vA; idx++) {
         if (pDecInsn->arg[idx] > registersSize) {
-            LOG_VFY("VFY: invalid reg index (%d) in non-range invoke (> %d)\n",
+            LOG_VFY("VFY: invalid reg index (%d) in non-range invoke (> %d)",
                 pDecInsn->arg[idx], registersSize);
             return false;
         }
@@ -585,7 +585,7 @@ static bool checkVarargRangeRegs(const Method* meth,
      * so there's no risk of integer overflow when adding them here.
      */
     if (pDecInsn->vA + pDecInsn->vC > registersSize) {
-        LOG_VFY("VFY: invalid reg index %d+%d in range invoke (> %d)\n",
+        LOG_VFY("VFY: invalid reg index %d+%d in range invoke (> %d)",
             pDecInsn->vA, pDecInsn->vC, registersSize);
         return false;
     }
@@ -619,7 +619,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
         curOffset + offsetToSwitch + 2 >= insnCount)
     {
         LOG_VFY("VFY: invalid switch start: at %d, switch offset %d, "
-                "count %d\n",
+                "count %d",
             curOffset, offsetToSwitch, insnCount);
         return false;
     }
@@ -629,7 +629,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
 
     /* make sure the table is 32-bit aligned */
     if ((((u4) switchInsns) & 0x03) != 0) {
-        LOG_VFY("VFY: unaligned switch table: at %d, switch offset %d\n",
+        LOG_VFY("VFY: unaligned switch table: at %d, switch offset %d",
             curOffset, offsetToSwitch);
         return false;
     }
@@ -650,7 +650,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
     tableSize = offsetToTargets + switchCount*2;
 
     if (switchInsns[0] != expectedSignature) {
-        LOG_VFY("VFY: wrong signature for switch table (0x%04x, wanted 0x%04x)\n",
+        LOG_VFY("VFY: wrong signature for switch table (0x%04x, wanted 0x%04x)",
             switchInsns[0], expectedSignature);
         return false;
     }
@@ -658,7 +658,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
     /* make sure the end of the switch is in range */
     if (curOffset + offsetToSwitch + tableSize > (u4) insnCount) {
         LOG_VFY("VFY: invalid switch end: at %d, switch offset %d, end %d, "
-                "count %d\n",
+                "count %d",
             curOffset, offsetToSwitch, curOffset + offsetToSwitch + tableSize,
             insnCount);
         return false;
@@ -674,7 +674,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
             s4 key = (s4) switchInsns[offsetToKeys + targ*2] |
                     (s4) (switchInsns[offsetToKeys + targ*2 +1] << 16);
             if (key <= lastKey) {
-                LOG_VFY("VFY: invalid packed switch: last key=%d, this=%d\n",
+                LOG_VFY("VFY: invalid packed switch: last key=%d, this=%d",
                     lastKey, key);
                 return false;
             }
@@ -692,7 +692,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
         if (absOffset < 0 || absOffset >= (s4)insnCount ||
             !dvmInsnIsOpcode(insnFlags, absOffset))
         {
-            LOG_VFY("VFY: invalid switch target %d (-> 0x%x) at 0x%x[%d]\n",
+            LOG_VFY("VFY: invalid switch target %d (-> %#x) at %#x[%d]",
                 offset, absOffset, curOffset, targ);
             return false;
         }
@@ -726,7 +726,7 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
         return false;
 
     if (!selfOkay && offset == 0) {
-        LOG_VFY_METH(meth, "VFY: branch offset of zero not allowed at 0x%x\n",
+        LOG_VFY_METH(meth, "VFY: branch offset of zero not allowed at %#x",
             curOffset);
         return false;
     }
@@ -737,7 +737,7 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
      * it's unwise to depend on that.
      */
     if (((s8) curOffset + (s8) offset) != (s8)(curOffset + offset)) {
-        LOG_VFY_METH(meth, "VFY: branch target overflow 0x%x +%d\n",
+        LOG_VFY_METH(meth, "VFY: branch target overflow %#x +%d",
             curOffset, offset);
         return false;
     }
@@ -746,7 +746,7 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
         !dvmInsnIsOpcode(insnFlags, absOffset))
     {
         LOG_VFY_METH(meth,
-            "VFY: invalid branch target %d (-> 0x%x) at 0x%x\n",
+            "VFY: invalid branch target %d (-> %#x) at %#x",
             offset, absOffset, curOffset);
         return false;
     }
@@ -1435,7 +1435,7 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_UNUSED_EFFF:
         case OP_UNUSED_F0FF:
         case OP_UNUSED_F1FF:
-            LOGE("VFY: unexpected opcode %04x\n", decInsn.opcode);
+            LOGE("VFY: unexpected opcode %04x", decInsn.opcode);
             okay = false;
             break;
 
@@ -1446,7 +1446,7 @@ static bool verifyInstructions(VerifierData* vdata)
         }
 
         if (!okay) {
-            LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
+            LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x",
                 decInsn.opcode, codeOffset);
             return false;
         }
@@ -1473,7 +1473,7 @@ static bool verifyInstructions(VerifierData* vdata)
     /* make sure the last instruction ends at the end of the insn area */
     if (codeOffset != vdata->insnsSize) {
         LOG_VFY_METH(meth,
-            "VFY: code did not end when expected (end at %d, count %d)\n",
+            "VFY: code did not end when expected (end at %d, count %d)",
             codeOffset, vdata->insnsSize);
         return false;
     }

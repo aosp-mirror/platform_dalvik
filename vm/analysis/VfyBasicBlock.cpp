@@ -134,7 +134,7 @@ static bool addToPredecessor(VerifierData* vdata, VfyBasicBlock* curBlock,
          * trip over this.
          */
         LOGV("ODD: point set for targ=0x%04x (%p) already had block "
-             "fir=0x%04x (%p)\n",
+             "fir=0x%04x (%p)",
             targetIdx, targetBlock, curBlock->firstAddr, curBlock);
     }
 
@@ -228,7 +228,7 @@ static bool setPredecessors(VerifierData* vdata, VfyBasicBlock* curBlock,
 
     if (false) {
         if (dvmPointerSetGetCount(curBlock->predecessors) > 256) {
-            LOGI("Lots of preds at 0x%04x in %s.%s:%s\n", curIdx,
+            LOGI("Lots of preds at 0x%04x in %s.%s:%s", curIdx,
                 meth->clazz->descriptor, meth->name, meth->shorty);
         }
     }
@@ -245,7 +245,7 @@ static void dumpBasicBlocks(const VerifierData* vdata)
     unsigned int idx;
     int count;
 
-    LOGI("Basic blocks for %s.%s:%s\n", vdata->method->clazz->descriptor,
+    LOGI("Basic blocks for %s.%s:%s", vdata->method->clazz->descriptor,
         vdata->method->name, vdata->method->shorty);
     for (idx = 0; idx < vdata->insnsSize; idx++) {
         VfyBasicBlock* block = vdata->basicBlocks[idx];
@@ -309,7 +309,7 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
 
     bool verbose = false; //dvmWantVerboseVerification(meth);
     if (verbose) {
-        LOGI("Basic blocks for %s.%s:%s\n",
+        LOGI("Basic blocks for %s.%s:%s",
             meth->clazz->descriptor, meth->name, meth->shorty);
     }
 
@@ -382,7 +382,7 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
                 if (numHandlers <= kHandlerStackAllocSize) {
                     handlerList = handlerAddrs;
                 } else {
-                    LOGD("overflow, numHandlers=%d\n", numHandlers);
+                    LOGD("overflow, numHandlers=%d", numHandlers);
                     handlerListAlloc = (u4*) malloc(sizeof(u4) * numHandlers);
                     if (handlerListAlloc == NULL)
                         return false;
@@ -391,7 +391,7 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
                     handlerList = handlerListAlloc;
                 }
 
-                LOGV("+++ start=%x end=%x numHan=%d\n",
+                LOGV("+++ start=%x end=%x numHan=%d",
                     tryStart, tryEnd, numHandlers);
 
                 tryIndex++;
@@ -473,11 +473,11 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
             else
                 startEnd = "-";
 
-            LOGI("%04x: %c%c%s #%d\n", idx, tryc, btc, startEnd, debugBBIndex);
+            LOGI("%04x: %c%c%s #%d", idx, tryc, btc, startEnd, debugBBIndex);
 
             if (pTries != NULL && idx == tryStart) {
                 assert(numHandlers > 0);
-                LOGI("  EXC block: [%04x, %04x) %d:(%04x...)\n",
+                LOGI("  EXC block: [%04x, %04x) %d:(%04x...)",
                     tryStart, tryEnd, numHandlers, handlerList[0]);
             }
         }

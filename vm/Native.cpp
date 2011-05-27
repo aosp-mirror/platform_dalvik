@@ -92,13 +92,13 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
         /* resolution always gets the same answer, so no race here */
         IF_LOGVV() {
             char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-            LOGVV("+++ resolved native %s.%s %s, invoking\n",
+            LOGVV("+++ resolved native %s.%s %s, invoking",
                 clazz->descriptor, method->name, desc);
             free(desc);
         }
         if (dvmIsSynchronizedMethod(method)) {
-            LOGE("ERROR: internal-native can't be declared 'synchronized'\n");
-            LOGE("Failing on %s.%s\n", method->clazz->descriptor, method->name);
+            LOGE("ERROR: internal-native can't be declared 'synchronized'");
+            LOGE("Failing on %s.%s", method->clazz->descriptor, method->name);
             dvmAbort();     // harsh, but this is VM-internal problem
         }
         DalvikBridgeFunc dfunc = (DalvikBridgeFunc) infunc;
@@ -118,7 +118,7 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
 
     IF_LOGW() {
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGW("No implementation found for native %s.%s %s\n",
+        LOGW("No implementation found for native %s.%s %s",
             clazz->descriptor, method->name, desc);
         free(desc);
     }
@@ -184,7 +184,7 @@ static int hashcmpSharedLib(const void* ventry, const void* vnewEntry)
     const SharedLib* pLib = (const SharedLib*) ventry;
     const SharedLib* pNewLib = (const SharedLib*) vnewEntry;
 
-    LOGD("--- comparing %p '%s' %p '%s'\n",
+    LOGD("--- comparing %p '%s' %p '%s'",
         pLib, pLib->pathName, pNewLib, pNewLib->pathName);
     return strcmp(pLib->pathName, pNewLib->pathName);
 }
@@ -269,27 +269,27 @@ static bool checkOnLoadResult(SharedLib* pEntry)
          * Check this so we don't end up waiting for ourselves.  We need
          * to return "true" so the caller can continue.
          */
-        LOGI("threadid=%d: recursive native library load attempt (%s)\n",
+        LOGI("threadid=%d: recursive native library load attempt (%s)",
             self->threadId, pEntry->pathName);
         return true;
     }
 
-    LOGV("+++ retrieving %s OnLoad status\n", pEntry->pathName);
+    LOGV("+++ retrieving %s OnLoad status", pEntry->pathName);
     bool result;
 
     dvmLockMutex(&pEntry->onLoadLock);
     while (pEntry->onLoadResult == kOnLoadPending) {
-        LOGD("threadid=%d: waiting for %s OnLoad status\n",
+        LOGD("threadid=%d: waiting for %s OnLoad status",
             self->threadId, pEntry->pathName);
         ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         pthread_cond_wait(&pEntry->onLoadCond, &pEntry->onLoadLock);
         dvmChangeStatus(self, oldStatus);
     }
     if (pEntry->onLoadResult == kOnLoadOkay) {
-        LOGV("+++ earlier OnLoad(%s) okay\n", pEntry->pathName);
+        LOGV("+++ earlier OnLoad(%s) okay", pEntry->pathName);
         result = true;
     } else {
-        LOGV("+++ earlier OnLoad(%s) failed\n", pEntry->pathName);
+        LOGV("+++ earlier OnLoad(%s) failed", pEntry->pathName);
         result = false;
     }
     dvmUnlockMutex(&pEntry->onLoadLock);
@@ -327,7 +327,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
     verbose = verbose && !!strncmp(pathName, "/vendor", sizeof("/vendor")-1);
 
     if (verbose)
-        LOGD("Trying to load lib %s %p\n", pathName, classLoader);
+        LOGD("Trying to load lib %s %p", pathName, classLoader);
 
     *detail = NULL;
 
@@ -338,12 +338,12 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
     pEntry = findSharedLibEntry(pathName);
     if (pEntry != NULL) {
         if (pEntry->classLoader != classLoader) {
-            LOGW("Shared lib '%s' already opened by CL %p; can't open in %p\n",
+            LOGW("Shared lib '%s' already opened by CL %p; can't open in %p",
                 pathName, pEntry->classLoader, classLoader);
             return false;
         }
         if (verbose) {
-            LOGD("Shared lib '%s' already loaded in same CL %p\n",
+            LOGD("Shared lib '%s' already loaded in same CL %p",
                 pathName, classLoader);
         }
         if (!checkOnLoadResult(pEntry))
@@ -402,13 +402,13 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
     SharedLib* pActualEntry = addSharedLibEntry(pNewEntry);
 
     if (pNewEntry != pActualEntry) {
-        LOGI("WOW: we lost a race to add a shared lib (%s CL=%p)\n",
+        LOGI("WOW: we lost a race to add a shared lib (%s CL=%p)",
             pathName, classLoader);
         freeSharedLibEntry(pNewEntry);
         return checkOnLoadResult(pActualEntry);
     } else {
         if (verbose)
-            LOGD("Added shared lib %s %p\n", pathName, classLoader);
+            LOGD("Added shared lib %s %p", pathName, classLoader);
 
         bool result = true;
         void* vonLoad;
@@ -416,7 +416,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
 
         vonLoad = dlsym(handle, "JNI_OnLoad");
         if (vonLoad == NULL) {
-            LOGD("No JNI_OnLoad found in %s %p, skipping init\n",
+            LOGD("No JNI_OnLoad found in %s %p, skipping init",
                 pathName, classLoader);
         } else {
             /*
@@ -430,7 +430,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
 
             self->classLoaderOverride = classLoader;
             oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
-            LOGV("+++ calling JNI_OnLoad(%s)\n", pathName);
+            LOGV("+++ calling JNI_OnLoad(%s)", pathName);
             version = (*func)(gDvmJni.jniVm, NULL);
             dvmChangeStatus(self, oldStatus);
             self->classLoaderOverride = prevOverride;
@@ -438,7 +438,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
             if (version != JNI_VERSION_1_2 && version != JNI_VERSION_1_4 &&
                 version != JNI_VERSION_1_6)
             {
-                LOGW("JNI_OnLoad returned bad version (%d) in %s %p\n",
+                LOGW("JNI_OnLoad returned bad version (%d) in %s %p",
                     version, pathName, classLoader);
                 /*
                  * It's unwise to call dlclose() here, but we can mark it
@@ -451,7 +451,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
                  */
                 result = false;
             } else {
-                LOGV("+++ finished JNI_OnLoad %s\n", pathName);
+                LOGV("+++ finished JNI_OnLoad %s", pathName);
             }
         }
 
@@ -522,7 +522,7 @@ static void unregisterJNINativeMethods(Method* methods, size_t count)
          * anything.
          */
 
-        LOGD("Unregistering JNI method %s.%s:%s\n",
+        LOGD("Unregistering JNI method %s.%s:%s",
             meth->clazz->descriptor, meth->name, meth->shorty);
         dvmSetNativeFunc(meth, dvmResolveNativeMethod, NULL);
     }
@@ -579,7 +579,7 @@ static char* createJniNameString(const char* classDescriptor,
  */
 static char* mangleString(const char* str, int len)
 {
-    //LOGI("mangling '%s' %d\n", str, len);
+    //LOGI("mangling '%s' %d", str, len);
 
     assert(str[len] == '\0');
 
@@ -692,11 +692,11 @@ static int findMethodInLib(void* vlib, void* vmethod)
     int len;
 
     if (meth->clazz->classLoader != pLib->classLoader) {
-        LOGV("+++ not scanning '%s' for '%s' (wrong CL)\n",
+        LOGV("+++ not scanning '%s' for '%s' (wrong CL)",
             pLib->pathName, meth->name);
         return 0;
     } else
-        LOGV("+++ scanning '%s' for '%s'\n", pLib->pathName, meth->name);
+        LOGV("+++ scanning '%s' for '%s'", pLib->pathName, meth->name);
 
     /*
      * First, we try it without the signature.
@@ -710,7 +710,7 @@ static int findMethodInLib(void* vlib, void* vmethod)
     if (mangleCM == NULL)
         goto bail;
 
-    LOGV("+++ calling dlsym(%s)\n", mangleCM);
+    LOGV("+++ calling dlsym(%s)", mangleCM);
     func = dlsym(pLib->handle, mangleCM);
     if (func == NULL) {
         mangleSig =
@@ -724,13 +724,13 @@ static int findMethodInLib(void* vlib, void* vmethod)
 
         sprintf(mangleCMSig, "%s__%s", mangleCM, mangleSig);
 
-        LOGV("+++ calling dlsym(%s)\n", mangleCMSig);
+        LOGV("+++ calling dlsym(%s)", mangleCMSig);
         func = dlsym(pLib->handle, mangleCMSig);
         if (func != NULL) {
-            LOGV("Found '%s' with dlsym\n", mangleCMSig);
+            LOGV("Found '%s' with dlsym", mangleCMSig);
         }
     } else {
-        LOGV("Found '%s' with dlsym\n", mangleCM);
+        LOGV("Found '%s' with dlsym", mangleCM);
     }
 
 bail:
@@ -749,7 +749,7 @@ bail:
 static void* lookupSharedLibMethod(const Method* method)
 {
     if (gDvm.nativeLibs == NULL) {
-        LOGE("Unexpected init state: nativeLibs not ready\n");
+        LOGE("Unexpected init state: nativeLibs not ready");
         dvmAbort();
     }
     return (void*) dvmHashForeach(gDvm.nativeLibs, findMethodInLib,
@@ -773,7 +773,7 @@ static void appendValue(char type, const JValue value, char* buf, size_t n,
         if (value.b >= 0 && value.b < 10) {
             sprintf(p, "%d", value.b);
         } else {
-            sprintf(p, "0x%x (%d)", value.b, value.b);
+            sprintf(p, "%#x (%d)", value.b, value.b);
         }
         break;
     case 'C':
@@ -793,7 +793,7 @@ static void appendValue(char type, const JValue value, char* buf, size_t n,
         sprintf(p, "%d", value.i);
         break;
     case 'L':
-        sprintf(p, "0x%x", value.i);
+        sprintf(p, "%#x", value.i);
         break;
     case 'J':
         sprintf(p, "%lld", value.j);

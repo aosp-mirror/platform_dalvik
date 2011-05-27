@@ -69,7 +69,7 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
     pDvmDex->pResFields = (struct Field**)
         calloc(fieldCount, sizeof(struct Field*));
 
-    LOGV("+++ DEX %p: allocateAux %d+%d+%d+%d * 4 = %d bytes\n",
+    LOGV("+++ DEX %p: allocateAux %d+%d+%d+%d * 4 = %d bytes",
         pDvmDex, stringCount, classCount, methodCount, fieldCount,
         (stringCount + classCount + methodCount + fieldCount) * 4);
 
@@ -81,7 +81,7 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
         pDvmDex->pResFields == NULL ||
         pDvmDex->pInterfaceCache == NULL)
     {
-        LOGE("Alloc failure in allocateAuxStructures\n");
+        LOGE("Alloc failure in allocateAuxStructures");
         free(pDvmDex->pResStrings);
         free(pDvmDex->pResClasses);
         free(pDvmDex->pResMethods);
@@ -112,18 +112,18 @@ int dvmDexFileOpenFromFd(int fd, DvmDex** ppDvmDex)
         parseFlags |= kDexParseVerifyChecksum;
 
     if (lseek(fd, 0, SEEK_SET) < 0) {
-        LOGE("lseek rewind failed\n");
+        LOGE("lseek rewind failed");
         goto bail;
     }
 
     if (sysMapFileInShmemWritableReadOnly(fd, &memMap) != 0) {
-        LOGE("Unable to map file\n");
+        LOGE("Unable to map file");
         goto bail;
     }
 
     pDexFile = dexFileParse((u1*)memMap.addr, memMap.length, parseFlags);
     if (pDexFile == NULL) {
-        LOGE("DEX parse failed\n");
+        LOGE("DEX parse failed");
         sysReleaseShmem(&memMap);
         goto bail;
     }
@@ -167,7 +167,7 @@ int dvmDexFileOpenPartial(const void* addr, int len, DvmDex** ppDvmDex)
 
     pDexFile = dexFileParse((u1*)addr, len, parseFlags);
     if (pDexFile == NULL) {
-        LOGE("DEX parse failed\n");
+        LOGE("DEX parse failed");
         goto bail;
     }
     pDvmDex = allocateAuxStructures(pDexFile);
@@ -196,7 +196,7 @@ void dvmDexFileFree(DvmDex* pDvmDex)
 
     dexFileFree(pDvmDex->pDexFile);
 
-    LOGV("+++ DEX %p: freeing aux structs\n", pDvmDex);
+    LOGV("+++ DEX %p: freeing aux structs", pDvmDex);
     free(pDvmDex->pResStrings);
     free(pDvmDex->pResClasses);
     free(pDvmDex->pResMethods);
@@ -232,7 +232,7 @@ void dvmDexFileFree(DvmDex* pDvmDex)
 bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
 {
     if (*addr == newVal) {
-        LOGV("+++ byte at %p is already 0x%02x\n", addr, newVal);
+        LOGV("+++ byte at %p is already 0x%02x", addr, newVal);
         return true;
     }
 
@@ -242,16 +242,16 @@ bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
      */
     dvmLockMutex(&pDvmDex->modLock);
 
-    LOGV("+++ change byte at %p from 0x%02x to 0x%02x\n", addr, *addr, newVal);
+    LOGV("+++ change byte at %p from 0x%02x to 0x%02x", addr, *addr, newVal);
     if (sysChangeMapAccess(addr, 1, true, &pDvmDex->memMap) != 0) {
-        LOGD("NOTE: DEX page access change (->RW) failed\n");
+        LOGD("NOTE: DEX page access change (->RW) failed");
         /* expected on files mounted from FAT; keep going (may crash) */
     }
 
     *addr = newVal;
 
     if (sysChangeMapAccess(addr, 1, false, &pDvmDex->memMap) != 0) {
-        LOGD("NOTE: DEX page access change (->RO) failed\n");
+        LOGD("NOTE: DEX page access change (->RO) failed");
         /* expected on files mounted from FAT; keep going */
     }
 
@@ -269,7 +269,7 @@ bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
 bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
 {
     if (*addr == newVal) {
-        LOGV("+++ value at %p is already 0x%04x\n", addr, newVal);
+        LOGV("+++ value at %p is already 0x%04x", addr, newVal);
         return true;
     }
 
@@ -279,16 +279,16 @@ bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
      */
     dvmLockMutex(&pDvmDex->modLock);
 
-    LOGV("+++ change 2byte at %p from 0x%04x to 0x%04x\n", addr, *addr, newVal);
+    LOGV("+++ change 2byte at %p from 0x%04x to 0x%04x", addr, *addr, newVal);
     if (sysChangeMapAccess(addr, 2, true, &pDvmDex->memMap) != 0) {
-        LOGD("NOTE: DEX page access change (->RW) failed\n");
+        LOGD("NOTE: DEX page access change (->RW) failed");
         /* expected on files mounted from FAT; keep going (may crash) */
     }
 
     *addr = newVal;
 
     if (sysChangeMapAccess(addr, 2, false, &pDvmDex->memMap) != 0) {
-        LOGD("NOTE: DEX page access change (->RO) failed\n");
+        LOGD("NOTE: DEX page access change (->RO) failed");
         /* expected on files mounted from FAT; keep going */
     }
 

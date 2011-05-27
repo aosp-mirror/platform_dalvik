@@ -16,6 +16,8 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dx.dex.DexFormat;
+import com.android.dx.dex.DexOptions;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstBaseMethodRef;
 import com.android.dx.rop.cst.CstEnumRef;
@@ -41,6 +43,9 @@ import static com.android.dx.dex.file.MixedItemSection.SortType;
  * file, which itself consists of a set of Dalvik classes.
  */
 public final class DexFile {
+    /** options controlling the creation of the file */
+    private DexOptions dexOptions;
+
     /** {@code non-null;} word data section */
     private final MixedItemSection wordData;
 
@@ -103,7 +108,9 @@ public final class DexFile {
     /**
      * Constructs an instance. It is initially empty.
      */
-    public DexFile() {
+    public DexFile(DexOptions dexOptions) {
+        this.dexOptions = dexOptions;
+
         header = new HeaderSection(this);
         typeLists = new MixedItemSection(null, this, 4, SortType.NONE);
         wordData = new MixedItemSection("word_data", this, 4, SortType.TYPE);
@@ -137,6 +144,13 @@ public final class DexFile {
      */
     public boolean isEmpty() {
         return classDefs.items().isEmpty();
+    }
+
+    /**
+     * Gets the dex-creation options object.
+     */
+    public DexOptions getDexOptions() {
+        return dexOptions;
     }
 
     /**

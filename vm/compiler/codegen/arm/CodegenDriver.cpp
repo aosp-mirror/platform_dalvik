@@ -837,7 +837,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
             op = kOpLsr;
             break;
         default:
-            LOGE("Invalid word arith op: 0x%x(%d)",
+            LOGE("Invalid word arith op: %#x(%d)",
                  mir->dalvikInsn.opcode, mir->dalvikInsn.opcode);
             dvmCompilerAbort(cUnit);
     }
@@ -1477,7 +1477,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
 {
     Opcode dalvikOpcode = mir->dalvikInsn.opcode;
     if ((dalvikOpcode >= OP_UNUSED_3E) && (dalvikOpcode <= OP_UNUSED_43)) {
-        LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpcode);
+        LOGE("Codegen: got unused opcode %#x",dalvikOpcode);
         return true;
     }
     switch (dalvikOpcode) {
@@ -1491,7 +1491,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_DISPATCH_FF:
-            LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpcode);
+            LOGE("Codegen: got unused opcode %#x",dalvikOpcode);
             return true;
         case OP_NOP:
             break;
@@ -1629,7 +1629,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         case OP_SGET_BYTE_JUMBO:
         case OP_SGET_SHORT:
         case OP_SGET_SHORT_JUMBO: {
-            int valOffset = offsetof(StaticField, value);
+            int valOffset = OFFSETOF_MEMBER(StaticField, value);
             int tReg = dvmCompilerAllocTemp(cUnit);
             bool isVolatile;
             const Method *method = (mir->OptimizationFlags & MIR_CALLEE) ?
@@ -1678,7 +1678,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_SGET_WIDE:
         case OP_SGET_WIDE_JUMBO: {
-            int valOffset = offsetof(StaticField, value);
+            int valOffset = OFFSETOF_MEMBER(StaticField, value);
             const Method *method = (mir->OptimizationFlags & MIR_CALLEE) ?
                 mir->meta.calleeMethod : cUnit->method;
             void *fieldPtr = (void*)
@@ -1718,7 +1718,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         case OP_SPUT_BYTE_JUMBO:
         case OP_SPUT_SHORT:
         case OP_SPUT_SHORT_JUMBO: {
-            int valOffset = offsetof(StaticField, value);
+            int valOffset = OFFSETOF_MEMBER(StaticField, value);
             int tReg = dvmCompilerAllocTemp(cUnit);
             int objHead;
             bool isVolatile;
@@ -1755,7 +1755,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, tReg,  (int) fieldPtr);
             if (isSputObject) {
                 objHead = dvmCompilerAllocTemp(cUnit);
-                loadWordDisp(cUnit, tReg, offsetof(Field, clazz), objHead);
+                loadWordDisp(cUnit, tReg, OFFSETOF_MEMBER(Field, clazz), objHead);
             }
             HEAP_ACCESS_SHADOW(true);
             storeWordDisp(cUnit, tReg, valOffset ,rlSrc.lowReg);
@@ -1775,7 +1775,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         case OP_SPUT_WIDE:
         case OP_SPUT_WIDE_JUMBO: {
             int tReg = dvmCompilerAllocTemp(cUnit);
-            int valOffset = offsetof(StaticField, value);
+            int valOffset = OFFSETOF_MEMBER(StaticField, value);
             const Method *method = (mir->OptimizationFlags & MIR_CALLEE) ?
                 mir->meta.calleeMethod : cUnit->method;
             void *fieldPtr = (void*)
@@ -2155,7 +2155,7 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             break;
         default:
             cond = (ArmConditionCode)0;
-            LOGE("Unexpected opcode (%d) for Fmt21t\n", dalvikOpcode);
+            LOGE("Unexpected opcode (%d) for Fmt21t", dalvikOpcode);
             dvmCompilerAbort(cUnit);
     }
     genConditionalBranch(cUnit, cond, &labelList[bb->taken->id]);
@@ -2700,7 +2700,7 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             break;
         default:
             cond = (ArmConditionCode)0;
-            LOGE("Unexpected opcode (%d) for Fmt22t\n", dalvikOpcode);
+            LOGE("Unexpected opcode (%d) for Fmt22t", dalvikOpcode);
             dvmCompilerAbort(cUnit);
     }
     genConditionalBranch(cUnit, cond, &labelList[bb->taken->id]);
@@ -4547,7 +4547,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     }
                 }
                 if (notHandled) {
-                    LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled\n",
+                    LOGE("%#06x: Opcode %#x (%s) / Fmt %d not handled",
                          mir->offset,
                          dalvikOpcode, dexGetOpcodeName(dalvikOpcode),
                          dalvikFormat);

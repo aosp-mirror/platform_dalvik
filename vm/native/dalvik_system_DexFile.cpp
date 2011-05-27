@@ -50,7 +50,7 @@ void dvmFreeDexOrJar(void* vptr)
 {
     DexOrJar* pDexOrJar = (DexOrJar*) vptr;
 
-    LOGV("Freeing DexOrJar '%s'\n", pDexOrJar->fileName);
+    LOGV("Freeing DexOrJar '%s'", pDexOrJar->fileName);
 
     if (pDexOrJar->isDex)
         dvmRawDexFileFree(pDexOrJar->pRawDexFile);
@@ -82,7 +82,7 @@ static bool validateCookie(int cookie)
 {
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
 
-    LOGVV("+++ dex verifying cookie %p\n", pDexOrJar);
+    LOGVV("+++ dex verifying cookie %p", pDexOrJar);
 
     if (pDexOrJar == NULL)
         return false;
@@ -122,7 +122,7 @@ static void addToDexFileTable(DexOrJar* pDexOrJar) {
     dvmHashTableUnlock(gDvm.userDexFiles);
 
     if (result != pDexOrJar) {
-        LOGE("Pointer has already been added?\n");
+        LOGE("Pointer has already been added?");
         dvmAbort();
     }
 
@@ -192,7 +192,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
      * if the caller specifies their own output file.
      */
     if (dvmClassPathContains(gDvm.bootClassPath, sourceName)) {
-        LOGW("Refusing to reopen boot DEX '%s'\n", sourceName);
+        LOGW("Refusing to reopen boot DEX '%s'", sourceName);
         dvmThrowIOException(
             "Re-opening BOOTCLASSPATH DEX files is not allowed");
         free(sourceName);
@@ -207,21 +207,21 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
      */
     if (hasDexExtension(sourceName)
             && dvmRawDexFileOpen(sourceName, outputName, &pRawDexFile, false) == 0) {
-        LOGV("Opening DEX file '%s' (DEX)\n", sourceName);
+        LOGV("Opening DEX file '%s' (DEX)", sourceName);
 
         pDexOrJar = (DexOrJar*) malloc(sizeof(DexOrJar));
         pDexOrJar->isDex = true;
         pDexOrJar->pRawDexFile = pRawDexFile;
         pDexOrJar->pDexMemory = NULL;
     } else if (dvmJarFileOpen(sourceName, outputName, &pJarFile, false) == 0) {
-        LOGV("Opening DEX file '%s' (Jar)\n", sourceName);
+        LOGV("Opening DEX file '%s' (Jar)", sourceName);
 
         pDexOrJar = (DexOrJar*) malloc(sizeof(DexOrJar));
         pDexOrJar->isDex = false;
         pDexOrJar->pJarFile = pJarFile;
         pDexOrJar->pDexMemory = NULL;
     } else {
-        LOGV("Unable to open DEX file '%s'\n", sourceName);
+        LOGV("Unable to open DEX file '%s'", sourceName);
         dvmThrowIOException("unable to open DEX file");
     }
 
@@ -271,13 +271,13 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
     memcpy(pBytes, fileContentsObj->contents, length);
 
     if (dvmRawDexFileOpenArray(pBytes, length, &pRawDexFile) != 0) {
-        LOGV("Unable to open in-memory DEX file\n");
+        LOGV("Unable to open in-memory DEX file");
         free(pBytes);
         dvmThrowRuntimeException("unable to open in-memory DEX file");
         RETURN_VOID();
     }
 
-    LOGV("Opening in-memory DEX\n");
+    LOGV("Opening in-memory DEX");
     pDexOrJar = (DexOrJar*) malloc(sizeof(DexOrJar));
     pDexOrJar->isDex = true;
     pDexOrJar->pRawDexFile = pRawDexFile;
@@ -304,7 +304,7 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
     if (!validateCookie(cookie))
         RETURN_VOID();
 
-    LOGV("Closing DEX file %p (%s)\n", pDexOrJar, pDexOrJar->fileName);
+    LOGV("Closing DEX file %p (%s)", pDexOrJar, pDexOrJar->fileName);
 
     /*
      * We can't just free arbitrary DEX files because they have bits and
@@ -318,14 +318,14 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
         u4 hash = (u4) pDexOrJar;
         dvmHashTableLock(gDvm.userDexFiles);
         if (!dvmHashTableRemove(gDvm.userDexFiles, hash, pDexOrJar)) {
-            LOGW("WARNING: could not remove '%s' from DEX hash table\n",
+            LOGW("WARNING: could not remove '%s' from DEX hash table",
                 pDexOrJar->fileName);
         }
         dvmHashTableUnlock(gDvm.userDexFiles);
-        LOGV("+++ freeing DexFile '%s' resources\n", pDexOrJar->fileName);
+        LOGV("+++ freeing DexFile '%s' resources", pDexOrJar->fileName);
         dvmFreeDexOrJar(pDexOrJar);
     } else {
-        LOGV("+++ NOT freeing DexFile '%s' resources\n", pDexOrJar->fileName);
+        LOGV("+++ NOT freeing DexFile '%s' resources", pDexOrJar->fileName);
     }
 
     RETURN_VOID();
@@ -359,7 +359,7 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
 
     name = dvmCreateCstrFromString(nameObj);
     descriptor = dvmDotToDescriptor(name);
-    LOGV("--- Explicit class load '%s' l=%p c=0x%08x\n",
+    LOGV("--- Explicit class load '%s' l=%p c=0x%08x",
         descriptor, loader, cookie);
     free(name);
 
@@ -428,7 +428,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
         dvmAllocArrayByClass(arrayClass, count, ALLOC_DEFAULT);
     if (stringArray == NULL) {
         /* probably OOM */
-        LOGD("Failed allocating array of %d strings\n", count);
+        LOGD("Failed allocating array of %d strings", count);
         assert(dvmCheckException(self));
         RETURN_VOID();
     }
@@ -486,7 +486,7 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
         RETURN_VOID();
     }
     status = dvmDexCacheStatus(name);
-    LOGV("dvmDexCacheStatus(%s) returned %d\n", name, status);
+    LOGV("dvmDexCacheStatus(%s) returned %d", name, status);
 
     result = true;
     switch (status) {

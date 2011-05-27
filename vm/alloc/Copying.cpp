@@ -1133,7 +1133,7 @@ void processFinalizableReferences()
         //      we can schedule them next time.  Watch out,
         //      because we may be expecting to free up space
         //      by calling finalizers.
-        LOG_REF("no room for pending finalizations\n");
+        LOG_REF("no room for pending finalizations");
         dvmAbort();
     }
 
@@ -1153,7 +1153,7 @@ void processFinalizableReferences()
                 if (!dvmHeapAddToHeapRefTable(&newPendingRefs, *ref)) {
                     //TODO: add the current table and allocate
                     //      a new, smaller one.
-                    LOG_REF("no room for any more pending finalizations: %zd\n",
+                    LOG_REF("no room for any more pending finalizations: %zd",
                             dvmHeapNumHeapRefTableEntries(&newPendingRefs));
                     dvmAbort();
                 }
@@ -1178,7 +1178,7 @@ void processFinalizableReferences()
         totalPendCount += newPendCount;
         finRefs = finRefs->next;
     }
-    LOG_REF("%zd finalizers triggered.\n", totalPendCount);
+    LOG_REF("%zd finalizers triggered.", totalPendCount);
     if (totalPendCount == 0) {
         /* No objects required finalization.
          * Free the empty temporary table.
@@ -1192,7 +1192,7 @@ void processFinalizableReferences()
     if (!dvmHeapAddTableToLargeTable(&gDvm.gcHeap->pendingFinalizationRefs,
                 &newPendingRefs))
     {
-        LOG_REF("can't insert new pending finalizations\n");
+        LOG_REF("can't insert new pending finalizations");
         dvmAbort();
     }
 
@@ -1537,7 +1537,7 @@ static void scavengeThreadStack(Thread *thread)
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
             if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
-                LOG_SCAV("PGC: added %s.%s %p\n",
+                LOG_SCAV("PGC: added %s.%s %p",
                              method->clazz->descriptor, method->name, method);
 #endif
 #if WITH_EXTRA_GC_CHECKS > 1
@@ -1580,13 +1580,13 @@ static void scavengeThreadStack(Thread *thread)
                  * some value.
                  */
                 if (saveArea->xtra.currentPc != thread->currentPc2) {
-                    LOGW("PGC: savedPC(%p) != current PC(%p), %s.%s ins=%p\n",
+                    LOGW("PGC: savedPC(%p) != current PC(%p), %s.%s ins=%p",
                         saveArea->xtra.currentPc, thread->currentPc2,
                         method->clazz->descriptor, method->name, method->insns);
                     if (saveArea->xtra.currentPc != NULL)
-                        LOGE("  pc inst = 0x%04x\n", *saveArea->xtra.currentPc);
+                        LOGE("  pc inst = 0x%04x", *saveArea->xtra.currentPc);
                     if (thread->currentPc2 != NULL)
-                        LOGE("  pc2 inst = 0x%04x\n", *thread->currentPc2);
+                        LOGE("  pc2 inst = 0x%04x", *thread->currentPc2);
                     dvmDumpThread(thread, false);
                 }
             } else {
@@ -1612,7 +1612,7 @@ static void scavengeThreadStack(Thread *thread)
             Method* nonConstMethod = (Method*) method;  // quiet gcc
             pMap = dvmGetExpandedRegisterMap(nonConstMethod);
 
-            //LOG_SCAV("PGC: %s.%s\n", method->clazz->descriptor, method->name);
+            //LOG_SCAV("PGC: %s.%s", method->clazz->descriptor, method->name);
 
             if (pMap != NULL) {
                 /* found map, get registers for this address */
@@ -1620,10 +1620,10 @@ static void scavengeThreadStack(Thread *thread)
                 regVector = dvmRegisterMapGetLine(pMap, addr);
                 /*
                 if (regVector == NULL) {
-                    LOG_SCAV("PGC: map but no entry for %s.%s addr=0x%04x\n",
+                    LOG_SCAV("PGC: map but no entry for %s.%s addr=0x%04x",
                                  method->clazz->descriptor, method->name, addr);
                 } else {
-                    LOG_SCAV("PGC: found map for %s.%s 0x%04x (t=%d)\n",
+                    LOG_SCAV("PGC: found map for %s.%s 0x%04x (t=%d)",
                                  method->clazz->descriptor, method->name, addr,
                                  thread->threadId);
                 }
@@ -1637,7 +1637,7 @@ static void scavengeThreadStack(Thread *thread)
                  * worth yelling a little.
                  */
                 if (gDvm.preciseGc) {
-                    LOG_SCAV("PGC: no map for %s.%s\n", method->clazz->descriptor, method->name);
+                    LOG_SCAV("PGC: no map for %s.%s", method->clazz->descriptor, method->name);
                 }
                 regVector = NULL;
             }
@@ -1673,7 +1673,7 @@ static void scavengeThreadStack(Thread *thread)
 #if WITH_EXTRA_GC_CHECKS > 0
                         if ((rval & 0x3) != 0 || !dvmIsValidObject((Object*) rval)) {
                             /* this is very bad */
-                            LOGE("PGC: invalid ref in reg %d: 0x%08x\n",
+                            LOGE("PGC: invalid ref in reg %d: 0x%08x",
                                 method->registersSize-1 - i, rval);
                         } else
 #endif
@@ -1690,7 +1690,7 @@ static void scavengeThreadStack(Thread *thread)
 #if WITH_EXTRA_GC_CHECKS > 1
                         if (dvmIsValidObject((Object*) rval)) {
                             /* this is normal, but we feel chatty */
-                            LOGD("PGC: ignoring valid ref in reg %d: 0x%08x\n",
+                            LOGD("PGC: ignoring valid ref in reg %d: 0x%08x",
                                  method->registersSize-1 - i, rval);
                         }
 #endif
@@ -1771,7 +1771,7 @@ static void pinThreadStack(const Thread *thread)
              * native methods don't move around.  We can do a precise scan
              * of the arguments by examining the method signature.
              */
-            LOG_PIN("+++ native scan %s.%s\n",
+            LOG_PIN("+++ native scan %s.%s",
                     method->clazz->descriptor, method->name);
             assert(method->registersSize == method->insSize);
             if (!dvmIsStaticMethod(method)) {
@@ -1809,7 +1809,7 @@ static void pinThreadStack(const Thread *thread)
                     obj = (Object *)*framePtr;          // debug, remove
                     if (dvmIsValidObject(obj)) {        // debug, remove
                         /* if we see a lot of these, our scan might be off */
-                        LOG_PIN("+++ did NOT pin obj %p\n", obj);
+                        LOG_PIN("+++ did NOT pin obj %p", obj);
                     }
                     break;
                 }
@@ -1818,7 +1818,7 @@ static void pinThreadStack(const Thread *thread)
             const RegisterMap* pMap = dvmGetExpandedRegisterMap(method);
             const u1* regVector = NULL;
 
-            LOGI("conservative : %s.%s\n", method->clazz->descriptor, method->name);
+            LOGI("conservative : %s.%s", method->clazz->descriptor, method->name);
 
             if (pMap != NULL) {
                 int addr = saveArea->xtra.currentPc - method->insns;
@@ -2019,10 +2019,10 @@ static void scavengeBlockQueue()
     describeBlockQueue(heapSource);
     while (heapSource->queueHead != QUEUE_TAIL) {
         block = heapSource->queueHead;
-        LOG_SCAV("Dequeueing block %zu\n", block);
+        LOG_SCAV("Dequeueing block %zu", block);
         scavengeBlock(heapSource, block);
         heapSource->queueHead = heapSource->blockQueue[block];
-        LOG_SCAV("New queue head is %zu\n", heapSource->queueHead);
+        LOG_SCAV("New queue head is %zu", heapSource->queueHead);
     }
     LOG_SCAV("<<< scavengeBlockQueue()");
 }

@@ -48,7 +48,7 @@ static StringObject* makeStringObject(u4 charsLength, ArrayObject** pChars)
     if (!dvmIsClassInitialized(gDvm.classJavaLangString)) {
         /* Perform first-time use initialization of the class. */
         if (!dvmInitClass(gDvm.classJavaLangString)) {
-            LOGE("FATAL: Could not initialize class String\n");
+            LOGE("FATAL: Could not initialize class String");
             dvmAbort();
         }
     }
@@ -204,12 +204,18 @@ static inline u4 computeUtf16Hash(const u2* utf16Str, size_t len)
     return hash;
 }
 
-u4 dvmComputeStringHash(const StringObject* strObj) {
-    const ArrayObject* chars = (ArrayObject*) dvmGetFieldObject((Object*) strObj,
+u4 dvmComputeStringHash(StringObject* strObj) {
+    int hashCode = dvmGetFieldInt(strObj, STRING_FIELDOFF_HASHCODE);
+    if (hashCode != 0) {
+      return hashCode;
+    }
+    int len = dvmGetFieldInt(strObj, STRING_FIELDOFF_COUNT);
+    int offset = dvmGetFieldInt(strObj, STRING_FIELDOFF_OFFSET);
+    ArrayObject* chars = (ArrayObject*) dvmGetFieldObject(strObj,
                                 STRING_FIELDOFF_VALUE);
-    int len = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_COUNT);
-    int offset = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_OFFSET);
-    return computeUtf16Hash((u2*)(void*)chars->contents + offset, len);
+    hashCode = computeUtf16Hash((u2*)(void*)chars->contents + offset, len);
+    dvmSetFieldInt(strObj, STRING_FIELDOFF_HASHCODE, hashCode);
+    return hashCode;
 }
 
 /*

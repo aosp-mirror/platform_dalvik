@@ -18,9 +18,6 @@
  */
 #include "Hprof.h"
 
-#include "alloc/HeapInternal.h"
-#include "alloc/HeapSource.h"
-
 /* Set DUMP_PRIM_DATA to 1 if you want to include the contents
  * of primitive arrays (byte arrays, character arrays, etc.)
  * in heap dumps.  This can be a large amount of data.
@@ -39,8 +36,7 @@
  */
 #define CLASS_STATICS_ID(clazz) ((hprof_object_id)(((u4)(clazz)) | 1))
 
-int
-hprofStartHeapDump(hprof_context_t *ctx)
+int hprofStartHeapDump(hprof_context_t *ctx)
 {
     UNUSED_PARAMETER(ctx);
 
@@ -49,15 +45,14 @@ hprofStartHeapDump(hprof_context_t *ctx)
     return 0;
 }
 
-int
-hprofFinishHeapDump(hprof_context_t *ctx)
+int hprofFinishHeapDump(hprof_context_t *ctx)
 {
     return hprofStartNewRecord(ctx, HPROF_TAG_HEAP_DUMP_END, HPROF_TIME);
 }
 
-int
-hprofSetGcScanState(hprof_context_t *ctx,
-                    hprof_heap_tag_t state, u4 threadSerialNumber)
+int hprofSetGcScanState(hprof_context_t *ctx,
+                        hprof_heap_tag_t state,
+                        u4 threadSerialNumber)
 {
     /* Used by hprofMarkRootObject()
      */
@@ -66,8 +61,8 @@ hprofSetGcScanState(hprof_context_t *ctx,
     return 0;
 }
 
-static hprof_basic_type
-signatureToBasicTypeAndSize(const char *sig, size_t *sizeOut)
+static hprof_basic_type signatureToBasicTypeAndSize(const char *sig,
+                                                    size_t *sizeOut)
 {
     char c = sig[0];
     hprof_basic_type ret;
@@ -94,8 +89,8 @@ signatureToBasicTypeAndSize(const char *sig, size_t *sizeOut)
     return ret;
 }
 
-static hprof_basic_type
-primitiveToBasicTypeAndSize(PrimitiveType prim, size_t *sizeOut)
+static hprof_basic_type primitiveToBasicTypeAndSize(PrimitiveType prim,
+                                                    size_t *sizeOut)
 {
     hprof_basic_type ret;
     size_t size;
@@ -124,8 +119,7 @@ primitiveToBasicTypeAndSize(PrimitiveType prim, size_t *sizeOut)
  * only true when marking the root set or unreachable
  * objects.  Used to add rootset references to obj.
  */
-int
-hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
+int hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
 {
     hprof_record_t *rec = &ctx->curRec;
     int err;
@@ -212,22 +206,18 @@ hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
     return err;
 }
 
-static int
-stackTraceSerialNumber(const void *obj)
+static int stackTraceSerialNumber(const void *obj)
 {
     return HPROF_NULL_STACK_TRACE;
 }
 
-int
-hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
+int hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
 {
     const ClassObject *clazz;
     hprof_record_t *rec = &ctx->curRec;
     HprofHeapId desiredHeap;
 
-    desiredHeap =
-            dvmHeapSourceGetPtrFlag(obj, HS_ALLOCATED_IN_ZYGOTE) ?
-            HPROF_HEAP_ZYGOTE : HPROF_HEAP_APP;
+    desiredHeap = dvmIsZygoteObject(obj) ? HPROF_HEAP_ZYGOTE : HPROF_HEAP_APP;
 
     if (ctx->objectsInSegment >= OBJECTS_PER_SEGMENT ||
         rec->length >= BYTES_PER_SEGMENT)
@@ -331,8 +321,8 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                     size_t size;
                     const StaticField *f = &thisClass->sfields[i];
 
-                    t = signatureToBasicTypeAndSize(f->field.signature, &size);
-                    hprofAddIdToRecord(rec, hprofLookupStringId(f->field.name));
+                    t = signatureToBasicTypeAndSize(f->signature, &size);
+                    hprofAddIdToRecord(rec, hprofLookupStringId(f->name));
                     hprofAddU1ToRecord(rec, t);
                     if (size == 1) {
                         hprofAddU1ToRecord(rec, (u1)f->value.b);
@@ -356,8 +346,8 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                 const InstField *f = &thisClass->ifields[i];
                 hprof_basic_type t;
 
-                t = signatureToBasicTypeAndSize(f->field.signature, NULL);
-                hprofAddIdToRecord(rec, hprofLookupStringId(f->field.name));
+                t = signatureToBasicTypeAndSize(f->signature, NULL);
+                hprofAddIdToRecord(rec, hprofLookupStringId(f->name));
                 hprofAddU1ToRecord(rec, t);
             }
         } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
@@ -445,7 +435,7 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                     hprof_basic_type t;
                     size_t size;
 
-                    t = signatureToBasicTypeAndSize(f->field.signature, &size);
+                    t = signatureToBasicTypeAndSize(f->signature, &size);
                     if (size == 1) {
                         hprofAddU1ToRecord(rec,
                                 (u1)dvmGetFieldByte(obj, f->byteOffset));

@@ -40,8 +40,8 @@ InstField* dvmFindInstanceField(const ClassObject* clazz,
      */
     pField = clazz->ifields;
     for (i = 0; i < clazz->ifieldCount; i++, pField++) {
-        if (strcmp(fieldName, pField->field.name) == 0 &&
-            strcmp(signature, pField->field.signature) == 0)
+        if (strcmp(fieldName, pField->name) == 0 &&
+            strcmp(signature, pField->signature) == 0)
         {
             return pField;
         }
@@ -97,8 +97,8 @@ StaticField* dvmFindStaticField(const ClassObject* clazz,
      */
     pField = &clazz->sfields[0];
     for (i = 0; i < clazz->sfieldCount; i++, pField++) {
-        if (strcmp(fieldName, pField->field.name) == 0 &&
-            strcmp(signature, pField->field.signature) == 0)
+        if (strcmp(fieldName, pField->name) == 0 &&
+            strcmp(signature, pField->signature) == 0)
         {
             return (StaticField*) pField;
         }
@@ -369,7 +369,7 @@ static Method* findMethodInListByDescriptor(const ClassObject* clazz,
     size_t argCount = countArgsAndFindReturnType(descriptor, &returnType);
 
     if (returnType == NULL) {
-        LOGW("Bogus method descriptor: %s\n", descriptor);
+        LOGW("Bogus method descriptor: %s", descriptor);
         return NULL;
     }
 
@@ -756,7 +756,7 @@ void dvmDumpObject(const Object* obj)
         LOGD("    -- %s", clazz->descriptor);
         for (i = 0; i < clazz->ifieldCount; i++) {
             const InstField* pField = &clazz->ifields[i];
-            char type = pField->field.signature[0];
+            char type = pField->signature[0];
 
             if (type == 'F' || type == 'D') {
                 double dval;
@@ -767,8 +767,8 @@ void dvmDumpObject(const Object* obj)
                     dval = dvmGetFieldDouble(obj, pField->byteOffset);
 
                 LOGD("    %2d: '%s' '%s' af=%04x off=%d %.3f", i,
-                    pField->field.name, pField->field.signature,
-                    pField->field.accessFlags, pField->byteOffset, dval);
+                    pField->name, pField->signature,
+                    pField->accessFlags, pField->byteOffset, dval);
             } else {
                 u8 lval;
 
@@ -780,8 +780,8 @@ void dvmDumpObject(const Object* obj)
                     lval = dvmGetFieldInt(obj, pField->byteOffset);
 
                 LOGD("    %2d: '%s' '%s' af=%04x off=%d 0x%08llx", i,
-                    pField->field.name, pField->field.signature,
-                    pField->field.accessFlags, pField->byteOffset, lval);
+                    pField->name, pField->signature,
+                    pField->accessFlags, pField->byteOffset, lval);
             }
         }
 
@@ -793,7 +793,7 @@ void dvmDumpObject(const Object* obj)
         for (i = 0; i < ((ClassObject *)obj)->sfieldCount; ++i) {
             const StaticField* pField = &sfields[i];
             size_t byteOffset = (size_t)pField - (size_t)sfields;
-            char type = pField->field.signature[0];
+            char type = pField->signature[0];
 
             if (type == 'F' || type == 'D') {
                 double dval;
@@ -804,8 +804,8 @@ void dvmDumpObject(const Object* obj)
                     dval = pField->value.d;
 
                 LOGD("    %2d: '%s' '%s' af=%04x off=%zd %.3f", i,
-                     pField->field.name, pField->field.signature,
-                     pField->field.accessFlags, byteOffset, dval);
+                     pField->name, pField->signature,
+                     pField->accessFlags, byteOffset, dval);
             } else {
                 u8 lval;
 
@@ -817,8 +817,8 @@ void dvmDumpObject(const Object* obj)
                     lval = pField->value.i;
 
                 LOGD("    %2d: '%s' '%s' af=%04x off=%zd 0x%08llx", i,
-                     pField->field.name, pField->field.signature,
-                     pField->field.accessFlags, byteOffset, lval);
+                     pField->name, pField->signature,
+                     pField->accessFlags, byteOffset, lval);
             }
         }
     }

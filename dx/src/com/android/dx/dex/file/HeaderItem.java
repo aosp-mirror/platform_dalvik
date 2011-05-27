@@ -61,8 +61,10 @@ public final class HeaderItem extends IndexedItem {
         int dataSize = lastDataSection.getFileOffset() +
             lastDataSection.writeSize() - dataOff;
 
+        String magic = file.getDexOptions().getMagic();
+
         if (out.annotates()) {
-            out.annotate(8, "magic: " + new CstString(DexFormat.MAGIC).toQuoted());
+            out.annotate(8, "magic: " + new CstString(magic).toQuoted());
             out.annotate(4, "checksum");
             out.annotate(20, "signature");
             out.annotate(4, "file_size:       " +
@@ -76,7 +78,7 @@ public final class HeaderItem extends IndexedItem {
 
         // Write the magic number.
         for (int i = 0; i < 8; i++) {
-            out.writeByte(DexFormat.MAGIC.charAt(i));
+            out.writeByte(magic.charAt(i));
         }
 
         // Leave space for the checksum and signature.

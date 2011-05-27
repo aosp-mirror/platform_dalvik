@@ -111,7 +111,7 @@ bool dvmEnableAllocTracker()
     dvmLockMutex(&gDvm.allocTrackerLock);
 
     if (gDvm.allocRecords == NULL) {
-        LOGI("Enabling alloc tracker (%d entries, %d frames --> %d bytes)\n",
+        LOGI("Enabling alloc tracker (%d entries, %d frames --> %d bytes)",
             kNumAllocRecords, kMaxAllocRecordStackDepth,
             sizeof(AllocRecord) * kNumAllocRecords);
         gDvm.allocRecordHead = gDvm.allocRecordCount = 0;
@@ -188,7 +188,7 @@ void dvmDoTrackAllocation(ClassObject* clazz, size_t size)
 {
     Thread* self = dvmThreadSelf();
     if (self == NULL) {
-        LOGW("alloc tracker: no thread\n");
+        LOGW("alloc tracker: no thread");
         return;
     }
 
@@ -351,7 +351,7 @@ static bool populateStringTables(PointerSet* classNames,
         idx = (idx + 1) & (kNumAllocRecords-1);
     }
 
-    LOGI("class %d/%d, method %d/%d, file %d/%d\n",
+    LOGI("class %d/%d, method %d/%d, file %d/%d",
         dvmPointerSetGetCount(classNames), classCount,
         dvmPointerSetGetCount(methodNames), methodCount,
         dvmPointerSetGetCount(fileNames), fileCount);
@@ -527,7 +527,7 @@ bool dvmGenerateTrackedAllocationReport(u1** pData, size_t* pDataLen)
     methodNames = dvmPointerSetAlloc(128);
     fileNames = dvmPointerSetAlloc(128);
     if (classNames == NULL || methodNames == NULL || fileNames == NULL) {
-        LOGE("Failed allocating pointer sets\n");
+        LOGE("Failed allocating pointer sets");
         goto bail;
     }
 
@@ -555,7 +555,7 @@ bool dvmGenerateTrackedAllocationReport(u1** pData, size_t* pDataLen)
     totalSize += computeStringTableSize(classNames);
     totalSize += computeStringTableSize(methodNames);
     totalSize += computeStringTableSize(fileNames);
-    LOGI("Generated AT, size is %zd/%zd\n", baseSize, totalSize);
+    LOGI("Generated AT, size is %zd/%zd", baseSize, totalSize);
 
     /*
      * Part 3: allocate a buffer and generate the output.
@@ -569,7 +569,7 @@ bool dvmGenerateTrackedAllocationReport(u1** pData, size_t* pDataLen)
     strPtr += outputStringTable(methodNames, strPtr);
     strPtr += outputStringTable(fileNames, strPtr);
     if (strPtr - buffer != (int)totalSize) {
-        LOGE("size mismatch (%d vs %zd)\n", strPtr - buffer, totalSize);
+        LOGE("size mismatch (%d vs %zd)", strPtr - buffer, totalSize);
         dvmAbort();
     }
     //dvmPrintHexDump(buffer, totalSize);
@@ -613,11 +613,11 @@ void dvmDumpTrackedAllocations(bool enable)
     int idx = headIndex();
     int count = gDvm.allocRecordCount;
 
-    LOGI("Tracked allocations, (head=%d count=%d)\n",
+    LOGI("Tracked allocations, (head=%d count=%d)",
         gDvm.allocRecordHead, count);
     while (count--) {
         AllocRecord* pRec = &gDvm.allocRecords[idx];
-        LOGI(" T=%-2d %6d %s\n",
+        LOGI(" T=%-2d %6d %s",
             pRec->threadId, pRec->size, pRec->clazz->descriptor);
 
         if (true) {
@@ -627,10 +627,10 @@ void dvmDumpTrackedAllocations(bool enable)
 
                 const Method* method = pRec->stackElem[i].method;
                 if (dvmIsNativeMethod(method)) {
-                    LOGI("    %s.%s (Native)\n",
+                    LOGI("    %s.%s (Native)",
                         method->clazz->descriptor, method->name);
                 } else {
-                    LOGI("    %s.%s +%d\n",
+                    LOGI("    %s.%s +%d",
                         method->clazz->descriptor, method->name,
                         pRec->stackElem[i].pc);
                 }

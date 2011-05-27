@@ -23,9 +23,8 @@
  * enough to cover a heap at <base> of <maxSize> bytes, where
  * objects are guaranteed to be HB_OBJECT_ALIGNMENT-aligned.
  */
-bool
-dvmHeapBitmapInit(HeapBitmap *hb, const void *base, size_t maxSize,
-        const char *name)
+bool dvmHeapBitmapInit(HeapBitmap *hb, const void *base, size_t maxSize,
+                       const char *name)
 {
     void *bits;
     size_t bitsLen;
@@ -48,8 +47,7 @@ dvmHeapBitmapInit(HeapBitmap *hb, const void *base, size_t maxSize,
 /*
  * Clean up any resources associated with the bitmap.
  */
-void
-dvmHeapBitmapDelete(HeapBitmap *hb)
+void dvmHeapBitmapDelete(HeapBitmap *hb)
 {
     assert(hb != NULL);
 
@@ -63,8 +61,7 @@ dvmHeapBitmapDelete(HeapBitmap *hb)
  * Fill the bitmap with zeroes.  Returns the bitmap's memory to
  * the system as a side-effect.
  */
-void
-dvmHeapBitmapZero(HeapBitmap *hb)
+void dvmHeapBitmapZero(HeapBitmap *hb)
 {
     assert(hb != NULL);
 

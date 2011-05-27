@@ -102,7 +102,7 @@ public final class DexGenerator {
      * Returns a .dex formatted file.
      */
     public byte[] generate() {
-        DexFile outputDex = new DexFile();
+        DexFile outputDex = new DexFile(new DexOptions());
 
         for (TypeDeclaration typeDeclaration : types.values()) {
             outputDex.add(typeDeclaration.toClassDefItem());
@@ -178,7 +178,7 @@ public final class DexGenerator {
             }
 
             DexOptions dexOptions = new DexOptions();
-            dexOptions.enableExtendedOpcodes = false;
+            dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
 
             CstType thisType = type.constant;
 

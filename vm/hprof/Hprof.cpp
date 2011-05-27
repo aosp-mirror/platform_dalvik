@@ -35,15 +35,15 @@
 
 #define kHeadSuffix "-hptemp"
 
-hprof_context_t *
-hprofStartup(const char *outputFileName, int fd, bool directToDdms)
+hprof_context_t* hprofStartup(const char *outputFileName, int fd,
+                              bool directToDdms)
 {
     hprofStartup_String();
     hprofStartup_Class();
 
     hprof_context_t *ctx = (hprof_context_t *)malloc(sizeof(*ctx));
     if (ctx == NULL) {
-        LOGE("hprof: can't allocate context.\n");
+        LOGE("hprof: can't allocate context.");
         return NULL;
     }
 
@@ -58,8 +58,7 @@ hprofStartup(const char *outputFileName, int fd, bool directToDdms)
 /*
  * Finish up the hprof dump.  Returns true on success.
  */
-bool
-hprofShutdown(hprof_context_t *tailCtx)
+bool hprofShutdown(hprof_context_t *tailCtx)
 {
     /* flush the "tail" portion of the output */
     hprofFlushCurrentRecord(tailCtx);
@@ -70,14 +69,14 @@ hprofShutdown(hprof_context_t *tailCtx)
      */
     hprof_context_t *headCtx = (hprof_context_t *)malloc(sizeof(*headCtx));
     if (headCtx == NULL) {
-        LOGE("hprof: can't allocate context.\n");
+        LOGE("hprof: can't allocate context.");
         hprofFreeContext(tailCtx);
         return false;
     }
     hprofContextInit(headCtx, strdup(tailCtx->fileName), tailCtx->fd, true,
         tailCtx->directToDdms);
 
-    LOGI("hprof: dumping heap strings to \"%s\".\n", tailCtx->fileName);
+    LOGI("hprof: dumping heap strings to \"%s\".", tailCtx->fileName);
     hprofDumpStrings(headCtx);
     hprofDumpClasses(headCtx);
 
@@ -116,13 +115,13 @@ hprofShutdown(hprof_context_t *tailCtx)
         if (headCtx->fd >= 0) {
             outFd = dup(headCtx->fd);
             if (outFd < 0) {
-                LOGE("dup(%d) failed: %s\n", headCtx->fd, strerror(errno));
+                LOGE("dup(%d) failed: %s", headCtx->fd, strerror(errno));
                 /* continue to fail-handler below */
             }
         } else {
             outFd = open(tailCtx->fileName, O_WRONLY|O_CREAT|O_TRUNC, 0644);
             if (outFd < 0) {
-                LOGE("can't open %s: %s\n", headCtx->fileName, strerror(errno));
+                LOGE("can't open %s: %s", headCtx->fileName, strerror(errno));
                 /* continue to fail-handler below */
             }
         }
@@ -146,7 +145,7 @@ hprofShutdown(hprof_context_t *tailCtx)
     }
 
     /* throw out a log message for the benefit of "runhat" */
-    LOGI("hprof: heap dump completed (%dKB)\n",
+    LOGI("hprof: heap dump completed (%dKB)",
         (headCtx->fileDataSize + tailCtx->fileDataSize + 1023) / 1024);
 
     hprofFreeContext(headCtx);
@@ -158,8 +157,7 @@ hprofShutdown(hprof_context_t *tailCtx)
 /*
  * Free any heap-allocated items in "ctx", and then free "ctx" itself.
  */
-void
-hprofFreeContext(hprof_context_t *ctx)
+void hprofFreeContext(hprof_context_t *ctx)
 {
     assert(ctx != NULL);
 

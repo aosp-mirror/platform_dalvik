@@ -102,7 +102,7 @@
         {                                                                   \
             char* desc;                                                     \
             desc = dexProtoCopyMethodDescriptor(&curMethod->prototype);     \
-            LOGE("Invalid branch %d at 0x%04x in %s.%s %s\n",               \
+            LOGE("Invalid branch %d at 0x%04x in %s.%s %s",                 \
                 myoff, (int) (pc - curMethod->insns),                       \
                 curMethod->clazz->descriptor, curMethod->name, desc);       \
             free(desc);                                                     \
@@ -127,11 +127,11 @@
 # define ILOG(_level, ...) do {                                             \
         char debugStrBuf[128];                                              \
         snprintf(debugStrBuf, sizeof(debugStrBuf), __VA_ARGS__);            \
-        if (curMethod != NULL)                                                 \
-            LOG(_level, LOG_TAG"i", "%-2d|%04x%s\n",                        \
+        if (curMethod != NULL)                                              \
+            LOG(_level, LOG_TAG"i", "%-2d|%04x%s",                          \
                 self->threadId, (int)(pc - curMethod->insns), debugStrBuf); \
         else                                                                \
-            LOG(_level, LOG_TAG"i", "%-2d|####%s\n",                        \
+            LOG(_level, LOG_TAG"i", "%-2d|####%s",                          \
                 self->threadId, debugStrBuf);                               \
     } while(false)
 void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly);
@@ -231,7 +231,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
         getLongFromArray(fp, (_idx)) : (assert(!"bad reg"),1969) )
 # define SET_REGISTER_WIDE(_idx, _val) \
     ( (_idx) < curMethod->registersSize-1 ? \
-        putLongToArray(fp, (_idx), (_val)) : (assert(!"bad reg"),1969) )
+        (void)putLongToArray(fp, (_idx), (_val)) : assert(!"bad reg") )
 # define GET_REGISTER_FLOAT(_idx) \
     ( (_idx) < curMethod->registersSize ? \
         (*((float*) &fp[(_idx)])) : (assert(!"bad reg"),1969.0f) )
@@ -243,7 +243,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
         getDoubleFromArray(fp, (_idx)) : (assert(!"bad reg"),1969.0) )
 # define SET_REGISTER_DOUBLE(_idx, _val) \
     ( (_idx) < curMethod->registersSize-1 ? \
-        putDoubleToArray(fp, (_idx), (_val)) : (assert(!"bad reg"),1969.0) )
+        (void)putDoubleToArray(fp, (_idx), (_val)) : assert(!"bad reg") )
 #else
 # define GET_REGISTER(_idx)                 (fp[(_idx)])
 # define SET_REGISTER(_idx, _val)           (fp[(_idx)] = (_val))
@@ -321,14 +321,14 @@ static inline bool checkForNull(Object* obj)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsValidObject(obj)) {
-        LOGE("Invalid object %p\n", obj);
+        LOGE("Invalid object %p", obj);
         dvmAbort();
     }
 #endif
 #ifndef NDEBUG
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
         /* probable heap corruption */
-        LOGE("Invalid object class %p (in %p)\n", obj->clazz, obj);
+        LOGE("Invalid object class %p (in %p)", obj->clazz, obj);
         dvmAbort();
     }
 #endif
@@ -353,14 +353,14 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsValidObject(obj)) {
-        LOGE("Invalid object %p\n", obj);
+        LOGE("Invalid object %p", obj);
         dvmAbort();
     }
 #endif
 #ifndef NDEBUG
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
         /* probable heap corruption */
-        LOGE("Invalid object class %p (in %p)\n", obj->clazz, obj);
+        LOGE("Invalid object class %p (in %p)", obj->clazz, obj);
         dvmAbort();
     }
 #endif
@@ -595,7 +595,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             result = 1;                                                     \
         else                                                                \
             result = (_nanVal);                                             \
-        ILOGV("+ result=%d\n", result);                                     \
+        ILOGV("+ result=%d", result);                                       \
         SET_REGISTER(vdst, result);                                         \
     }                                                                       \
     FINISH(2);
@@ -964,7 +964,7 @@ GOTO_TARGET_DECL(exceptionThrown);
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
             ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)]);      \
-        ILOGV("+ AGET[%d]=0x%x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));  \
+        ILOGV("+ AGET[%d]=%#x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));   \
     }                                                                       \
     FINISH(2);
 
@@ -1174,7 +1174,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1197,7 +1197,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1220,7 +1220,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1243,7 +1243,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \

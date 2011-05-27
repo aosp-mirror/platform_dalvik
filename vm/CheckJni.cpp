@@ -398,12 +398,16 @@ public:
         ScopedJniThreadState ts(mEnv);
 
         Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
-        ClassObject* clazz = obj->clazz;
+        if (!dvmIsValidObject(obj)) {
+            LOGW("JNI ERROR: field operation on invalid reference (%p)", jobj);
+            dvmAbort();
+        }
 
         /*
          * Check this class and all of its superclasses for a matching field.
          * Don't need to scan interfaces.
          */
+        ClassObject* clazz = obj->clazz;
         while (clazz != NULL) {
             if ((InstField*) fieldID >= clazz->ifields &&
                     (InstField*) fieldID < clazz->ifields + clazz->ifieldCount) {
@@ -413,7 +417,7 @@ public:
             clazz = clazz->super;
         }
 
-        LOGW("JNI WARNING: inst fieldID %p not valid for class %s",
+        LOGW("JNI WARNING: instance fieldID %p not valid for class %s",
                 fieldID, obj->clazz->descriptor);
         showLocation();
         abortMaybe();
@@ -585,7 +589,7 @@ public:
         const char* errorKind = NULL;
         u1 utf8 = checkUtfBytes(bytes, &errorKind);
         if (errorKind != NULL) {
-            LOGW("JNI WARNING: input is not valid UTF-8: illegal %s byte 0x%x", errorKind, utf8);
+            LOGW("JNI WARNING: input is not valid UTF-8: illegal %s byte %#x", errorKind, utf8);
             LOGW("             string: '%s'", bytes);
             showLocation();
             abortMaybe();
@@ -685,7 +689,7 @@ private:
          */
         bool printException = false;
         if ((flags & kFlag_ExcepOkay) == 0 && dvmCheckException(dvmThreadSelf())) {
-            LOGW("JNI WARNING: JNI method called with exception raised");
+            LOGW("JNI WARNING: JNI method called with exception pending");
             printWarn = true;
             printException = true;
         }
@@ -980,10 +984,10 @@ private:
         // TODO: we could mprotect instead, and keep the allocation around for a while.
         // This would be even more expensive, but it might catch more errors.
         // if (mprotect(fullBuf, totalByteCount, PROT_NONE) != 0) {
-        //     LOGW("mprotect(PROT_NONE) failed: %s\n", strerror(errno));
+        //     LOGW("mprotect(PROT_NONE) failed: %s", strerror(errno));
         // }
         if (munmap(fullBuf, totalByteCount) != 0) {
-            LOGW("munmap failed: %s\n", strerror(errno));
+            LOGW("munmap failed: %s", strerror(errno));
             dvmAbort();
         }
     }

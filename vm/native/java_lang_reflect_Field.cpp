@@ -137,12 +137,12 @@ static Field* validateFieldAccess(Object* obj, ClassObject* declaringClass,
  */
 static void getStaticFieldValue(const StaticField* sfield, JValue* value)
 {
-    if (!dvmIsVolatileField(&sfield->field)) {
+    if (!dvmIsVolatileField(sfield)) {
         /* just copy the whole thing */
         *value = sfield->value;
     } else {
         /* need memory barriers and/or 64-bit atomic ops */
-        switch (sfield->field.signature[0]) {
+        switch (sfield->signature[0]) {
         case 'Z':
             value->i = dvmGetStaticFieldBooleanVolatile(sfield);
             break;
@@ -172,7 +172,7 @@ static void getStaticFieldValue(const StaticField* sfield, JValue* value)
             value->l = dvmGetStaticFieldObjectVolatile(sfield);
             break;
         default:
-            LOGE("Unhandled field signature '%s'\n", sfield->field.signature);
+            LOGE("Unhandled field signature '%s'", sfield->signature);
             dvmAbort();
         }
     }
@@ -187,9 +187,9 @@ static void getStaticFieldValue(const StaticField* sfield, JValue* value)
 static void getInstFieldValue(const InstField* ifield, Object* obj,
     JValue* value)
 {
-    if (!dvmIsVolatileField(&ifield->field)) {
+    if (!dvmIsVolatileField(ifield)) {
         /* use type-specific get; really just 32-bit vs. 64-bit */
-        switch (ifield->field.signature[0]) {
+        switch (ifield->signature[0]) {
         case 'Z':
             value->i = dvmGetFieldBoolean(obj, ifield->byteOffset);
             break;
@@ -219,12 +219,12 @@ static void getInstFieldValue(const InstField* ifield, Object* obj,
             value->l = dvmGetFieldObject(obj, ifield->byteOffset);
             break;
         default:
-            LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
+            LOGE("Unhandled field signature '%s'", ifield->signature);
             dvmAbort();
         }
     } else {
         /* need memory barriers and/or 64-bit atomic ops */
-        switch (ifield->field.signature[0]) {
+        switch (ifield->signature[0]) {
         case 'Z':
             value->i = dvmGetFieldBooleanVolatile(obj, ifield->byteOffset);
             break;
@@ -254,7 +254,7 @@ static void getInstFieldValue(const InstField* ifield, Object* obj,
             value->l = dvmGetFieldObjectVolatile(obj, ifield->byteOffset);
             break;
         default:
-            LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
+            LOGE("Unhandled field signature '%s'", ifield->signature);
             dvmAbort();
         }
     }
@@ -278,8 +278,8 @@ static void getFieldValue(const Field* field, Object* obj, JValue* value)
  */
 static void setStaticFieldValue(StaticField* sfield, const JValue* value)
 {
-    if (!dvmIsVolatileField(&sfield->field)) {
-        switch (sfield->field.signature[0]) {
+    if (!dvmIsVolatileField(sfield)) {
+        switch (sfield->signature[0]) {
         case 'L':
         case '[':
             dvmSetStaticFieldObject(sfield, (Object*)value->l);
@@ -291,7 +291,7 @@ static void setStaticFieldValue(StaticField* sfield, const JValue* value)
         }
     } else {
         /* need memory barriers and/or 64-bit atomic ops */
-        switch (sfield->field.signature[0]) {
+        switch (sfield->signature[0]) {
         case 'Z':
             dvmSetStaticFieldBooleanVolatile(sfield, value->z);
             break;
@@ -321,7 +321,7 @@ static void setStaticFieldValue(StaticField* sfield, const JValue* value)
             dvmSetStaticFieldObjectVolatile(sfield, (Object*)value->l);
             break;
         default:
-            LOGE("Unhandled field signature '%s'\n", sfield->field.signature);
+            LOGE("Unhandled field signature '%s'", sfield->signature);
             dvmAbort();
         }
     }
@@ -334,9 +334,9 @@ static void setStaticFieldValue(StaticField* sfield, const JValue* value)
 static void setInstFieldValue(InstField* ifield, Object* obj,
     const JValue* value)
 {
-    if (!dvmIsVolatileField(&ifield->field)) {
+    if (!dvmIsVolatileField(ifield)) {
         /* use type-specific set; really just 32-bit vs. 64-bit */
-        switch (ifield->field.signature[0]) {
+        switch (ifield->signature[0]) {
         case 'Z':
             dvmSetFieldBoolean(obj, ifield->byteOffset, value->z);
             break;
@@ -366,7 +366,7 @@ static void setInstFieldValue(InstField* ifield, Object* obj,
             dvmSetFieldObject(obj, ifield->byteOffset, (Object *)value->l);
             break;
         default:
-            LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
+            LOGE("Unhandled field signature '%s'", ifield->signature);
             dvmAbort();
         }
 #if ANDROID_SMP != 0
@@ -374,13 +374,13 @@ static void setInstFieldValue(InstField* ifield, Object* obj,
          * Special handling for final fields on SMP systems.  We need a
          * store/store barrier here (JMM requirement).
          */
-        if (dvmIsFinalField(&ifield->field)) {
+        if (dvmIsFinalField(ifield)) {
             ANDROID_MEMBAR_STORE();
         }
 #endif
     } else {
         /* need memory barriers and/or 64-bit atomic ops */
-        switch (ifield->field.signature[0]) {
+        switch (ifield->signature[0]) {
         case 'Z':
             dvmSetFieldBooleanVolatile(obj, ifield->byteOffset, value->z);
             break;
@@ -410,7 +410,7 @@ static void setInstFieldValue(InstField* ifield, Object* obj,
             dvmSetFieldObjectVolatile(obj, ifield->byteOffset, (Object*)value->l);
             break;
         default:
-            LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
+            LOGE("Unhandled field signature '%s'", ifield->signature);
             dvmAbort();
         }
     }

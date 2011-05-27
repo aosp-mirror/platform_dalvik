@@ -87,6 +87,11 @@ extern "C" void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
 bool dvmIsValidObject(const Object* obj);
 
 /*
+ * Returns true iff <obj> points to a zygote allocated object.
+ */
+bool dvmIsZygoteObject(const Object* obj);
+
+/*
  * Create a copy of an object.
  *
  * Returns NULL and throws an exception on failure.
@@ -143,5 +148,7 @@ void dvmClearGrowthLimit(void);
  * Returns true if the address is within the bounds of the heap.
  */
 bool dvmIsHeapAddress(void *address);
+
+bool dvmIsNonMovingObject(const Object* object);
 
 #endif /*_DALVIK_ALLOC_ALLOC*/

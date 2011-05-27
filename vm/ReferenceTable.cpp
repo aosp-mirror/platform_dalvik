@@ -64,7 +64,7 @@ bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj)
     if (pRef->nextEntry == pRef->table + pRef->allocEntries) {
         /* reached end of allocated space; did we hit buffer max? */
         if (pRef->nextEntry == pRef->table + pRef->maxEntries) {
-            LOGW("ReferenceTable overflow (max=%d)\n", pRef->maxEntries);
+            LOGW("ReferenceTable overflow (max=%d)", pRef->maxEntries);
             return false;
         }
 
@@ -78,11 +78,11 @@ bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj)
 
         newTable = (Object**) realloc(pRef->table, newSize * sizeof(Object*));
         if (newTable == NULL) {
-            LOGE("Unable to expand ref table (from %d to %d %d-byte entries)\n",
+            LOGE("Unable to expand ref table (from %d to %d %d-byte entries)",
                 pRef->allocEntries, newSize, sizeof(Object*));
             return false;
         }
-        LOGVV("Growing %p from %d to %d\n", pRef, pRef->allocEntries, newSize);
+        LOGVV("Growing %p from %d to %d", pRef, pRef->allocEntries, newSize);
 
         /* update entries; adjust "nextEntry" in case memory moved */
         pRef->nextEntry = newTable + (pRef->nextEntry - pRef->table);
@@ -141,10 +141,10 @@ bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** bottom,
     if (moveCount != 0) {
         /* remove from middle, slide the rest down */
         memmove(ptr, ptr+1, moveCount * sizeof(Object*));
-        //LOGV("LREF delete %p, shift %d down\n", obj, moveCount);
+        //LOGV("LREF delete %p, shift %d down", obj, moveCount);
     } else {
         /* last entry, falls off the end */
-        //LOGV("LREF delete %p from end\n", obj);
+        //LOGV("LREF delete %p from end", obj);
     }
 
     return true;
@@ -205,7 +205,7 @@ static int compareObject(const void* vobj1, const void* vobj2)
 static void logObject(const Object* obj, size_t elems, int identical, int equiv)
 {
     if (obj == NULL) {
-        LOGW("  NULL reference (count=%d)\n", equiv);
+        LOGW("  NULL reference (count=%d)", equiv);
         return;
     }
 
@@ -222,10 +222,10 @@ static void logObject(const Object* obj, size_t elems, int identical, int equiv)
     }
 
     if (identical + equiv != 0) {
-        LOGW("%5d of %s%s (%d unique)\n", identical + equiv +1,
+        LOGW("%5d of %s%s (%d unique)", identical + equiv +1,
             descriptor, elemStr, equiv +1);
     } else {
-        LOGW("%5d of %s%s\n", identical + equiv +1, descriptor, elemStr);
+        LOGW("%5d of %s%s", identical + equiv +1, descriptor, elemStr);
     }
 }
 
@@ -239,7 +239,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     const char* descr)
 {
     if (count == 0) {
-        LOGW("%s reference table has no entries\n", descr);
+        LOGW("%s reference table has no entries", descr);
         return;
     }
 
@@ -247,7 +247,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
      * Dump the most recent N entries.
      */
     const size_t kLast = 10;
-    LOGW("Last %d entries in %s reference table:\n", kLast, descr);
+    LOGW("Last %d entries in %s reference table:", kLast, descr);
     int start = count - kLast;
     if (start < 0)
         start = 0;
@@ -263,16 +263,16 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
         if (ref->clazz == NULL) {
             /* should only be possible right after a plain dvmMalloc() */
             size_t size = dvmObjectSizeInHeap(ref);
-            LOGW("%5d: %p cls=(raw) (%zd bytes)\n", idx, ref, size);
+            LOGW("%5d: %p cls=(raw) (%zd bytes)", idx, ref, size);
         } else if (dvmIsClassObject(ref)) {
             ClassObject* clazz = (ClassObject*) ref;
-            LOGW("%5d: %p cls=%s '%s'\n", idx, ref, ref->clazz->descriptor,
+            LOGW("%5d: %p cls=%s '%s'", idx, ref, ref->clazz->descriptor,
                 clazz->descriptor);
         } else if (elems != 0) {
-            LOGW("%5d: %p cls=%s [%zd]\n",
+            LOGW("%5d: %p cls=%s [%zd]",
                 idx, ref, ref->clazz->descriptor, elems);
         } else {
-            LOGW("%5d: %p cls=%s\n", idx, ref, ref->clazz->descriptor);
+            LOGW("%5d: %p cls=%s", idx, ref, ref->clazz->descriptor);
         }
     }
 
@@ -281,7 +281,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
      */
     Object** tableCopy = (Object**)malloc(sizeof(Object*) * count);
     if (tableCopy == NULL) {
-        LOGE("Unable to copy table with %d elements\n", count);
+        LOGE("Unable to copy table with %d elements", count);
         return;
     }
     memcpy(tableCopy, refs, sizeof(Object*) * count);
@@ -304,7 +304,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     /*
      * Dump uniquified table summary.
      */
-    LOGW("%s reference table summary (%d entries):\n", descr, count);
+    LOGW("%s reference table summary (%d entries):", descr, count);
     size_t equiv, identical;
     equiv = identical = 0;
     for (idx = 1; idx < count; idx++) {

@@ -20,8 +20,7 @@
 
 static HashTable *gStringHashTable;
 
-int
-hprofStartup_String()
+int hprofStartup_String()
 {
     gStringHashTable = dvmHashTableCreate(512, free);
     if (gStringHashTable == NULL) {
@@ -30,15 +29,13 @@ hprofStartup_String()
     return 0;
 }
 
-int
-hprofShutdown_String()
+int hprofShutdown_String()
 {
     dvmHashTableFree(gStringHashTable);
     return 0;
 }
 
-static u4
-computeUtf8Hash(const char *str)
+static u4 computeUtf8Hash(const char *str)
 {
     u4 hash = 0;
     const char *cp;
@@ -52,8 +49,7 @@ computeUtf8Hash(const char *str)
     return hash;
 }
 
-hprof_string_id
-hprofLookupStringId(const char *str)
+hprof_string_id hprofLookupStringId(const char *str)
 {
     void *val;
     u4 hashValue;
@@ -77,8 +73,7 @@ hprofLookupStringId(const char *str)
     return (hprof_string_id)val;
 }
 
-int
-hprofDumpStrings(hprof_context_t *ctx)
+int hprofDumpStrings(hprof_context_t *ctx)
 {
     HashIter iter;
     hprof_record_t *rec = &ctx->curRec;

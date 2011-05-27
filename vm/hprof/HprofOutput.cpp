@@ -61,9 +61,8 @@
  *
  * This will take ownership of "fileName".
  */
-void
-hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
-    bool writeHeader, bool directToDdms)
+void hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
+                      bool writeHeader, bool directToDdms)
 {
     memset(ctx, 0, sizeof (*ctx));
 
@@ -75,7 +74,7 @@ hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
     FILE* fp = open_memstream(&ctx->fileDataPtr, &ctx->fileDataSize);
     if (fp == NULL) {
         /* not expected */
-        LOGE("hprof: open_memstream failed: %s\n", strerror(errno));
+        LOGE("hprof: open_memstream failed: %s", strerror(errno));
         dvmAbort();
     }
 
@@ -126,8 +125,7 @@ hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
     }
 }
 
-int
-hprofFlushRecord(hprof_record_t *rec, FILE *fp)
+int hprofFlushRecord(hprof_record_t *rec, FILE *fp)
 {
     if (rec->dirty) {
         unsigned char headBuf[sizeof (u1) + 2 * sizeof (u4)];
@@ -153,14 +151,12 @@ hprofFlushRecord(hprof_record_t *rec, FILE *fp)
     return 0;
 }
 
-int
-hprofFlushCurrentRecord(hprof_context_t *ctx)
+int hprofFlushCurrentRecord(hprof_context_t *ctx)
 {
     return hprofFlushRecord(&ctx->curRec, ctx->memFp);
 }
 
-int
-hprofStartNewRecord(hprof_context_t *ctx, u1 tag, u4 time)
+int hprofStartNewRecord(hprof_context_t *ctx, u1 tag, u4 time)
 {
     hprof_record_t *rec = &ctx->curRec;
     int err;
@@ -180,8 +176,7 @@ hprofStartNewRecord(hprof_context_t *ctx, u1 tag, u4 time)
     return 0;
 }
 
-static inline int
-guaranteeRecordAppend(hprof_record_t *rec, size_t nmore)
+static inline int guaranteeRecordAppend(hprof_record_t *rec, size_t nmore)
 {
     size_t minSize;
 
@@ -208,8 +203,8 @@ guaranteeRecordAppend(hprof_record_t *rec, size_t nmore)
     return 0;
 }
 
-int
-hprofAddU1ListToRecord(hprof_record_t *rec, const u1 *values, size_t numValues)
+int hprofAddU1ListToRecord(hprof_record_t *rec, const u1 *values,
+                           size_t numValues)
 {
     int err;
 
@@ -224,8 +219,7 @@ hprofAddU1ListToRecord(hprof_record_t *rec, const u1 *values, size_t numValues)
     return 0;
 }
 
-int
-hprofAddU1ToRecord(hprof_record_t *rec, u1 value)
+int hprofAddU1ToRecord(hprof_record_t *rec, u1 value)
 {
     int err;
 
@@ -239,8 +233,7 @@ hprofAddU1ToRecord(hprof_record_t *rec, u1 value)
     return 0;
 }
 
-int
-hprofAddUtf8StringToRecord(hprof_record_t *rec, const char *str)
+int hprofAddUtf8StringToRecord(hprof_record_t *rec, const char *str)
 {
     /* The terminating NUL character is NOT written.
      */
@@ -248,8 +241,8 @@ hprofAddUtf8StringToRecord(hprof_record_t *rec, const char *str)
     return hprofAddU1ListToRecord(rec, (const u1 *)str, strlen(str));
 }
 
-int
-hprofAddU2ListToRecord(hprof_record_t *rec, const u2 *values, size_t numValues)
+int hprofAddU2ListToRecord(hprof_record_t *rec, const u2 *values,
+                           size_t numValues)
 {
     int err = guaranteeRecordAppend(rec, numValues * 2);
     if (err != 0) {
@@ -268,14 +261,13 @@ hprofAddU2ListToRecord(hprof_record_t *rec, const u2 *values, size_t numValues)
     return 0;
 }
 
-int
-hprofAddU2ToRecord(hprof_record_t *rec, u2 value)
+int hprofAddU2ToRecord(hprof_record_t *rec, u2 value)
 {
     return hprofAddU2ListToRecord(rec, &value, 1);
 }
 
-int
-hprofAddU4ListToRecord(hprof_record_t *rec, const u4 *values, size_t numValues)
+int hprofAddU4ListToRecord(hprof_record_t *rec, const u4 *values,
+                           size_t numValues)
 {
     int err = guaranteeRecordAppend(rec, numValues * 4);
     if (err != 0) {
@@ -294,14 +286,13 @@ hprofAddU4ListToRecord(hprof_record_t *rec, const u4 *values, size_t numValues)
     return 0;
 }
 
-int
-hprofAddU4ToRecord(hprof_record_t *rec, u4 value)
+int hprofAddU4ToRecord(hprof_record_t *rec, u4 value)
 {
     return hprofAddU4ListToRecord(rec, &value, 1);
 }
 
-int
-hprofAddU8ListToRecord(hprof_record_t *rec, const u8 *values, size_t numValues)
+int hprofAddU8ListToRecord(hprof_record_t *rec, const u8 *values,
+                           size_t numValues)
 {
     int err = guaranteeRecordAppend(rec, numValues * 8);
     if (err != 0) {
@@ -320,8 +311,7 @@ hprofAddU8ListToRecord(hprof_record_t *rec, const u8 *values, size_t numValues)
     return 0;
 }
 
-int
-hprofAddU8ToRecord(hprof_record_t *rec, u8 value)
+int hprofAddU8ToRecord(hprof_record_t *rec, u8 value)
 {
     return hprofAddU8ListToRecord(rec, &value, 1);
 }

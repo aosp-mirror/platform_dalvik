@@ -50,7 +50,7 @@ static bool basicTest()
 
     iref0 = (IndirectRef) 0x11110;
     if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0)) {
-        LOGE("unexpectedly successful removal\n");
+        LOGE("unexpectedly successful removal");
         goto bail;
     }
 
@@ -62,7 +62,7 @@ static bool basicTest()
     iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
     iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
     if (iref0 == NULL || iref1 == NULL || iref2 == NULL) {
-        LOGE("trivial add1 failed\n");
+        LOGE("trivial add1 failed");
         goto bail;
     }
 
@@ -70,7 +70,7 @@ static bool basicTest()
         dvmGetFromIndirectRefTable(&irt, iref1) != obj1 ||
         dvmGetFromIndirectRefTable(&irt, iref2) != obj2)
     {
-        LOGE("objects don't match expected values %p %p %p vs. %p %p %p\n",
+        LOGE("objects don't match expected values %p %p %p vs. %p %p %p",
             dvmGetFromIndirectRefTable(&irt, iref0),
             dvmGetFromIndirectRefTable(&irt, iref1),
             dvmGetFromIndirectRefTable(&irt, iref2),
@@ -84,19 +84,19 @@ static bool basicTest()
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref1) ||
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref2))
     {
-        LOGE("fifo deletion failed\n");
+        LOGE("fifo deletion failed");
         goto bail;
     }
 
     /* table should be empty now */
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("fifo del not empty\n");
+        LOGE("fifo del not empty");
         goto bail;
     }
 
     /* get invalid entry (off the end of the list) */
     if (dvmGetFromIndirectRefTable(&irt, iref0) != kInvalidIndirectRefObject) {
-        LOGE("stale entry get succeeded unexpectedly\n");
+        LOGE("stale entry get succeeded unexpectedly");
         goto bail;
     }
 
@@ -108,7 +108,7 @@ static bool basicTest()
     iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
     iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
     if (iref0 == NULL || iref1 == NULL || iref2 == NULL) {
-        LOGE("trivial add2 failed\n");
+        LOGE("trivial add2 failed");
         goto bail;
     }
 
@@ -116,13 +116,13 @@ static bool basicTest()
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref1) ||
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref0))
     {
-        LOGE("lifo deletion failed\n");
+        LOGE("lifo deletion failed");
         goto bail;
     }
 
     /* table should be empty now */
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("lifo del not empty\n");
+        LOGE("lifo del not empty");
         goto bail;
     }
 
@@ -135,12 +135,12 @@ static bool basicTest()
     iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
     iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
     if (iref0 == NULL || iref1 == NULL || iref2 == NULL) {
-        LOGE("trivial add3 failed\n");
+        LOGE("trivial add3 failed");
         goto bail;
     }
 
     if (dvmIndirectRefTableEntries(&irt) != 3) {
-        LOGE("expected 3 entries, found %d\n",
+        LOGE("expected 3 entries, found %d",
             dvmIndirectRefTableEntries(&irt));
         goto bail;
     }
@@ -148,26 +148,26 @@ static bool basicTest()
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1) ||
         dvmRemoveFromIndirectRefTable(&irt, cookie, iref1))
     {
-        LOGE("unorder deletion1 failed\n");
+        LOGE("unorder deletion1 failed");
         goto bail;
     }
 
     /* get invalid entry (from hole) */
     if (dvmGetFromIndirectRefTable(&irt, iref1) != kInvalidIndirectRefObject) {
-        LOGE("hole get succeeded unexpectedly\n");
+        LOGE("hole get succeeded unexpectedly");
         goto bail;
     }
 
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2) ||
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref0))
     {
-        LOGE("unorder deletion2 failed\n");
+        LOGE("unorder deletion2 failed");
         goto bail;
     }
 
     /* table should be empty now */
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("unorder del not empty\n");
+        LOGE("unorder del not empty");
         goto bail;
     }
 
@@ -182,36 +182,36 @@ static bool basicTest()
     iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
     iref3 = dvmAddToIndirectRefTable(&irt, cookie, obj3);
     if (iref0 == NULL || iref1 == NULL || iref2 == NULL || iref3 == NULL) {
-        LOGE("trivial add4 failed\n");
+        LOGE("trivial add4 failed");
         goto bail;
     }
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1)) {
-        LOGE("remove 1 of 4 failed\n");
+        LOGE("remove 1 of 4 failed");
         goto bail;
     }
     iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
     if (dvmIndirectRefTableEntries(&irt) != 4) {
-        LOGE("hole not filled\n");
+        LOGE("hole not filled");
         goto bail;
     }
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1) ||
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref3))
     {
-        LOGE("remove 1/3 failed\n");
+        LOGE("remove 1/3 failed");
         goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != 3) {
-        LOGE("should be 3 after two deletions\n");
+        LOGE("should be 3 after two deletions");
         goto bail;
     }
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2) ||
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref0))
     {
-        LOGE("remove 2/0 failed\n");
+        LOGE("remove 2/0 failed");
         goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("not empty after split remove\n");
+        LOGE("not empty after split remove");
         goto bail;
     }
 
@@ -225,15 +225,15 @@ static bool basicTest()
     dvmRemoveFromIndirectRefTable(&irt, cookie, iref0);
     iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
     if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0)) {
-        LOGE("mismatched del succeeded (%p vs %p)\n", iref0, iref1);
+        LOGE("mismatched del succeeded (%p vs %p)", iref0, iref1);
         goto bail;
     }
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1)) {
-        LOGE("switched del failed\n");
+        LOGE("switched del failed");
         goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("switching del not empty\n");
+        LOGE("switching del not empty");
         goto bail;
     }
 
@@ -247,16 +247,16 @@ static bool basicTest()
     if (iref0 != iref1) {
         /* try 0, should not work */
         if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0)) {
-            LOGE("temporal del succeeded (%p vs %p)\n", iref0, iref1);
+            LOGE("temporal del succeeded (%p vs %p)", iref0, iref1);
             goto bail;
         }
     }
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1)) {
-        LOGE("temporal cleanup failed\n");
+        LOGE("temporal cleanup failed");
         goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("temporal del not empty\n");
+        LOGE("temporal del not empty");
         goto bail;
     }
 
@@ -268,37 +268,37 @@ static bool basicTest()
     for (i = 0; i < kTableMax; i++) {
         manyRefs[i] = dvmAddToIndirectRefTable(&irt, cookie, obj0);
         if (manyRefs[i] == NULL) {
-            LOGE("Failed adding %d of %d\n", i, kTableMax);
+            LOGE("Failed adding %d of %d", i, kTableMax);
             goto bail;
         }
     }
     if (dvmAddToIndirectRefTable(&irt, cookie, obj0) != NULL) {
-        LOGE("Table overflow succeeded\n");
+        LOGE("Table overflow succeeded");
         goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != (size_t)kTableMax) {
-        LOGE("Expected %d entries, found %d\n",
+        LOGE("Expected %d entries, found %d",
             kTableMax, dvmIndirectRefTableEntries(&irt));
         goto bail;
     }
     for (i = 0; i < kTableMax-1; i++) {
         if (!dvmRemoveFromIndirectRefTable(&irt, cookie, manyRefs[i])) {
-            LOGE("multi-remove failed at %d\n", i);
+            LOGE("multi-remove failed at %d", i);
             goto bail;
         }
     }
     /* because of removal order, should have 20 entries, 19 of them holes */
     if (dvmIndirectRefTableEntries(&irt) != (size_t)kTableMax) {
-        LOGE("Expected %d entries (with holes), found %d\n",
+        LOGE("Expected %d entries (with holes), found %d",
             kTableMax, dvmIndirectRefTableEntries(&irt));
         goto bail;
     }
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, manyRefs[kTableMax-1])) {
-        LOGE("multi-remove final failed\n");
+        LOGE("multi-remove final failed");
         goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("multi-del not empty\n");
+        LOGE("multi-del not empty");
         goto bail;
     }
 
@@ -351,17 +351,17 @@ static bool segmentTest()
     if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0) ||
         dvmRemoveFromIndirectRefTable(&irt, cookie, iref1))
     {
-        LOGE("removed values from earlier segment\n");
+        LOGE("removed values from earlier segment");
         goto bail;
     }
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2) ||
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref3))
     {
-        LOGE("unable to remove values from current segment\n");
+        LOGE("unable to remove values from current segment");
         goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != 2) {
-        LOGE("wrong total entries\n");
+        LOGE("wrong total entries");
         goto bail;
     }
     dvmPopIndirectRefTableSegment(&irt, segmentState[1]);
@@ -369,11 +369,11 @@ static bool segmentTest()
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref0) ||
         !dvmRemoveFromIndirectRefTable(&irt, cookie, iref1))
     {
-        LOGE("unable to remove values from first segment\n");
+        LOGE("unable to remove values from first segment");
         goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("basic push/pop not empty\n");
+        LOGE("basic push/pop not empty");
         goto bail;
     }
 
@@ -392,12 +392,12 @@ static bool segmentTest()
     dvmPopIndirectRefTableSegment(&irt, segmentState[1]);
     cookie = segmentState[0];
     if (dvmIndirectRefTableEntries(&irt) != 2) {
-        LOGE("wrong total entries after pop\n");
+        LOGE("wrong total entries after pop");
         goto bail;
     }
     dvmRemoveFromIndirectRefTable(&irt, cookie, iref1);
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("not back to zero after pop + del\n");
+        LOGE("not back to zero after pop + del");
         goto bail;
     }
 
@@ -420,7 +420,7 @@ static bool segmentTest()
         dvmGetFromIndirectRefTable(&irt, iref2) != obj2 ||
         dvmGetFromIndirectRefTable(&irt, iref3) != obj3)
     {
-        LOGE("Unable to retrieve all multiseg objects\n");
+        LOGE("Unable to retrieve all multiseg objects");
         goto bail;
     }
 
@@ -433,13 +433,13 @@ static bool segmentTest()
 
     dvmRemoveFromIndirectRefTable(&irt, cookie, iref3);
     if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref2)) {
-        LOGE("multiseg del2 worked\n");
+        LOGE("multiseg del2 worked");
         goto bail;
     }
     dvmPopIndirectRefTableSegment(&irt, segmentState[3]);
     cookie = segmentState[2];
     if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2)) {
-        LOGE("multiseg del2b failed (cookie=0x%08x ref=%p)\n", cookie, iref2);
+        LOGE("multiseg del2b failed (cookie=0x%08x ref=%p)", cookie, iref2);
         goto bail;
     }
     iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
@@ -449,13 +449,13 @@ static bool segmentTest()
     cookie = segmentState[0];
 
     if (dvmIndirectRefTableEntries(&irt) != 2) {
-        LOGE("Unexpected entry count in multiseg\n");
+        LOGE("Unexpected entry count in multiseg");
         goto bail;
     }
     dvmRemoveFromIndirectRefTable(&irt, cookie, iref0);
     dvmRemoveFromIndirectRefTable(&irt, cookie, iref1);
     if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("Unexpected entry count at multiseg end\n");
+        LOGE("Unexpected entry count at multiseg end");
         goto bail;
     }
 
@@ -474,11 +474,11 @@ bail:
 bool dvmTestIndirectRefTable()
 {
     if (!basicTest()) {
-        LOGE("IRT basic test failed\n");
+        LOGE("IRT basic test failed");
         return false;
     }
     if (!segmentTest()) {
-        LOGE("IRT segment test failed\n");
+        LOGE("IRT segment test failed");
         return false;
     }
 

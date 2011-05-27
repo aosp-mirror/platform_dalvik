@@ -399,14 +399,14 @@ void writeKeyMethods(FILE *keyFp)
                 pNext->methodId = id;
         }
         if (pRecord->className == NULL || pRecord->methodName == NULL) {
-            fprintf(keyFp, "0x%x        %s      m       ()\n",
+            fprintf(keyFp, "%#x        %s      m       ()\n",
                     pRecord->methodId, pRecord->fullName);
         } else if (pRecord->signature == NULL) {
-            fprintf(keyFp, "0x%x        %s      %s      ()\n",
+            fprintf(keyFp, "%#x        %s      %s      ()\n",
                     pRecord->methodId, pRecord->className,
                     pRecord->methodName);
         } else {
-            fprintf(keyFp, "0x%x        %s      %s      %s\n",
+            fprintf(keyFp, "%#x        %s      %s      %s\n",
                     pRecord->methodId, pRecord->className,
                     pRecord->methodName, pRecord->signature);
         }

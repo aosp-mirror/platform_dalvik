@@ -76,7 +76,7 @@ INLINE double dvmGetFieldDouble(const Object* obj, int offset) {
     return ((JValue*)BYTE_OFFSET(obj, offset))->d;
 }
 INLINE Object* dvmGetFieldObject(const Object* obj, int offset) {
-    return (Object*)((JValue*)BYTE_OFFSET(obj, offset))->l;
+    return ((JValue*)BYTE_OFFSET(obj, offset))->l;
 }
 INLINE bool dvmGetFieldBooleanVolatile(const Object* obj, int offset) {
     s4* ptr = &((JValue*)BYTE_OFFSET(obj, offset))->i;
@@ -234,7 +234,7 @@ INLINE double dvmGetStaticFieldDouble(const StaticField* sfield) {
     return sfield->value.d;
 }
 INLINE Object* dvmGetStaticFieldObject(const StaticField* sfield) {
-    return (Object*)sfield->value.l;
+    return sfield->value.l;
 }
 INLINE bool dvmGetStaticFieldBooleanVolatile(const StaticField* sfield) {
     const s4* ptr = &(sfield->value.i);
@@ -307,7 +307,7 @@ INLINE void dvmSetStaticFieldDouble(StaticField* sfield, double val) {
 INLINE void dvmSetStaticFieldObject(StaticField* sfield, Object* val) {
     sfield->value.l = val;
     if (val != NULL) {
-        dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
+        dvmWriteBarrierField(sfield->clazz, &sfield->value.l);
     }
 }
 INLINE void dvmSetStaticFieldIntVolatile(StaticField* sfield, s4 val) {
@@ -350,7 +350,7 @@ INLINE void dvmSetStaticFieldObjectVolatile(StaticField* sfield, Object* val) {
     *ptr = val;
     ANDROID_MEMBAR_FULL();
     if (val != NULL) {
-        dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
+        dvmWriteBarrierField(sfield->clazz, &sfield->value.l);
     }
 }
 

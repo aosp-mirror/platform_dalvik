@@ -172,7 +172,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
             RETURN_VOID();
         }
 
-        if (false) LOGD("arraycopy prim[%c] dst=%p %d src=%p %d len=%d\n",
+        if (false) LOGD("arraycopy prim[%c] dst=%p %d src=%p %d len=%d",
             srcType, dstArray->contents, dstPos,
             srcArray->contents, srcPos, length);
 
@@ -209,7 +209,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 length * 8);
             break;
         default:        /* illegal array type */
-            LOGE("Weird array type '%s'\n", srcClass->descriptor);
+            LOGE("Weird array type '%s'", srcClass->descriptor);
             dvmAbort();
         }
     } else {
@@ -226,7 +226,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
             /*
              * "dst" can hold "src"; copy the whole thing.
              */
-            if (false) LOGD("arraycopy ref dst=%p %d src=%p %d len=%d\n",
+            if (false) LOGD("arraycopy ref dst=%p %d src=%p %d len=%d",
                 dstArray->contents, dstPos * width,
                 srcArray->contents, srcPos * width,
                 length * width);
@@ -273,7 +273,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 }
             }
 
-            if (false) LOGD("arraycopy iref dst=%p %d src=%p %d count=%d of %d\n",
+            if (false) LOGD("arraycopy iref dst=%p %d src=%p %d count=%d of %d",
                 dstArray->contents, dstPos * width,
                 srcArray->contents, srcPos * width,
                 copyCount, length);
