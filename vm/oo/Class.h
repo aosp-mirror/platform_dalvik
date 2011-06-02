@@ -26,18 +26,16 @@
  * look for optional packages (a/k/a standard extensions), and then try
  * the classpath.
  *
- * In Dalvik, a class can be found in one of three ways:
- *  - as a "loose" .class file in a directory
- *  - as a .class file held in a JAR archive
+ * In Dalvik, a class can be found in one of two ways:
  *  - in a .dex file
+ *  - in a .dex file named specifically "classes.dex", which is held
+ *    inside a jar file
  *
- * These three may be freely intermixed in a classpath specification.
- * Ordering is significant.  (Currently only ".dex" is supported directly
- * by the VM.)
+ * These two may be freely intermixed in a classpath specification.
+ * Ordering is significant.
  */
 enum ClassPathEntryKind {
     kCpeUnknown = 0,
-    kCpeDir,
     kCpeJar,
     kCpeDex,
     kCpeLastEntry       /* used as sentinel at end of array */

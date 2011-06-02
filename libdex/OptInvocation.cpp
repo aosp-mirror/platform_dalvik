@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
- * Utility functions for managing an invocation of "dexopt".
+ * Utility functions for dealing with optimized dex files.
  */
+
 #include "vm/DalvikVersion.h"
 
 #include <stdint.h>
@@ -30,8 +32,8 @@
 #include "OptInvocation.h"
 #include "DexFile.h"
 
+static const char* kCacheDirectoryName = "dalvik-cache";
 static const char* kClassesDex = "classes.dex";
-
 
 /*
  * Given the filename of a .jar or .dex file, construct the DEX file cache
@@ -45,7 +47,6 @@ static const char* kClassesDex = "classes.dex";
 char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
 {
     char nameBuf[512];
-    static const char kDexCachePath[] = "dalvik-cache";
     char absoluteFile[sizeof(nameBuf)];
     const size_t kBufLen = sizeof(nameBuf) - 1;
     const char* dataRoot;
@@ -95,7 +96,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
     dataRoot = getenv("ANDROID_DATA");
     if (dataRoot == NULL)
         dataRoot = "/data";
-    snprintf(nameBuf, kBufLen, "%s/%s", dataRoot, kDexCachePath);
+    snprintf(nameBuf, kBufLen, "%s/%s", dataRoot, kCacheDirectoryName);
 
     /* Tack on the file name for the actual cache file path.
      */
