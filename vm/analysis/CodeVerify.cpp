@@ -3400,6 +3400,11 @@ void handleMonitorExit(RegisterLine* workLine, u4 regIdx, u4 insnIdx,
      */
     workLine->monitorStackTop--;
 #ifdef BUG_3215458_FIXED
+    /*
+     * TODO: This code can safely be enabled if know we are working on
+     * a dex file of format version 036 or later. (That is, we'll need to
+     * add a check for the version number.)
+     */
     if ((workLine->monitorEntries[regIdx] & (1 << workLine->monitorStackTop))
             == 0)
     {
