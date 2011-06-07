@@ -1314,12 +1314,10 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  * Each returns a newly-allocated string.
  */
 #define kThrowShow_accessFromClass     1
-static char* classNameFromIndex(const Method* method, int ref,
+static std::string classNameFromIndex(const Method* method, int ref,
     VerifyErrorRefType refType, int flags)
 {
-    static const int kBufLen = 256;
     const DvmDex* pDvmDex = method->clazz->pDvmDex;
-
     if (refType == VERIFY_ERROR_REF_FIELD) {
         /* get class ID from field ID */
         const DexFieldId* pFieldId = dexGetFieldId(pDvmDex->pDexFile, ref);
@@ -1331,96 +1329,71 @@ static char* classNameFromIndex(const Method* method, int ref,
     }
 
     const char* className = dexStringByTypeIdx(pDvmDex->pDexFile, ref);
-    char* dotClassName = dvmHumanReadableDescriptor(className);
-    if (flags == 0)
+    std::string dotClassName(dvmHumanReadableDescriptor(className));
+    if (flags == 0) {
         return dotClassName;
-
-    char* result = (char*) malloc(kBufLen);
-
-    if ((flags & kThrowShow_accessFromClass) != 0) {
-        char* dotFromName =
-            dvmHumanReadableDescriptor(method->clazz->descriptor);
-        snprintf(result, kBufLen, "tried to access class %s from class %s",
-            dotClassName, dotFromName);
-        free(dotFromName);
-    } else {
-        assert(false);      // should've been caught above
-        result[0] = '\0';
     }
 
-    free(dotClassName);
+    std::string result;
+    if ((flags & kThrowShow_accessFromClass) != 0) {
+        result += "tried to access class " + dotClassName;
+        result += " from class " + dvmHumanReadableDescriptor(method->clazz->descriptor);
+    } else {
+        assert(false);      // should've been caught above
+    }
+
     return result;
 }
-static char* fieldNameFromIndex(const Method* method, int ref,
+static std::string fieldNameFromIndex(const Method* method, int ref,
     VerifyErrorRefType refType, int flags)
 {
-    static const int kBufLen = 256;
-    const DvmDex* pDvmDex = method->clazz->pDvmDex;
-    const DexFieldId* pFieldId;
-    const char* className;
-    const char* fieldName;
-
     if (refType != VERIFY_ERROR_REF_FIELD) {
         LOGW("Expected ref type %d, got %d", VERIFY_ERROR_REF_FIELD, refType);
         return NULL;    /* no message */
     }
 
-    pFieldId = dexGetFieldId(pDvmDex->pDexFile, ref);
-    className = dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->classIdx);
-    fieldName = dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx);
+    const DvmDex* pDvmDex = method->clazz->pDvmDex;
+    const DexFieldId* pFieldId = dexGetFieldId(pDvmDex->pDexFile, ref);
+    const char* className = dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->classIdx);
+    const char* fieldName = dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx);
 
-    char* dotName = dvmHumanReadableDescriptor(className);
-    char* result = (char*) malloc(kBufLen);
+    std::string dotName(dvmHumanReadableDescriptor(className));
 
     if ((flags & kThrowShow_accessFromClass) != 0) {
-        char* dotFromName =
-            dvmHumanReadableDescriptor(method->clazz->descriptor);
-        snprintf(result, kBufLen, "tried to access field %s.%s from class %s",
-            dotName, fieldName, dotFromName);
-        free(dotFromName);
-    } else {
-        snprintf(result, kBufLen, "%s.%s", dotName, fieldName);
+        std::string result;
+        result += "tried to access field ";
+        result += dotName + "." + fieldName;
+        result += " from class ";
+        result += dvmHumanReadableDescriptor(method->clazz->descriptor);
+        return result;
     }
-
-    free(dotName);
-    return result;
+    return dotName + "." + fieldName;
 }
-static char* methodNameFromIndex(const Method* method, int ref,
+static std::string methodNameFromIndex(const Method* method, int ref,
     VerifyErrorRefType refType, int flags)
 {
-    static const int kBufLen = 384;
-    const DvmDex* pDvmDex = method->clazz->pDvmDex;
-    const DexMethodId* pMethodId;
-    const char* className;
-    const char* methodName;
-
     if (refType != VERIFY_ERROR_REF_METHOD) {
         LOGW("Expected ref type %d, got %d", VERIFY_ERROR_REF_METHOD,refType);
         return NULL;    /* no message */
     }
 
-    pMethodId = dexGetMethodId(pDvmDex->pDexFile, ref);
-    className = dexStringByTypeIdx(pDvmDex->pDexFile, pMethodId->classIdx);
-    methodName = dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx);
+    const DvmDex* pDvmDex = method->clazz->pDvmDex;
+    const DexMethodId* pMethodId = dexGetMethodId(pDvmDex->pDexFile, ref);
+    const char* className = dexStringByTypeIdx(pDvmDex->pDexFile, pMethodId->classIdx);
+    const char* methodName = dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx);
 
-    char* dotName = dvmHumanReadableDescriptor(className);
-    char* result = (char*) malloc(kBufLen);
+    std::string dotName(dvmHumanReadableDescriptor(className));
 
     if ((flags & kThrowShow_accessFromClass) != 0) {
-        char* dotFromName =
-            dvmHumanReadableDescriptor(method->clazz->descriptor);
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        snprintf(result, kBufLen,
-            "tried to access method %s.%s:%s from class %s",
-            dotName, methodName, desc, dotFromName);
-        free(dotFromName);
+        std::string result;
+        result += "tried to access method ";
+        result += dotName + "." + methodName + ":" + desc;
+        result += " from class " + dvmHumanReadableDescriptor(method->clazz->descriptor);
         free(desc);
-    } else {
-        snprintf(result, kBufLen, "%s.%s", dotName, methodName);
+        return result;
     }
-
-    free(dotName);
-    return result;
+    return dotName + "." + methodName;
 }
 
 /*
@@ -1439,7 +1412,7 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
     VerifyError errorKind = static_cast<VerifyError>(errorPart);
     VerifyErrorRefType refType = static_cast<VerifyErrorRefType>(errorRefPart);
     ClassObject* exceptionClass = gDvm.exVerifyError;
-    char* msg = NULL;
+    std::string msg;
 
     switch ((VerifyError) errorKind) {
     case VERIFY_ERROR_NO_CLASS:
@@ -1490,8 +1463,7 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
     /* no default clause -- want warning if enum updated */
     }
 
-    dvmThrowException(exceptionClass, msg);
-    free(msg);
+    dvmThrowException(exceptionClass, msg.c_str());
 }
 
 /*

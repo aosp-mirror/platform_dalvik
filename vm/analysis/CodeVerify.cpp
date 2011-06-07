@@ -1081,31 +1081,21 @@ static Method* verifyInvocationArgs(const Method* meth,
     if (resMethod == NULL) {
         /* failed; print a meaningful failure message */
         DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
-        const DexMethodId* pMethodId;
-        const char* methodName;
-        char* methodDesc;
-        const char* classDescriptor;
 
-        pMethodId = dexGetMethodId(pDexFile, pDecInsn->vB);
-        methodName = dexStringById(pDexFile, pMethodId->nameIdx);
-        methodDesc = dexCopyDescriptorFromMethodId(pDexFile, pMethodId);
-        classDescriptor = dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
+        const DexMethodId* pMethodId = dexGetMethodId(pDexFile, pDecInsn->vB);
+        const char* methodName = dexStringById(pDexFile, pMethodId->nameIdx);
+        char* methodDesc = dexCopyDescriptorFromMethodId(pDexFile, pMethodId);
+        const char* classDescriptor = dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
 
         if (!gDvm.optimizing) {
-            char* dotMissingClass =
+            std::string dotMissingClass =
                 dvmHumanReadableDescriptor(classDescriptor);
-            char* dotMethClass =
+            std::string dotMethClass =
                 dvmHumanReadableDescriptor(meth->clazz->descriptor);
-            //char* curMethodDesc =
-            //    dexProtoCopyMethodDescriptor(&meth->prototype);
 
             LOGI("Could not find method %s.%s, referenced from method %s.%s",
-                dotMissingClass, methodName/*, methodDesc*/,
-                dotMethClass, meth->name/*, curMethodDesc*/);
-
-            free(dotMissingClass);
-            free(dotMethClass);
-            //free(curMethodDesc);
+                    dotMissingClass.c_str(), methodName,
+                    dotMethClass.c_str(), meth->name);
         }
 
         LOG_VFY("VFY: unable to resolve %s method %u: %s.%s %s",

@@ -842,34 +842,27 @@ void dvmLogNativeMethodEntry(const Method* method, const u4* args)
         *desc != '\0');
     }
 
-    char* className = dvmHumanReadableDescriptor(method->clazz->descriptor);
+    std::string className(dvmHumanReadableDescriptor(method->clazz->descriptor));
     char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
-    LOGI_NATIVE("-> %s %s%s %s(%s)", className, method->name, signature,
+    LOGI_NATIVE("-> %s %s%s %s(%s)", className.c_str(), method->name, signature,
         thisString, argsString);
-    free(className);
     free(signature);
 }
 
-void dvmLogNativeMethodExit(const Method* method, Thread* self,
-        const JValue returnValue)
-{
-    char* className = dvmHumanReadableDescriptor(method->clazz->descriptor);
+void dvmLogNativeMethodExit(const Method* method, Thread* self, const JValue returnValue) {
+    std::string className(dvmHumanReadableDescriptor(method->clazz->descriptor));
     char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
     if (dvmCheckException(self)) {
         Object* exception = dvmGetException(self);
-        char* exceptionClassName =
-            dvmHumanReadableDescriptor(exception->clazz->descriptor);
-        LOGI_NATIVE("<- %s %s%s threw %s", className,
-            method->name, signature, exceptionClassName);
-        free(exceptionClassName);
+        std::string exceptionClassName(dvmHumanReadableDescriptor(exception->clazz->descriptor));
+        LOGI_NATIVE("<- %s %s%s threw %s", className.c_str(),
+                method->name, signature, exceptionClassName.c_str());
     } else {
         char returnValueString[128] = { 0 };
         char returnType = method->shorty[0];
-        appendValue(returnType, returnValue,
-            returnValueString, sizeof(returnValueString), false);
-        LOGI_NATIVE("<- %s %s%s returned %s", className,
-            method->name, signature, returnValueString);
+        appendValue(returnType, returnValue, returnValueString, sizeof(returnValueString), false);
+        LOGI_NATIVE("<- %s %s%s returned %s", className.c_str(),
+                method->name, signature, returnValueString);
     }
-    free(className);
     free(signature);
 }

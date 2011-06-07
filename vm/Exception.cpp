@@ -993,37 +993,27 @@ void dvmFillStackTraceElements(const int* intVals, size_t stackDepth, ArrayObjec
      * We use the standard constructor to configure the object.
      */
     for (i = 0; i < stackDepth; i++) {
-        Object* ste;
-        Method* meth;
-        StringObject* className;
-        StringObject* methodName;
-        StringObject* fileName;
-        int lineNumber, pc;
-        const char* sourceFile;
-        char* dotName;
-
-        ste = dvmAllocObject(gDvm.classJavaLangStackTraceElement,ALLOC_DEFAULT);
-        if (ste == NULL)
+        Object* ste = dvmAllocObject(gDvm.classJavaLangStackTraceElement,ALLOC_DEFAULT);
+        if (ste == NULL) {
             return;
+        }
 
-        meth = (Method*) *intVals++;
-        pc = *intVals++;
+        Method* meth = (Method*) *intVals++;
+        int pc = *intVals++;
 
+        int lineNumber;
         if (pc == -1)      // broken top frame?
             lineNumber = 0;
         else
             lineNumber = dvmLineNumFromPC(meth, pc);
 
-        dotName = dvmHumanReadableDescriptor(meth->clazz->descriptor);
-        className = dvmCreateStringFromCstr(dotName);
-        free(dotName);
+        std::string dotName(dvmHumanReadableDescriptor(meth->clazz->descriptor));
+        StringObject* className = dvmCreateStringFromCstr(dotName);
 
-        methodName = dvmCreateStringFromCstr(meth->name);
-        sourceFile = dvmGetMethodSourceFile(meth);
-        if (sourceFile != NULL)
-            fileName = dvmCreateStringFromCstr(sourceFile);
-        else
-            fileName = NULL;
+        StringObject* methodName = dvmCreateStringFromCstr(meth->name);
+
+        const char* sourceFile = dvmGetMethodSourceFile(meth);
+        StringObject* fileName = (sourceFile != NULL) ? dvmCreateStringFromCstr(sourceFile) : NULL;
 
         /*
          * Invoke:
@@ -1040,8 +1030,9 @@ void dvmFillStackTraceElements(const int* intVals, size_t stackDepth, ArrayObjec
         dvmReleaseTrackedAlloc((Object*) methodName, NULL);
         dvmReleaseTrackedAlloc((Object*) fileName, NULL);
 
-        if (dvmCheckException(dvmThreadSelf()))
+        if (dvmCheckException(dvmThreadSelf())) {
             return;
+        }
 
         dvmSetObjectArrayElement(steArray, i, ste);
     }
@@ -1050,41 +1041,28 @@ void dvmFillStackTraceElements(const int* intVals, size_t stackDepth, ArrayObjec
 /*
  * Dump the contents of a raw stack trace to the log.
  */
-void dvmLogRawStackTrace(const int* intVals, int stackDepth)
-{
-    int i;
-
+void dvmLogRawStackTrace(const int* intVals, int stackDepth) {
     /*
      * Run through the array of stack frame data.
      */
-    for (i = 0; i < stackDepth; i++) {
-        Method* meth;
-        int lineNumber, pc;
-        const char* sourceFile;
-        char* dotName;
+    for (int i = 0; i < stackDepth; i++) {
+        Method* meth = (Method*) *intVals++;
+        int pc = *intVals++;
 
-        meth = (Method*) *intVals++;
-        pc = *intVals++;
-
+        int lineNumber;
         if (pc == -1)      // broken top frame?
             lineNumber = 0;
         else
             lineNumber = dvmLineNumFromPC(meth, pc);
 
-        // probably don't need to do this, but it looks nicer
-        dotName = dvmHumanReadableDescriptor(meth->clazz->descriptor);
-
+        std::string dotName(dvmHumanReadableDescriptor(meth->clazz->descriptor));
         if (dvmIsNativeMethod(meth)) {
-            LOGI("\tat %s.%s(Native Method)", dotName, meth->name);
+            LOGI("\tat %s.%s(Native Method)", dotName.c_str(), meth->name);
         } else {
             LOGI("\tat %s.%s(%s:%d)",
-                dotName, meth->name, dvmGetMethodSourceFile(meth),
+                dotName.c_str(), meth->name, dvmGetMethodSourceFile(meth),
                 dvmLineNumFromPC(meth, pc));
         }
-
-        free(dotName);
-
-        sourceFile = dvmGetMethodSourceFile(meth);
     }
 }
 
@@ -1148,27 +1126,19 @@ static StringObject* getExceptionMessage(Object* exception)
 /*
  * Print the direct stack trace of the given exception to the log.
  */
-static void logStackTraceOf(Object* exception)
-{
-    const ArrayObject* stackData;
-    StringObject* messageStr;
-    int stackSize;
-    const int* intVals;
-    char* className;
-
-    className = dvmHumanReadableDescriptor(exception->clazz->descriptor);
-    messageStr = getExceptionMessage(exception);
+static void logStackTraceOf(Object* exception) {
+    std::string className(dvmHumanReadableDescriptor(exception->clazz->descriptor));
+    StringObject* messageStr = getExceptionMessage(exception);
     if (messageStr != NULL) {
         char* cp = dvmCreateCstrFromString(messageStr);
         dvmReleaseTrackedAlloc((Object*) messageStr, dvmThreadSelf());
         messageStr = NULL;
 
-        LOGI("%s: %s", className, cp);
+        LOGI("%s: %s", className.c_str(), cp);
         free(cp);
     } else {
-        LOGI("%s:", className);
+        LOGI("%s:", className.c_str());
     }
-    free(className);
 
     /*
      * This relies on the stackState field, which contains the "raw"
@@ -1176,15 +1146,15 @@ static void logStackTraceOf(Object* exception)
      * after it generates the "cooked" form, in which case we'll have
      * nothing to show.
      */
-    stackData = (const ArrayObject*) dvmGetFieldObject(exception,
+    const ArrayObject* stackData = (const ArrayObject*) dvmGetFieldObject(exception,
                     gDvm.offJavaLangThrowable_stackState);
     if (stackData == NULL) {
         LOGI("  (raw stack trace not found)");
         return;
     }
 
-    stackSize = stackData->length / 2;
-    intVals = (const int*)(void*)stackData->contents;
+    int stackSize = stackData->length / 2;
+    const int* intVals = (const int*)(void*)stackData->contents;
 
     dvmLogRawStackTrace(intVals, stackSize);
 }
@@ -1225,12 +1195,9 @@ void dvmLogExceptionStackTrace()
 static void throwTypeError(ClassObject* exceptionClass, const char* fmt,
     ClassObject* actual, ClassObject* desired)
 {
-    char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
-    char* desiredClassName = dvmHumanReadableDescriptor(desired->descriptor);
-    dvmThrowExceptionFmt(exceptionClass, fmt,
-        actualClassName, desiredClassName);
-    free(desiredClassName);
-    free(actualClassName);
+    std::string actualClassName(dvmHumanReadableDescriptor(actual->descriptor));
+    std::string desiredClassName(dvmHumanReadableDescriptor(desired->descriptor));
+    dvmThrowExceptionFmt(exceptionClass, fmt, actualClassName.c_str(), desiredClassName.c_str());
 }
 
 void dvmThrowAbstractMethodError(const char* msg) {
@@ -1255,13 +1222,10 @@ void dvmThrowArrayStoreExceptionIncompatibleElement(ClassObject* objectType,
         objectType, arrayType);
 }
 
-void dvmThrowArrayStoreExceptionNotArray(ClassObject* actual, const char* label)
-{
-    char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
-    dvmThrowExceptionFmt(gDvm.exArrayStoreException,
-            "%s of type %s is not an array",
-            label, actualClassName);
-    free(actualClassName);
+void dvmThrowArrayStoreExceptionNotArray(ClassObject* actual, const char* label) {
+    std::string actualClassName(dvmHumanReadableDescriptor(actual->descriptor));
+    dvmThrowExceptionFmt(gDvm.exArrayStoreException, "%s of type %s is not an array",
+            label, actualClassName.c_str());
 }
 
 void dvmThrowArrayStoreExceptionIncompatibleArrays(ClassObject* source, ClassObject* destination)
@@ -1274,13 +1238,11 @@ void dvmThrowArrayStoreExceptionIncompatibleArrays(ClassObject* source, ClassObj
 void dvmThrowArrayStoreExceptionIncompatibleArrayElement(s4 index, ClassObject* objectType,
         ClassObject* arrayType)
 {
-    char* objectClassName = dvmHumanReadableDescriptor(objectType->descriptor);
-    char* arrayClassName = dvmHumanReadableDescriptor(arrayType->descriptor);
+    std::string objectClassName(dvmHumanReadableDescriptor(objectType->descriptor));
+    std::string arrayClassName(dvmHumanReadableDescriptor(arrayType->descriptor));
     dvmThrowExceptionFmt(gDvm.exArrayStoreException,
-        "source[%d] of type %s cannot be stored in destination array of type %s",
-        index, objectClassName, arrayClassName);
-    free(objectClassName);
-    free(arrayClassName);
+            "source[%d] of type %s cannot be stored in destination array of type %s",
+            index, objectClassName.c_str(), arrayClassName.c_str());
 }
 
 void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
@@ -1389,14 +1351,12 @@ void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
             gDvm.exIncompatibleClassChangeError, descriptor);
 }
 
-void dvmThrowInstantiationException(ClassObject* clazz,
-        const char* extraDetail) {
-    char* className = dvmHumanReadableDescriptor(clazz->descriptor);
+void dvmThrowInstantiationException(ClassObject* clazz, const char* extraDetail) {
+    std::string className(dvmHumanReadableDescriptor(clazz->descriptor));
     dvmThrowExceptionFmt(gDvm.exInstantiationException,
-            "can't instantiate class %s%s%s", className,
+            "can't instantiate class %s%s%s", className.c_str(),
             (extraDetail == NULL) ? "" : "; ",
             (extraDetail == NULL) ? "" : extraDetail);
-    free(className);
 }
 
 void dvmThrowInternalError(const char* msg) {

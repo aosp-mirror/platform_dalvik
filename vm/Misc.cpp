@@ -218,8 +218,7 @@ char* dvmDotToSlash(const char* str)
     return newStr;
 }
 
-char* dvmHumanReadableDescriptor(const char* descriptor)
-{
+std::string dvmHumanReadableDescriptor(const char* descriptor) {
     // Count the number of '['s to get the dimensionality.
     const char* c = descriptor;
     size_t dim = 0;
@@ -228,11 +227,9 @@ char* dvmHumanReadableDescriptor(const char* descriptor)
         c++;
     }
 
-    // Work out how large the result will be.
-    size_t resultLength;
+    // Reference or primitive?
     if (*c == 'L') {
         // "[[La/b/C;" -> "a.b.C[][]".
-        resultLength = strlen(c) - 2 + 2*dim;
         c++; // Skip the 'L'.
     } else {
         // "[[B" -> "byte[][]".
@@ -247,34 +244,25 @@ char* dvmHumanReadableDescriptor(const char* descriptor)
         case 'J': c = "long;"; break;
         case 'S': c = "short;"; break;
         case 'Z': c = "boolean;"; break;
-        default: return strdup(descriptor);
+        default: return descriptor;
         }
-        resultLength = strlen(c) - 1 + 2*dim;
-    }
-
-    // Allocate enough space.
-    char* result = (char*)malloc(resultLength + 1);
-    if (result == NULL) {
-        return NULL;
     }
 
     // At this point, 'c' is a string of the form "fully/qualified/Type;"
     // or "primitive;". Rewrite the type with '.' instead of '/':
+    std::string result;
     const char* p = c;
-    char* q = result;
     while (*p != ';') {
         char ch = *p++;
         if (ch == '/') {
           ch = '.';
         }
-        *q++ = ch;
+        result.push_back(ch);
     }
     // ...and replace the semicolon with 'dim' "[]" pairs:
     while (dim--) {
-        *q++ = '[';
-        *q++ = ']';
+        result += "[]";
     }
-    *q = '\0';
     return result;
 }
 

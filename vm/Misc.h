@@ -20,9 +20,12 @@
 #ifndef _DALVIK_MISC
 #define _DALVIK_MISC
 
+#include <string>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
+
 #include "Inlines.h"
 
 /*
@@ -141,7 +144,7 @@ char* dvmDotToSlash(const char* str);
  * of 'descriptor'. So "I" would be "int", "[[I" would be "int[][]",
  * "[Ljava/lang/String;" would be "java.lang.String[]", and so forth.
  */
-extern "C" char* dvmHumanReadableDescriptor(const char* descriptor);
+std::string dvmHumanReadableDescriptor(const char* descriptor);
 
 /*
  * Return a newly-allocated string for the "dot version" of the class
