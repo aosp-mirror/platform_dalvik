@@ -218,17 +218,13 @@ u4 dvmComputeStringHash(StringObject* strObj) {
     return hashCode;
 }
 
-/*
- * Create a new java/lang/String object, using the string data in "utf8Str".
- *
- * The caller must call dvmReleaseTrackedAlloc() on the return value.
- *
- * Returns NULL and throws an exception on failure.
- */
-StringObject* dvmCreateStringFromCstr(const char* utf8Str)
-{
+StringObject* dvmCreateStringFromCstr(const char* utf8Str) {
     assert(utf8Str != NULL);
     return dvmCreateStringFromCstrAndLength(utf8Str, dvmUtf8Len(utf8Str));
+}
+
+StringObject* dvmCreateStringFromCstr(const std::string& utf8Str) {
+    return dvmCreateStringFromCstr(utf8Str.c_str());
 }
 
 /*
@@ -423,31 +419,23 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
                   len1 * sizeof(u2));
 }
 
-ArrayObject* dvmCreateStringArray(const char** strings, size_t length)
-{
+ArrayObject* dvmCreateStringArray(const std::vector<std::string>& strings) {
     Thread* self = dvmThreadSelf();
 
-    /*
-     * Allocate an array to hold the String objects.
-     */
-    ClassObject* elementClass =
-        dvmFindArrayClassForElement(gDvm.classJavaLangString);
-    ArrayObject* stringArray =
-        dvmAllocArrayByClass(elementClass, length, ALLOC_DEFAULT);
+    // Allocate an array to hold the String objects.
+    ClassObject* elementClass = dvmFindArrayClassForElement(gDvm.classJavaLangString);
+    ArrayObject* stringArray = dvmAllocArrayByClass(elementClass, strings.size(), ALLOC_DEFAULT);
     if (stringArray == NULL) {
-        /* probably OOM */
+        // Probably OOM.
         assert(dvmCheckException(self));
         return NULL;
     }
 
-    /*
-     * Create the individual String objects and add them to the array.
-     */
-    for (size_t i = 0; i < length; i++) {
-        Object* str =
-            (Object*) dvmCreateStringFromCstr(strings[i]);
+    // Create the individual String objects and add them to the array.
+    for (size_t i = 0; i < strings.size(); i++) {
+        Object* str = (Object*) dvmCreateStringFromCstr(strings[i]);
         if (str == NULL) {
-            /* probably OOM; drop out now */
+            // Probably OOM; drop out now.
             assert(dvmCheckException(self));
             dvmReleaseTrackedAlloc((Object*) stringArray, self);
             return NULL;

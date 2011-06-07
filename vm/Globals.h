@@ -29,7 +29,9 @@
 #ifndef _DALVIK_GLOBALS
 #define _DALVIK_GLOBALS
 
-#include <cutils/array.h>
+#include <string>
+#include <vector>
+
 #include <stdarg.h>
 #include <pthread.h>
 
@@ -156,7 +158,7 @@ struct DvmGlobals {
      * This is effectively a set, where later entries override earlier
      * ones.
      */
-    Array*      properties;
+    std::vector<std::string> properties;
 
     /*
      * Where the VM goes to find system classes.

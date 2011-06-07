@@ -29,7 +29,7 @@
 #include "analysis/RegisterMap.h"
 #include "analysis/Optimize.h"
 
-#include <zlib.h>
+#include <string>
 
 #include <libgen.h>
 #include <stdlib.h>
@@ -43,7 +43,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
-
+#include <zlib.h>
 
 /* fwd */
 static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
@@ -60,25 +60,14 @@ static bool writeOptData(int fd, const DexClassLookup* pClassLookup,\
 static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum);
 
 /*
- * Get just the directory portion of the given path. This is just like
- * dirname(), except it (a) never modifies its argument and (b) always
- * returns allocated storage that must subsequently be free()d.
+ * Get just the directory portion of the given path. Equivalent to dirname(3).
  */
-static char* saneDirName(const char* fileName) {
-    const char* lastSlash = strrchr(fileName, '/');
-
-    if (lastSlash == NULL) {
-        return strdup("."); // strdup() to make free() always be appropriate.
+static std::string saneDirName(const std::string& path) {
+    size_t n = path.rfind('/');
+    if (n == std::string::npos) {
+        return ".";
     }
-
-    size_t length = lastSlash - fileName + 1; // +1 for the '\0' byte.
-    char* result = (char*) malloc(length);
-
-    if (result != NULL) {
-        strlcpy(result, fileName, length);
-    }
-
-    return result;
+    return path.substr(0, n);
 }
 
 /*
@@ -86,40 +75,32 @@ static char* saneDirName(const char* fileName) {
  * see if the directory part of the given path (all but the last
  * component) exists and is writable. Complain to the log if not.
  */
-static bool directoryIsValid(const char* fileName)
+static bool directoryIsValid(const std::string& fileName)
 {
-    char* dirName = saneDirName(fileName);
+    std::string dirName(saneDirName(fileName));
 
-    if (dirName == NULL) {
-        LOGE("Could not get directory name of dex cache file '%s': %s", fileName, strerror(errno));
+    struct stat sb;
+    if (stat(dirName.c_str(), &sb) < 0) {
+        LOGE("Could not stat dex cache directory '%s': %s", dirName.c_str(), strerror(errno));
         return false;
     }
 
-    bool ok = true;
-    struct stat status;
-
-    if (stat(dirName, &status) < 0) {
-        LOGE("Could not stat dex cache directory '%s': %s", dirName, strerror(errno));
-        ok = false;
+    if (!S_ISDIR(sb.st_mode)) {
+        LOGE("Dex cache directory isn't a directory: %s", dirName.c_str());
+        return false;
     }
 
-    if (ok && !S_ISDIR(status.st_mode)) {
-        LOGE("Dex cache directory isn't a directory: %s", dirName);
-        ok = false;
+    if (access(dirName.c_str(), R_OK) < 0) {
+        LOGE("Dex cache directory isn't readable: %s", dirName.c_str());
+        return false;
     }
 
-    if (ok && access(dirName, R_OK) < 0) {
-        LOGE("Dex cache directory isn't readable: %s", dirName);
-        ok = false;
+    if (access(dirName.c_str(), W_OK) < 0) {
+        LOGE("Dex cache directory isn't writable: %s", dirName.c_str());
+        return false;
     }
 
-    if (ok && access(dirName, W_OK) < 0) {
-        LOGE("Dex cache directory isn't writable: %s", dirName);
-        ok = false;
-    }
-
-    free(dirName);
-    return ok;
+    return true;
 }
 
 /*
@@ -164,9 +145,10 @@ retry:
         fd = open(cacheFileName, O_RDONLY, 0);
         if (fd < 0) {
             if (createIfMissing) {
-                const char* errnoString = strerror(errno);
+                // TODO: write an equivalent of strerror_r that returns a std::string.
+                const std::string errnoString(strerror(errno));
                 if (directoryIsValid(cacheFileName)) {
-                    LOGE("Can't open dex cache file '%s': %s", cacheFileName, errnoString);
+                    LOGE("Can't open dex cache file '%s': %s", cacheFileName, errnoString.c_str());
                 }
             }
             return fd;

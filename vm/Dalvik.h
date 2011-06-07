@@ -60,7 +60,6 @@
 #include "alloc/WriteBarrier.h"
 #include "oo/AccessCheck.h"
 #include "JarFile.h"
-#include "Properties.h"
 #include "jdwp/Jdwp.h"
 #include "SignalCatcher.h"
 #include "StdioConverter.h"

@@ -107,7 +107,6 @@ LOCAL_SRC_FILES := \
 	Native.cpp \
 	PointerSet.cpp \
 	Profile.cpp \
-	Properties.cpp \
 	RawDexFile.cpp \
 	ReferenceTable.cpp \
 	SignalCatcher.cpp \

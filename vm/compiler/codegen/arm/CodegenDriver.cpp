@@ -150,7 +150,7 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
             break;
         case OP_REM_DOUBLE_2ADDR:
         case OP_REM_DOUBLE:
-            funct = (void*) fmod;
+            funct = (void*) (double (*)(double, double)) fmod;
             break;
         case OP_NEG_DOUBLE: {
             genNegDouble(cUnit, rlDest, rlSrc1);

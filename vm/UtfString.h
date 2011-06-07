@@ -21,6 +21,9 @@
 #ifndef _DALVIK_STRING
 #define _DALVIK_STRING
 
+#include <string>
+#include <vector>
+
 /*
  * (This is private to UtfString.c, but we cheat a bit and also use it
  * for InlineNative.c.  Not really worth creating a separate header.)
@@ -57,14 +60,14 @@ u4 dvmComputeUtf8Hash(const char* str);
 u4 dvmComputeStringHash(StringObject* strObj);
 
 /*
- * Create a java.lang.String[] from an array of C strings.
+ * Create a java.lang.String[] from a vector of C++ strings.
  *
  * The caller must call dvmReleaseTrackedAlloc() on the returned array,
  * but not on the individual elements.
  *
  * Returns NULL and throws an exception on failure.
  */
-ArrayObject* dvmCreateStringArray(const char** strings, size_t count);
+ArrayObject* dvmCreateStringArray(const std::vector<std::string>& strings);
 
 /*
  * Create a java/lang/String from a C string.
@@ -74,6 +77,15 @@ ArrayObject* dvmCreateStringArray(const char** strings, size_t count);
  * Returns NULL and throws an exception on failure.
  */
 StringObject* dvmCreateStringFromCstr(const char* utf8Str);
+
+/*
+ * Create a java/lang/String from a C++ string.
+ *
+ * The caller must call dvmReleaseTrackedAlloc() on the return value.
+ *
+ * Returns NULL and throws an exception on failure.
+ */
+StringObject* dvmCreateStringFromCstr(const std::string& utf8Str);
 
 /*
  * Create a java/lang/String from a C string, given its UTF-16 length

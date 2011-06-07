@@ -51,14 +51,14 @@ static int getFileDescriptor(Object* obj)
  * Return a set of strings describing available VM features (this is chiefly
  * of interest to DDMS).
  */
-static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
-    JValue* pResult)
-{
-    const char* strings[] = { "method-trace-profiling",
-                              "method-trace-profiling-streaming",
-                              "hprof-heap-dump",
-                              "hprof-heap-dump-streaming" };
-    ArrayObject* result = dvmCreateStringArray(strings, NELEM(strings));
+static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args, JValue* pResult) {
+    std::vector<std::string> features;
+    features.push_back("method-trace-profiling");
+    features.push_back("method-trace-profiling-streaming");
+    features.push_back("hprof-heap-dump");
+    features.push_back("hprof-heap-dump-streaming");
+
+    ArrayObject* result = dvmCreateStringArray(features);
     dvmReleaseTrackedAlloc((Object*) result, dvmThreadSelf());
     RETURN_PTR(result);
 }
