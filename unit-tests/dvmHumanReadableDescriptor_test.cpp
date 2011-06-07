@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "Dalvik.h"
+
 TEST(dvmHumanReadableDescriptor, ArrayReferences) {
   ASSERT_EQ("java.lang.Class[]", dvmHumanReadableDescriptor("[Ljava/lang/Class;"));
   ASSERT_EQ("java.lang.Class[][]", dvmHumanReadableDescriptor("[[Ljava/lang/Class;"));
