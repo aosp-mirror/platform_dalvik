@@ -271,7 +271,7 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent,
     u4 relativePc;
     char eventBuffer[174];
     const char *fileName;
-    char procName[33], *selfName;
+    char procName[33];
     char *cp;
     size_t len;
     int fd;
@@ -299,9 +299,8 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent,
     cp = logWriteInt(cp, isSensitive);
 
     /* Emit self thread name string, <= 37 bytes. */
-    selfName = dvmGetThreadName(self);
-    cp = logWriteString(cp, selfName, strlen(selfName));
-    free(selfName);
+    std::string selfName = dvmGetThreadName(self);
+    cp = logWriteString(cp, selfName.c_str(), selfName.size());
 
     /* Emit the wait time, 5 bytes. */
     cp = logWriteInt(cp, waitMs);

@@ -554,10 +554,9 @@ void dvmSlayDaemons()
                 threadId, target->threadId);
         }
 
-        char* threadName = dvmGetThreadName(target);
+        std::string threadName(dvmGetThreadName(target));
         LOGV("threadid=%d: suspending daemon id=%d name='%s'",
-            threadId, target->threadId, threadName);
-        free(threadName);
+                threadId, target->threadId, threadName.c_str());
 
         /* mark as suspended */
         lockThreadSuspendCount();
@@ -1455,9 +1454,8 @@ static void* interpThreadStart(void* arg)
 {
     Thread* self = (Thread*) arg;
 
-    char *threadName = dvmGetThreadName(self);
-    setThreadName(threadName);
-    free(threadName);
+    std::string threadName(dvmGetThreadName(self));
+    setThreadName(threadName.c_str());
 
     /*
      * Finish initializing the Thread struct.
@@ -3121,13 +3119,11 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
     }
 
     if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
-        char* str = dvmGetThreadName(thread);
+        std::string threadName(dvmGetThreadName(thread));
         LOGI("setPriority(%d) '%s' to prio=%d(n=%d) failed: %s",
-            pid, str, newPriority, newNice, strerror(errno));
-        free(str);
+                pid, threadName.c_str(), newPriority, newNice, strerror(errno));
     } else {
-        LOGV("setPriority(%d) to prio=%d(n=%d)",
-            pid, newPriority, newNice);
+        LOGV("setPriority(%d) to prio=%d(n=%d)", pid, newPriority, newNice);
     }
 }
 
@@ -3414,24 +3410,13 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     free(groupName);
 }
 
-/*
- * Get the name of a thread.
- *
- * For correctness, the caller should hold the thread list lock to ensure
- * that the thread doesn't go away mid-call.
- *
- * Returns a newly-allocated string, or NULL if the Thread doesn't have a name.
- */
-char* dvmGetThreadName(Thread* thread)
-{
-    StringObject* nameObj;
-
+std::string dvmGetThreadName(Thread* thread) {
     if (thread->threadObj == NULL) {
         LOGW("threadObj is NULL, name not available");
-        return strdup("-unknown-");
+        return "-unknown-";
     }
 
-    nameObj = (StringObject*)
+    StringObject* nameObj = (StringObject*)
         dvmGetFieldObject(thread->threadObj, gDvm.offJavaLangThread_name);
     return dvmCreateCstrFromString(nameObj);
 }

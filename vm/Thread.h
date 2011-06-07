@@ -532,9 +532,12 @@ Thread* dvmGetThreadByThreadId(u4 threadId);
 void dvmThreadSleep(u8 msec, u4 nsec);
 
 /*
- * Get the name of a thread.  (For safety, hold the thread list lock.)
+ * Get the name of a thread.
+ *
+ * For correctness, the caller should hold the thread list lock to ensure
+ * that the thread doesn't go away mid-call.
  */
-char* dvmGetThreadName(Thread* thread);
+std::string dvmGetThreadName(Thread* thread);
 
 /*
  * Convert ThreadStatus to a string.

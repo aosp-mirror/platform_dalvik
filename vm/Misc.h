@@ -22,6 +22,7 @@
 
 #include <string>
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -302,5 +303,10 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid);
  * as, for example, in the dependency paths of optimized dex files).
  */
 const char* dvmPathToAbsolutePortion(const char* path);
+
+/**
+ * Returns a string corresponding to printf-like formatting of the arguments.
+ */
+std::string dvmStringPrintf(const char* fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
 
 #endif /*_DALVIK_MISC*/
