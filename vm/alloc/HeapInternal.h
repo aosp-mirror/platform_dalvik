@@ -48,6 +48,7 @@ struct GcHeap {
     /* GC's card table */
     u1* cardTableBase;
     size_t cardTableLength;
+    size_t cardTableOffset;
 
     /* GC's modified union table. */
     u1* modUnionTableBase;
