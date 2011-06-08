@@ -38,7 +38,7 @@
 #include "Dalvik.h"
 #include "libdex/OptInvocation.h"
 
-#include "utils/Log.h"
+#include "cutils/log.h"
 #include "cutils/process_name.h"
 
 #include <fcntl.h>

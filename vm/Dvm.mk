@@ -223,7 +223,6 @@ LOCAL_C_INCLUDES += \
 	dalvik/vm \
 	external/zlib \
 	libcore/include \
-	$(KERNEL_HEADERS)
 
 ifeq ($(dvm_simulator),true)
   LOCAL_LDLIBS += -lpthread -ldl
