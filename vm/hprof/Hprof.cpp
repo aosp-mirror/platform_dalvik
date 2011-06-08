@@ -214,15 +214,11 @@ static void hprofRootVisitor(void *addr, u4 threadId, RootType type, void *arg)
 /*
  * Visitor invoked on every heap object.
  */
-static void hprofBitmapCallback(void *ptr, void *arg)
+static void hprofBitmapCallback(Object *obj, void *arg)
 {
-    Object *obj;
-    hprof_context_t *ctx;
-
-    assert(ptr != NULL);
+    assert(obj != NULL);
     assert(arg != NULL);
-    obj = (Object *)ptr;
-    ctx = (hprof_context_t *)arg;
+    hprof_context_t *ctx = (hprof_context_t *)arg;
     hprofDumpHeapObject(ctx, obj);
 }
 

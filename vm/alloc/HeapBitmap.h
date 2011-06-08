@@ -73,8 +73,8 @@ struct HeapBitmap {
 /*
  * Callback types used by the walking routines.
  */
-typedef void BitmapCallback(void *addr, void *arg);
-typedef void BitmapScanCallback(void *addr, void *finger, void *arg);
+typedef void BitmapCallback(Object *obj, void *arg);
+typedef void BitmapScanCallback(Object *obj, void *finger, void *arg);
 typedef void BitmapSweepCallback(size_t numPtrs, void **ptrs, void *arg);
 
 /*

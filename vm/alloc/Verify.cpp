@@ -38,16 +38,15 @@ static void dumpReferencesVisitor(void *pObj, void *arg)
  * Visitor applied to each bitmap element to search for things that
  * point to an object.  Logs a message when a match is found.
  */
-static void dumpReferencesCallback(void *ptr, void *arg)
+static void dumpReferencesCallback(Object *obj, void *arg)
 {
-    Object *obj = (Object *)arg;
-    if (ptr == obj) {
+    if (obj == (Object *)arg) {
         return;
     }
-    dvmVisitObject(dumpReferencesVisitor, (Object *)ptr, &obj);
-    if (obj == NULL) {
-        LOGD("Found %p in the heap @ %p", arg, ptr);
-        dvmDumpObject((Object *)ptr);
+    dvmVisitObject(dumpReferencesVisitor, obj, &arg);
+    if (arg == NULL) {
+        LOGD("Found %p in the heap @ %p", arg, obj);
+        dvmDumpObject(obj);
     }
 }
 
@@ -108,8 +107,8 @@ static void verifyReference(void *addr, void *arg)
  */
 void dvmVerifyObject(const Object *obj)
 {
-    Object *arg = (Object *)obj;
-    dvmVisitObject(verifyReference, (Object *)obj, &arg);
+    Object *arg = const_cast<Object*>(obj);
+    dvmVisitObject(verifyReference, arg, &arg);
     if (arg == NULL) {
         dumpReferences(obj);
         dvmAbort();
@@ -119,9 +118,9 @@ void dvmVerifyObject(const Object *obj)
 /*
  * Helper function to call dvmVerifyObject from a bitmap walker.
  */
-static void verifyBitmapCallback(void *ptr, void *arg)
+static void verifyBitmapCallback(Object *obj, void *arg)
 {
-    dvmVerifyObject((Object *)ptr);
+    dvmVerifyObject(obj);
 }
 
 /*

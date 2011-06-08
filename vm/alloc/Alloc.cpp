@@ -320,11 +320,9 @@ struct CountContext {
     size_t count;
 };
 
-static void countInstancesOfClassCallback(void *ptr, void *arg)
+static void countInstancesOfClassCallback(Object *obj, void *arg)
 {
     CountContext *ctx = (CountContext *)arg;
-    const Object *obj = (const Object *)ptr;
-
     assert(ctx != NULL);
     if (obj->clazz == ctx->clazz) {
         ctx->count += 1;
@@ -341,11 +339,9 @@ size_t dvmCountInstancesOfClass(const ClassObject *clazz)
     return ctx.count;
 }
 
-static void countAssignableInstancesOfClassCallback(void *ptr, void *arg)
+static void countAssignableInstancesOfClassCallback(Object *obj, void *arg)
 {
     CountContext *ctx = (CountContext *)arg;
-    const Object *obj = (const Object *)ptr;
-
     assert(ctx != NULL);
     if (obj->clazz != NULL && dvmInstanceof(obj->clazz, ctx->clazz)) {
         ctx->count += 1;
