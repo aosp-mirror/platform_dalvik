@@ -300,16 +300,15 @@ static void dumpReferencesVisitor(void *pObj, void *arg)
     }
 }
 
-static void dumpReferencesCallback(void *ptr, void *arg)
+static void dumpReferencesCallback(Object *obj, void *arg)
 {
-    Object *obj = (Object *)arg;
-    if (ptr == obj) {
+    if (obj == (Object *)arg) {
         return;
     }
-    dvmVisitObject(dumpReferencesVisitor, (Object *)ptr, &obj);
-    if (obj == NULL) {
-        LOGD("Found %p in the heap @ %p", arg, ptr);
-        dvmDumpObject((Object *)ptr);
+    dvmVisitObject(dumpReferencesVisitor, obj, &arg);
+    if (arg == NULL) {
+        LOGD("Found %p in the heap @ %p", arg, obj);
+        dvmDumpObject(obj);
     }
 }
 
@@ -395,9 +394,8 @@ static bool isPushedOnMarkStack(const Object *obj)
  * references specially as it is permissible for these objects to be
  * gray and on an unmarked card.
  */
-static void verifyCardTableCallback(void *ptr, void *arg)
+static void verifyCardTableCallback(Object *obj, void *arg)
 {
-    Object *obj = (Object *)ptr;
     WhiteReferenceCounter ctx = { (HeapBitmap *)arg, 0 };
 
     dvmVisitObject(countWhiteReferenceVisitor, obj, &ctx);

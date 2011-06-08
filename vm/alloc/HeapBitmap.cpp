@@ -108,8 +108,8 @@ void dvmHeapBitmapWalk(const HeapBitmap *bitmap, BitmapCallback *callback,
             uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + bitmap->base;
             while (word != 0) {
                 const int shift = CLZ(word);
-                void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
-                (*callback)(addr, arg);
+                Object* obj = (Object *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+                (*callback)(obj, arg);
                 word &= ~(highBit >> shift);
             }
         }
@@ -147,8 +147,8 @@ void dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
             void *finger = (void *)(HB_INDEX_TO_OFFSET(i + 1) + bitmap->base);
             while (word != 0) {
                 const int shift = CLZ(word);
-                void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
-                (*callback)(addr, finger, arg);
+                Object *obj = (Object *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+                (*callback)(obj, finger, arg);
                 word &= ~(highBit >> shift);
             }
             end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
