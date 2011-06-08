@@ -69,8 +69,7 @@ enum RegisterMapMode {
 /*
  * All fields are initialized to zero.
  *
- * Storage allocated here must be freed by a subsystem shutdown function or
- * from within freeGlobals().
+ * Storage allocated here must be freed by a subsystem shutdown function.
  */
 struct DvmGlobals {
     /*
@@ -158,7 +157,7 @@ struct DvmGlobals {
      * This is effectively a set, where later entries override earlier
      * ones.
      */
-    std::vector<std::string> properties;
+    std::vector<std::string>* properties;
 
     /*
      * Where the VM goes to find system classes.

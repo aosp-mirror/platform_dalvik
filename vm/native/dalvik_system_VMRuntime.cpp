@@ -146,7 +146,7 @@ static void Dalvik_dalvik_system_VMRuntime_clearGrowthLimit(const u4* args,
 static void Dalvik_dalvik_system_VMRuntime_properties(const u4* args,
     JValue* pResult)
 {
-    ArrayObject* result = dvmCreateStringArray(gDvm.properties);
+    ArrayObject* result = dvmCreateStringArray(*gDvm.properties);
     dvmReleaseTrackedAlloc((Object*) result, dvmThreadSelf());
     RETURN_PTR(result);
 }
