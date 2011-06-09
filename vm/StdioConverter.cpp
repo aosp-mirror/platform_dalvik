@@ -27,14 +27,6 @@
 #define kFilenoStdout   1
 #define kFilenoStderr   2
 
-/*
- * Hold our replacement stdout/stderr.
- */
-struct StdPipes {
-    int stdoutPipe[2];
-    int stderrPipe[2];
-};
-
 #define kMaxLine    512
 
 /*
@@ -57,41 +49,35 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag);
  */
 bool dvmStdioConverterStartup()
 {
-    StdPipes* pipeStorage;
-
     gDvm.haltStdioConverter = false;
 
     dvmInitMutex(&gDvm.stdioConverterLock);
     pthread_cond_init(&gDvm.stdioConverterCond, NULL);
 
-    pipeStorage = (StdPipes*) malloc(sizeof(StdPipes));
-    if (pipeStorage == NULL)
-        return false;
-
-    if (pipe(pipeStorage->stdoutPipe) != 0) {
+    if (pipe(gDvm.stdoutPipe) != 0) {
         LOGW("pipe failed: %s", strerror(errno));
         return false;
     }
-    if (pipe(pipeStorage->stderrPipe) != 0) {
+    if (pipe(gDvm.stderrPipe) != 0) {
         LOGW("pipe failed: %s", strerror(errno));
         return false;
     }
 
-    if (dup2(pipeStorage->stdoutPipe[1], kFilenoStdout) != kFilenoStdout) {
+    if (dup2(gDvm.stdoutPipe[1], kFilenoStdout) != kFilenoStdout) {
         LOGW("dup2(1) failed: %s", strerror(errno));
         return false;
     }
-    close(pipeStorage->stdoutPipe[1]);
-    pipeStorage->stdoutPipe[1] = -1;
+    close(gDvm.stdoutPipe[1]);
+    gDvm.stdoutPipe[1] = -1;
 #ifdef HAVE_ANDROID_OS
     /* don't redirect stderr on sim -- logs get written there! */
     /* (don't need this on the sim anyway) */
-    if (dup2(pipeStorage->stderrPipe[1], kFilenoStderr) != kFilenoStderr) {
+    if (dup2(gDvm.stderrPipe[1], kFilenoStderr) != kFilenoStderr) {
         LOGW("dup2(2) failed: %d %s", errno, strerror(errno));
         return false;
     }
-    close(pipeStorage->stderrPipe[1]);
-    pipeStorage->stderrPipe[1] = -1;
+    close(gDvm.stderrPipe[1]);
+    gDvm.stderrPipe[1] = -1;
 #endif
 
 
@@ -101,12 +87,11 @@ bool dvmStdioConverterStartup()
     dvmLockMutex(&gDvm.stdioConverterLock);
 
     if (!dvmCreateInternalThread(&gDvm.stdioConverterHandle,
-                "Stdio Converter", stdioConverterThreadStart, pipeStorage))
-    {
-        free(pipeStorage);
+                                 "Stdio Converter",
+                                 stdioConverterThreadStart,
+                                 NULL)) {
         return false;
     }
-    /* new thread owns pipeStorage */
 
     while (!gDvm.stdioConverterReady) {
         dvmWaitCond(&gDvm.stdioConverterCond, &gDvm.stdioConverterLock);
@@ -143,9 +128,6 @@ void dvmStdioConverterShutdown()
  */
 static void* stdioConverterThreadStart(void* arg)
 {
-    StdPipes* pipeStorage = (StdPipes*) arg;
-    BufferedData* stdoutData;
-    BufferedData* stderrData;
     int cc;
 
     /* tell the main thread that we're ready */
@@ -161,8 +143,8 @@ static void* stdioConverterThreadStart(void* arg)
     /*
      * Allocate read buffers.
      */
-    stdoutData = (BufferedData*) malloc(sizeof(*stdoutData));
-    stderrData = (BufferedData*) malloc(sizeof(*stderrData));
+    BufferedData* stdoutData = new BufferedData;
+    BufferedData* stderrData = new BufferedData;
     stdoutData->count = stderrData->count = 0;
 
     /*
@@ -173,9 +155,9 @@ static void* stdioConverterThreadStart(void* arg)
         int maxFd, fdCount;
 
         FD_ZERO(&readfds);
-        FD_SET(pipeStorage->stdoutPipe[0], &readfds);
-        FD_SET(pipeStorage->stderrPipe[0], &readfds);
-        maxFd = MAX(pipeStorage->stdoutPipe[0], pipeStorage->stderrPipe[0]);
+        FD_SET(gDvm.stdoutPipe[0], &readfds);
+        FD_SET(gDvm.stderrPipe[0], &readfds);
+        maxFd = MAX(gDvm.stdoutPipe[0], gDvm.stderrPipe[0]);
 
         fdCount = select(maxFd+1, &readfds, NULL, NULL, NULL);
 
@@ -189,12 +171,12 @@ static void* stdioConverterThreadStart(void* arg)
             LOGD("WEIRD: select returned zero");
         } else {
             bool err = false;
-            if (FD_ISSET(pipeStorage->stdoutPipe[0], &readfds)) {
-                err |= !readAndLog(pipeStorage->stdoutPipe[0], stdoutData,
+            if (FD_ISSET(gDvm.stdoutPipe[0], &readfds)) {
+                err |= !readAndLog(gDvm.stdoutPipe[0], stdoutData,
                     "stdout");
             }
-            if (FD_ISSET(pipeStorage->stderrPipe[0], &readfds)) {
-                err |= !readAndLog(pipeStorage->stderrPipe[0], stderrData,
+            if (FD_ISSET(gDvm.stderrPipe[0], &readfds)) {
+                err |= !readAndLog(gDvm.stderrPipe[0], stderrData,
                     "stderr");
             }
 
@@ -206,12 +188,11 @@ static void* stdioConverterThreadStart(void* arg)
         }
     }
 
-    close(pipeStorage->stdoutPipe[0]);
-    close(pipeStorage->stderrPipe[0]);
+    close(gDvm.stdoutPipe[0]);
+    close(gDvm.stderrPipe[0]);
 
-    free(pipeStorage);
-    free(stdoutData);
-    free(stderrData);
+    delete stdoutData;
+    delete stderrData;
 
     /* change back for shutdown sequence */
     dvmChangeStatus(NULL, THREAD_RUNNING);
