@@ -433,6 +433,7 @@ static bool compilerThreadStartup(void)
     pJitProfTable = (unsigned char *)malloc(JIT_PROF_SIZE);
     if (!pJitProfTable) {
         LOGE("jit prof table allocation failed");
+        free(pJitProfTable);
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
     }

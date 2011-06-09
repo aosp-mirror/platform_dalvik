@@ -692,6 +692,8 @@ struct DvmGlobals {
     pthread_t       stdioConverterHandle;
     pthread_mutex_t stdioConverterLock;
     pthread_cond_t  stdioConverterCond;
+    int             stdoutPipe[2];
+    int             stderrPipe[2];
 
     /*
      * pid of the system_server process. We track it so that when system server
