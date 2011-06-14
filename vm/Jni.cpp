@@ -1226,7 +1226,8 @@ static jclass FindClass(JNIEnv* env, const char* name) {
         /* hack for JNI_OnLoad */
         assert(strcmp(thisMethod->name, "nativeLoad") == 0);
         loader = ts.self()->classLoaderOverride;
-    } else if (thisMethod == gDvm.methDalvikSystemNativeStart_main) {
+    } else if (thisMethod == gDvm.methDalvikSystemNativeStart_main ||
+               thisMethod == gDvm.methDalvikSystemNativeStart_run) {
         /* start point of invocation interface */
         if (!gDvm.initializing) {
             loader = trackedLoader = dvmGetSystemClassLoader();
