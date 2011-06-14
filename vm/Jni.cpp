@@ -716,6 +716,15 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
         return false;
     }
 
+    // If a signature starts with a '!', we take that as a sign that the native code doesn't
+    // need a JNIEnv* passed in.
+    bool needsJniEnv = true;
+    if (*signature == '!') {
+        needsJniEnv = false;
+        ++signature;
+        LOGV("fast JNI method %s.%s:%s detected", clazz->descriptor, methodName, signature);
+    }
+
     Method* method = dvmFindDirectMethodByDescriptor(clazz, methodName, signature);
     if (method == NULL) {
         method = dvmFindVirtualMethodByDescriptor(clazz, methodName, signature);
@@ -730,11 +739,26 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
         return false;
     }
 
+    if (!needsJniEnv) {
+        // In this case, we have extra constraints to check...
+        if (dvmIsSynchronizedMethod(method)) {
+            LOGE("fast JNI method %s.%s:%s cannot be synchronized",
+                    clazz->descriptor, methodName, signature);
+            return false;
+        }
+        if (!dvmIsStaticMethod(method)) {
+            LOGE("fast JNI method %s.%s:%s cannot be non-static",
+                    clazz->descriptor, methodName, signature);
+            return false;
+        }
+    }
+
     if (method->nativeFunc != dvmResolveNativeMethod) {
         /* this is allowed, but unusual */
         LOGV("Note: %s.%s:%s was already registered", clazz->descriptor, methodName, signature);
     }
 
+    method->needsJniEnv = needsJniEnv;
     dvmUseJNIBridge(method, fnPtr);
 
     LOGV("JNI-registered %s.%s:%s", clazz->descriptor, methodName, signature);
@@ -1059,9 +1083,10 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult, const Method* met
     assert(method->insns != NULL);
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(env, (ClassObject*)staticMethodClass,
-        method->jniArgInfo, method->insSize, modArgs, method->shorty,
-        (void*)method->insns, pResult);
+    dvmPlatformInvoke(method->needsJniEnv ? env : NULL,
+            (ClassObject*)staticMethodClass,
+            method->jniArgInfo, method->insSize, modArgs, method->shorty,
+            (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
@@ -1117,9 +1142,9 @@ void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
     ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(self->jniEnv, NULL,
-        method->jniArgInfo, method->insSize, modArgs, method->shorty,
-        (void*)method->insns, pResult);
+    dvmPlatformInvoke(method->needsJniEnv ? self->jniEnv : NULL, NULL,
+            method->jniArgInfo, method->insSize, modArgs, method->shorty,
+            (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
@@ -1146,9 +1171,10 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(self->jniEnv, (ClassObject*)staticMethodClass,
-        method->jniArgInfo, method->insSize, args, method->shorty,
-        (void*)method->insns, pResult);
+    dvmPlatformInvoke(method->needsJniEnv ? self->jniEnv : NULL,
+            (ClassObject*)staticMethodClass,
+            method->jniArgInfo, method->insSize, args, method->shorty,
+            (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);

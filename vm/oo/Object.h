@@ -533,6 +533,9 @@ struct Method {
      */
     DalvikBridgeFunc nativeFunc;
 
+    /* Whether this native method needs a JNIEnv*. */
+    bool needsJniEnv;
+
     /*
      * Register map data, if available.  This will point into the DEX file
      * if the data was computed during pre-verification, or into the
