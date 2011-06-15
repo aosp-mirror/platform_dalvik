@@ -717,7 +717,7 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     }
 
     // If a signature starts with a '!', we take that as a sign that the native code doesn't
-    // need a JNIEnv* passed in.
+    // need the extra JNI arguments (the JNIEnv* and the jclass).
     bool needsJniEnv = true;
     if (*signature == '!') {
         needsJniEnv = false;
@@ -742,11 +742,16 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     if (!needsJniEnv) {
         // In this case, we have extra constraints to check...
         if (dvmIsSynchronizedMethod(method)) {
+            // Synchronization is usually provided by the JNI bridge,
+            // but we won't have one.
             LOGE("fast JNI method %s.%s:%s cannot be synchronized",
                     clazz->descriptor, methodName, signature);
             return false;
         }
         if (!dvmIsStaticMethod(method)) {
+            // There's no real reason for this constraint, but since we won't
+            // be supplying a JNIEnv* or a jobject 'this', you're effectively
+            // static anyway, so it seems clearer to say so.
             LOGE("fast JNI method %s.%s:%s cannot be non-static",
                     clazz->descriptor, methodName, signature);
             return false;
