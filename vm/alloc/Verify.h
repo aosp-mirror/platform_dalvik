@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_ALLOC_VERIFY
-#define _DALVIK_ALLOC_VERIFY
+#ifndef DALVIK_ALLOC_VERIFY_H_
+#define DALVIK_ALLOC_VERIFY_H_
 
 /*
  * Verifies an object reference.
@@ -33,4 +33,4 @@ void dvmVerifyBitmap(const HeapBitmap *bitmap);
  */
 void dvmVerifyRoots(void);
 
-#endif /* _DALVIK_ALLOC_VERIFY */
+#endif  // DALVIK_ALLOC_VERIFY_H_

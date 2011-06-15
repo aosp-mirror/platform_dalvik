@@ -16,10 +16,10 @@
 /*
  * Stdout/stderr conversion thread.
  */
-#ifndef _DALVIK_STDOUTCONVERTER
-#define _DALVIK_STDOUTCONVERTER
+#ifndef DALVIK_STDOUTCONVERTER_H_
+#define DALVIK_STDOUTCONVERTER_H_
 
 bool dvmStdioConverterStartup(void);
 void dvmStdioConverterShutdown(void);
 
-#endif /*_DALVIK_STDOUTCONVERTER*/
+#endif  // DALVIK_STDOUTCONVERTER_H_

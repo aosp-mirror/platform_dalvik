@@ -21,8 +21,8 @@
  *
  * Functions and globals declared here are defined in Interp.c.
  */
-#ifndef _DALVIK_INTERP_DEFS
-#define _DALVIK_INTERP_DEFS
+#ifndef DALVIK_INTERP_DEFS_H_
+#define DALVIK_INTERP_DEFS_H_
 
 #if defined(WITH_JIT)
 /*
@@ -105,4 +105,4 @@ static inline bool dvmJitHideTranslation()
 
 #endif
 
-#endif /*_DALVIK_INTERP_DEFS*/
+#endif  // DALVIK_INTERP_DEFS_H_

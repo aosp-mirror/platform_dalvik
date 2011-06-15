@@ -18,8 +18,8 @@
  * Functions for dealing with method prototypes
  */
 
-#ifndef _LIBDEX_DEXPROTO
-#define _LIBDEX_DEXPROTO
+#ifndef LIBDEX_DEXPROTO_H_
+#define LIBDEX_DEXPROTO_H_
 
 #include "DexFile.h"
 
@@ -226,4 +226,4 @@ u4 dexParameterIteratorNextIndex(DexParameterIterator* pIterator);
 const char* dexParameterIteratorNextDescriptor(
         DexParameterIterator* pIterator);
 
-#endif /*_LIBDEX_DEXPROTO*/
+#endif  // LIBDEX_DEXPROTO_H_

@@ -17,8 +17,8 @@
 /*
  * VM thread support.
  */
-#ifndef _DALVIK_THREAD
-#define _DALVIK_THREAD
+#ifndef DALVIK_THREAD_H_
+#define DALVIK_THREAD_H_
 
 #include "jni.h"
 #include "interp/InterpState.h"
@@ -599,4 +599,4 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
  */
 void dvmNukeThread(Thread* thread);
 
-#endif /*_DALVIK_THREAD*/
+#endif  // DALVIK_THREAD_H_

@@ -17,8 +17,8 @@
 /*
  * Dalvik instruction utility functions.
  */
-#ifndef _LIBDEX_INSTRUTILS
-#define _LIBDEX_INSTRUTILS
+#ifndef LIBDEX_INSTRUTILS_H_
+#define LIBDEX_INSTRUTILS_H_
 
 #include "DexFile.h"
 #include "DexOpcodes.h"
@@ -198,4 +198,4 @@ DEX_INLINE InstructionIndexType dexGetIndexTypeFromOpcode(Opcode opcode)
  */
 void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec);
 
-#endif /*_LIBDEX_INSTRUTILS*/
+#endif  // LIBDEX_INSTRUTILS_H_

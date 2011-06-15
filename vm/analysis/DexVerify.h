@@ -17,8 +17,8 @@
 /*
  * Dalvik classfile verification.
  */
-#ifndef _DALVIK_DEXVERIFY
-#define _DALVIK_DEXVERIFY
+#ifndef DALVIK_DEXVERIFY_H_
+#define DALVIK_DEXVERIFY_H_
 
 /*
  * Global verification mode.  These must be in order from least verification
@@ -63,4 +63,4 @@ bool dvmVerifyClass(ClassObject* clazz);
  */
 void dvmFreeRegisterMap(RegisterMap* pMap);
 
-#endif /*_DALVIK_DEXVERIFY*/
+#endif  // DALVIK_DEXVERIFY_H_

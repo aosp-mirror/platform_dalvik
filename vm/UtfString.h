@@ -18,8 +18,8 @@
  * UTF-8 and Unicode string manipulation functions, plus convenience
  * functions for working with java/lang/String.
  */
-#ifndef _DALVIK_STRING
-#define _DALVIK_STRING
+#ifndef DALVIK_STRING_H_
+#define DALVIK_STRING_H_
 
 #include <string>
 #include <vector>
@@ -158,4 +158,4 @@ const u2* dvmStringChars(StringObject* jstr);
  */
 int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2);
 
-#endif /*_DALVIK_STRING*/
+#endif  // DALVIK_STRING_H_

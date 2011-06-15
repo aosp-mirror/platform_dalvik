@@ -16,8 +16,8 @@
 /*
  * Resolve "constant pool" references into pointers to VM structs.
  */
-#ifndef _DALVIK_OO_RESOLVE
-#define _DALVIK_OO_RESOLVE
+#ifndef DALVIK_OO_RESOLVE_H_
+#define DALVIK_OO_RESOLVE_H_
 
 /*
  * "Direct" and "virtual" methods are stored independently.  The type of call
@@ -95,4 +95,4 @@ extern "C" StringObject* dvmResolveString(const ClassObject* referrer, u4 string
  */
 const char* dvmMethodTypeStr(MethodType methodType);
 
-#endif /*_DALVIK_OO_RESOLVE*/
+#endif  // DALVIK_OO_RESOLVE_H_

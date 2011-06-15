@@ -16,8 +16,8 @@
 /*
  * Types and macros used internally by the heap.
  */
-#ifndef _DALVIK_ALLOC_HEAP_INTERNAL
-#define _DALVIK_ALLOC_HEAP_INTERNAL
+#ifndef DALVIK_ALLOC_HEAP_INTERNAL_H_
+#define DALVIK_ALLOC_HEAP_INTERNAL_H_
 
 #include "MarkSweep.h"
 
@@ -97,4 +97,4 @@ void dvmUnlockHeap(void);
 #define FRACTIONAL_PCT(n,max)    ((n) * 100) / (max), \
                                  (((n) * 1000) / (max)) % 10
 
-#endif  // _DALVIK_ALLOC_HEAP_INTERNAL
+#endif  // DALVIK_ALLOC_HEAP_INTERNAL_H_

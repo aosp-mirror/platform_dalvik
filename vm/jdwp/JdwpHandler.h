@@ -16,8 +16,8 @@
 /*
  * Handle requests.
  */
-#ifndef _DALVIK_JDWP_JDWPHANDLER
-#define _DALVIK_JDWP_JDWPHANDLER
+#ifndef DALVIK_JDWP_JDWPHANDLER_H_
+#define DALVIK_JDWP_JDWPHANDLER_H_
 
 #include "Common.h"
 #include "ExpandBuf.h"
@@ -44,4 +44,4 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
 /* helper function */
 void dvmJdwpAddLocation(ExpandBuf* pReply, const JdwpLocation* pLoc);
 
-#endif /*_DALVIK_JDWP_JDWPHANDLER*/
+#endif  // DALVIK_JDWP_JDWPHANDLER_H_

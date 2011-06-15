@@ -16,8 +16,8 @@
 /*
  * Handle registration of events, and debugger event notification.
  */
-#ifndef _DALVIK_JDWP_JDWPEVENT
-#define _DALVIK_JDWP_JDWPEVENT
+#ifndef DALVIK_JDWP_JDWPEVENT_H_
+#define DALVIK_JDWP_JDWPEVENT_H_
 
 #include "JdwpConstants.h"
 #include "ExpandBuf.h"
@@ -126,4 +126,4 @@ void dvmJdwpUnregisterAll(JdwpState* state);
  */
 bool dvmJdwpSendRequest(JdwpState* state, ExpandBuf* pReq);
 
-#endif /*_DALVIK_JDWP_JDWPEVENT*/
+#endif  // DALVIK_JDWP_JDWPEVENT_H_

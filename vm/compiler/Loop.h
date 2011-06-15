@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_LOOP
-#define _DALVIK_VM_LOOP
+#ifndef DALVIK_VM_LOOP_H_
+#define DALVIK_VM_LOOP_H_
 
 #include "Dalvik.h"
 #include "CompilerInternals.h"
@@ -45,4 +45,4 @@ bool dvmCompilerFilterLoopBlocks(CompilationUnit *cUnit);
                                     return false;                       \
                                 }
 
-#endif /* _DALVIK_VM_LOOP */
+#endif  // DALVIK_VM_LOOP_H_

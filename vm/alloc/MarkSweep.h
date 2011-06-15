@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _DALVIK_ALLOC_MARK_SWEEP
-#define _DALVIK_ALLOC_MARK_SWEEP
+#ifndef DALVIK_ALLOC_MARK_SWEEP_H_
+#define DALVIK_ALLOC_MARK_SWEEP_H_
 
 #include "alloc/HeapBitmap.h"
 #include "alloc/HeapSource.h"
@@ -61,4 +61,4 @@ void dvmHeapSweepUnmarkedObjects(bool isPartial, bool isConcurrent,
                                  size_t *numObjects, size_t *numBytes);
 void dvmEnqueueClearedReferences(Object **references);
 
-#endif  // _DALVIK_ALLOC_MARK_SWEEP
+#endif  // DALVIK_ALLOC_MARK_SWEEP_H_

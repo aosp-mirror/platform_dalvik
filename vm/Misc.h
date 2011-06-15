@@ -17,8 +17,8 @@
 /*
  * Miscellaneous utility functions.
  */
-#ifndef _DALVIK_MISC
-#define _DALVIK_MISC
+#ifndef DALVIK_MISC_H_
+#define DALVIK_MISC_H_
 
 #include <string>
 
@@ -309,4 +309,4 @@ const char* dvmPathToAbsolutePortion(const char* path);
  */
 std::string dvmStringPrintf(const char* fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
 
-#endif /*_DALVIK_MISC*/
+#endif  // DALVIK_MISC_H_

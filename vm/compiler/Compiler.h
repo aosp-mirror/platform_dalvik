@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_COMPILER
-#define _DALVIK_VM_COMPILER
+#ifndef DALVIK_VM_COMPILER_H_
+#define DALVIK_VM_COMPILER_H_
 
 #include <setjmp.h>
 #include "Thread.h"
@@ -242,4 +242,4 @@ JitInstructionSetType dvmCompilerGetInterpretTemplateSet();
 u8 dvmGetRegResourceMask(int reg);
 void dvmDumpCFG(struct CompilationUnit *cUnit, const char *dirPrefix);
 
-#endif /* _DALVIK_VM_COMPILER */
+#endif  // DALVIK_VM_COMPILER_H_

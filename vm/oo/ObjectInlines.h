@@ -17,8 +17,8 @@
 /*
  * Helper functions to access data fields in Objects.
  */
-#ifndef _DALVIK_OO_OBJECTINLINES
-#define _DALVIK_OO_OBJECTINLINES
+#ifndef DALVIK_OO_OBJECTINLINES_H_
+#define DALVIK_OO_OBJECTINLINES_H_
 
 /*
  * Store a single value in the array, and if the value isn't null,
@@ -354,4 +354,4 @@ INLINE void dvmSetStaticFieldObjectVolatile(StaticField* sfield, Object* val) {
     }
 }
 
-#endif /*_DALVIK_OO_OBJECTINLINES*/
+#endif  // DALVIK_OO_OBJECTINLINES_H_

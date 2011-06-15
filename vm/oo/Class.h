@@ -16,8 +16,8 @@
 /*
  * Class loader.
  */
-#ifndef _DALVIK_OO_CLASS
-#define _DALVIK_OO_CLASS
+#ifndef DALVIK_OO_CLASS_H_
+#define DALVIK_OO_CLASS_H_
 
 /*
  * The classpath and bootclasspath differ in that only the latter is
@@ -281,4 +281,4 @@ int dvmCompareNameDescriptorAndMethod(const char* name,
  */
 size_t dvmClassObjectSize(const ClassObject *clazz);
 
-#endif /*_DALVIK_OO_CLASS*/
+#endif  // DALVIK_OO_CLASS_H_

@@ -16,10 +16,10 @@
 /*
  * Signal catcher thread.
  */
-#ifndef _DALVIK_SIGNALCATCHER
-#define _DALVIK_SIGNALCATCHER
+#ifndef DALVIK_SIGNALCATCHER_H_
+#define DALVIK_SIGNALCATCHER_H_
 
 bool dvmSignalCatcherStartup(void);
 void dvmSignalCatcherShutdown(void);
 
-#endif /*_DALVIK_SIGNALCATCHER*/
+#endif  // DALVIK_SIGNALCATCHER_H_

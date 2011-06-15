@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _DALVIK_HEAP_SOURCE
-#define _DALVIK_HEAP_SOURCE
+#ifndef DALVIK_HEAP_SOURCE_H_
+#define DALVIK_HEAP_SOURCE_H_
 
 #include "alloc/Heap.h"
 #include "alloc/HeapInternal.h" // for GcHeap
@@ -203,4 +203,4 @@ void *dvmHeapSourceGetImmuneLimit(bool isPartial);
  */
 size_t dvmHeapSourceGetMaximumSize(void);
 
-#endif  // _DALVIK_HEAP_SOURCE
+#endif  // DALVIK_HEAP_SOURCE_H_

@@ -26,8 +26,8 @@
  * accessed through a Thread field).  May need to pass it around for some
  * of the early initialization functions.
  */
-#ifndef _DALVIK_GLOBALS
-#define _DALVIK_GLOBALS
+#ifndef DALVIK_GLOBALS_H_
+#define DALVIK_GLOBALS_H_
 
 #include <string>
 #include <vector>
@@ -966,4 +966,4 @@ struct DvmJniGlobals {
 
 extern struct DvmJniGlobals gDvmJni;
 
-#endif /*_DALVIK_GLOBALS*/
+#endif  // DALVIK_GLOBALS_H_

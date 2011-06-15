@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _DALVIK_HPROF_HPROF
-#define _DALVIK_HPROF_HPROF
+#ifndef DALVIK_HPROF_HPROF_H_
+#define DALVIK_HPROF_HPROF_H_
 
 #include "Dalvik.h"
 
@@ -224,4 +224,4 @@ bool hprofShutdown(hprof_context_t *ctx);
 void hprofFreeContext(hprof_context_t *ctx);
 int hprofDumpHeap(const char* fileName, int fd, bool directToDdms);
 
-#endif  // _DALVIK_HPROF_HPROF
+#endif  // DALVIK_HPROF_HPROF_H_

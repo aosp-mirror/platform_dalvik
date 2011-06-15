@@ -17,8 +17,8 @@
 /*
  * Read-only access to Zip archives, with minimal heap allocation.
  */
-#ifndef _LIBDEX_ZIPARCHIVE
-#define _LIBDEX_ZIPARCHIVE
+#ifndef LIBDEX_ZIPARCHIVE_H_
+#define LIBDEX_ZIPARCHIVE_H_
 
 #include "SysUtil.h"
 #include "DexFile.h"            // need DEX_INLINE
@@ -177,4 +177,4 @@ int dexZipExtractEntryToFile(const ZipArchive* pArchive,
 u4 dexInitCrc32(void);
 u4 dexComputeCrc32(u4 crc, const void* buf, size_t len);
 
-#endif /*_LIBDEX_ZIPARCHIVE*/
+#endif  // LIBDEX_ZIPARCHIVE_H_

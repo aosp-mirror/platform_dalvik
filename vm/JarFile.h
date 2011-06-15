@@ -16,8 +16,8 @@
 /*
  * Decode jar/apk/zip files.
  */
-#ifndef _DALVIK_JARFILE
-#define _DALVIK_JARFILE
+#ifndef DALVIK_JARFILE_H_
+#define DALVIK_JARFILE_H_
 
 /*
  * This represents an open, scanned Jar file.  (It's actually for any Zip
@@ -68,4 +68,4 @@ enum DexCacheStatus {
  */
 DexCacheStatus dvmDexCacheStatus(const char *fileName);
 
-#endif /*_DALVIK_JARFILE*/
+#endif  // DALVIK_JARFILE_H_

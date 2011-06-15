@@ -25,8 +25,8 @@
  * opcodes and instruction formats.
  */
 
-#ifndef _LIBDEX_DEXOPCODES
-#define _LIBDEX_DEXOPCODES
+#ifndef LIBDEX_DEXOPCODES_H_
+#define LIBDEX_DEXOPCODES_H_
 
 #include "DexFile.h"
 
@@ -1133,4 +1133,4 @@ DEX_INLINE Opcode dexOpcodeFromCodeUnit(u2 codeUnit) {
  */
 const char* dexGetOpcodeName(Opcode op);
 
-#endif /*_LIBDEX_DEXOPCODES*/
+#endif  // LIBDEX_DEXOPCODES_H_

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_ALLOC_WRITEBARRIER
-#define _DALVIK_ALLOC_WRITEBARRIER
+#ifndef DALVIK_ALLOC_WRITEBARRIER_H_
+#define DALVIK_ALLOC_WRITEBARRIER_H_
 
 /*
  * Note writes to the heap. These functions must be called if a field
@@ -50,4 +50,4 @@ INLINE void dvmWriteBarrierArray(const ArrayObject *obj,
     dvmMarkCard((Object *)obj);
 }
 
-#endif /* _DALVIK_ALLOC_WRITEBARRIER */
+#endif  // DALVIK_ALLOC_WRITEBARRIER_H_

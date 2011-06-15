@@ -17,8 +17,8 @@
 /*
  * Common defines for all Dalvik code.
  */
-#ifndef _DALVIK_COMMON
-#define _DALVIK_COMMON
+#ifndef DALVIK_COMMON_H_
+#define DALVIK_COMMON_H_
 
 #ifndef LOG_TAG
 # define LOG_TAG "dalvikvm"
@@ -120,4 +120,4 @@ union JValue {
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 
-#endif /*_DALVIK_COMMON*/
+#endif  // DALVIK_COMMON_H_

@@ -16,8 +16,8 @@
 /*
  * Mutex-free cache for key1+key2=value.
  */
-#ifndef _DALVIK_ATOMICCACHE
-#define _DALVIK_ATOMICCACHE
+#ifndef DALVIK_ATOMICCACHE_H_
+#define DALVIK_ATOMICCACHE_H_
 
 /*
  * If set to "1", gather some stats on our caching success rate.
@@ -170,4 +170,4 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
  */
 void dvmDumpAtomicCacheStats(const AtomicCache* pCache);
 
-#endif /*_DALVIK_ATOMICCACHE*/
+#endif  // DALVIK_ATOMICCACHE_H_

@@ -16,8 +16,8 @@
 /*
  * These come out of the JDWP documentation.
  */
-#ifndef _DALVIK_JDWP_JDWPCONSTANTS
-#define _DALVIK_JDWP_JDWPCONSTANTS
+#ifndef DALVIK_JDWP_JDWPCONSTANTS_H_
+#define DALVIK_JDWP_JDWPCONSTANTS_H_
 
 /*
  * Error constants.
@@ -226,4 +226,4 @@ enum JdwpType {
     JT_CLASS_OBJECT          = 'c',
 };
 
-#endif /*_DALVIK_JDWP_JDWPCONSTANTS*/
+#endif  // DALVIK_JDWP_JDWPCONSTANTS_H_

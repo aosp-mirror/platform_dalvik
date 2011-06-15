@@ -18,8 +18,8 @@
  * Validate and manipulate MUTF-8 (modified UTF-8) encoded string data.
  */
 
-#ifndef _LIBDEX_DEXUTF
-#define _LIBDEX_DEXUTF
+#ifndef LIBDEX_DEXUTF_H_
+#define LIBDEX_DEXUTF_H_
 
 #include "DexFile.h"
 
@@ -128,4 +128,4 @@ bool dexIsClassDescriptor(const char* s);
  * is for anything but "void". */
 bool dexIsFieldDescriptor(const char* s);
 
-#endif /* def _LIBDEX_DEXUTF */
+#endif  // LIBDEX_DEXUTF_H_

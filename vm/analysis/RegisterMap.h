@@ -19,8 +19,8 @@
  *
  * These structures should be treated as opaque through most of the VM.
  */
-#ifndef _DALVIK_REGISTERMAP
-#define _DALVIK_REGISTERMAP
+#ifndef DALVIK_REGISTERMAP_H_
+#define DALVIK_REGISTERMAP_H_
 
 #include "analysis/VerifySubs.h"
 #include "analysis/CodeVerify.h"
@@ -263,4 +263,4 @@ INLINE const RegisterMap* dvmGetExpandedRegisterMap(Method* method)
 /* dump stats gathered during register map creation process */
 void dvmRegisterMapDumpStats(void);
 
-#endif /*_DALVIK_REGISTERMAP*/
+#endif  // DALVIK_REGISTERMAP_H_

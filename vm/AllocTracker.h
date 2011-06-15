@@ -16,8 +16,8 @@
 /*
  * Allocation tracking and reporting.
  */
-#ifndef _DALVIK_ALLOCTRACKER
-#define _DALVIK_ALLOCTRACKER
+#ifndef DALVIK_ALLOCTRACKER_H_
+#define DALVIK_ALLOCTRACKER_H_
 
 /* initialization */
 bool dvmAllocTrackerStartup(void);
@@ -59,4 +59,4 @@ bool dvmGenerateTrackedAllocationReport(u1** pData, size_t* pDataLen);
  */
 void dvmDumpTrackedAllocations(bool enable);
 
-#endif /*_DALVIK_ALLOCTRACKER*/
+#endif  // DALVIK_ALLOCTRACKER_H_

@@ -18,8 +18,8 @@
  * Functions for interpreting LEB128 (little endian base 128) values
  */
 
-#ifndef _LIBDEX_LEB128
-#define _LIBDEX_LEB128
+#ifndef LIBDEX_LEB128_H_
+#define LIBDEX_LEB128_H_
 
 #include "DexFile.h"
 

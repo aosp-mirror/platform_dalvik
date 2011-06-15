@@ -16,8 +16,8 @@
 /*
  * Basic reflection calls and utility functions.
  */
-#ifndef _DALVIK_REFLECT_REFLECT
-#define _DALVIK_REFLECT_REFLECT
+#ifndef DALVIK_REFLECT_REFLECT_H_
+#define DALVIK_REFLECT_REFLECT_H_
 
 /*
  * During startup, validate the "box" classes, e.g. java/lang/Integer.
@@ -260,4 +260,4 @@ bool dvmEncodedArrayIteratorHasNext(const EncodedArrayIterator* iterator);
 bool dvmEncodedArrayIteratorGetNext(EncodedArrayIterator* iterator,
         AnnotationValue* value);
 
-#endif /*_DALVIK_REFLECT_REFLECT*/
+#endif  // DALVIK_REFLECT_REFLECT_H_

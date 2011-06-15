@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_COMPILER_INTERNAL
-#define _DALVIK_VM_COMPILER_INTERNAL
+#ifndef DALVIK_VM_COMPILER_INTERNAL_H_
+#define DALVIK_VM_COMPILER_INTERNAL_H_
 
 #include "Dalvik.h"
 #include "CompilerUtility.h"
 #include "codegen/CompilerCodegen.h"
 #include "interp/Jit.h"
 
-#endif /* _DALVIK_VM_COMPILER_INTERNAL */
+#endif  // DALVIK_VM_COMPILER_INTERNAL_H_

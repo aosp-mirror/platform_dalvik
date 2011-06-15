@@ -17,8 +17,8 @@
 /*
  * Exception handling.
  */
-#ifndef _DALVIK_EXCEPTION
-#define _DALVIK_EXCEPTION
+#ifndef DALVIK_EXCEPTION_H_
+#define DALVIK_EXCEPTION_H_
 
 /*
  * Create a Throwable and throw an exception in the current thread (where
@@ -482,4 +482,4 @@ void dvmThrowVerifyError(const char* descriptor);
  */
 void dvmThrowVirtualMachineError(const char* msg);
 
-#endif /*_DALVIK_EXCEPTION*/
+#endif  // DALVIK_EXCEPTION_H_

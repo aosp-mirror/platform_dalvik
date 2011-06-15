@@ -17,8 +17,8 @@
  * Maintain an expanding set of unique pointer values.  The set is
  * kept in sorted order.
  */
-#ifndef _DALVIK_POINTERSET
-#define _DALVIK_POINTERSET
+#ifndef DALVIK_POINTERSET_H_
+#define DALVIK_POINTERSET_H_
 
 struct PointerSet;   /* private */
 
@@ -91,4 +91,4 @@ void dvmPointerSetIntersect(PointerSet* pSet, const void** ptrArray, int count);
  */
 void dvmPointerSetDump(const PointerSet* pSet);
 
-#endif /*_DALVIK_POINTERSET*/
+#endif  // DALVIK_POINTERSET_H_

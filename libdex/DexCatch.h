@@ -18,8 +18,8 @@
  * Functions for dealing with try-catch info.
  */
 
-#ifndef _LIBDEX_DEXCATCH
-#define _LIBDEX_DEXCATCH
+#ifndef LIBDEX_DEXCATCH_H_
+#define LIBDEX_DEXCATCH_H_
 
 #include "DexFile.h"
 #include "Leb128.h"
@@ -159,4 +159,4 @@ DEX_INLINE bool dexFindCatchHandler(DexCatchIterator *pIterator,
     }
 }
 
-#endif
+#endif  // LIBDEX_DEXCATCH_H_

@@ -18,8 +18,8 @@
  * The VM wraps some additional data structures around the DexFile.  These
  * are defined here.
  */
-#ifndef _DALVIK_DVMDEX
-#define _DALVIK_DVMDEX
+#ifndef DALVIK_DVMDEX_H_
+#define DALVIK_DVMDEX_H_
 
 #include "libdex/DexFile.h"
 
@@ -158,4 +158,4 @@ INLINE void dvmDexSetResolvedField(DvmDex* pDvmDex, u4 fieldIdx,
     pDvmDex->pResFields[fieldIdx] = field;
 }
 
-#endif /*_DALVIK_DVMDEX*/
+#endif  // DALVIK_DVMDEX_H_

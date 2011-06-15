@@ -17,8 +17,8 @@
 /*
  * Declarations and definitions common to internal native code.
  */
-#ifndef _DALVIK_NATIVE_INTERNALNATIVEPRIV
-#define _DALVIK_NATIVE_INTERNALNATIVEPRIV
+#ifndef DALVIK_NATIVE_INTERNALNATIVEPRIV_H_
+#define DALVIK_NATIVE_INTERNALNATIVEPRIV_H_
 
 /*
  * Return macros.  Note we use "->i" instead of "->z" for boolean; this
@@ -112,4 +112,4 @@ extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmVmInternal
 extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_NativeTestTarget[];
 extern const DalvikNativeMethod dvm_sun_misc_Unsafe[];
 
-#endif /*_DALVIK_NATIVE_INTERNALNATIVEPRIV*/
+#endif  // DALVIK_NATIVE_INTERNALNATIVEPRIV_H_

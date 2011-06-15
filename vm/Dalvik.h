@@ -17,8 +17,8 @@
 /*
  * All-inclusive internal header file.  Include this to get everything useful.
  */
-#ifndef _DALVIK_DALVIK
-#define _DALVIK_DALVIK
+#ifndef DALVIK_DALVIK_H_
+#define DALVIK_DALVIK_H_
 
 #include "Common.h"
 #include "Inlines.h"
@@ -84,4 +84,4 @@
 #include "InlineNative.h"
 #include "oo/ObjectInlines.h"
 
-#endif /*_DALVIK_DALVIK*/
+#endif  // DALVIK_DALVIK_H_

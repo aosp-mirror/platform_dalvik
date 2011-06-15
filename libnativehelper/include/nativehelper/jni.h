@@ -21,8 +21,8 @@
  * Everything here is expected to be VM-neutral.
  */
 
-#ifndef _JNI_H
-#define _JNI_H
+#ifndef JNI_H_
+#define JNI_H_
 
 #include <stdarg.h>
 
@@ -1152,4 +1152,4 @@ void JNI_OnUnload(JavaVM* vm, void* reserved);
 #define JNIEXPORT
 #define JNICALL
 
-#endif /*_JNI_H*/
+#endif  /* JNI_H_ */

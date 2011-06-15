@@ -16,8 +16,8 @@
 /*
  * JDWP internal interfaces.
  */
-#ifndef _DALVIK_JDWP_JDWPPRIV
-#define _DALVIK_JDWP_JDWPPRIV
+#ifndef DALVIK_JDWP_JDWPPRIV_H_
+#define DALVIK_JDWP_JDWPPRIV_H_
 
 #define LOG_TAG "jdwp"
 
@@ -174,4 +174,4 @@ INLINE bool dvmJdwpSendBufferedRequest(JdwpState* state,
     return (*state->transport->sendBufferedRequest)(state, iov, iovcnt);
 }
 
-#endif /*_DALVIK_JDWP_JDWPPRIV*/
+#endif  // DALVIK_JDWP_JDWPPRIV_H_

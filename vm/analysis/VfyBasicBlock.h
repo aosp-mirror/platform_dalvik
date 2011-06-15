@@ -18,8 +18,8 @@
  * Basic block functions, as used by the verifier.  (The names were chosen
  * to avoid conflicts with similar structures used by the compiler.)
  */
-#ifndef _DALVIK_VFYBASICBLOCK
-#define _DALVIK_VFYBASICBLOCK
+#ifndef DALVIK_VFYBASICBLOCK_H_
+#define DALVIK_VFYBASICBLOCK_H_
 
 #include "PointerSet.h"
 
@@ -58,4 +58,4 @@ bool dvmComputeVfyBasicBlocks(struct VerifierData* vdata);
  */
 void dvmFreeVfyBasicBlocks(struct VerifierData* vdata);
 
-#endif /*_DALVIK_VFYBASICBLOCK*/
+#endif  // DALVIK_VFYBASICBLOCK_H_

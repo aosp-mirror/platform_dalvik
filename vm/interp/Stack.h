@@ -17,8 +17,8 @@
 /*
  * Stack frames, and uses thereof.
  */
-#ifndef _DALVIK_INTERP_STACK
-#define _DALVIK_INTERP_STACK
+#ifndef DALVIK_INTERP_STACK_H_
+#define DALVIK_INTERP_STACK_H_
 
 #include "jni.h"
 #include <stdarg.h>
@@ -276,4 +276,4 @@ extern "C" void dvmCleanupStackOverflow(Thread* self, const Object* exception);
 void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread);
 void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread);
 
-#endif /*_DALVIK_INTERP_STACK*/
+#endif  // DALVIK_INTERP_STACK_H_

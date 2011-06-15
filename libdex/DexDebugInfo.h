@@ -18,8 +18,8 @@
  * Handling of method debug info in a .dex file.
  */
 
-#ifndef _LIBDEX_DEXDEBUGINFO
-#define _LIBDEX_DEXDEBUGINFO
+#ifndef LIBDEX_DEXDEBUGINFO_H_
+#define LIBDEX_DEXDEBUGINFO_H_
 
 #include "DexFile.h"
 
@@ -52,4 +52,4 @@ void dexDecodeDebugInfo(
             DexDebugNewPositionCb posCb, DexDebugNewLocalCb localCb,
             void* cnxt);
 
-#endif /* def _LIBDEX_DEXDEBUGINFO */
+#endif  // LIBDEX_DEXDEBUGINFO_H_

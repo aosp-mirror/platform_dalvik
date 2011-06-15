@@ -16,8 +16,8 @@
 /*
  * Internal heap functions
  */
-#ifndef _DALVIK_ALLOC_HEAP
-#define _DALVIK_ALLOC_HEAP
+#ifndef DALVIK_ALLOC_HEAP_H_
+#define DALVIK_ALLOC_HEAP_H_
 
 struct GcSpec {
   /* If true, only the application heap is threatened. */
@@ -94,4 +94,4 @@ void dvmCollectGarbageInternal(const GcSpec *spec);
  */
 void dvmWaitForConcurrentGcToComplete(void);
 
-#endif  // _DALVIK_ALLOC_HEAP
+#endif  // DALVIK_ALLOC_HEAP_H_

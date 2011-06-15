@@ -17,8 +17,8 @@
 /*
  * Utility functions related to "dexopt".
  */
-#ifndef _LIBDEX_OPTINVOCATION
-#define _LIBDEX_OPTINVOCATION
+#ifndef LIBDEX_OPTINVOCATION_H_
+#define LIBDEX_OPTINVOCATION_H_
 
 /*
  * Utility routines, used by the VM.
@@ -27,4 +27,4 @@ char* dexOptGenerateCacheFileName(const char* fileName,
     const char* subFileName);
 int dexOptCreateEmptyHeader(int fd);
 
-#endif /*_LIBDEX_OPTINVOCATION*/
+#endif  // LIBDEX_OPTINVOCATION_H_

@@ -18,8 +18,8 @@
  * Declaration of the fundamental Object type and refinements thereof, plus
  * some functions for manipulating them.
  */
-#ifndef _DALVIK_OO_OBJECT
-#define _DALVIK_OO_OBJECT
+#ifndef DALVIK_OO_OBJECT_H_
+#define DALVIK_OO_OBJECT_H_
 
 #include <stddef.h>
 #include "Atomic.h"
@@ -769,4 +769,4 @@ INLINE u4 dvmGetMethodInsnsSize(const Method* meth) {
 /* debugging */
 void dvmDumpObject(const Object* obj);
 
-#endif /*_DALVIK_OO_OBJECT*/
+#endif  // DALVIK_OO_OBJECT_H_

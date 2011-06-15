@@ -17,8 +17,8 @@
 /*
  * Dalvik bytecode verifier.
  */
-#ifndef _DALVIK_CODEVERIFY
-#define _DALVIK_CODEVERIFY
+#ifndef DALVIK_CODEVERIFY_H_
+#define DALVIK_CODEVERIFY_H_
 
 #include "analysis/VerifySubs.h"
 #include "analysis/VfyBasicBlock.h"
@@ -321,4 +321,4 @@ void dvmFreeUninitInstanceMap(UninitInstanceMap* uninitMap);
  */
 bool dvmVerifyCodeFlow(VerifierData* vdata);
 
-#endif /*_DALVIK_CODEVERIFY*/
+#endif  // DALVIK_CODEVERIFY_H_

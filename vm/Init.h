@@ -17,8 +17,8 @@
 /*
  * VM initialization and shutdown.
  */
-#ifndef _DALVIK_INIT
-#define _DALVIK_INIT
+#ifndef DALVIK_INIT_H_
+#define DALVIK_INIT_H_
 
 /*
  * Standard VM initialization, usually invoked through JNI.
@@ -69,4 +69,4 @@ int dvmFprintf(FILE* fp, const char* format, ...)
 #endif
     ;
 
-#endif /*_DALVIK_INIT*/
+#endif  // DALVIK_INIT_H_

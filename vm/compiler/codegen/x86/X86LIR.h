@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+#ifndef DALVIK_VM_COMPILER_CODEGEN_X86_X86LIR_H_
+#define DALVIK_VM_COMPILER_CODEGEN_X86_X86LIR_H_
+
 #include "Dalvik.h"
 #include "compiler/CompilerInternals.h"
-
-#ifndef _DALVIK_VM_COMPILER_CODEGEN_X86_X86LIR_H
-#define _DALVIK_VM_COMPILER_CODEGEN_X86_X86LIR_H
 
 /*
  * For both JIT & interpreter:
@@ -179,4 +179,4 @@ typedef struct X86LIR {
 #define CHAIN_CELL_NORMAL_SIZE 12
 #define CHAIN_CELL_PREDICTED_SIZE 16
 
-#endif /* _DALVIK_VM_COMPILER_CODEGEN_X86_X86LIR_H */
+#endif  // DALVIK_VM_COMPILER_CODEGEN_X86_X86LIR_H_

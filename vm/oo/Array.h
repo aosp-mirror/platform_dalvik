@@ -16,8 +16,8 @@
 /*
  * Array handling.
  */
-#ifndef _DALVIK_OO_ARRAY
-#define _DALVIK_OO_ARRAY
+#ifndef DALVIK_OO_ARRAY_H_
+#define DALVIK_OO_ARRAY_H_
 
 /*
  * Find a matching array class.  If it doesn't exist, create it.
@@ -137,4 +137,4 @@ size_t dvmArrayObjectSize(const ArrayObject *array);
  */
 size_t dvmArrayClassElementWidth(const ClassObject* clazz);
 
-#endif /*_DALVIK_OO_ARRAY*/
+#endif  // DALVIK_OO_ARRAY_H_

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_INDIRECTREFTABLE
-#define _DALVIK_INDIRECTREFTABLE
+#ifndef DALVIK_INDIRECTREFTABLE_H_
+#define DALVIK_INDIRECTREFTABLE_H_
 
 /*
  * Maintain a table of indirect references.  Used for local/global JNI
@@ -390,4 +390,4 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
  */
 void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr);
 
-#endif /*_DALVIK_INDIRECTREFTABLE*/
+#endif  // DALVIK_INDIRECTREFTABLE_H_

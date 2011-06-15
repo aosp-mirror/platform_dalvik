@@ -17,8 +17,8 @@
 /*
  * Some declarations used throughout mterp.
  */
-#ifndef _DALVIK_MTERP_MTERP
-#define _DALVIK_MTERP_MTERP
+#ifndef DALVIK_MTERP_MTERP_H_
+#define DALVIK_MTERP_MTERP_H_
 
 #include "Dalvik.h"
 #include "interp/InterpDefs.h"
@@ -51,4 +51,4 @@ extern "C" void dvmMterpStdBail(Thread* self, bool changeInterp);
  */
 extern "C" void dvmMterpPrintMethod(Method* method);
 
-#endif /*_DALVIK_MTERP_MTERP*/
+#endif  // DALVIK_MTERP_MTERP_H_

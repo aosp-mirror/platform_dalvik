@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _DALVIK_HEAP_BITMAP
-#define _DALVIK_HEAP_BITMAP
+#ifndef DALVIK_HEAP_BITMAP_H_
+#define DALVIK_HEAP_BITMAP_H_
 
 #include <limits.h>
 #include <stdint.h>
@@ -127,4 +127,4 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
                             uintptr_t base, uintptr_t max,
                             BitmapSweepCallback *callback, void *callbackArg);
 
-#endif /* _DALVIK_HEAP_BITMAP */
+#endif  // DALVIK_HEAP_BITMAP_H_

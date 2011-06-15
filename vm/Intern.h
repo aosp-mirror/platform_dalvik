@@ -16,8 +16,8 @@
 /*
  * Interned strings.
  */
-#ifndef _DALVIK_INTERN
-#define _DALVIK_INTERN
+#ifndef DALVIK_INTERN_H_
+#define DALVIK_INTERN_H_
 
 bool dvmStringInternStartup(void);
 void dvmStringInternShutdown(void);
@@ -26,4 +26,4 @@ StringObject* dvmLookupImmortalInternedString(StringObject* strObj);
 bool dvmIsWeakInternedString(StringObject* strObj);
 void dvmGcDetachDeadInternedStrings(int (*isUnmarkedObject)(void *));
 
-#endif /*_DALVIK_INTERN*/
+#endif  // DALVIK_INTERN_H_

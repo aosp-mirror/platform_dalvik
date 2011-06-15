@@ -17,8 +17,8 @@
 /*
  * Inlined native functions.
  */
-#ifndef _DALVIK_INLINENATIVE
-#define _DALVIK_INLINENATIVE
+#ifndef DALVIK_INLINENATIVE_H_
+#define DALVIK_INLINENATIVE_H_
 
 /* startup/shutdown */
 bool dvmInlineNativeStartup(void);
@@ -190,4 +190,4 @@ bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
 bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
                                      JValue* pResult);
 
-#endif /*_DALVIK_INLINENATIVE*/
+#endif  // DALVIK_INLINENATIVE_H_
