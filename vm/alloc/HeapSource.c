@@ -1116,6 +1116,7 @@ void dvmClearGrowthLimit()
     gHs->growthLimit = gHs->maximumSize;
     overhead = oldHeapOverhead(gHs, false);
     gHs->heaps[0].maximumSize = gHs->maximumSize - overhead;
+    gHs->heaps[0].limit = gHs->heaps[0].base + gHs->heaps[0].maximumSize;
     dvmUnlockHeap();
 }
 
