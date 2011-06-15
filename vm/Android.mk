@@ -112,7 +112,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
     # Build as a WHOLE static library so dependencies are available at link
     # time. When building this target as a regular static library, certain
     # dependencies like expat are not found by the linker.
-    LOCAL_WHOLE_STATIC_LIBRARIES += libexpat libcutils libdex liblog libnativehelper libutils libz
+    LOCAL_WHOLE_STATIC_LIBRARIES += libexpat libcutils libdex liblog libnativehelper libz
 
     # The libffi from the source tree should never be used by host builds.
     # The recommendation is that host builds should always either

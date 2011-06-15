@@ -18,8 +18,7 @@
  * Thread support.
  */
 #include "Dalvik.h"
-
-#include "utils/threads.h"      // need Android thread priorities
+#include "os/os.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -240,7 +239,6 @@ static void* internalThreadStart(void* arg);
 static void threadExitUncaughtException(Thread* thread, Object* group);
 static void threadExitCheck(void* arg);
 static void waitForThreadSuspend(Thread* self, Thread* thread);
-static int getThreadPriorityFromSystem();
 
 /*
  * Initialize thread list and main thread's environment.  We need to set
@@ -1889,7 +1887,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      */
     JValue unused;
     dvmCallMethod(self, init, threadObj, &unused, (Object*)pArgs->group,
-        threadNameStr, getThreadPriorityFromSystem(), isDaemon);
+            threadNameStr, os_getThreadPriorityFromSystem(), isDaemon);
     if (dvmCheckException(self)) {
         LOGE("exception thrown while constructing attached thread object");
         goto fail_unlink;
@@ -3075,87 +3073,10 @@ Thread* dvmGetThreadByThreadId(u4 threadId)
     return thread;
 }
 
-
-/*
- * Conversion map for "nice" values.
- *
- * We use Android thread priority constants to be consistent with the rest
- * of the system.  In some cases adjacent entries may overlap.
- */
-static const int kNiceValues[10] = {
-    ANDROID_PRIORITY_LOWEST,                /* 1 (MIN_PRIORITY) */
-    ANDROID_PRIORITY_BACKGROUND + 6,
-    ANDROID_PRIORITY_BACKGROUND + 3,
-    ANDROID_PRIORITY_BACKGROUND,
-    ANDROID_PRIORITY_NORMAL,                /* 5 (NORM_PRIORITY) */
-    ANDROID_PRIORITY_NORMAL - 2,
-    ANDROID_PRIORITY_NORMAL - 4,
-    ANDROID_PRIORITY_URGENT_DISPLAY + 3,
-    ANDROID_PRIORITY_URGENT_DISPLAY + 2,
-    ANDROID_PRIORITY_URGENT_DISPLAY         /* 10 (MAX_PRIORITY) */
-};
-
-/*
- * Change the priority of a system thread to match that of the Thread object.
- *
- * We map a priority value from 1-10 to Linux "nice" values, where lower
- * numbers indicate higher priority.
- */
 void dvmChangeThreadPriority(Thread* thread, int newPriority)
 {
-    pid_t pid = thread->systemTid;
-    int newNice;
-
-    if (newPriority < 1 || newPriority > 10) {
-        LOGW("bad priority %d", newPriority);
-        newPriority = 5;
-    }
-    newNice = kNiceValues[newPriority-1];
-
-    if (newNice >= ANDROID_PRIORITY_BACKGROUND) {
-        set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
-    } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
-        set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
-    }
-
-    if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
-        std::string threadName(dvmGetThreadName(thread));
-        LOGI("setPriority(%d) '%s' to prio=%d(n=%d) failed: %s",
-                pid, threadName.c_str(), newPriority, newNice, strerror(errno));
-    } else {
-        LOGV("setPriority(%d) to prio=%d(n=%d)", pid, newPriority, newNice);
-    }
+    os_changeThreadPriority(thread, newPriority);
 }
-
-/*
- * Get the thread priority for the current thread by querying the system.
- * This is useful when attaching a thread through JNI.
- *
- * Returns a value from 1 to 10 (compatible with java.lang.Thread values).
- */
-static int getThreadPriorityFromSystem()
-{
-    int i, sysprio, jprio;
-
-    errno = 0;
-    sysprio = getpriority(PRIO_PROCESS, 0);
-    if (sysprio == -1 && errno != 0) {
-        LOGW("getpriority() failed: %s", strerror(errno));
-        return THREAD_NORM_PRIORITY;
-    }
-
-    jprio = THREAD_MIN_PRIORITY;
-    for (i = 0; i < NELEM(kNiceValues); i++) {
-        if (sysprio >= kNiceValues[i])
-            break;
-        jprio++;
-    }
-    if (jprio > THREAD_MAX_PRIORITY)
-        jprio = THREAD_MAX_PRIORITY;
-
-    return jprio;
-}
-
 
 /*
  * Return true if the thread is on gDvm.threadList.

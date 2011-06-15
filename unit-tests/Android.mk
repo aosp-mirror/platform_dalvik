@@ -34,7 +34,7 @@ LOCAL_C_INCLUDES += $(test_c_includes)
 LOCAL_MODULE := $(test_module)
 LOCAL_MODULE_TAGS := $(test_tags)
 LOCAL_SRC_FILES := $(test_src_files)
-LOCAL_SHARED_LIBRARIES += libcutils libutils libdvm
+LOCAL_SHARED_LIBRARIES += libcutils libdvm
 include $(BUILD_NATIVE_TEST)
 
 # Build for the host.
@@ -46,5 +46,5 @@ include $(BUILD_NATIVE_TEST)
 #LOCAL_MODULE_TAGS := $(test_tags)
 #LOCAL_SRC_FILES := $(test_src_files)
 #LOCAL_SHARED_LIBRARIES += libdvm libcrypto libssl libicuuc libicui18n
-#LOCAL_WHOLE_STATIC_LIBRARIES += libcutils libutils liblog libdvm
+#LOCAL_WHOLE_STATIC_LIBRARIES += libcutils liblog libdvm
 #include $(BUILD_HOST_NATIVE_TEST)
