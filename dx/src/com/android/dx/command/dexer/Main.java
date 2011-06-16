@@ -1032,7 +1032,10 @@ public class Main {
                         System.err.println("improper target-api option: " + arg);
                         throw new UsageException();
                     }
-                    targetApiLevel = value;
+                    // TODO: this currently causes confusion for unbundled apps.
+                    // What we call 'target' is what developers call 'min', so
+                    // they're accidentally turning on new opcodes.
+                    // targetApiLevel = value;
                 } else if (arg.startsWith("--positions=")) {
                     String pstr = arg.substring(arg.indexOf('=') + 1).intern();
                     if (pstr == "none") {
