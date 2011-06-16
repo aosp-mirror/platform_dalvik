@@ -637,7 +637,7 @@ static void throwArgumentTypeMismatch(int argIndex, ClassObject* expected, DataO
     std::string expectedClassName(dvmHumanReadableDescriptor(expected->descriptor));
     std::string actualClassName;
     if (arg != NULL) {
-        actualClassName = dvmHumanReadableDescriptor(arg->clazz->descriptor);
+        actualClassName = dvmHumanReadableType(arg);
     } else {
         actualClassName = "null";
     }
@@ -1163,11 +1163,8 @@ static void printWaitMessage(const DebugOutputTarget* target, const char* detail
 
     if (obj->clazz != gDvm.classJavaLangClass) {
         // I(16573)   - waiting on <0xf5feda38> (a java.util.LinkedList)
-        msg += "(a " + dvmHumanReadableDescriptor(obj->clazz->descriptor) + ")";
-    } else {
-        // I(16573)   - waiting on <0xf5ed54f8> (java.lang.Class<java.lang.ref.ReferenceQueue>)
-        ClassObject* clazz = reinterpret_cast<ClassObject*>(obj);
-        msg += "(java.lang.Class<" + dvmHumanReadableDescriptor(clazz->descriptor) + ">)";
+        // I(16573)   - waiting on <0xf5ed54f8> (a java.lang.Class<java.lang.ref.ReferenceQueue>)
+        msg += "(a " + dvmHumanReadableType(obj) + ")";
     }
 
     if (thread != NULL) {

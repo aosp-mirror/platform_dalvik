@@ -147,6 +147,14 @@ char* dvmDotToSlash(const char* str);
  */
 std::string dvmHumanReadableDescriptor(const char* descriptor);
 
+/**
+ * Returns a human-readable string form of the name of the class of
+ * the given object. So given a java.lang.String, the output would
+ * be "java.lang.String". Given an array of int, the output would be "int[]".
+ * Given String.class, the output would be "java.lang.Class<java.lang.String>".
+ */
+std::string dvmHumanReadableType(const Object* obj);
+
 /*
  * Return a newly-allocated string for the "dot version" of the class
  * name for the given type descriptor. That is, The initial "L" and
