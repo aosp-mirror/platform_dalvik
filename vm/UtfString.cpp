@@ -211,8 +211,8 @@ u4 dvmComputeStringHash(StringObject* strObj) {
     }
     int len = dvmGetFieldInt(strObj, STRING_FIELDOFF_COUNT);
     int offset = dvmGetFieldInt(strObj, STRING_FIELDOFF_OFFSET);
-    ArrayObject* chars = (ArrayObject*) dvmGetFieldObject(strObj,
-                                STRING_FIELDOFF_VALUE);
+    ArrayObject* chars =
+            (ArrayObject*) dvmGetFieldObject(strObj, STRING_FIELDOFF_VALUE);
     hashCode = computeUtf16Hash((u2*)(void*)chars->contents + offset, len);
     dvmSetFieldInt(strObj, STRING_FIELDOFF_HASHCODE, hashCode);
     return hashCode;
@@ -281,29 +281,25 @@ StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
  *
  * Returns NULL if the object is NULL.
  */
-char* dvmCreateCstrFromString(StringObject* jstr)
+char* dvmCreateCstrFromString(const StringObject* jstr)
 {
-    char* newStr;
-    ArrayObject* chars;
-    int len, byteLen, offset;
-    const u2* data;
-
     assert(gDvm.classJavaLangString != NULL);
-
-    if (jstr == NULL)
+    if (jstr == NULL) {
         return NULL;
+    }
 
-    len = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
-    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
-    chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                STRING_FIELDOFF_VALUE);
-    data = (const u2*)(void*)chars->contents + offset;
+    int len = dvmGetFieldInt(jstr, STRING_FIELDOFF_COUNT);
+    int offset = dvmGetFieldInt(jstr, STRING_FIELDOFF_OFFSET);
+    ArrayObject* chars =
+            (ArrayObject*) dvmGetFieldObject(jstr, STRING_FIELDOFF_VALUE);
+    const u2* data = (const u2*)(void*)chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
-    byteLen = utf16_utf8ByteLen(data, len);
-    newStr = (char*) malloc(byteLen+1);
-    if (newStr == NULL)
+    int byteLen = utf16_utf8ByteLen(data, len);
+    char* newStr = (char*) malloc(byteLen+1);
+    if (newStr == NULL) {
         return NULL;
+    }
     convertUtf16ToUtf8(newStr, data, len);
 
     return newStr;
@@ -313,12 +309,10 @@ char* dvmCreateCstrFromString(StringObject* jstr)
  * Create a UTF-8 C string from a region of a java/lang/String.  (Used by
  * the JNI GetStringUTFRegion call.)
  */
-void dvmCreateCstrFromStringRegion(StringObject* jstr, int start, int len,
-    char* buf)
+void dvmCreateCstrFromStringRegion(const StringObject* jstr,
+        int start, int len, char* buf)
 {
-    const u2* data;
-
-    data = dvmStringChars(jstr) + start;
+    const u2* data = dvmStringChars(jstr) + start;
     convertUtf16ToUtf8(buf, data, len);
 }
 
@@ -327,22 +321,18 @@ void dvmCreateCstrFromStringRegion(StringObject* jstr, int start, int len,
  *
  * Does not include the terminating null byte.
  */
-int dvmStringUtf8ByteLen(StringObject* jstr)
+int dvmStringUtf8ByteLen(const StringObject* jstr)
 {
-    ArrayObject* chars;
-    int len, offset;
-    const u2* data;
-
     assert(gDvm.classJavaLangString != NULL);
-
-    if (jstr == NULL)
+    if (jstr == NULL) {
         return 0;       // should we throw something?  assert?
+    }
 
-    len = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
-    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
-    chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                STRING_FIELDOFF_VALUE);
-    data = (const u2*)(void*)chars->contents + offset;
+    int len = dvmGetFieldInt(jstr, STRING_FIELDOFF_COUNT);
+    int offset = dvmGetFieldInt(jstr, STRING_FIELDOFF_OFFSET);
+    ArrayObject* chars =
+            (ArrayObject*) dvmGetFieldObject(jstr, STRING_FIELDOFF_VALUE);
+    const u2* data = (const u2*)(void*)chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
     return utf16_utf8ByteLen(data, len);
@@ -351,31 +341,27 @@ int dvmStringUtf8ByteLen(StringObject* jstr)
 /*
  * Get the string's length.
  */
-int dvmStringLen(StringObject* jstr)
+int dvmStringLen(const StringObject* jstr)
 {
-    return dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
+    return dvmGetFieldInt(jstr, STRING_FIELDOFF_COUNT);
 }
 
 /*
  * Get the char[] object from the String.
  */
-ArrayObject* dvmStringCharArray(StringObject* jstr)
+ArrayObject* dvmStringCharArray(const StringObject* jstr)
 {
-    return (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                STRING_FIELDOFF_VALUE);
+    return (ArrayObject*) dvmGetFieldObject(jstr, STRING_FIELDOFF_VALUE);
 }
 
 /*
  * Get the string's data.
  */
-const u2* dvmStringChars(StringObject* jstr)
+const u2* dvmStringChars(const StringObject* jstr)
 {
-    ArrayObject* chars;
-    int offset;
-
-    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
-    chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                STRING_FIELDOFF_VALUE);
+    int offset = dvmGetFieldInt(jstr, STRING_FIELDOFF_OFFSET);
+    ArrayObject* chars =
+            (ArrayObject*) dvmGetFieldObject(jstr, STRING_FIELDOFF_VALUE);
     return (const u2*)(void*)chars->contents + offset;
 }
 
@@ -391,24 +377,22 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
 {
     const StringObject* strObj1 = (const StringObject*) vstrObj1;
     const StringObject* strObj2 = (const StringObject*) vstrObj2;
-    ArrayObject* chars1;
-    ArrayObject* chars2;
-    int len1, len2, offset1, offset2;
 
     assert(gDvm.classJavaLangString != NULL);
 
     /* get offset and length into char array; all values are in 16-bit units */
-    len1 = dvmGetFieldInt((Object*) strObj1, STRING_FIELDOFF_COUNT);
-    offset1 = dvmGetFieldInt((Object*) strObj1, STRING_FIELDOFF_OFFSET);
-    len2 = dvmGetFieldInt((Object*) strObj2, STRING_FIELDOFF_COUNT);
-    offset2 = dvmGetFieldInt((Object*) strObj2, STRING_FIELDOFF_OFFSET);
-    if (len1 != len2)
+    int len1 = dvmGetFieldInt(strObj1, STRING_FIELDOFF_COUNT);
+    int offset1 = dvmGetFieldInt(strObj1, STRING_FIELDOFF_OFFSET);
+    int len2 = dvmGetFieldInt(strObj2, STRING_FIELDOFF_COUNT);
+    int offset2 = dvmGetFieldInt(strObj2, STRING_FIELDOFF_OFFSET);
+    if (len1 != len2) {
         return len1 - len2;
+    }
 
-    chars1 = (ArrayObject*) dvmGetFieldObject((Object*) strObj1,
-                                STRING_FIELDOFF_VALUE);
-    chars2 = (ArrayObject*) dvmGetFieldObject((Object*) strObj2,
-                                STRING_FIELDOFF_VALUE);
+    ArrayObject* chars1 =
+            (ArrayObject*) dvmGetFieldObject(strObj1, STRING_FIELDOFF_VALUE);
+    ArrayObject* chars2 =
+            (ArrayObject*) dvmGetFieldObject(strObj2, STRING_FIELDOFF_VALUE);
 
     /* damage here actually indicates a broken java/lang/String */
     assert(offset1 + len1 <= (int) chars1->length);

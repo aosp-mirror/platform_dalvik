@@ -266,6 +266,23 @@ std::string dvmHumanReadableDescriptor(const char* descriptor) {
     return result;
 }
 
+std::string dvmHumanReadableType(const Object* obj)
+{
+    if (obj == NULL) {
+        return "(null)";
+    }
+    if (obj->clazz == NULL) {
+        /* should only be possible right after a plain dvmMalloc() */
+        return "(raw)";
+    }
+    std::string result(dvmHumanReadableDescriptor(obj->clazz->descriptor));
+    if (dvmIsClassObject(obj)) {
+        const ClassObject* clazz = reinterpret_cast<const ClassObject*>(obj);
+        result += "<" + dvmHumanReadableDescriptor(clazz->descriptor) + ">";
+    }
+    return result;
+}
+
 /*
  * Return a newly-allocated string for the "dot version" of the class
  * name for the given type descriptor. That is, The initial "L" and

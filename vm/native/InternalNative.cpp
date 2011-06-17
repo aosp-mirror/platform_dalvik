@@ -165,12 +165,7 @@ bool dvmVerifyObjectInClass(Object* obj, ClassObject* clazz) {
     }
 
     std::string expectedClassName(dvmHumanReadableDescriptor(clazz->descriptor));
-    std::string actualClassName;
-    if (obj != NULL) {
-        actualClassName = dvmHumanReadableDescriptor(obj->clazz->descriptor);
-    } else {
-        actualClassName = "null";
-    }
+    std::string actualClassName(dvmHumanReadableType(obj));
     dvmThrowExceptionFmt(exceptionClass, "expected receiver of type %s, but got %s",
             expectedClassName.c_str(), actualClassName.c_str());
     return false;
