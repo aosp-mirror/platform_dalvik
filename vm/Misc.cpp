@@ -779,11 +779,18 @@ static void StringAppendV(std::string* dst, const char* format, va_list ap) {
     }
 }
 
-std::string dvmStringPrintf(const char* fmt, ...) {
+std::string StringPrintf(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     std::string result;
     StringAppendV(&result, fmt, ap);
     va_end(ap);
     return result;
+}
+
+void StringAppendF(std::string* dst, const char* format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    StringAppendV(dst, format, ap);
+    va_end(ap);
 }

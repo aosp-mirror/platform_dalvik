@@ -216,14 +216,14 @@ static void logObject(const Object* obj, size_t elems, int identical, int equiv)
     } else {
         className = dvmHumanReadableType(obj);
         if (elems != 0) {
-            className += dvmStringPrintf(" (%zd elements)", elems);
+            StringAppendF(&className, " (%zd elements)", elems);
         }
     }
 
     size_t total = identical + equiv + 1;
-    std::string msg(dvmStringPrintf("%5d of %s", total, className.c_str()));
+    std::string msg(StringPrintf("%5d of %s", total, className.c_str()));
     if (identical + equiv != 0) {
-        msg += dvmStringPrintf(" (%d unique instances)", equiv + 1);
+        StringAppendF(&msg, " (%d unique instances)", equiv + 1);
     }
     LOGW("%s", msg.c_str());
 }
@@ -269,7 +269,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
         std::string extras;
         size_t elems = getElementCount(ref);
         if (elems != 0) {
-            extras += dvmStringPrintf(" (%zd elements)", elems);
+            StringAppendF(&extras, " (%zd elements)", elems);
         } else if (ref->clazz == gDvm.classJavaLangString) {
             const StringObject* str =
                     reinterpret_cast<const StringObject*>(ref);
@@ -283,7 +283,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
             if (*p == 0) {
                 extras += "\"";
             } else {
-                extras += dvmStringPrintf("... (%d chars)", dvmStringLen(str));
+                StringAppendF(&extras, "... (%d chars)", dvmStringLen(str));
             }
             free(s);
         }

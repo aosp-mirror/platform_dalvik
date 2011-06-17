@@ -1159,7 +1159,7 @@ static bool extractMonitorEnterObject(Thread* thread, Object** pLockObj,
 static void printWaitMessage(const DebugOutputTarget* target, const char* detail, Object* obj,
         Thread* thread)
 {
-    std::string msg(dvmStringPrintf("  - waiting %s <%p> ", detail, obj));
+    std::string msg(StringPrintf("  - waiting %s <%p> ", detail, obj));
 
     if (obj->clazz != gDvm.classJavaLangClass) {
         // I(16573)   - waiting on <0xf5feda38> (a java.util.LinkedList)
@@ -1169,7 +1169,7 @@ static void printWaitMessage(const DebugOutputTarget* target, const char* detail
 
     if (thread != NULL) {
         std::string threadName(dvmGetThreadName(thread));
-        msg += dvmStringPrintf(" held by tid=%d (%s)", thread->threadId, threadName.c_str());
+        StringAppendF(&msg, " held by tid=%d (%s)", thread->threadId, threadName.c_str());
     }
 
     dvmPrintDebugMessage(target, "%s\n", msg.c_str());

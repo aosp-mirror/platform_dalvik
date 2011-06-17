@@ -315,6 +315,13 @@ const char* dvmPathToAbsolutePortion(const char* path);
 /**
  * Returns a string corresponding to printf-like formatting of the arguments.
  */
-std::string dvmStringPrintf(const char* fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
+std::string StringPrintf(const char* fmt, ...)
+        __attribute__((__format__ (__printf__, 1, 2)));
+
+/**
+ * Appends a printf-like formatting of the arguments to 'dst'.
+ */
+void StringAppendF(std::string* dst, const char* fmt, ...)
+        __attribute__((__format__ (__printf__, 2, 3)));
 
 #endif  // DALVIK_MISC_H_
