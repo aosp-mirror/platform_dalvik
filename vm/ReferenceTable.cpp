@@ -284,6 +284,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
                 extras += "\"";
             } else {
                 StringAppendF(&extras, "... (%d chars)", dvmStringLen(str));
+                StringAppendF(&extras, "... (%d chars)", str->length());
             }
             free(s);
         }

@@ -246,8 +246,9 @@ void dvmDdmSetThreadNotification(bool enable)
  */
 void dvmDdmSendThreadNotification(Thread* thread, bool started)
 {
-    if (!gDvm.ddmThreadNotification)
+    if (!gDvm.ddmThreadNotification) {
         return;
+    }
 
     StringObject* nameObj = NULL;
     Object* threadObj = thread->threadObj;
@@ -268,16 +269,17 @@ void dvmDdmSendThreadNotification(Thread* thread, bool started)
         type = CHUNK_TYPE("THCR");
 
         if (nameObj != NULL) {
-            stringLen = dvmStringLen(nameObj);
-            chars = dvmStringChars(nameObj);
+            stringLen = nameObj->length();
+            chars = nameObj->chars();
         } else {
             stringLen = 0;
             chars = NULL;
         }
 
         /* leave room for the two integer fields */
-        if (stringLen > (sizeof(buf) - sizeof(u4)*2) / 2)
+        if (stringLen > (sizeof(buf) - sizeof(u4)*2) / 2) {
             stringLen = (sizeof(buf) - sizeof(u4)*2) / 2;
+        }
         len = stringLen*2 + sizeof(u4)*2;
 
         set4BE(&buf[0x00], thread->threadId);
@@ -285,8 +287,9 @@ void dvmDdmSendThreadNotification(Thread* thread, bool started)
 
         /* copy the UTF-16 string, transforming to big-endian */
         outChars = (u2*)(void*)&buf[0x08];
-        while (stringLen--)
+        while (stringLen--) {
             set2BE((u1*) (outChars++), *chars++);
+        }
     } else {
         type = CHUNK_TYPE("THDE");
 
@@ -303,11 +306,12 @@ void dvmDdmSendThreadNotification(Thread* thread, bool started)
  */
 void dvmDdmSendThreadNameChange(int threadId, StringObject* newName)
 {
-    if (!gDvm.ddmThreadNotification)
+    if (!gDvm.ddmThreadNotification) {
         return;
+    }
 
-    size_t stringLen = dvmStringLen(newName);
-    const u2* chars = dvmStringChars(newName);
+    size_t stringLen = newName->length();
+    const u2* chars = newName->chars();
 
     /*
      * Output format:
@@ -321,8 +325,9 @@ void dvmDdmSendThreadNameChange(int threadId, StringObject* newName)
     set4BE(&buf[0x00], threadId);
     set4BE(&buf[0x04], stringLen);
     u2* outChars = (u2*)(void*)&buf[0x08];
-    while (stringLen--)
+    while (stringLen--) {
         set2BE((u1*) (outChars++), *chars++);
+    }
 
     dvmDbgDdmSendChunk(CHUNK_TYPE("THNM"), bufLen, buf);
 }

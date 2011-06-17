@@ -1569,7 +1569,7 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string, jboolean* 
     if (gDvmJni.forceCopy && result != NULL) {
         ScopedJniThreadState ts(env);
         StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
-        int byteCount = dvmStringLen(strObj) * 2;
+        int byteCount = strObj->length() * 2;
         result = (const jchar*) GuardedCopy::create(result, byteCount, false);
         if (isCopy != NULL) {
             *isCopy = JNI_TRUE;
@@ -1832,7 +1832,7 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string, jboolea
     if (gDvmJni.forceCopy && result != NULL) {
         ScopedJniThreadState ts(env);
         StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
-        int byteCount = dvmStringLen(strObj) * 2;
+        int byteCount = strObj->length() * 2;
         result = (const jchar*) GuardedCopy::create(result, byteCount, false);
         if (isCopy != NULL) {
             *isCopy = JNI_TRUE;

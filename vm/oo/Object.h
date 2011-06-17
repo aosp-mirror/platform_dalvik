@@ -245,6 +245,21 @@ struct DataObject : Object {
 struct StringObject : Object {
     /* variable #of u4 slots; u8 uses 2 slots */
     u4              instanceData[1];
+
+    /** Returns this string's length in characters. */
+    int length() const;
+
+    /**
+     * Returns this string's length in bytes when encoded as modified UTF-8.
+     * Does not include a terminating NUL byte.
+     */
+    int utfLength() const;
+
+    /** Returns this string's char[] as an ArrayObject. */
+    ArrayObject* array() const;
+
+    /** Returns this string's char[] as a u2*. */
+    const u2* chars() const;
 };
 
 

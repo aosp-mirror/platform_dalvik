@@ -389,11 +389,14 @@ static jobject addLocalReference(JNIEnv* env, Object* obj) {
         dvmDumpThread(dvmThreadSelf(), false);
         dvmAbort();     // spec says call FatalError; this is equivalent
     } else {
-        LOGVV("LREF add %p  (%s.%s) (ent=%d)", obj,
-            dvmGetCurrentJNIMethod()->clazz->descriptor,
-            dvmGetCurrentJNIMethod()->name,
-            (int) dvmReferenceTableEntries(pRefTable));
+        if (false) {
+            LOGI("LREF add %p  (%s.%s) (ent=%d)", obj,
+                    dvmGetCurrentJNIMethod()->clazz->descriptor,
+                    dvmGetCurrentJNIMethod()->name,
+                    (int) dvmIndirectRefTableEntries(pRefTable));
+        }
     }
+
     return jobj;
 }
 
@@ -2147,7 +2150,7 @@ static jstring NewString(JNIEnv* env, const jchar* unicodeChars, jsize len) {
 static jsize GetStringLength(JNIEnv* env, jstring jstr) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    return dvmStringLen(strObj);
+    return strObj->length();
 }
 
 
@@ -2161,11 +2164,11 @@ static const jchar* GetStringChars(JNIEnv* env, jstring jstr, jboolean* isCopy) 
     ScopedJniThreadState ts(env);
 
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(strObj);
+    ArrayObject* strChars = strObj->array();
 
     pinPrimitiveArray(strChars);
 
-    const u2* data = dvmStringChars(strObj);
+    const u2* data = strObj->chars();
     if (isCopy != NULL) {
         *isCopy = JNI_FALSE;
     }
@@ -2178,7 +2181,7 @@ static const jchar* GetStringChars(JNIEnv* env, jstring jstr, jboolean* isCopy) 
 static void ReleaseStringChars(JNIEnv* env, jstring jstr, const jchar* chars) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(strObj);
+    ArrayObject* strChars = strObj->array();
     unpinPrimitiveArray(strChars);
 }
 
@@ -2206,7 +2209,10 @@ static jstring NewStringUTF(JNIEnv* env, const char* bytes) {
 static jsize GetStringUTFLength(JNIEnv* env, jstring jstr) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    return dvmStringUtf8ByteLen(strObj);
+    if (strObj == NULL) {
+        return 0; // Should we throw something or assert?
+    }
+    return strObj->utfLength();
 }
 
 /*
@@ -2583,12 +2589,12 @@ static jint GetJavaVM(JNIEnv* env, JavaVM** vm) {
 static void GetStringRegion(JNIEnv* env, jstring jstr, jsize start, jsize len, jchar* buf) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    int strLen = dvmStringLen(strObj);
-    if (((start|len) < 0) || (start + len > dvmStringLen(strObj))) {
+    int strLen = strObj->length();
+    if (((start|len) < 0) || (start + len > strLen)) {
         dvmThrowStringIndexOutOfBoundsExceptionWithRegion(strLen, start, len);
         return;
     }
-    memcpy(buf, dvmStringChars(strObj) + start, len * sizeof(u2));
+    memcpy(buf, strObj->chars() + start, len * sizeof(u2));
 }
 
 /*
@@ -2598,12 +2604,12 @@ static void GetStringRegion(JNIEnv* env, jstring jstr, jsize start, jsize len, j
 static void GetStringUTFRegion(JNIEnv* env, jstring jstr, jsize start, jsize len, char* buf) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    int strLen = dvmStringLen(strObj);
-    if (((start|len) < 0) || (start + len > dvmStringLen(strObj))) {
+    int strLen = strObj->length();
+    if (((start|len) < 0) || (start + len > strLen)) {
         dvmThrowStringIndexOutOfBoundsExceptionWithRegion(strLen, start, len);
         return;
     }
-    dvmCreateCstrFromStringRegion(strObj, start, len, buf);
+    dvmGetStringUtfRegion(strObj, start, len, buf);
 }
 
 /*
@@ -2643,11 +2649,11 @@ static const jchar* GetStringCritical(JNIEnv* env, jstring jstr, jboolean* isCop
     ScopedJniThreadState ts(env);
 
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(strObj);
+    ArrayObject* strChars = strObj->array();
 
     pinPrimitiveArray(strChars);
 
-    const u2* data = dvmStringChars(strObj);
+    const u2* data = strObj->chars();
     if (isCopy != NULL) {
         *isCopy = JNI_FALSE;
     }
@@ -2660,7 +2666,7 @@ static const jchar* GetStringCritical(JNIEnv* env, jstring jstr, jboolean* isCop
 static void ReleaseStringCritical(JNIEnv* env, jstring jstr, const jchar* carray) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(strObj);
+    ArrayObject* strChars = strObj->array();
     unpinPrimitiveArray(strChars);
 }
 

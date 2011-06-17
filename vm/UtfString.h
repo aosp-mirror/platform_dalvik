@@ -129,29 +129,8 @@ char* dvmCreateCstrFromString(const StringObject* jstr);
  * Create a UTF-8 C string from a region of a java/lang/String.  (Used by
  * the JNI GetStringUTFRegion call.)
  */
-void dvmCreateCstrFromStringRegion(const StringObject* jstr,
+void dvmGetStringUtfRegion(const StringObject* jstr,
         int start, int len, char* buf);
-
-/*
- * Compute the length in bytes of the modified UTF-8 representation of a
- * string.
- */
-int dvmStringUtf8ByteLen(const StringObject* jstr);
-
-/*
- * Get the length in Unicode characters of a string.
- */
-int dvmStringLen(const StringObject* jstr);
-
-/*
- * Get the char[] object from the String.
- */
-ArrayObject* dvmStringCharArray(const StringObject* jstr);
-
-/*
- * Get a pointer to the Unicode data.
- */
-const u2* dvmStringChars(const StringObject* jstr);
 
 /*
  * Compare two string objects.  (This is a dvmHashTableLookup() callback.)

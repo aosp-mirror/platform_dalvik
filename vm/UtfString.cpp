@@ -305,63 +305,42 @@ char* dvmCreateCstrFromString(const StringObject* jstr)
     return newStr;
 }
 
-/*
- * Create a UTF-8 C string from a region of a java/lang/String.  (Used by
- * the JNI GetStringUTFRegion call.)
- */
-void dvmCreateCstrFromStringRegion(const StringObject* jstr,
+void dvmGetStringUtfRegion(const StringObject* jstr,
         int start, int len, char* buf)
 {
-    const u2* data = dvmStringChars(jstr) + start;
+    const u2* data = jstr->chars() + start;
     convertUtf16ToUtf8(buf, data, len);
 }
 
-/*
- * Compute the length, in modified UTF-8, of a java/lang/String object.
- *
- * Does not include the terminating null byte.
- */
-int dvmStringUtf8ByteLen(const StringObject* jstr)
+int StringObject::utfLength() const
 {
     assert(gDvm.classJavaLangString != NULL);
-    if (jstr == NULL) {
-        return 0;       // should we throw something?  assert?
-    }
 
-    int len = dvmGetFieldInt(jstr, STRING_FIELDOFF_COUNT);
-    int offset = dvmGetFieldInt(jstr, STRING_FIELDOFF_OFFSET);
+    int len = dvmGetFieldInt(this, STRING_FIELDOFF_COUNT);
+    int offset = dvmGetFieldInt(this, STRING_FIELDOFF_OFFSET);
     ArrayObject* chars =
-            (ArrayObject*) dvmGetFieldObject(jstr, STRING_FIELDOFF_VALUE);
+            (ArrayObject*) dvmGetFieldObject(this, STRING_FIELDOFF_VALUE);
     const u2* data = (const u2*)(void*)chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
     return utf16_utf8ByteLen(data, len);
 }
 
-/*
- * Get the string's length.
- */
-int dvmStringLen(const StringObject* jstr)
+int StringObject::length() const
 {
-    return dvmGetFieldInt(jstr, STRING_FIELDOFF_COUNT);
+    return dvmGetFieldInt(this, STRING_FIELDOFF_COUNT);
 }
 
-/*
- * Get the char[] object from the String.
- */
-ArrayObject* dvmStringCharArray(const StringObject* jstr)
+ArrayObject* StringObject::array() const
 {
-    return (ArrayObject*) dvmGetFieldObject(jstr, STRING_FIELDOFF_VALUE);
+    return (ArrayObject*) dvmGetFieldObject(this, STRING_FIELDOFF_VALUE);
 }
 
-/*
- * Get the string's data.
- */
-const u2* dvmStringChars(const StringObject* jstr)
+const u2* StringObject::chars() const
 {
-    int offset = dvmGetFieldInt(jstr, STRING_FIELDOFF_OFFSET);
+    int offset = dvmGetFieldInt(this, STRING_FIELDOFF_OFFSET);
     ArrayObject* chars =
-            (ArrayObject*) dvmGetFieldObject(jstr, STRING_FIELDOFF_VALUE);
+            (ArrayObject*) dvmGetFieldObject(this, STRING_FIELDOFF_VALUE);
     return (const u2*)(void*)chars->contents + offset;
 }
 
