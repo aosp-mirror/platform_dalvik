@@ -202,22 +202,21 @@ static int compareObject(const void* vobj1, const void* vobj2)
  * array object), and the number of additional objects that are identical
  * or equivalent to the original.
  */
-static void logObject(const Object* obj, size_t elems, int identical, int equiv)
+static void logSummaryLine(const Object* obj, size_t elems, int identical, int equiv)
 {
     if (obj == NULL) {
         LOGW("  NULL reference (count=%d)", equiv);
         return;
     }
 
-    std::string className;
-    if (obj->clazz == NULL) {
-        /* handle "raw" dvmMalloc case */
-        className = "(raw)";
-    } else {
-        className = dvmHumanReadableType(obj);
-        if (elems != 0) {
-            StringAppendF(&className, " (%zd elements)", elems);
-        }
+    std::string className(dvmHumanReadableType(obj));
+    if (obj->clazz == gDvm.classJavaLangClass) {
+        // We're summarizing multiple instances, so using the exemplar
+        // Class' type parameter here would be misleading.
+        className = "java.lang.Class";
+    }
+    if (elems != 0) {
+        StringAppendF(&className, " (%zd elements)", elems);
     }
 
     size_t total = identical + equiv + 1;
@@ -336,14 +335,14 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
             equiv++;
         } else {
             /* different class */
-            logObject(refs[idx-1], elems, identical, equiv);
+            logSummaryLine(refs[idx-1], elems, identical, equiv);
             equiv = identical = 0;
         }
     }
 
     /* handle the last entry (everything above outputs refs[i-1]) */
     elems = getElementCount(refs[idx-1]);
-    logObject(refs[count-1], elems, identical, equiv);
+    logSummaryLine(refs[count-1], elems, identical, equiv);
 
     free(tableCopy);
 }
