@@ -75,7 +75,6 @@
  * we find there doesn't match because of heap movement, we could do a
  * secondary check on the preserved hash value; this implies that creating
  * a global/local ref queries the hash value and forces it to be saved.)
- * This is only done when CheckJNI is enabled.
  *
  * A more rigorous approach would be to put a serial number in the extra
  * bits, and keep a copy of the serial number in a parallel table.  This is
