@@ -68,13 +68,13 @@ bool dvmGcPreZygoteFork()
     return dvmHeapSourceStartupBeforeFork();
 }
 
-static bool startGcClass(const char* klassName, const char* methodName)
+bool dvmGcStartupClasses()
 {
-    ClassObject *klass = dvmFindSystemClass(klassName);
+    ClassObject *klass = dvmFindSystemClass("Ljava/lang/Daemons;");
     if (klass == NULL) {
         return false;
     }
-    Method *method = dvmFindDirectMethodByDescriptor(klass, methodName, "()V");
+    Method *method = dvmFindDirectMethodByDescriptor(klass, "start", "()V");
     if (method == NULL) {
         return false;
     }
@@ -83,16 +83,6 @@ static bool startGcClass(const char* klassName, const char* methodName)
     JValue unusedResult;
     dvmCallMethod(self, method, NULL, &unusedResult);
     return true;
-}
-
-bool dvmGcStartupClasses()
-{
-    bool success =
-            startGcClass("Ljava/lang/ref/ReferenceQueueThread;",
-                         "startReferenceQueue") &&
-            startGcClass("Ljava/lang/FinalizerThread;",
-                         "startFinalizer");
-    return success;
 }
 
 /*
