@@ -1001,7 +1001,7 @@ void sweepWeakJniGlobals()
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
     Object **entry = table->table;
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
-    int numEntries = dvmIndirectRefTableEntries(table);
+    int numEntries = table->capacity();
     for (int i = 0; i < numEntries; ++i) {
         if (entry[i] != NULL && !isMarked(entry[i], ctx)) {
             entry[i] = NULL;

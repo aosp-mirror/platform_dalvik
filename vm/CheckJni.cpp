@@ -264,6 +264,11 @@ private:
 #define kFlag_ExcepBad      0x0000      /* raised exceptions are bad */
 #define kFlag_ExcepOkay     0x0004      /* ...okay */
 
+static const char* indirectRefKindName(IndirectRef iref)
+{
+    return indirectRefKindToString(indirectRefKind(iref));
+}
+
 class ScopedCheck {
 public:
     explicit ScopedCheck(JNIEnv* env, int flags, const char* functionName)
@@ -294,7 +299,8 @@ public:
         Object* obj = dvmDecodeIndirectRef(mEnv, jarr);
 
         if (!dvmIsValidObject(obj)) {
-            LOGW("JNI WARNING: jarray is invalid %s ref (%p)", dvmIndirectRefTypeName(jarr), jarr);
+            LOGW("JNI WARNING: jarray is an invalid %s reference (%p)",
+                    indirectRefKindName(jarr), jarr);
             printWarn = true;
         } else if (obj->clazz->descriptor[0] != '[') {
             LOGW("JNI WARNING: jarray arg has wrong type (expected array, got %s)",
@@ -354,8 +360,8 @@ public:
              * and valid.
              */
             if (obj != NULL && !dvmIsValidObject(obj)) {
-                LOGW("JNI WARNING: field operation on invalid %s ref (%p)",
-                        dvmIndirectRefTypeName(jobj), jobj);
+                LOGW("JNI WARNING: field operation on invalid %s reference (%p)",
+                        indirectRefKindName(jobj), jobj);
                 printWarn = true;
             } else {
                 ClassObject* fieldClass = dvmFindLoadedClass(field->signature);
@@ -458,8 +464,7 @@ public:
 
         bool printWarn = false;
         if (dvmGetJNIRefType(mEnv, jobj) == JNIInvalidRefType) {
-            LOGW("JNI WARNING: %p is not a valid JNI reference (type=%s)",
-            jobj, dvmIndirectRefTypeName(jobj));
+            LOGW("JNI WARNING: %p is not a valid JNI reference", jobj);
             printWarn = true;
         } else {
             Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
@@ -727,8 +732,8 @@ private:
         Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
 
         if (!dvmIsValidObject(obj)) {
-            LOGW("JNI WARNING: %s is invalid %s ref (%p)",
-                    argName, dvmIndirectRefTypeName(jobj), jobj);
+            LOGW("JNI WARNING: %s is an invalid %s reference (%p)",
+                    argName, indirectRefKindName(jobj), jobj);
             printWarn = true;
         } else if (obj->clazz != expectedClass) {
             LOGW("JNI WARNING: %s arg has wrong type (expected %s, got %s)",
