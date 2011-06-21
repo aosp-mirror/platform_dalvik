@@ -19,32 +19,31 @@
  */
 #include "Dalvik.h"
 
-/*
- * Initialize an IndirectRefTable structure.
- */
-bool dvmInitIndirectRefTable(IndirectRefTable* pRef, int initialCount,
-    int maxCount, IndirectRefKind kind)
+bool IndirectRefTable::init(size_t initialCount,
+        size_t maxCount, IndirectRefKind desiredKind)
 {
     assert(initialCount > 0);
     assert(initialCount <= maxCount);
     assert(kind != kIndirectKindInvalid);
 
-    pRef->table = (Object**) malloc(initialCount * sizeof(Object*));
-    if (pRef->table == NULL)
+    table = (Object**) malloc(initialCount * sizeof(Object*));
+    if (table == NULL) {
         return false;
+    }
 #ifndef NDEBUG
-    memset(pRef->table, 0xd1, initialCount * sizeof(Object*));
+    memset(table, 0xd1, initialCount * sizeof(Object*));
 #endif
 
-    pRef->slotData =
+    slotData =
         (IndirectRefSlot*) calloc(maxCount, sizeof(IndirectRefSlot));
-    if (pRef->slotData == NULL)
+    if (slotData == NULL) {
         return false;
+    }
 
-    pRef->segmentState.all = IRT_FIRST_SEGMENT;
-    pRef->allocEntries = initialCount;
-    pRef->maxEntries = maxCount;
-    pRef->kind = kind;
+    segmentState.all = IRT_FIRST_SEGMENT;
+    allocEntries = initialCount;
+    maxEntries = maxCount;
+    kind = desiredKind;
 
     return true;
 }
@@ -52,133 +51,69 @@ bool dvmInitIndirectRefTable(IndirectRefTable* pRef, int initialCount,
 /*
  * Clears out the contents of a IndirectRefTable, freeing allocated storage.
  */
-void dvmClearIndirectRefTable(IndirectRefTable* pRef)
+void IndirectRefTable::destroy()
 {
-    free(pRef->table);
-    free(pRef->slotData);
-    pRef->table = NULL;
-    pRef->allocEntries = pRef->maxEntries = -1;
-}
-
-/*
- * Remove one or more segments from the top.  The table entry identified
- * by "cookie" becomes the new top-most entry.
- *
- * Returns false if "cookie" is invalid or the table has only one segment.
- */
-bool dvmPopIndirectRefTableSegmentCheck(IndirectRefTable* pRef, u4 cookie)
-{
-    IRTSegmentState sst;
-
-    /*
-     * The new value for "top" must be <= the current value.  Otherwise
-     * this would represent an expansion of the table.
-     */
-    sst.all = cookie;
-    if (sst.parts.topIndex > pRef->segmentState.parts.topIndex) {
-        LOGE("Attempt to expand table with segment pop (%d to %d)",
-            pRef->segmentState.parts.topIndex, sst.parts.topIndex);
-        return false;
-    }
-    if (sst.parts.numHoles >= sst.parts.topIndex) {
-        LOGE("Absurd numHoles in cookie (%d bi=%d)",
-            sst.parts.numHoles, sst.parts.topIndex);
-        return false;
-    }
-
-    LOGV("IRT %p[%d]: pop, top=%d holes=%d",
-        pRef, pRef->kind, sst.parts.topIndex, sst.parts.numHoles);
-
-    return true;
+    free(table);
+    free(slotData);
+    table = NULL;
+    allocEntries = maxEntries = -1;
 }
 
 /*
  * Make sure that the entry at "idx" is correctly paired with "iref".
  */
-static bool checkEntry(IndirectRefTable* pRef, IndirectRef iref, int idx)
+bool IndirectRefTable::checkEntry(IndirectRef iref, int idx) const
 {
-    Object* obj = pRef->table[idx];
-    IndirectRef checkRef = dvmObjectToIndirectRef(pRef, obj, idx, pRef->kind);
+    Object* obj = table[idx];
+    IndirectRef checkRef = toIndirectRef(obj, idx);
     if (checkRef != iref) {
-        LOGW("IRT %p[%d]: iref mismatch (req=%p vs cur=%p)",
-            pRef, pRef->kind, iref, checkRef);
+        LOGE("Attempt to use stale %s reference (req=%p vs cur=%p; table=%p)",
+                indirectRefKindToString(kind), iref, checkRef, this);
         return false;
     }
     return true;
 }
 
-/*
- * Update extended debug info when an entry is added.
- *
- * We advance the serial number, invalidating any outstanding references to
- * this slot.
- */
-static inline void updateSlotAdd(IndirectRefTable* pRef, Object* obj, int slot)
-{
-    if (pRef->slotData != NULL) {
-        IndirectRefSlot* pSlot = &pRef->slotData[slot];
-        pSlot->serial++;
-        //LOGI("+++ add [%d] slot %d (%p->%p), serial=%d",
-        //    pRef->kind, slot, obj, iref, pSlot->serial);
-        pSlot->previous[pSlot->serial % kIRTPrevCount] = obj;
-    }
-}
-
-/*
- * Update extended debug info when an entry is removed.
- */
-static inline void updateSlotRemove(IndirectRefTable* pRef, int slot)
-{
-    if (pRef->slotData != NULL) {
-        //IndirectRefSlot* pSlot = &pRef->slotData[slot];
-        //LOGI("+++ remove [%d] slot %d, serial now %d",
-        //    pRef->kind, slot, pSlot->serial);
-    }
-}
-
-/*
- * Add "obj" to "pRef".
- */
-IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
-    Object* obj)
+IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
 {
     IRTSegmentState prevState;
     prevState.all = cookie;
-    int topIndex = pRef->segmentState.parts.topIndex;
+    size_t topIndex = segmentState.parts.topIndex;
 
     assert(obj != NULL);
     assert(dvmIsValidObject(obj));
-    assert(pRef->table != NULL);
-    assert(pRef->allocEntries <= pRef->maxEntries);
-    assert(pRef->segmentState.parts.numHoles >= prevState.parts.numHoles);
+    assert(table != NULL);
+    assert(allocEntries <= maxEntries);
+    assert(segmentState.parts.numHoles >= prevState.parts.numHoles);
 
-    if (topIndex == pRef->allocEntries) {
+    if (topIndex == allocEntries) {
         /* reached end of allocated space; did we hit buffer max? */
-        if (topIndex == pRef->maxEntries) {
-            LOGW("IndirectRefTable overflow (max=%d)", pRef->maxEntries);
+        if (topIndex == maxEntries) {
+            LOGW("%s reference table overflow (max=%d)",
+                    indirectRefKindToString(kind), maxEntries);
             return NULL;
         }
 
-        Object** newTable;
-        int newSize;
+        size_t newSize = allocEntries * 2;
+        if (newSize > maxEntries) {
+            newSize = maxEntries;
+        }
+        assert(newSize > allocEntries);
 
-        newSize = pRef->allocEntries * 2;
-        if (newSize > pRef->maxEntries)
-            newSize = pRef->maxEntries;
-        assert(newSize > pRef->allocEntries);
-
-        newTable = (Object**) realloc(pRef->table, newSize * sizeof(Object*));
+        Object** newTable = (Object**) realloc(table, newSize * sizeof(Object*));
         if (newTable == NULL) {
-            LOGE("Unable to expand iref table (from %d to %d, max=%d)",
-                pRef->allocEntries, newSize, pRef->maxEntries);
+            LOGE("Unable to expand %s reference table from %d to %d (max=%d)",
+                    indirectRefKindToString(kind), allocEntries,
+                    newSize, maxEntries);
             return false;
         }
-        LOGV("Growing ireftab %p from %d to %d (max=%d)",
-            pRef, pRef->allocEntries, newSize, pRef->maxEntries);
+        LOGV("Growing %s reference table %p from %d to %d (max=%d)",
+                indirectRefKindToString(kind), this,
+                allocEntries, newSize, maxEntries);
 
         /* update entries; adjust "nextEntry" in case memory moved */
-        pRef->table = newTable;
-        pRef->allocEntries = newSize;
+        table = newTable;
+        allocEntries = newSize;
     }
 
     IndirectRef result;
@@ -188,26 +123,25 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
      * the right spot.  If there's a hole, find it and fill it; otherwise,
      * add to the end of the list.
      */
-    int numHoles = pRef->segmentState.parts.numHoles - prevState.parts.numHoles;
+    int numHoles = segmentState.parts.numHoles - prevState.parts.numHoles;
     if (numHoles > 0) {
         assert(topIndex > 1);
         /* find the first hole; likely to be near the end of the list */
-        Object** pScan = &pRef->table[topIndex - 1];
+        Object** pScan = &table[topIndex - 1];
         assert(*pScan != NULL);
         while (*--pScan != NULL) {
-            assert(pScan >= pRef->table + prevState.parts.topIndex);
+            assert(pScan >= table + prevState.parts.topIndex);
         }
-        updateSlotAdd(pRef, obj, pScan - pRef->table);
-        result = dvmObjectToIndirectRef(pRef, obj, pScan - pRef->table,
-            pRef->kind);
+        updateSlotAdd(obj, pScan - table);
+        result = toIndirectRef(obj, pScan - table);
         *pScan = obj;
-        pRef->segmentState.parts.numHoles--;
+        segmentState.parts.numHoles--;
     } else {
         /* add to the end */
-        updateSlotAdd(pRef, obj, topIndex);
-        result = dvmObjectToIndirectRef(pRef, obj, topIndex, pRef->kind);
-        pRef->table[topIndex++] = obj;
-        pRef->segmentState.parts.topIndex = topIndex;
+        updateSlotAdd(obj, topIndex);
+        result = toIndirectRef(obj, topIndex);
+        table[topIndex++] = obj;
+        segmentState.parts.topIndex = topIndex;
     }
 
     assert(result != NULL);
@@ -219,34 +153,37 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
  *
  * Returns "false" if something looks bad.
  */
-bool dvmGetFromIndirectRefTableCheck(IndirectRefTable* pRef, IndirectRef iref)
+bool IndirectRefTable::getChecked(IndirectRef iref) const
 {
-    if (dvmGetIndirectRefType(iref) == kIndirectKindInvalid) {
-        LOGW("Invalid indirect reference 0x%08x", (u4) iref);
-        return false;
-    }
-
-    int topIndex = pRef->segmentState.parts.topIndex;
-    int idx = dvmIndirectRefToIndex(iref);
-
     if (iref == NULL) {
-        LOGD("Attempt to look up NULL iref");
+        LOGW("Attempt to look up NULL %s reference",
+                indirectRefKindToString(kind));
         return false;
     }
+    if (indirectRefKind(iref) == kIndirectKindInvalid) {
+        LOGW("Invalid %s reference %p",
+                indirectRefKindToString(kind), iref);
+        return false;
+    }
+
+    int topIndex = segmentState.parts.topIndex;
+    int idx = extractIndex(iref);
     if (idx >= topIndex) {
         /* bad -- stale reference? */
-        LOGD("Attempt to access invalid index %d (top=%d)",
-            idx, topIndex);
+        LOGW("Attempt to access stale %s reference at index %d (top=%d)",
+            indirectRefKindToString(kind), idx, topIndex);
         return false;
     }
 
-    Object* obj = pRef->table[idx];
+    Object* obj = table[idx];
     if (obj == NULL) {
-        LOGD("Attempt to read from hole, iref=%p", iref);
+        LOGW("Attempt to access deleted %s reference (%p)",
+                indirectRefKindToString(kind), iref);
         return false;
     }
-    if (!checkEntry(pRef, iref, idx))
+    if (!checkEntry(iref, idx)) {
         return false;
+    }
 
     return true;
 }
@@ -264,19 +201,18 @@ bool dvmGetFromIndirectRefTableCheck(IndirectRefTable* pRef, IndirectRef iref)
  *
  * Returns "false" if nothing was removed.
  */
-bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
-    IndirectRef iref)
+bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
 {
     IRTSegmentState prevState;
     prevState.all = cookie;
-    int topIndex = pRef->segmentState.parts.topIndex;
+    int topIndex = segmentState.parts.topIndex;
     int bottomIndex = prevState.parts.topIndex;
 
-    assert(pRef->table != NULL);
-    assert(pRef->allocEntries <= pRef->maxEntries);
-    assert(pRef->segmentState.parts.numHoles >= prevState.parts.numHoles);
+    assert(table != NULL);
+    assert(allocEntries <= maxEntries);
+    assert(segmentState.parts.numHoles >= prevState.parts.numHoles);
 
-    int idx = dvmIndirectRefToIndex(iref);
+    int idx = extractIndex(iref);
     if (idx < bottomIndex) {
         /* wrong segment */
         LOGV("Attempt to remove index outside index area (%d vs %d-%d)",
@@ -295,30 +231,31 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
          * Top-most entry.  Scan up and consume holes.  No need to NULL
          * out the entry, since the test vs. topIndex will catch it.
          */
-        if (!checkEntry(pRef, iref, idx))
+        if (!checkEntry(iref, idx)) {
             return false;
-        updateSlotRemove(pRef, idx);
+        }
+        updateSlotRemove(idx);
 
 #ifndef NDEBUG
-        pRef->table[idx] = (Object*)0xd3d3d3d3;
+        table[idx] = (Object*)0xd3d3d3d3;
 #endif
 
         int numHoles =
-            pRef->segmentState.parts.numHoles - prevState.parts.numHoles;
+            segmentState.parts.numHoles - prevState.parts.numHoles;
         if (numHoles != 0) {
             while (--topIndex > bottomIndex && numHoles != 0) {
                 LOGV("+++ checking for hole at %d (cookie=0x%08x) val=%p",
-                    topIndex-1, cookie, pRef->table[topIndex-1]);
-                if (pRef->table[topIndex-1] != NULL)
+                    topIndex-1, cookie, table[topIndex-1]);
+                if (table[topIndex-1] != NULL)
                     break;
                 LOGV("+++ ate hole at %d", topIndex-1);
                 numHoles--;
             }
-            pRef->segmentState.parts.numHoles =
+            segmentState.parts.numHoles =
                 numHoles + prevState.parts.numHoles;
-            pRef->segmentState.parts.topIndex = topIndex;
+            segmentState.parts.topIndex = topIndex;
         } else {
-            pRef->segmentState.parts.topIndex = topIndex-1;
+            segmentState.parts.topIndex = topIndex-1;
             LOGV("+++ ate last entry %d", topIndex-1);
         }
     } else {
@@ -327,29 +264,27 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
          * entry to prevent somebody from deleting it twice and screwing up
          * the hole count.
          */
-        if (pRef->table[idx] == NULL) {
+        if (table[idx] == NULL) {
             LOGV("--- WEIRD: removing null entry %d", idx);
             return false;
         }
-        if (!checkEntry(pRef, iref, idx))
+        if (!checkEntry(iref, idx)) {
             return false;
-        updateSlotRemove(pRef, idx);
+        }
+        updateSlotRemove(idx);
 
-        pRef->table[idx] = NULL;
-        pRef->segmentState.parts.numHoles++;
+        table[idx] = NULL;
+        segmentState.parts.numHoles++;
         LOGV("+++ left hole at %d, holes=%d",
-            idx, pRef->segmentState.parts.numHoles);
+            idx, segmentState.parts.numHoles);
     }
 
     return true;
 }
 
-/*
- * Return a type name, useful for debugging.
- */
-const char* dvmIndirectRefTypeName(IndirectRef iref)
+const char* indirectRefKindToString(IndirectRefKind kind)
 {
-    switch (dvmGetIndirectRefType(iref)) {
+    switch (kind) {
     case kIndirectKindInvalid:      return "invalid";
     case kIndirectKindLocal:        return "local";
     case kIndirectKindGlobal:       return "global";
@@ -358,11 +293,7 @@ const char* dvmIndirectRefTypeName(IndirectRef iref)
     }
 }
 
-/*
- * Dump the contents of a IndirectRefTable to the log.
- */
-void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr)
+void IndirectRefTable::dump(const char* descr) const
 {
-    dvmDumpReferenceTableContents(pRef->table, dvmIndirectRefTableEntries(pRef),
-        descr);
+    dvmDumpReferenceTableContents(table, capacity(), descr);
 }

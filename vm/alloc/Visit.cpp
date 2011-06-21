@@ -71,7 +71,7 @@ static void visitIndirectRefTable(RootVisitor *visitor, IndirectRefTable *table,
     assert(visitor != NULL);
     assert(table != NULL);
     Object **entry = table->table;
-    int numEntries = dvmIndirectRefTableEntries(table);
+    int numEntries = table->capacity();
     for (int i = 0; i < numEntries; ++i) {
         (*visitor)(&entry[i], threadId, type, arg);
     }

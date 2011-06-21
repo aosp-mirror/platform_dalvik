@@ -23,7 +23,7 @@
 
 #ifndef NDEBUG
 
-#define DBUG_MSG    LOGV
+#define DBUG_MSG    LOGI
 
 /*
  * Basic add/get/delete tests in an unsegmented table.
@@ -42,14 +42,12 @@ static bool basicTest()
     const u4 cookie = IRT_FIRST_SEGMENT;
     bool result = false;
 
-    if (!dvmInitIndirectRefTable(&irt, kTableMax/2, kTableMax,
-            kIndirectKindGlobal))
-    {
+    if (!irt.init(kTableMax/2, kTableMax, kIndirectKindGlobal)) {
         return false;
     }
 
     iref0 = (IndirectRef) 0x11110;
-    if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0)) {
+    if (irt.remove(cookie, iref0)) {
         LOGE("unexpectedly successful removal");
         goto bail;
     }
@@ -58,44 +56,41 @@ static bool basicTest()
      * Add three, check, remove in the order in which they were added.
      */
     DBUG_MSG("+++ START fifo\n");
-    iref0 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
-    iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
+    iref0 = irt.add(cookie, obj0);
+    iref1 = irt.add(cookie, obj1);
+    iref2 = irt.add(cookie, obj2);
     if (iref0 == NULL || iref1 == NULL || iref2 == NULL) {
         LOGE("trivial add1 failed");
         goto bail;
     }
 
-    if (dvmGetFromIndirectRefTable(&irt, iref0) != obj0 ||
-        dvmGetFromIndirectRefTable(&irt, iref1) != obj1 ||
-        dvmGetFromIndirectRefTable(&irt, iref2) != obj2)
-    {
+    if (irt.get(iref0) != obj0 ||
+            irt.get(iref1) != obj1 ||
+            irt.get(iref2) != obj2) {
         LOGE("objects don't match expected values %p %p %p vs. %p %p %p",
-            dvmGetFromIndirectRefTable(&irt, iref0),
-            dvmGetFromIndirectRefTable(&irt, iref1),
-            dvmGetFromIndirectRefTable(&irt, iref2),
-            obj0, obj1, obj2);
+                irt.get(iref0), irt.get(iref1), irt.get(iref2),
+                obj0, obj1, obj2);
         goto bail;
     } else {
         DBUG_MSG("+++ obj1=%p --> iref1=%p\n", obj1, iref1);
     }
 
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref0) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref1) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref2))
+    if (!irt.remove(cookie, iref0) ||
+            !irt.remove(cookie, iref1) ||
+            !irt.remove(cookie, iref2))
     {
         LOGE("fifo deletion failed");
         goto bail;
     }
 
     /* table should be empty now */
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
+    if (irt.capacity() != 0) {
         LOGE("fifo del not empty");
         goto bail;
     }
 
     /* get invalid entry (off the end of the list) */
-    if (dvmGetFromIndirectRefTable(&irt, iref0) != kInvalidIndirectRefObject) {
+    if (irt.get(iref0) != kInvalidIndirectRefObject) {
         LOGE("stale entry get succeeded unexpectedly");
         goto bail;
     }
@@ -104,24 +99,24 @@ static bool basicTest()
      * Add three, remove in the opposite order.
      */
     DBUG_MSG("+++ START lifo\n");
-    iref0 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
-    iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
+    iref0 = irt.add(cookie, obj0);
+    iref1 = irt.add(cookie, obj1);
+    iref2 = irt.add(cookie, obj2);
     if (iref0 == NULL || iref1 == NULL || iref2 == NULL) {
         LOGE("trivial add2 failed");
         goto bail;
     }
 
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref1) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref0))
+    if (!irt.remove(cookie, iref2) ||
+            !irt.remove(cookie, iref1) ||
+            !irt.remove(cookie, iref0))
     {
         LOGE("lifo deletion failed");
         goto bail;
     }
 
     /* table should be empty now */
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
+    if (irt.capacity() != 0) {
         LOGE("lifo del not empty");
         goto bail;
     }
@@ -131,42 +126,37 @@ static bool basicTest()
      * to remove middle should fail.)
      */
     DBUG_MSG("+++ START unorder\n");
-    iref0 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
-    iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
+    iref0 = irt.add(cookie, obj0);
+    iref1 = irt.add(cookie, obj1);
+    iref2 = irt.add(cookie, obj2);
     if (iref0 == NULL || iref1 == NULL || iref2 == NULL) {
         LOGE("trivial add3 failed");
         goto bail;
     }
 
-    if (dvmIndirectRefTableEntries(&irt) != 3) {
-        LOGE("expected 3 entries, found %d",
-            dvmIndirectRefTableEntries(&irt));
+    if (irt.capacity() != 3) {
+        LOGE("expected 3 entries, found %d", irt.capacity());
         goto bail;
     }
 
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1) ||
-        dvmRemoveFromIndirectRefTable(&irt, cookie, iref1))
-    {
+    if (!irt.remove(cookie, iref1) || irt.remove(cookie, iref1)) {
         LOGE("unorder deletion1 failed");
         goto bail;
     }
 
     /* get invalid entry (from hole) */
-    if (dvmGetFromIndirectRefTable(&irt, iref1) != kInvalidIndirectRefObject) {
+    if (irt.get(iref1) != kInvalidIndirectRefObject) {
         LOGE("hole get succeeded unexpectedly");
         goto bail;
     }
 
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref0))
-    {
+    if (!irt.remove(cookie, iref2) || !irt.remove(cookie, iref0)) {
         LOGE("unorder deletion2 failed");
         goto bail;
     }
 
     /* table should be empty now */
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
+    if (irt.capacity() != 0) {
         LOGE("unorder del not empty");
         goto bail;
     }
@@ -177,40 +167,36 @@ static bool basicTest()
      * that we delete one and don't hole-compact the other.
      */
     DBUG_MSG("+++ START hole fill\n");
-    iref0 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
-    iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
-    iref3 = dvmAddToIndirectRefTable(&irt, cookie, obj3);
+    iref0 = irt.add(cookie, obj0);
+    iref1 = irt.add(cookie, obj1);
+    iref2 = irt.add(cookie, obj2);
+    iref3 = irt.add(cookie, obj3);
     if (iref0 == NULL || iref1 == NULL || iref2 == NULL || iref3 == NULL) {
         LOGE("trivial add4 failed");
         goto bail;
     }
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1)) {
+    if (!irt.remove(cookie, iref1)) {
         LOGE("remove 1 of 4 failed");
         goto bail;
     }
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
-    if (dvmIndirectRefTableEntries(&irt) != 4) {
+    iref1 = irt.add(cookie, obj1);
+    if (irt.capacity() != 4) {
         LOGE("hole not filled");
         goto bail;
     }
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref3))
-    {
+    if (!irt.remove(cookie, iref1) || !irt.remove(cookie, iref3)) {
         LOGE("remove 1/3 failed");
         goto bail;
     }
-    if (dvmIndirectRefTableEntries(&irt) != 3) {
+    if (irt.capacity() != 3) {
         LOGE("should be 3 after two deletions");
         goto bail;
     }
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref0))
-    {
+    if (!irt.remove(cookie, iref2) || !irt.remove(cookie, iref0)) {
         LOGE("remove 2/0 failed");
         goto bail;
     }
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
+    if (irt.capacity() != 0) {
         LOGE("not empty after split remove");
         goto bail;
     }
@@ -221,18 +207,18 @@ static bool basicTest()
      * With the extended checks in place, this should fail.
      */
     DBUG_MSG("+++ START switched\n");
-    iref0 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
-    dvmRemoveFromIndirectRefTable(&irt, cookie, iref0);
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
-    if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0)) {
+    iref0 = irt.add(cookie, obj0);
+    irt.remove(cookie, iref0);
+    iref1 = irt.add(cookie, obj1);
+    if (irt.remove(cookie, iref0)) {
         LOGE("mismatched del succeeded (%p vs %p)", iref0, iref1);
         goto bail;
     }
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1)) {
+    if (!irt.remove(cookie, iref1)) {
         LOGE("switched del failed");
         goto bail;
     }
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
+    if (irt.capacity() != 0) {
         LOGE("switching del not empty");
         goto bail;
     }
@@ -241,22 +227,37 @@ static bool basicTest()
      * Same as above, but with the same object.  A more rigorous checker
      * (e.g. with slot serialization) will catch this.
      */
-    iref0 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
-    dvmRemoveFromIndirectRefTable(&irt, cookie, iref0);
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
+    DBUG_MSG("+++ START switched same object\n");
+    iref0 = irt.add(cookie, obj0);
+    irt.remove(cookie, iref0);
+    iref1 = irt.add(cookie, obj0);
     if (iref0 != iref1) {
         /* try 0, should not work */
-        if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0)) {
+        if (irt.remove(cookie, iref0)) {
             LOGE("temporal del succeeded (%p vs %p)", iref0, iref1);
             goto bail;
         }
     }
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1)) {
+    if (!irt.remove(cookie, iref1)) {
         LOGE("temporal cleanup failed");
         goto bail;
     }
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
+    if (irt.capacity() != 0) {
         LOGE("temporal del not empty");
+        goto bail;
+    }
+
+    DBUG_MSG("+++ START null lookup\n");
+    if (irt.get(NULL) != kInvalidIndirectRefObject) {
+        LOGE("null lookup succeeded");
+        goto bail;
+    }
+
+    DBUG_MSG("+++ START stale lookup\n");
+    iref0 = irt.add(cookie, obj0);
+    irt.remove(cookie, iref0);
+    if (irt.get(iref0) != kInvalidIndirectRefObject) {
+        LOGE("stale lookup succeeded");
         goto bail;
     }
 
@@ -266,38 +267,37 @@ static bool basicTest()
     DBUG_MSG("+++ START overflow\n");
     int i;
     for (i = 0; i < kTableMax; i++) {
-        manyRefs[i] = dvmAddToIndirectRefTable(&irt, cookie, obj0);
+        manyRefs[i] = irt.add(cookie, obj0);
         if (manyRefs[i] == NULL) {
             LOGE("Failed adding %d of %d", i, kTableMax);
             goto bail;
         }
     }
-    if (dvmAddToIndirectRefTable(&irt, cookie, obj0) != NULL) {
+    if (irt.add(cookie, obj0) != NULL) {
         LOGE("Table overflow succeeded");
         goto bail;
     }
-    if (dvmIndirectRefTableEntries(&irt) != (size_t)kTableMax) {
-        LOGE("Expected %d entries, found %d",
-            kTableMax, dvmIndirectRefTableEntries(&irt));
+    if (irt.capacity() != (size_t)kTableMax) {
+        LOGE("Expected %d entries, found %d", kTableMax, irt.capacity());
         goto bail;
     }
     for (i = 0; i < kTableMax-1; i++) {
-        if (!dvmRemoveFromIndirectRefTable(&irt, cookie, manyRefs[i])) {
+        if (!irt.remove(cookie, manyRefs[i])) {
             LOGE("multi-remove failed at %d", i);
             goto bail;
         }
     }
     /* because of removal order, should have 20 entries, 19 of them holes */
-    if (dvmIndirectRefTableEntries(&irt) != (size_t)kTableMax) {
+    if (irt.capacity() != (size_t)kTableMax) {
         LOGE("Expected %d entries (with holes), found %d",
-            kTableMax, dvmIndirectRefTableEntries(&irt));
+                kTableMax, irt.capacity());
         goto bail;
     }
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, manyRefs[kTableMax-1])) {
+    if (!irt.remove(cookie, manyRefs[kTableMax-1])) {
         LOGE("multi-remove final failed");
         goto bail;
     }
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
+    if (irt.capacity() != 0) {
         LOGE("multi-del not empty");
         goto bail;
     }
@@ -306,167 +306,9 @@ static bool basicTest()
     result = true;
 
 bail:
-    dvmClearIndirectRefTable(&irt);
+    irt.destroy();
     return result;
 }
-
-/*
- * Test operations on a segmented table.
- */
-static bool segmentTest()
-{
-    static const int kTableMax = 20;
-    IndirectRefTable irt;
-    IndirectRef iref0, iref1, iref2, iref3;
-    ClassObject* clazz = dvmFindClass("Ljava/lang/Object;", NULL);
-    Object* obj0 = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    Object* obj1 = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    Object* obj2 = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    Object* obj3 = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    u4 cookie;
-    u4 segmentState[4];
-    bool result = false;
-
-    if (!dvmInitIndirectRefTable(&irt, kTableMax, kTableMax,
-            kIndirectKindLocal))
-    {
-        return false;
-    }
-    cookie = segmentState[0] = IRT_FIRST_SEGMENT;
-    DBUG_MSG("+++ objs %p %p %p %p\n", obj0, obj1, obj2, obj3);
-
-    /*
-     * Push two, create new segment, push two more, try to get all four,
-     * try to delete all 4.  All four should be accessible, but only the
-     * last two should be deletable.
-     */
-    DBUG_MSG("+++ START basic segment\n");
-    iref0 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
-    cookie = segmentState[1] = dvmPushIndirectRefTableSegment(&irt);
-    DBUG_MSG("+++ pushed, cookie is 0x%08x\n", cookie);
-    iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
-    iref3 = dvmAddToIndirectRefTable(&irt, cookie, obj3);
-
-    if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0) ||
-        dvmRemoveFromIndirectRefTable(&irt, cookie, iref1))
-    {
-        LOGE("removed values from earlier segment");
-        goto bail;
-    }
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref3))
-    {
-        LOGE("unable to remove values from current segment");
-        goto bail;
-    }
-    if (dvmIndirectRefTableEntries(&irt) != 2) {
-        LOGE("wrong total entries");
-        goto bail;
-    }
-    dvmPopIndirectRefTableSegment(&irt, segmentState[1]);
-    cookie = segmentState[0];
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref0) ||
-        !dvmRemoveFromIndirectRefTable(&irt, cookie, iref1))
-    {
-        LOGE("unable to remove values from first segment");
-        goto bail;
-    }
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("basic push/pop not empty");
-        goto bail;
-    }
-
-    /*
-     * Push two, delete first, segment, push two more, pop segment, verify
-     * the last two are no longer present and hole count is right.  The
-     * adds after the segment pop should not be filling in the hole.
-     */
-    DBUG_MSG("+++ START segment pop\n");
-    iref0 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
-    iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj1);
-    dvmRemoveFromIndirectRefTable(&irt, cookie, iref0);
-    cookie = segmentState[1] = dvmPushIndirectRefTableSegment(&irt);
-    iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
-    iref3 = dvmAddToIndirectRefTable(&irt, cookie, obj3);
-    dvmPopIndirectRefTableSegment(&irt, segmentState[1]);
-    cookie = segmentState[0];
-    if (dvmIndirectRefTableEntries(&irt) != 2) {
-        LOGE("wrong total entries after pop");
-        goto bail;
-    }
-    dvmRemoveFromIndirectRefTable(&irt, cookie, iref1);
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("not back to zero after pop + del");
-        goto bail;
-    }
-
-    /*
-     * Multiple segments, some empty.
-     */
-    DBUG_MSG("+++ START multiseg\n");
-    iref0 = dvmAppendToIndirectRefTable(&irt, cookie, obj0);
-    iref1 = dvmAppendToIndirectRefTable(&irt, cookie, obj1);
-    cookie = segmentState[1] = dvmPushIndirectRefTableSegment(&irt);
-    cookie = segmentState[2] = dvmPushIndirectRefTableSegment(&irt);
-    iref3 = dvmAppendToIndirectRefTable(&irt, cookie, obj3);
-    iref2 = dvmAppendToIndirectRefTable(&irt, cookie, obj2);
-    dvmRemoveFromIndirectRefTable(&irt, cookie, iref3);
-    cookie = segmentState[3] = dvmPushIndirectRefTableSegment(&irt);
-    iref3 = dvmAppendToIndirectRefTable(&irt, cookie, obj3);
-
-    if (dvmGetFromIndirectRefTable(&irt, iref0) != obj0 ||
-        dvmGetFromIndirectRefTable(&irt, iref1) != obj1 ||
-        dvmGetFromIndirectRefTable(&irt, iref2) != obj2 ||
-        dvmGetFromIndirectRefTable(&irt, iref3) != obj3)
-    {
-        LOGE("Unable to retrieve all multiseg objects");
-        goto bail;
-    }
-
-    dvmDumpIndirectRefTable(&irt, "test");
-
-    //int i;
-    //for (i = 0; i < sizeof(segmentState) / sizeof(segmentState[0]); i++) {
-    //    DBUG_MSG("+++  segment %d = 0x%08x\n", i, segmentState[i]);
-    //}
-
-    dvmRemoveFromIndirectRefTable(&irt, cookie, iref3);
-    if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref2)) {
-        LOGE("multiseg del2 worked");
-        goto bail;
-    }
-    dvmPopIndirectRefTableSegment(&irt, segmentState[3]);
-    cookie = segmentState[2];
-    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref2)) {
-        LOGE("multiseg del2b failed (cookie=0x%08x ref=%p)", cookie, iref2);
-        goto bail;
-    }
-    iref2 = dvmAddToIndirectRefTable(&irt, cookie, obj2);
-
-    /* pop two off at once */
-    dvmPopIndirectRefTableSegment(&irt, segmentState[1]);
-    cookie = segmentState[0];
-
-    if (dvmIndirectRefTableEntries(&irt) != 2) {
-        LOGE("Unexpected entry count in multiseg");
-        goto bail;
-    }
-    dvmRemoveFromIndirectRefTable(&irt, cookie, iref0);
-    dvmRemoveFromIndirectRefTable(&irt, cookie, iref1);
-    if (dvmIndirectRefTableEntries(&irt) != 0) {
-        LOGE("Unexpected entry count at multiseg end");
-        goto bail;
-    }
-
-    DBUG_MSG("+++ segment test complete\n");
-    result = true;
-
-bail:
-    dvmClearIndirectRefTable(&irt);
-    return result;
-}
-
 
 /*
  * Some quick tests.
@@ -475,10 +317,6 @@ bool dvmTestIndirectRefTable()
 {
     if (!basicTest()) {
         LOGE("IRT basic test failed");
-        return false;
-    }
-    if (!segmentTest()) {
-        LOGE("IRT segment test failed");
         return false;
     }
 

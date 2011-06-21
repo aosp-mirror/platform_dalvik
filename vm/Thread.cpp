@@ -922,9 +922,10 @@ static bool prepareThread(Thread* thread)
      * Most threads won't use jniMonitorRefTable, so we clear out the
      * structure but don't call the init function (which allocs storage).
      */
-    if (!dvmInitIndirectRefTable(&thread->jniLocalRefTable,
-            kJniLocalRefMin, kJniLocalRefMax, kIndirectKindLocal))
+    if (!thread->jniLocalRefTable.init(kJniLocalRefMin,
+            kJniLocalRefMax, kIndirectKindLocal)) {
         return false;
+    }
     if (!dvmInitReferenceTable(&thread->internalLocalRefTable,
             kInternalRefDefault, kInternalRefMax))
         return false;
@@ -984,7 +985,7 @@ static void freeThread(Thread* thread)
 #endif
     }
 
-    dvmClearIndirectRefTable(&thread->jniLocalRefTable);
+    thread->jniLocalRefTable.destroy();
     dvmClearReferenceTable(&thread->internalLocalRefTable);
     if (&thread->jniMonitorRefTable.table != NULL)
         dvmClearReferenceTable(&thread->jniMonitorRefTable);
