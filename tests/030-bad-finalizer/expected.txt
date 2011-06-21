@@ -5,4 +5,3 @@ Finalizer done spinning.
 Finalizer sleeping forever now.
 Requesting another GC.
 Requesting another GC.
-(segfault)
