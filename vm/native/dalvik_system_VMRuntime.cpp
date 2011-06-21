@@ -143,6 +143,12 @@ static void Dalvik_dalvik_system_VMRuntime_clearGrowthLimit(const u4* args,
     RETURN_VOID();
 }
 
+static void Dalvik_dalvik_system_VMRuntime_isDebuggerActive(
+    const u4* args, JValue* pResult)
+{
+    RETURN_BOOLEAN(gDvm.debuggerActive || gDvm.nativeDebuggerActive);
+}
+
 static void Dalvik_dalvik_system_VMRuntime_properties(const u4* args,
     JValue* pResult)
 {
@@ -190,6 +196,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_clearGrowthLimit },
     { "disableJitCompilation", "()V",
         Dalvik_dalvik_system_VMRuntime_disableJitCompilation },
+    { "isDebuggerActive", "()Z",
+        Dalvik_dalvik_system_VMRuntime_isDebuggerActive },
     { "getTargetHeapUtilization", "()F",
         Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization },
     { "nativeSetTargetHeapUtilization", "(F)V",
