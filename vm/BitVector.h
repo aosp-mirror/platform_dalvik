@@ -17,8 +17,8 @@
 /*
  * Miscellaneous utility functions.
  */
-#ifndef _DALVIK_BITVECTOR
-#define _DALVIK_BITVECTOR
+#ifndef DALVIK_BITVECTOR_H_
+#define DALVIK_BITVECTOR_H_
 
 /*
  * Expanding bitmap, used for tracking resources.  Bits are numbered starting
@@ -100,4 +100,4 @@ void dvmBitVectorIteratorInit(BitVector* pBits, BitVectorIterator* iterator);
 /* Return the next position set to 1. -1 means end-of-vector reached */
 int dvmBitVectorIteratorNext(BitVectorIterator* iterator);
 
-#endif /*_DALVIK_BITVECTOR*/
+#endif  // DALVIK_BITVECTOR_H_

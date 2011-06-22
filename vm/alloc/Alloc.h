@@ -16,8 +16,8 @@
 /*
  * Garbage-collecting allocator.
  */
-#ifndef _DALVIK_ALLOC_ALLOC
-#define _DALVIK_ALLOC_ALLOC
+#ifndef DALVIK_ALLOC_ALLOC_H_
+#define DALVIK_ALLOC_ALLOC_H_
 
 #include <stddef.h>
 
@@ -151,4 +151,4 @@ bool dvmIsHeapAddress(void *address);
 
 bool dvmIsNonMovingObject(const Object* object);
 
-#endif /*_DALVIK_ALLOC_ALLOC*/
+#endif  // DALVIK_ALLOC_ALLOC_H_

@@ -65,15 +65,9 @@ static int classCmp(const void *v1, const void *v2)
     return diff;
 }
 
-static int getPrettyClassNameId(const char *descriptor)
-{
-    char* name = dvmHumanReadableDescriptor(descriptor);
-    if (name == NULL) {
-        return -1;
-    }
-    hprof_string_id classNameId = hprofLookupStringId(name);
-    free(name);
-    return classNameId;
+static int getPrettyClassNameId(const char *descriptor) {
+    std::string name(dvmHumanReadableDescriptor(descriptor));
+    return hprofLookupStringId(name.c_str());
 }
 
 hprof_class_object_id hprofLookupClassId(const ClassObject *clazz)

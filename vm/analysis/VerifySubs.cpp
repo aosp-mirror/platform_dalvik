@@ -74,19 +74,14 @@ void dvmLogVerifyFailure(const Method* meth, const char* format, ...)
 void dvmLogUnableToResolveClass(const char* missingClassDescr,
     const Method* meth)
 {
-    if (gDvm.optimizing)
+    if (gDvm.optimizing) {
         return;
+    }
 
-    char* dotMissingClass = dvmHumanReadableDescriptor(missingClassDescr);
-    char* dotFromClass = dvmHumanReadableDescriptor(meth->clazz->descriptor);
-    //char* methodDescr = dexProtoCopyMethodDescriptor(&meth->prototype);
-
+    std::string dotMissingClass = dvmHumanReadableDescriptor(missingClassDescr);
+    std::string dotFromClass = dvmHumanReadableDescriptor(meth->clazz->descriptor);
     LOGE("Could not find class '%s', referenced from method %s.%s",
-        dotMissingClass, dotFromClass, meth->name/*, methodDescr*/);
-
-    free(dotMissingClass);
-    free(dotFromClass);
-    //free(methodDescr);
+            dotMissingClass.c_str(), dotFromClass.c_str(), meth->name);
 }
 
 /*

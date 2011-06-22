@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_HEAP_BITMAPINLINES
-#define _DALVIK_HEAP_BITMAPINLINES
+#ifndef DALVIK_HEAP_BITMAPINLINES_H_
+#define DALVIK_HEAP_BITMAPINLINES_H_
 
 static unsigned long dvmHeapBitmapSetAndReturnObjectBit(HeapBitmap *hb, const void *obj) __attribute__((used));
 static void dvmHeapBitmapSetObjectBit(HeapBitmap *hb, const void *obj) __attribute__((used));
@@ -104,4 +104,4 @@ static unsigned long dvmHeapBitmapIsObjectBitSet(const HeapBitmap *hb,
     }
 }
 
-#endif /* _DALVIK_HEAP_BITMAPINLINES */
+#endif  // DALVIK_HEAP_BITMAPINLINES_H_

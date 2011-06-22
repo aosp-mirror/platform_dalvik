@@ -751,11 +751,7 @@ static int processOptions(int argc, const char* const argv[],
                     argv[i]);
                 return -1;
             }
-            if (arrayAdd(gDvm.properties, strdup(argv[i] + 2)) == -1) {
-                dvmFprintf(stderr, "Can't set system property: \"%s\"\n",
-                    argv[i]);
-                return -1;
-            }
+            gDvm.properties->push_back(argv[i] + 2);
 
         } else if (strcmp(argv[i], "-jar") == 0) {
             // TODO: handle this; name of jar should be in argv[i+1]
@@ -1035,18 +1031,20 @@ static int processOptions(int argc, const char* const argv[],
  */
 static void setCommandLineDefaults()
 {
-    const char* envStr;
-
-    envStr = getenv("CLASSPATH");
-    if (envStr != NULL)
+    const char* envStr = getenv("CLASSPATH");
+    if (envStr != NULL) {
         gDvm.classPathStr = strdup(envStr);
-    else
+    } else {
         gDvm.classPathStr = strdup(".");
+    }
     envStr = getenv("BOOTCLASSPATH");
-    if (envStr != NULL)
+    if (envStr != NULL) {
         gDvm.bootClassPathStr = strdup(envStr);
-    else
+    } else {
         gDvm.bootClassPathStr = strdup(".");
+    }
+
+    gDvm.properties = new std::vector<std::string>();
 
     /* Defaults overridden by -Xms and -Xmx.
      * TODO: base these on a system or application-specific default
@@ -1158,10 +1156,6 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     LOGV("VM init args (%d):", argc);
     for (i = 0; i < argc; i++)
         LOGV("  %d: '%s'", i, argv[i]);
-
-    /* prep properties storage */
-    if (!dvmPropertiesStartup())
-        goto fail;
 
     setCommandLineDefaults();
 
@@ -1666,7 +1660,6 @@ void dvmShutdown()
     dvmInlineNativeShutdown();
     dvmGcShutdown();
     dvmAllocTrackerShutdown();
-    dvmPropertiesShutdown();
 
     /* these must happen AFTER dvmClassShutdown has walked through class data */
     dvmNativeShutdown();
@@ -1676,6 +1669,7 @@ void dvmShutdown()
 
     free(gDvm.bootClassPathStr);
     free(gDvm.classPathStr);
+    delete gDvm.properties;
 
     freeAssertionCtrl();
 

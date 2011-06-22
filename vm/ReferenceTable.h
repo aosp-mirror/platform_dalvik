@@ -20,8 +20,8 @@
  *
  * None of the table functions are synchronized.
  */
-#ifndef _DALVIK_REFERENCETABLE
-#define _DALVIK_REFERENCETABLE
+#ifndef DALVIK_REFERENCETABLE_H_
+#define DALVIK_REFERENCETABLE_H_
 
 /*
  * Table definition.
@@ -122,4 +122,4 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr);
 void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     const char* descr);
 
-#endif /*_DALVIK_REFERENCETABLE*/
+#endif  // DALVIK_REFERENCETABLE_H_

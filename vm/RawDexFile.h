@@ -18,8 +18,8 @@
  * them directly, except to create the optimized version that we tuck in
  * the cache area.
  */
-#ifndef _DALVIK_RAWDEXFILE
-#define _DALVIK_RAWDEXFILE
+#ifndef DALVIK_RAWDEXFILE_H_
+#define DALVIK_RAWDEXFILE_H_
 
 /*
  * Structure representing a "raw" DEX file, in its unswapped unoptimized
@@ -68,4 +68,4 @@ INLINE const char* dvmGetRawDexFileCacheFileName(RawDexFile* pRawDexFile) {
     return pRawDexFile->cacheFileName;
 }
 
-#endif /*_DALVIK_RAWDEXFILE*/
+#endif  // DALVIK_RAWDEXFILE_H_

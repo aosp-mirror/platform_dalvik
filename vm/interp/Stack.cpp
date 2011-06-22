@@ -633,18 +633,16 @@ bail:
     dvmPopFrame(self);
 }
 
-static void throwArgumentTypeMismatch(int argIndex, ClassObject* expected,
-    DataObject* arg)
-{
-    char* expectedClassName = dvmHumanReadableDescriptor(expected->descriptor);
-    char* actualClassName = (arg != NULL)
-        ? dvmHumanReadableDescriptor(arg->clazz->descriptor)
-        : strdup("null");
-    dvmThrowExceptionFmt(gDvm.exIllegalArgumentException,
-        "argument %d should have type %s, got %s",
-        argIndex + 1, expectedClassName, actualClassName);
-    free(expectedClassName);
-    free(actualClassName);
+static void throwArgumentTypeMismatch(int argIndex, ClassObject* expected, DataObject* arg) {
+    std::string expectedClassName(dvmHumanReadableDescriptor(expected->descriptor));
+    std::string actualClassName;
+    if (arg != NULL) {
+        actualClassName = dvmHumanReadableType(arg);
+    } else {
+        actualClassName = "null";
+    }
+    dvmThrowExceptionFmt(gDvm.exIllegalArgumentException, "argument %d should have type %s, got %s",
+            argIndex + 1, expectedClassName.c_str(), actualClassName.c_str());
 }
 
 /*
@@ -1158,6 +1156,25 @@ static bool extractMonitorEnterObject(Thread* thread, Object** pLockObj,
     return true;
 }
 
+static void printWaitMessage(const DebugOutputTarget* target, const char* detail, Object* obj,
+        Thread* thread)
+{
+    std::string msg(StringPrintf("  - waiting %s <%p> ", detail, obj));
+
+    if (obj->clazz != gDvm.classJavaLangClass) {
+        // I(16573)   - waiting on <0xf5feda38> (a java.util.LinkedList)
+        // I(16573)   - waiting on <0xf5ed54f8> (a java.lang.Class<java.lang.ref.ReferenceQueue>)
+        msg += "(a " + dvmHumanReadableType(obj) + ")";
+    }
+
+    if (thread != NULL) {
+        std::string threadName(dvmGetThreadName(thread));
+        StringAppendF(&msg, " held by tid=%d (%s)", thread->threadId, threadName.c_str());
+    }
+
+    dvmPrintDebugMessage(target, "%s\n", msg.c_str());
+}
+
 /*
  * Dump stack frames, starting from the specified frame and moving down.
  *
@@ -1211,19 +1228,16 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
             else
                 relPc = -1;
 
-            char* className =
-                dvmHumanReadableDescriptor(method->clazz->descriptor);
-            if (dvmIsNativeMethod(method))
-                dvmPrintDebugMessage(target,
-                    "  at %s.%s(Native Method)\n", className, method->name);
-            else {
-                dvmPrintDebugMessage(target,
-                    "  at %s.%s(%s:%s%d)\n",
-                    className, method->name, dvmGetMethodSourceFile(method),
-                    (relPc >= 0 && first) ? "~" : "",
-                    relPc < 0 ? -1 : dvmLineNumFromPC(method, relPc));
+            std::string className(dvmHumanReadableDescriptor(method->clazz->descriptor));
+            if (dvmIsNativeMethod(method)) {
+                dvmPrintDebugMessage(target, "  at %s.%s(Native Method)\n",
+                        className.c_str(), method->name);
+            } else {
+                dvmPrintDebugMessage(target, "  at %s.%s(%s:%s%d)\n",
+                        className.c_str(), method->name, dvmGetMethodSourceFile(method),
+                        (relPc >= 0 && first) ? "~" : "",
+                        relPc < 0 ? -1 : dvmLineNumFromPC(method, relPc));
             }
-            free(className);
 
             if (first) {
                 /*
@@ -1239,39 +1253,16 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
                     Object* obj = dvmGetMonitorObject(mon);
                     if (obj != NULL) {
                         Thread* joinThread = NULL;
-                        className =
-                            dvmHumanReadableDescriptor(obj->clazz->descriptor);
-                        if (strcmp(className, "java.lang.VMThread") == 0) {
+                        if (obj->clazz == gDvm.classJavaLangVMThread) {
                             joinThread = dvmGetThreadFromThreadObject(obj);
                         }
-                        if (joinThread == NULL) {
-                            dvmPrintDebugMessage(target,
-                                "  - waiting on <%p> (a %s)\n", obj, className);
-                        } else {
-                            dvmPrintDebugMessage(target,
-                                "  - waiting on <%p> (a %s) tid=%d\n",
-                                obj, className, joinThread->threadId);
-                        }
-                        free(className);
+                        printWaitMessage(target, "on", obj, joinThread);
                     }
                 } else if (thread->status == THREAD_MONITOR) {
                     Object* obj;
                     Thread* owner;
                     if (extractMonitorEnterObject(thread, &obj, &owner)) {
-                        className =
-                            dvmHumanReadableDescriptor(obj->clazz->descriptor);
-                        if (owner != NULL) {
-                            char* threadName = dvmGetThreadName(owner);
-                            dvmPrintDebugMessage(target,
-                                "  - waiting to lock <%p> (a %s) held by threadid=%d (%s)\n",
-                                obj, className, owner->threadId, threadName);
-                            free(threadName);
-                        } else {
-                            dvmPrintDebugMessage(target,
-                                "  - waiting to lock <%p> (a %s) held by ???\n",
-                                obj, className);
-                        }
-                        free(className);
+                        printWaitMessage(target, "to lock", obj, owner);
                     }
                 }
             }

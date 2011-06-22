@@ -16,8 +16,8 @@
 /*
  * Check access to fields and methods.
  */
-#ifndef _DALVIK_OO_ACCESSCHECK
-#define _DALVIK_OO_ACCESSCHECK
+#ifndef DALVIK_OO_ACCESSCHECK_H_
+#define DALVIK_OO_ACCESSCHECK_H_
 
 /*
  * Determine whether the "accessFrom" class is allowed to get at "clazz".
@@ -40,4 +40,4 @@ bool dvmCheckFieldAccess(const ClassObject* accessFrom, const Field* field);
  */
 bool dvmInSamePackage(const ClassObject* class1, const ClassObject* class2);
 
-#endif /*_DALVIK_OO_ACCESSCHECK*/
+#endif  // DALVIK_OO_ACCESSCHECK_H_

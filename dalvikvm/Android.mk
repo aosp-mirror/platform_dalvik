@@ -61,7 +61,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
         # OS X comes with all these libraries, so there is no need
         # to build any of them. Note: OpenSSL consists of libssl
         # and libcrypto.
-        LOCAL_LDLIBS := -lffi -lssl -lcrypto -lz -lsqlite3
+        LOCAL_LDLIBS := -lffi -lssl -lcrypto -lz
     else
         LOCAL_LDLIBS += -ldl -lpthread
         LOCAL_SHARED_LIBRARIES += libdvm libcrypto libicuuc libicui18n libssl

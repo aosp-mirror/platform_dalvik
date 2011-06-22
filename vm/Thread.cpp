@@ -18,8 +18,7 @@
  * Thread support.
  */
 #include "Dalvik.h"
-
-#include "utils/threads.h"      // need Android thread priorities
+#include "os/os.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -240,7 +239,6 @@ static void* internalThreadStart(void* arg);
 static void threadExitUncaughtException(Thread* thread, Object* group);
 static void threadExitCheck(void* arg);
 static void waitForThreadSuspend(Thread* self, Thread* thread);
-static int getThreadPriorityFromSystem();
 
 /*
  * Initialize thread list and main thread's environment.  We need to set
@@ -554,10 +552,9 @@ void dvmSlayDaemons()
                 threadId, target->threadId);
         }
 
-        char* threadName = dvmGetThreadName(target);
+        std::string threadName(dvmGetThreadName(target));
         LOGV("threadid=%d: suspending daemon id=%d name='%s'",
-            threadId, target->threadId, threadName);
-        free(threadName);
+                threadId, target->threadId, threadName.c_str());
 
         /* mark as suspended */
         lockThreadSuspendCount();
@@ -925,9 +922,10 @@ static bool prepareThread(Thread* thread)
      * Most threads won't use jniMonitorRefTable, so we clear out the
      * structure but don't call the init function (which allocs storage).
      */
-    if (!dvmInitIndirectRefTable(&thread->jniLocalRefTable,
-            kJniLocalRefMin, kJniLocalRefMax, kIndirectKindLocal))
+    if (!thread->jniLocalRefTable.init(kJniLocalRefMin,
+            kJniLocalRefMax, kIndirectKindLocal)) {
         return false;
+    }
     if (!dvmInitReferenceTable(&thread->internalLocalRefTable,
             kInternalRefDefault, kInternalRefMax))
         return false;
@@ -987,7 +985,7 @@ static void freeThread(Thread* thread)
 #endif
     }
 
-    dvmClearIndirectRefTable(&thread->jniLocalRefTable);
+    thread->jniLocalRefTable.destroy();
     dvmClearReferenceTable(&thread->internalLocalRefTable);
     if (&thread->jniMonitorRefTable.table != NULL)
         dvmClearReferenceTable(&thread->jniMonitorRefTable);
@@ -1455,9 +1453,8 @@ static void* interpThreadStart(void* arg)
 {
     Thread* self = (Thread*) arg;
 
-    char *threadName = dvmGetThreadName(self);
-    setThreadName(threadName);
-    free(threadName);
+    std::string threadName(dvmGetThreadName(self));
+    setThreadName(threadName.c_str());
 
     /*
      * Finish initializing the Thread struct.
@@ -1891,7 +1888,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      */
     JValue unused;
     dvmCallMethod(self, init, threadObj, &unused, (Object*)pArgs->group,
-        threadNameStr, getThreadPriorityFromSystem(), isDaemon);
+            threadNameStr, os_getThreadPriorityFromSystem(), isDaemon);
     if (dvmCheckException(self)) {
         LOGE("exception thrown while constructing attached thread object");
         goto fail_unlink;
@@ -3077,89 +3074,10 @@ Thread* dvmGetThreadByThreadId(u4 threadId)
     return thread;
 }
 
-
-/*
- * Conversion map for "nice" values.
- *
- * We use Android thread priority constants to be consistent with the rest
- * of the system.  In some cases adjacent entries may overlap.
- */
-static const int kNiceValues[10] = {
-    ANDROID_PRIORITY_LOWEST,                /* 1 (MIN_PRIORITY) */
-    ANDROID_PRIORITY_BACKGROUND + 6,
-    ANDROID_PRIORITY_BACKGROUND + 3,
-    ANDROID_PRIORITY_BACKGROUND,
-    ANDROID_PRIORITY_NORMAL,                /* 5 (NORM_PRIORITY) */
-    ANDROID_PRIORITY_NORMAL - 2,
-    ANDROID_PRIORITY_NORMAL - 4,
-    ANDROID_PRIORITY_URGENT_DISPLAY + 3,
-    ANDROID_PRIORITY_URGENT_DISPLAY + 2,
-    ANDROID_PRIORITY_URGENT_DISPLAY         /* 10 (MAX_PRIORITY) */
-};
-
-/*
- * Change the priority of a system thread to match that of the Thread object.
- *
- * We map a priority value from 1-10 to Linux "nice" values, where lower
- * numbers indicate higher priority.
- */
 void dvmChangeThreadPriority(Thread* thread, int newPriority)
 {
-    pid_t pid = thread->systemTid;
-    int newNice;
-
-    if (newPriority < 1 || newPriority > 10) {
-        LOGW("bad priority %d", newPriority);
-        newPriority = 5;
-    }
-    newNice = kNiceValues[newPriority-1];
-
-    if (newNice >= ANDROID_PRIORITY_BACKGROUND) {
-        set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
-    } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
-        set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
-    }
-
-    if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
-        char* str = dvmGetThreadName(thread);
-        LOGI("setPriority(%d) '%s' to prio=%d(n=%d) failed: %s",
-            pid, str, newPriority, newNice, strerror(errno));
-        free(str);
-    } else {
-        LOGV("setPriority(%d) to prio=%d(n=%d)",
-            pid, newPriority, newNice);
-    }
+    os_changeThreadPriority(thread, newPriority);
 }
-
-/*
- * Get the thread priority for the current thread by querying the system.
- * This is useful when attaching a thread through JNI.
- *
- * Returns a value from 1 to 10 (compatible with java.lang.Thread values).
- */
-static int getThreadPriorityFromSystem()
-{
-    int i, sysprio, jprio;
-
-    errno = 0;
-    sysprio = getpriority(PRIO_PROCESS, 0);
-    if (sysprio == -1 && errno != 0) {
-        LOGW("getpriority() failed: %s", strerror(errno));
-        return THREAD_NORM_PRIORITY;
-    }
-
-    jprio = THREAD_MIN_PRIORITY;
-    for (i = 0; i < NELEM(kNiceValues); i++) {
-        if (sysprio >= kNiceValues[i])
-            break;
-        jprio++;
-    }
-    if (jprio > THREAD_MAX_PRIORITY)
-        jprio = THREAD_MAX_PRIORITY;
-
-    return jprio;
-}
-
 
 /*
  * Return true if the thread is on gDvm.threadList.
@@ -3414,24 +3332,13 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     free(groupName);
 }
 
-/*
- * Get the name of a thread.
- *
- * For correctness, the caller should hold the thread list lock to ensure
- * that the thread doesn't go away mid-call.
- *
- * Returns a newly-allocated string, or NULL if the Thread doesn't have a name.
- */
-char* dvmGetThreadName(Thread* thread)
-{
-    StringObject* nameObj;
-
+std::string dvmGetThreadName(Thread* thread) {
     if (thread->threadObj == NULL) {
         LOGW("threadObj is NULL, name not available");
-        return strdup("-unknown-");
+        return "-unknown-";
     }
 
-    nameObj = (StringObject*)
+    StringObject* nameObj = (StringObject*)
         dvmGetFieldObject(thread->threadObj, gDvm.offJavaLangThread_name);
     return dvmCreateCstrFromString(nameObj);
 }

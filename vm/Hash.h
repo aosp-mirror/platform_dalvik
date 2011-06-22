@@ -19,8 +19,8 @@
  * When the number of elements reaches a certain percentage of the table's
  * capacity, the table will be resized.
  */
-#ifndef _DALVIK_HASH
-#define _DALVIK_HASH
+#ifndef DALVIK_HASH_H_
+#define DALVIK_HASH_H_
 
 /* compute the hash of an item with a specific type */
 typedef u4 (*HashCompute)(const void* item);
@@ -218,4 +218,4 @@ typedef u4 (*HashCalcFunc)(const void* item);
 void dvmHashTableProbeCount(HashTable* pHashTable, HashCalcFunc calcFunc,
     HashCompareFunc cmpFunc);
 
-#endif /*_DALVIK_HASH*/
+#endif  // DALVIK_HASH_H_

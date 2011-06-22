@@ -16,8 +16,8 @@
 /*
  * Expanding byte buffer, with primitives for appending basic data types.
  */
-#ifndef _DALVIK_JDWP_EXPANDBUF
-#define _DALVIK_JDWP_EXPANDBUF
+#ifndef DALVIK_JDWP_EXPANDBUF_H_
+#define DALVIK_JDWP_EXPANDBUF_H_
 
 #include "Common.h"     // need u1/u2/u4/u8 types
 
@@ -53,4 +53,4 @@ void expandBufAdd4BE(ExpandBuf* pBuf, u4 val);
 void expandBufAdd8BE(ExpandBuf* pBuf, u8 val);
 void expandBufAddUtf8String(ExpandBuf* pBuf, const u1* str);
 
-#endif /*_DALVIK_JDWP_EXPANDBUF*/
+#endif  // DALVIK_JDWP_EXPANDBUF_H_

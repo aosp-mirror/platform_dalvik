@@ -16,8 +16,8 @@
 /*
  * DDM-specific internal heap functions.
  */
-#ifndef _DALVIK_ALLOC_DDMHEAP
-#define _DALVIK_ALLOC_DDMHEAP
+#ifndef DALVIK_ALLOC_DDMHEAP_H_
+#define DALVIK_ALLOC_DDMHEAP_H_
 
 /*
  * Sends the current heap info to the DDM server.
@@ -38,4 +38,4 @@ void dvmDdmSendHeapInfo(int reason, bool shouldLock);
  */
 void dvmDdmSendHeapSegments(bool shouldLock, bool native);
 
-#endif  // _DALVIK_ALLOC_DDMHEAP
+#endif  // DALVIK_ALLOC_DDMHEAP_H_

@@ -17,8 +17,8 @@
 /*
  * VM thread support.
  */
-#ifndef _DALVIK_THREAD
-#define _DALVIK_THREAD
+#ifndef DALVIK_THREAD_H_
+#define DALVIK_THREAD_H_
 
 #include "jni.h"
 #include "interp/InterpState.h"
@@ -532,9 +532,12 @@ Thread* dvmGetThreadByThreadId(u4 threadId);
 void dvmThreadSleep(u8 msec, u4 nsec);
 
 /*
- * Get the name of a thread.  (For safety, hold the thread list lock.)
+ * Get the name of a thread.
+ *
+ * For correctness, the caller should hold the thread list lock to ensure
+ * that the thread doesn't go away mid-call.
  */
-char* dvmGetThreadName(Thread* thread);
+std::string dvmGetThreadName(Thread* thread);
 
 /*
  * Convert ThreadStatus to a string.
@@ -596,4 +599,4 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
  */
 void dvmNukeThread(Thread* thread);
 
-#endif /*_DALVIK_THREAD*/
+#endif  // DALVIK_THREAD_H_

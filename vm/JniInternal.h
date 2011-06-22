@@ -16,8 +16,8 @@
 /*
  * JNI innards, common to the regular and "checked" interfaces.
  */
-#ifndef _DALVIK_JNIINTERNAL
-#define _DALVIK_JNIINTERNAL
+#ifndef DALVIK_JNIINTERNAL_H_
+#define DALVIK_JNIINTERNAL_H_
 
 #include "jni.h"
 
@@ -184,4 +184,4 @@ void dvmReleaseJniMonitors(Thread* self);
  */
 void dvmDumpJniReferenceTables(void);
 
-#endif /*_DALVIK_JNIINTERNAL*/
+#endif  // DALVIK_JNIINTERNAL_H_

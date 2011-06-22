@@ -152,29 +152,23 @@ void dvmAbstractMethodStub(const u4* args, JValue* pResult)
  *
  * Returns "false" and throws an exception if not.
  */
-bool dvmVerifyObjectInClass(Object* obj, ClassObject* clazz)
-{
+bool dvmVerifyObjectInClass(Object* obj, ClassObject* clazz) {
     ClassObject* exceptionClass = NULL;
-
     if (obj == NULL) {
         exceptionClass = gDvm.exNullPointerException;
     } else if (!dvmInstanceof(obj->clazz, clazz)) {
         exceptionClass = gDvm.exIllegalArgumentException;
     }
 
-    if (exceptionClass != NULL) {
-        char* expectedClassName = dvmHumanReadableDescriptor(clazz->descriptor);
-        char* actualClassName = (obj != NULL)
-            ? dvmHumanReadableDescriptor(obj->clazz->descriptor)
-            : strdup("null");
-        dvmThrowExceptionFmt(exceptionClass,
-            "expected receiver of type %s, but got %s",
-            expectedClassName, actualClassName);
-        free(expectedClassName);
-        free(actualClassName);
-        return false;
+    if (exceptionClass == NULL) {
+        return true;
     }
-    return true;
+
+    std::string expectedClassName(dvmHumanReadableDescriptor(clazz->descriptor));
+    std::string actualClassName(dvmHumanReadableType(obj));
+    dvmThrowExceptionFmt(exceptionClass, "expected receiver of type %s, but got %s",
+            expectedClassName.c_str(), actualClassName.c_str());
+    return false;
 }
 
 /*

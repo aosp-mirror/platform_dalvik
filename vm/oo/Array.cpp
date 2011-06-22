@@ -50,10 +50,9 @@ static ArrayObject* allocArray(ClassObject* arrayClass, size_t length,
     size_t headerSize = OFFSETOF_MEMBER(ArrayObject, contents);
     size_t totalSize = elementSize + headerSize;
     if (elementSize >> elementShift != length || totalSize < elementSize) {
-        char *descriptor = dvmHumanReadableDescriptor(arrayClass->descriptor);
+        std::string descriptor(dvmHumanReadableDescriptor(arrayClass->descriptor));
         dvmThrowExceptionFmt(gDvm.exOutOfMemoryError,
-                "%s of length %zd exceeds the VM limit", descriptor, length);
-        free(descriptor);
+                "%s of length %zd exceeds the VM limit", descriptor.c_str(), length);
         return NULL;
     }
     ArrayObject* newArray = (ArrayObject*)dvmMalloc(totalSize, allocFlags);

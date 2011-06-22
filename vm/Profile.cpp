@@ -249,16 +249,11 @@ static void resetCpuClockBase()
 /*
  * Dump the thread list to the specified file.
  */
-static void dumpThreadList(FILE* fp)
-{
-    Thread* thread;
-
+static void dumpThreadList(FILE* fp) {
     dvmLockThreadList(NULL);
-    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
-        char* name = dvmGetThreadName(thread);
-
-        fprintf(fp, "%d\t%s\n", thread->threadId, name);
-        free(name);
+    for (Thread* thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        std::string threadName(dvmGetThreadName(thread));
+        fprintf(fp, "%d\t%s\n", thread->threadId, threadName.c_str());
     }
     dvmUnlockThreadList();
 }

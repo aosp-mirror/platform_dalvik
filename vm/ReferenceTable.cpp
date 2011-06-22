@@ -202,31 +202,29 @@ static int compareObject(const void* vobj1, const void* vobj2)
  * array object), and the number of additional objects that are identical
  * or equivalent to the original.
  */
-static void logObject(const Object* obj, size_t elems, int identical, int equiv)
+static void logSummaryLine(const Object* obj, size_t elems, int identical, int equiv)
 {
     if (obj == NULL) {
         LOGW("  NULL reference (count=%d)", equiv);
         return;
     }
 
-    /* handle "raw" dvmMalloc case */
-    const char* descriptor =
-        (obj->clazz != NULL) ? obj->clazz->descriptor : "(raw)";
-
-    char elemStr[16];
-
+    std::string className(dvmHumanReadableType(obj));
+    if (obj->clazz == gDvm.classJavaLangClass) {
+        // We're summarizing multiple instances, so using the exemplar
+        // Class' type parameter here would be misleading.
+        className = "java.lang.Class";
+    }
     if (elems != 0) {
-        snprintf(elemStr, sizeof(elemStr), " [%zd]", elems);
-    } else {
-        elemStr[0] = '\0';
+        StringAppendF(&className, " (%zd elements)", elems);
     }
 
+    size_t total = identical + equiv + 1;
+    std::string msg(StringPrintf("%5d of %s", total, className.c_str()));
     if (identical + equiv != 0) {
-        LOGW("%5d of %s%s (%d unique)", identical + equiv +1,
-            descriptor, elemStr, equiv +1);
-    } else {
-        LOGW("%5d of %s%s", identical + equiv +1, descriptor, elemStr);
+        StringAppendF(&msg, " (%d unique instances)", equiv + 1);
     }
+    LOGW("%s", msg.c_str());
 }
 
 /*
@@ -248,32 +246,47 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
      */
     const size_t kLast = 10;
     LOGW("Last %d entries in %s reference table:", kLast, descr);
-    int start = count - kLast;
-    if (start < 0)
-        start = 0;
+    int first = count - kLast;
+    if (first < 0) {
+        first = 0;
+    }
 
-    size_t idx, elems;
-    for (idx = start; idx < count; idx++) {
+    for (int idx = count - 1; idx >= first; --idx) {
         const Object* ref = refs[idx];
-        if (ref == NULL)
+        if (ref == NULL) {
             continue;
-
-        elems = getElementCount(ref);
-
+        }
         if (ref->clazz == NULL) {
             /* should only be possible right after a plain dvmMalloc() */
             size_t size = dvmObjectSizeInHeap(ref);
-            LOGW("%5d: %p cls=(raw) (%zd bytes)", idx, ref, size);
-        } else if (dvmIsClassObject(ref)) {
-            ClassObject* clazz = (ClassObject*) ref;
-            LOGW("%5d: %p cls=%s '%s'", idx, ref, ref->clazz->descriptor,
-                clazz->descriptor);
-        } else if (elems != 0) {
-            LOGW("%5d: %p cls=%s [%zd]",
-                idx, ref, ref->clazz->descriptor, elems);
-        } else {
-            LOGW("%5d: %p cls=%s", idx, ref, ref->clazz->descriptor);
+            LOGW("%5d: %p (raw) (%zd bytes)", idx, ref, size);
+            continue;
         }
+
+        std::string className(dvmHumanReadableType(ref));
+
+        std::string extras;
+        size_t elems = getElementCount(ref);
+        if (elems != 0) {
+            StringAppendF(&extras, " (%zd elements)", elems);
+        } else if (ref->clazz == gDvm.classJavaLangString) {
+            const StringObject* str =
+                    reinterpret_cast<const StringObject*>(ref);
+            extras += " \"";
+            size_t count = 0;
+            char* s = dvmCreateCstrFromString(str);
+            char* p = s;
+            for (; *p && count < 16; ++p, ++count) {
+                extras += *p;
+            }
+            if (*p == 0) {
+                extras += "\"";
+            } else {
+                StringAppendF(&extras, "... (%d chars)", str->length());
+            }
+            free(s);
+        }
+        LOGW("%5d: %p %s%s", idx, ref, className.c_str(), extras.c_str());
     }
 
     /*
@@ -307,6 +320,8 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     LOGW("%s reference table summary (%d entries):", descr, count);
     size_t equiv, identical;
     equiv = identical = 0;
+    size_t idx;
+    size_t elems;
     for (idx = 1; idx < count; idx++) {
         elems = getElementCount(refs[idx-1]);
 
@@ -320,14 +335,14 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
             equiv++;
         } else {
             /* different class */
-            logObject(refs[idx-1], elems, identical, equiv);
+            logSummaryLine(refs[idx-1], elems, identical, equiv);
             equiv = identical = 0;
         }
     }
 
     /* handle the last entry (everything above outputs refs[i-1]) */
     elems = getElementCount(refs[idx-1]);
-    logObject(refs[count-1], elems, identical, equiv);
+    logSummaryLine(refs[count-1], elems, identical, equiv);
 
     free(tableCopy);
 }

@@ -17,8 +17,8 @@
 /*
  * Dalvik bytecode verification subroutines.
  */
-#ifndef _DALVIK_VERIFYSUBS
-#define _DALVIK_VERIFYSUBS
+#ifndef DALVIK_VERIFYSUBS_H_
+#define DALVIK_VERIFYSUBS_H_
 
 /*
  * InsnFlags is a 32-bit integer with the following layout:
@@ -71,4 +71,4 @@ char dvmDetermineCat1Const(s4 value);
 /* debugging */
 bool dvmWantVerboseVerification(const Method* meth);
 
-#endif /*_DALVIK_VERIFYSUBS*/
+#endif  // DALVIK_VERIFYSUBS_H_

@@ -18,8 +18,8 @@
  * Verification-time map of data section items
  */
 
-#ifndef _LIBDEX_DEXDATAMAP
-#define _LIBDEX_DEXDATAMAP
+#ifndef LIBDEX_DEXDATAMAP_H_
+#define LIBDEX_DEXDATAMAP_H_
 
 #include "DexFile.h"
 
@@ -70,4 +70,4 @@ DEX_INLINE bool dexDataMapVerify0Ok(DexDataMap* map, u4 offset, u2 type) {
     return dexDataMapVerify(map, offset, type);
 }
 
-#endif /*_LIBDEX_DEXDATAMAP*/
+#endif  // LIBDEX_DEXDATAMAP_H_

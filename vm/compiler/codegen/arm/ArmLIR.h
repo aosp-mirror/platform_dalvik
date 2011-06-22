@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+#ifndef DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H_
+#define DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H_
+
 #include "Dalvik.h"
 #include "compiler/CompilerInternals.h"
-
-#ifndef _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H
-#define _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H
 
 /*
  * r0, r1, r2, r3 are always scratch
@@ -792,4 +792,4 @@ typedef struct ArmLIR {
 #define CHAIN_CELL_NORMAL_SIZE 12
 #define CHAIN_CELL_PREDICTED_SIZE 16
 
-#endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H */
+#endif  // DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H_

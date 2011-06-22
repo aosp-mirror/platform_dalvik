@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_COMPILERCODEGEN_H_
-#define _DALVIK_VM_COMPILERCODEGEN_H_
+#ifndef DALVIK_VM_COMPILERCODEGEN_H_
+#define DALVIK_VM_COMPILERCODEGEN_H_
 
 #include "compiler/CompilerIR.h"
 
@@ -71,4 +71,4 @@ int dvmCompilerTargetOptHint(int key);
 /* Implemented in codegen/<target>/<target_variant>/ArchVariant.c */
 void dvmCompilerGenMemBarrier(CompilationUnit *cUnit, int barrierKind);
 
-#endif /* _DALVIK_VM_COMPILERCODEGEN_H_ */
+#endif  // DALVIK_VM_COMPILERCODEGEN_H_

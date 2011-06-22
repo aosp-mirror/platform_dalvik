@@ -17,8 +17,8 @@
 /*
  * Bytecode optimization declarations.
  */
-#ifndef _DALVIK_OPTIMIZE
-#define _DALVIK_OPTIMIZE
+#ifndef DALVIK_OPTIMIZE_H_
+#define DALVIK_OPTIMIZE_H_
 
 /*
  * Entry point from DEX preparation.
@@ -44,4 +44,4 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
 StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
     VerifyError* pFailure);
 
-#endif /*_DALVIK_OPTIMIZE*/
+#endif  // DALVIK_OPTIMIZE_H_

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_COMPILER_IR
-#define _DALVIK_VM_COMPILER_IR
+#ifndef DALVIK_VM_COMPILER_IR_H_
+#define DALVIK_VM_COMPILER_IR_H_
 
 #include "codegen/Optimizer.h"
 
@@ -299,4 +299,4 @@ void dvmCompilerAbort(CompilationUnit *cUnit);
 /* Debug Utilities */
 void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit);
 
-#endif /* _DALVIK_VM_COMPILER_IR */
+#endif  // DALVIK_VM_COMPILER_IR_H_

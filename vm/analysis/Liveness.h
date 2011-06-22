@@ -17,11 +17,11 @@
 /*
  * Liveness analysis.
  */
-#ifndef _DALVIK_LIVENESS
-#define _DALVIK_LIVENESS
+#ifndef DALVIK_LIVENESS_H_
+#define DALVIK_LIVENESS_H_
 
 struct VerifierData;
 
 bool dvmComputeLiveness(struct VerifierData* vdata);
 
-#endif /*_DALVIK_LIVENESS*/
+#endif  // DALVIK_LIVENESS_H_

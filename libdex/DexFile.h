@@ -30,8 +30,8 @@
  * All memory-mapped structures are 32-bit aligned unless otherwise noted.
  */
 
-#ifndef _LIBDEX_DEXFILE
-#define _LIBDEX_DEXFILE
+#ifndef LIBDEX_DEXFILE_H_
+#define LIBDEX_DEXFILE_H_
 
 #include "vm/Common.h"      // basic type defs, e.g. u1/u2/u4/u8, and LOG
 #include "libdex/SysUtil.h"
@@ -974,4 +974,4 @@ const char* dexGetBoxedTypeDescriptor(PrimitiveType type);
  */
 PrimitiveType dexGetPrimitiveTypeFromDescriptorChar(char descriptorChar);
 
-#endif /*_LIBDEX_DEXFILE*/
+#endif  // LIBDEX_DEXFILE_H_

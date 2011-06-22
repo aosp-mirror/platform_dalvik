@@ -196,7 +196,7 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     newLIR0(cUnit, kThumb2Fmstat);
     branch = newLIR2(cUnit, kThumbBCond, 0, kArmCondEq);
     dvmCompilerClobberCallRegs(cUnit);
-    LOAD_FUNC_ADDR(cUnit, r2, (int)sqrt);
+    LOAD_FUNC_ADDR(cUnit, r2, (int) (double (*)(double)) sqrt);
     newLIR3(cUnit, kThumb2Fmrrd, r0, r1, S2D(rlSrc.lowReg, rlSrc.highReg));
     newLIR1(cUnit, kThumbBlxR, r2);
     newLIR3(cUnit, kThumb2Fmdrr, S2D(rlResult.lowReg, rlResult.highReg),

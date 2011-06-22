@@ -17,7 +17,7 @@
 #define LOG_TAG "JNIHelp"
 
 #include "JNIHelp.h"
-#include "utils/Log.h"
+#include "cutils/log.h"
 
 #include <stdlib.h>
 #include <string.h>

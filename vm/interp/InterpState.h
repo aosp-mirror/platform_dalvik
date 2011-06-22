@@ -21,8 +21,8 @@
  *
  * Functions and globals declared here are defined in Interp.c.
  */
-#ifndef _DALVIK_INTERP_STATE
-#define _DALVIK_INTERP_STATE
+#ifndef DALVIK_INTERP_STATE_H_
+#define DALVIK_INTERP_STATE_H_
 
 /*
  * Execution mode, e.g. interpreter vs. JIT.
@@ -234,4 +234,4 @@ struct JitTraceRun {
 
 #endif
 
-#endif /*_DALVIK_INTERP_STATE*/
+#endif  // DALVIK_INTERP_STATE_H_

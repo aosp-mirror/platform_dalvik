@@ -65,6 +65,7 @@ static bool allocCardTable(size_t heapMaximumSize)
     }
     gcHeap->cardTableBase = (u1*)allocBase;
     gcHeap->cardTableLength = length;
+    gcHeap->cardTableOffset = 0;
     /* All zeros is the correct initial value; all clean. */
     assert(GC_CARD_CLEAN == 0);
 
@@ -72,7 +73,8 @@ static bool allocCardTable(size_t heapMaximumSize)
                         ((uintptr_t)heapBase >> GC_CARD_SHIFT));
     if (((uintptr_t)biasedBase & 0xff) != GC_CARD_DIRTY) {
         int offset = GC_CARD_DIRTY - ((uintptr_t)biasedBase & 0xff);
-        biasedBase += offset + (offset < 0 ? 0x100 : 0);
+        gcHeap->cardTableOffset = offset + (offset < 0 ? 0x100 : 0);
+        biasedBase += gcHeap->cardTableOffset;
     }
     assert(((uintptr_t)biasedBase & 0xff) == GC_CARD_DIRTY);
     gDvm.biasedCardTableBase = biasedBase;
@@ -114,7 +116,7 @@ static void freeCardTable()
         return;
     }
     gDvm.biasedCardTableBase = NULL;
-    munmap(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength);
+    munmap(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength + 0x100);
     gDvm.gcHeap->cardTableBase = NULL;
     gDvm.gcHeap->cardTableLength = 0;
 }
@@ -190,8 +192,9 @@ void dvmClearCardTable()
 bool dvmIsValidCard(const u1 *cardAddr)
 {
     GcHeap *h = gDvm.gcHeap;
-    return cardAddr >= h->cardTableBase &&
-        cardAddr < &h->cardTableBase[h->cardTableLength];
+    u1* begin = h->cardTableBase + h->cardTableOffset;
+    u1* end = &begin[h->cardTableLength];
+    return cardAddr >= begin && cardAddr < end;
 }
 
 /*
@@ -300,16 +303,15 @@ static void dumpReferencesVisitor(void *pObj, void *arg)
     }
 }
 
-static void dumpReferencesCallback(void *ptr, void *arg)
+static void dumpReferencesCallback(Object *obj, void *arg)
 {
-    Object *obj = (Object *)arg;
-    if (ptr == obj) {
+    if (obj == (Object *)arg) {
         return;
     }
-    dvmVisitObject(dumpReferencesVisitor, (Object *)ptr, &obj);
-    if (obj == NULL) {
-        LOGD("Found %p in the heap @ %p", arg, ptr);
-        dvmDumpObject((Object *)ptr);
+    dvmVisitObject(dumpReferencesVisitor, obj, &arg);
+    if (arg == NULL) {
+        LOGD("Found %p in the heap @ %p", arg, obj);
+        dvmDumpObject(obj);
     }
 }
 
@@ -395,9 +397,8 @@ static bool isPushedOnMarkStack(const Object *obj)
  * references specially as it is permissible for these objects to be
  * gray and on an unmarked card.
  */
-static void verifyCardTableCallback(void *ptr, void *arg)
+static void verifyCardTableCallback(Object *obj, void *arg)
 {
-    Object *obj = (Object *)ptr;
     WhiteReferenceCounter ctx = { (HeapBitmap *)arg, 0 };
 
     dvmVisitObject(countWhiteReferenceVisitor, obj, &ctx);

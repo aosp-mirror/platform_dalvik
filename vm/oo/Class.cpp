@@ -509,7 +509,6 @@ static void dumpClassPath(const ClassPathEntry* cpe)
         const char* kindStr;
 
         switch (cpe->kind) {
-        case kCpeDir:       kindStr = "dir";    break;
         case kCpeJar:       kindStr = "jar";    break;
         case kCpeDex:       kindStr = "dex";    break;
         default:            kindStr = "???";    break;
@@ -572,8 +571,7 @@ static void freeCpeArray(ClassPathEntry* cpe)
             dvmRawDexFileFree((RawDexFile*) cpe->ptr);
             break;
         default:
-            /* e.g. kCpeDir */
-            assert(cpe->ptr == NULL);
+            assert(false);
             break;
         }
 
@@ -585,6 +583,18 @@ static void freeCpeArray(ClassPathEntry* cpe)
 }
 
 /*
+ * Get the filename suffix of the given file (everything after the
+ * last "." if any, or "<none>" if there's no apparent suffix). The
+ * passed-in buffer will always be '\0' terminated.
+ */
+static void getFileNameSuffix(const char* fileName, char* suffixBuf, size_t suffixBufLen)
+{
+    const char* lastDot = strrchr(fileName, '.');
+
+    strlcpy(suffixBuf, (lastDot == NULL) ? "<none>" : (lastDot + 1), suffixBufLen);
+}
+
+/*
  * Prepare a ClassPathEntry struct, which at this point only has a valid
  * filename.  We need to figure out what kind of file it is, and for
  * everything other than directories we need to open it up and see
@@ -592,43 +602,37 @@ static void freeCpeArray(ClassPathEntry* cpe)
  */
 static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
 {
-    JarFile* pJarFile = NULL;
-    RawDexFile* pRawDexFile = NULL;
     struct stat sb;
-    int cc;
 
-    cc = stat(cpe->fileName, &sb);
-    if (cc < 0) {
+    if (stat(cpe->fileName, &sb) < 0) {
         LOGD("Unable to stat classpath element '%s'", cpe->fileName);
         return false;
     }
     if (S_ISDIR(sb.st_mode)) {
-        /*
-         * The directory will usually have .class files in subdirectories,
-         * which may be a few levels down.  Doing a recursive scan and
-         * caching the results would help us avoid hitting the filesystem
-         * on misses.  Whether or not this is of measureable benefit
-         * depends on a number of factors, but most likely it is not
-         * worth the effort (especially since most of our stuff will be
-         * in DEX or JAR).
-         */
-        cpe->kind = kCpeDir;
-        assert(cpe->ptr == NULL);
-        return true;
+        LOGE("Directory classpath elements are not supported: %s", cpe->fileName);
+        return false;
     }
 
-    if (dvmJarFileOpen(cpe->fileName, NULL, &pJarFile, isBootstrap) == 0) {
-        cpe->kind = kCpeJar;
-        cpe->ptr = pJarFile;
-        return true;
-    }
+    char suffix[10];
+    getFileNameSuffix(cpe->fileName, suffix, sizeof(suffix));
 
-    // TODO: do we still want to support "raw" DEX files in the classpath?
-    if (dvmRawDexFileOpen(cpe->fileName, NULL, &pRawDexFile, isBootstrap) == 0)
-    {
-        cpe->kind = kCpeDex;
-        cpe->ptr = pRawDexFile;
-        return true;
+    if ((strcmp(suffix, "jar") == 0) || (strcmp(suffix, "zip") == 0) ||
+            (strcmp(suffix, "apk") == 0)) {
+        JarFile* pJarFile = NULL;
+        if (dvmJarFileOpen(cpe->fileName, NULL, &pJarFile, isBootstrap) == 0) {
+            cpe->kind = kCpeJar;
+            cpe->ptr = pJarFile;
+            return true;
+        }
+    } else if (strcmp(suffix, "dex") == 0) {
+        RawDexFile* pRawDexFile = NULL;
+        if (dvmRawDexFileOpen(cpe->fileName, NULL, &pRawDexFile, isBootstrap) == 0) {
+            cpe->kind = kCpeDex;
+            cpe->ptr = pRawDexFile;
+            return true;
+        }
+    } else {
+        LOGE("Unknown type suffix '%s'", suffix);
     }
 
     LOGD("Unable to process classpath element '%s'", cpe->fileName);
@@ -729,10 +733,12 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
     }
     assert(idx <= count);
     if (idx == 0 && !gDvm.optimizing) {
+        /*
+         * There's no way the vm will be doing anything if this is the
+         * case, so just bail out (reasonably) gracefully.
+         */
         LOGE("No valid entries found in bootclasspath '%s'", pathStr);
-        free(cpe);
-        cpe = NULL;
-        goto bail;
+        dvmAbort();
     }
 
     LOGVV("  (filled %d of %d slots)", idx, count);
@@ -771,10 +777,6 @@ static DvmDex* searchBootPathForClass(const char* descriptor,
         //LOGV("+++  checking '%s' (%d)", cpe->fileName, cpe->kind);
 
         switch (cpe->kind) {
-        case kCpeDir:
-            LOGW("Directory entries ('%s') not supported in bootclasspath",
-                cpe->fileName);
-            break;
         case kCpeJar:
             {
                 JarFile* pJarFile = (JarFile*) cpe->ptr;
@@ -898,11 +900,6 @@ StringObject* dvmGetBootPathResource(const char* name, int idx)
     char urlBuf[strlen(name) + strlen(cpe->fileName) + kUrlOverhead +1];
 
     switch (cpe->kind) {
-    case kCpeDir:
-        sprintf(urlBuf, "file://%s/%s", cpe->fileName, name);
-        if (access(urlBuf+7, F_OK) != 0)
-            goto bail;
-        break;
     case kCpeJar:
         {
             JarFile* pJarFile = (JarFile*) cpe->ptr;

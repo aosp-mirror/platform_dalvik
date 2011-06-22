@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_ALLOC_VISITINLINES
-#define _DALVIK_ALLOC_VISITINLINES
+#ifndef DALVIK_ALLOC_VISITINLINES_H_
+#define DALVIK_ALLOC_VISITINLINES_H_
 
 /*
  * Visits the instance fields of a class or data object.
@@ -170,4 +170,4 @@ static void visitObject(Visitor *visitor, Object *obj, void *arg)
     }
 }
 
-#endif /* _DALVIK_ALLOC_VISITINLINES */
+#endif  // DALVIK_ALLOC_VISITINLINES_H_

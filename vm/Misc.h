@@ -17,12 +17,16 @@
 /*
  * Miscellaneous utility functions.
  */
-#ifndef _DALVIK_MISC
-#define _DALVIK_MISC
+#ifndef DALVIK_MISC_H_
+#define DALVIK_MISC_H_
 
+#include <string>
+
+#include <stdarg.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
+
 #include "Inlines.h"
 
 /*
@@ -141,7 +145,15 @@ char* dvmDotToSlash(const char* str);
  * of 'descriptor'. So "I" would be "int", "[[I" would be "int[][]",
  * "[Ljava/lang/String;" would be "java.lang.String[]", and so forth.
  */
-extern "C" char* dvmHumanReadableDescriptor(const char* descriptor);
+std::string dvmHumanReadableDescriptor(const char* descriptor);
+
+/**
+ * Returns a human-readable string form of the name of the class of
+ * the given object. So given a java.lang.String, the output would
+ * be "java.lang.String". Given an array of int, the output would be "int[]".
+ * Given String.class, the output would be "java.lang.Class<java.lang.String>".
+ */
+std::string dvmHumanReadableType(const Object* obj);
 
 /*
  * Return a newly-allocated string for the "dot version" of the class
@@ -300,4 +312,16 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid);
  */
 const char* dvmPathToAbsolutePortion(const char* path);
 
-#endif /*_DALVIK_MISC*/
+/**
+ * Returns a string corresponding to printf-like formatting of the arguments.
+ */
+std::string StringPrintf(const char* fmt, ...)
+        __attribute__((__format__ (__printf__, 1, 2)));
+
+/**
+ * Appends a printf-like formatting of the arguments to 'dst'.
+ */
+void StringAppendF(std::string* dst, const char* fmt, ...)
+        __attribute__((__format__ (__printf__, 2, 3)));
+
+#endif  // DALVIK_MISC_H_

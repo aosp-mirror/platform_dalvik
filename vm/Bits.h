@@ -18,8 +18,8 @@
  *
  * These get inlined, so prefer small size over maximum speed.
  */
-#ifndef _DALVIK_BITS
-#define _DALVIK_BITS
+#ifndef DALVIK_BITS_H_
+#define DALVIK_BITS_H_
 
 #include "Common.h"
 #include "Inlines.h"
@@ -355,4 +355,4 @@ INLINE void setUtf8String(u1* buf, const u1* str)
     memcpy(buf + sizeof(u4), str, strLen);
 }
 
-#endif /*_DALVIK_BITS*/
+#endif  // DALVIK_BITS_H_

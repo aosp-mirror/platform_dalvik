@@ -16,8 +16,8 @@
 /*
  * Simple linear memory allocator.
  */
-#ifndef _DALVIK_LINEARALLOC
-#define _DALVIK_LINEARALLOC
+#ifndef DALVIK_LINEARALLOC_H_
+#define DALVIK_LINEARALLOC_H_
 
 /*
  * If this is set, we create additional data structures and make many
@@ -117,4 +117,4 @@ void dvmLinearAllocDump(Object* classLoader);
  */
 bool dvmLinearAllocContains(const void* start, size_t length);
 
-#endif /*_DALVIK_LINEARALLOC*/
+#endif  // DALVIK_LINEARALLOC_H_

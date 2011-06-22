@@ -26,10 +26,12 @@
  * accessed through a Thread field).  May need to pass it around for some
  * of the early initialization functions.
  */
-#ifndef _DALVIK_GLOBALS
-#define _DALVIK_GLOBALS
+#ifndef DALVIK_GLOBALS_H_
+#define DALVIK_GLOBALS_H_
 
-#include <cutils/array.h>
+#include <string>
+#include <vector>
+
 #include <stdarg.h>
 #include <pthread.h>
 
@@ -67,8 +69,7 @@ enum RegisterMapMode {
 /*
  * All fields are initialized to zero.
  *
- * Storage allocated here must be freed by a subsystem shutdown function or
- * from within freeGlobals().
+ * Storage allocated here must be freed by a subsystem shutdown function.
  */
 struct DvmGlobals {
     /*
@@ -156,7 +157,7 @@ struct DvmGlobals {
      * This is effectively a set, where later entries override earlier
      * ones.
      */
-    Array*      properties;
+    std::vector<std::string>* properties;
 
     /*
      * Where the VM goes to find system classes.
@@ -691,6 +692,8 @@ struct DvmGlobals {
     pthread_t       stdioConverterHandle;
     pthread_mutex_t stdioConverterLock;
     pthread_cond_t  stdioConverterCond;
+    int             stdoutPipe[2];
+    int             stderrPipe[2];
 
     /*
      * pid of the system_server process. We track it so that when system server
@@ -963,4 +966,4 @@ struct DvmJniGlobals {
 
 extern struct DvmJniGlobals gDvmJni;
 
-#endif /*_DALVIK_GLOBALS*/
+#endif  // DALVIK_GLOBALS_H_

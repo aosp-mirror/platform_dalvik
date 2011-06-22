@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * Support for System.getProperties().
- */
-#ifndef _DALVIK_PROPERTIES
-#define _DALVIK_PROPERTIES
 
-/*
- * Initialization.
- */
-bool dvmPropertiesStartup(void);
-void dvmPropertiesShutdown(void);
+#include "os.h"
 
-#endif /*_DALVIK_PROPERTIES*/
+#include "Dalvik.h"
+
+int os_raiseThreadPriority()
+{
+    return 0;
+}
+
+void os_lowerThreadPriority(int oldThreadPriority)
+{
+    // Do nothing.
+}
+
+void os_changeThreadPriority(Thread* thread, int newPriority)
+{
+    // Do nothing.
+}
+
+int os_getThreadPriorityFromSystem()
+{
+    return THREAD_NORM_PRIORITY;
+}

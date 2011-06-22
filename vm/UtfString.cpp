@@ -211,24 +211,20 @@ u4 dvmComputeStringHash(StringObject* strObj) {
     }
     int len = dvmGetFieldInt(strObj, STRING_FIELDOFF_COUNT);
     int offset = dvmGetFieldInt(strObj, STRING_FIELDOFF_OFFSET);
-    ArrayObject* chars = (ArrayObject*) dvmGetFieldObject(strObj,
-                                STRING_FIELDOFF_VALUE);
+    ArrayObject* chars =
+            (ArrayObject*) dvmGetFieldObject(strObj, STRING_FIELDOFF_VALUE);
     hashCode = computeUtf16Hash((u2*)(void*)chars->contents + offset, len);
     dvmSetFieldInt(strObj, STRING_FIELDOFF_HASHCODE, hashCode);
     return hashCode;
 }
 
-/*
- * Create a new java/lang/String object, using the string data in "utf8Str".
- *
- * The caller must call dvmReleaseTrackedAlloc() on the return value.
- *
- * Returns NULL and throws an exception on failure.
- */
-StringObject* dvmCreateStringFromCstr(const char* utf8Str)
-{
+StringObject* dvmCreateStringFromCstr(const char* utf8Str) {
     assert(utf8Str != NULL);
     return dvmCreateStringFromCstrAndLength(utf8Str, dvmUtf8Len(utf8Str));
+}
+
+StringObject* dvmCreateStringFromCstr(const std::string& utf8Str) {
+    return dvmCreateStringFromCstr(utf8Str.c_str());
 }
 
 /*
@@ -285,101 +281,66 @@ StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
  *
  * Returns NULL if the object is NULL.
  */
-char* dvmCreateCstrFromString(StringObject* jstr)
+char* dvmCreateCstrFromString(const StringObject* jstr)
 {
-    char* newStr;
-    ArrayObject* chars;
-    int len, byteLen, offset;
-    const u2* data;
-
     assert(gDvm.classJavaLangString != NULL);
-
-    if (jstr == NULL)
+    if (jstr == NULL) {
         return NULL;
+    }
 
-    len = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
-    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
-    chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                STRING_FIELDOFF_VALUE);
-    data = (const u2*)(void*)chars->contents + offset;
+    int len = dvmGetFieldInt(jstr, STRING_FIELDOFF_COUNT);
+    int offset = dvmGetFieldInt(jstr, STRING_FIELDOFF_OFFSET);
+    ArrayObject* chars =
+            (ArrayObject*) dvmGetFieldObject(jstr, STRING_FIELDOFF_VALUE);
+    const u2* data = (const u2*)(void*)chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
-    byteLen = utf16_utf8ByteLen(data, len);
-    newStr = (char*) malloc(byteLen+1);
-    if (newStr == NULL)
+    int byteLen = utf16_utf8ByteLen(data, len);
+    char* newStr = (char*) malloc(byteLen+1);
+    if (newStr == NULL) {
         return NULL;
+    }
     convertUtf16ToUtf8(newStr, data, len);
 
     return newStr;
 }
 
-/*
- * Create a UTF-8 C string from a region of a java/lang/String.  (Used by
- * the JNI GetStringUTFRegion call.)
- */
-void dvmCreateCstrFromStringRegion(StringObject* jstr, int start, int len,
-    char* buf)
+void dvmGetStringUtfRegion(const StringObject* jstr,
+        int start, int len, char* buf)
 {
-    const u2* data;
-
-    data = dvmStringChars(jstr) + start;
+    const u2* data = jstr->chars() + start;
     convertUtf16ToUtf8(buf, data, len);
 }
 
-/*
- * Compute the length, in modified UTF-8, of a java/lang/String object.
- *
- * Does not include the terminating null byte.
- */
-int dvmStringUtf8ByteLen(StringObject* jstr)
+int StringObject::utfLength() const
 {
-    ArrayObject* chars;
-    int len, offset;
-    const u2* data;
-
     assert(gDvm.classJavaLangString != NULL);
 
-    if (jstr == NULL)
-        return 0;       // should we throw something?  assert?
-
-    len = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
-    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
-    chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                STRING_FIELDOFF_VALUE);
-    data = (const u2*)(void*)chars->contents + offset;
+    int len = dvmGetFieldInt(this, STRING_FIELDOFF_COUNT);
+    int offset = dvmGetFieldInt(this, STRING_FIELDOFF_OFFSET);
+    ArrayObject* chars =
+            (ArrayObject*) dvmGetFieldObject(this, STRING_FIELDOFF_VALUE);
+    const u2* data = (const u2*)(void*)chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
     return utf16_utf8ByteLen(data, len);
 }
 
-/*
- * Get the string's length.
- */
-int dvmStringLen(StringObject* jstr)
+int StringObject::length() const
 {
-    return dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
+    return dvmGetFieldInt(this, STRING_FIELDOFF_COUNT);
 }
 
-/*
- * Get the char[] object from the String.
- */
-ArrayObject* dvmStringCharArray(StringObject* jstr)
+ArrayObject* StringObject::array() const
 {
-    return (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                STRING_FIELDOFF_VALUE);
+    return (ArrayObject*) dvmGetFieldObject(this, STRING_FIELDOFF_VALUE);
 }
 
-/*
- * Get the string's data.
- */
-const u2* dvmStringChars(StringObject* jstr)
+const u2* StringObject::chars() const
 {
-    ArrayObject* chars;
-    int offset;
-
-    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
-    chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                STRING_FIELDOFF_VALUE);
+    int offset = dvmGetFieldInt(this, STRING_FIELDOFF_OFFSET);
+    ArrayObject* chars =
+            (ArrayObject*) dvmGetFieldObject(this, STRING_FIELDOFF_VALUE);
     return (const u2*)(void*)chars->contents + offset;
 }
 
@@ -395,24 +356,22 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
 {
     const StringObject* strObj1 = (const StringObject*) vstrObj1;
     const StringObject* strObj2 = (const StringObject*) vstrObj2;
-    ArrayObject* chars1;
-    ArrayObject* chars2;
-    int len1, len2, offset1, offset2;
 
     assert(gDvm.classJavaLangString != NULL);
 
     /* get offset and length into char array; all values are in 16-bit units */
-    len1 = dvmGetFieldInt((Object*) strObj1, STRING_FIELDOFF_COUNT);
-    offset1 = dvmGetFieldInt((Object*) strObj1, STRING_FIELDOFF_OFFSET);
-    len2 = dvmGetFieldInt((Object*) strObj2, STRING_FIELDOFF_COUNT);
-    offset2 = dvmGetFieldInt((Object*) strObj2, STRING_FIELDOFF_OFFSET);
-    if (len1 != len2)
+    int len1 = dvmGetFieldInt(strObj1, STRING_FIELDOFF_COUNT);
+    int offset1 = dvmGetFieldInt(strObj1, STRING_FIELDOFF_OFFSET);
+    int len2 = dvmGetFieldInt(strObj2, STRING_FIELDOFF_COUNT);
+    int offset2 = dvmGetFieldInt(strObj2, STRING_FIELDOFF_OFFSET);
+    if (len1 != len2) {
         return len1 - len2;
+    }
 
-    chars1 = (ArrayObject*) dvmGetFieldObject((Object*) strObj1,
-                                STRING_FIELDOFF_VALUE);
-    chars2 = (ArrayObject*) dvmGetFieldObject((Object*) strObj2,
-                                STRING_FIELDOFF_VALUE);
+    ArrayObject* chars1 =
+            (ArrayObject*) dvmGetFieldObject(strObj1, STRING_FIELDOFF_VALUE);
+    ArrayObject* chars2 =
+            (ArrayObject*) dvmGetFieldObject(strObj2, STRING_FIELDOFF_VALUE);
 
     /* damage here actually indicates a broken java/lang/String */
     assert(offset1 + len1 <= (int) chars1->length);
@@ -423,31 +382,23 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
                   len1 * sizeof(u2));
 }
 
-ArrayObject* dvmCreateStringArray(const char** strings, size_t length)
-{
+ArrayObject* dvmCreateStringArray(const std::vector<std::string>& strings) {
     Thread* self = dvmThreadSelf();
 
-    /*
-     * Allocate an array to hold the String objects.
-     */
-    ClassObject* elementClass =
-        dvmFindArrayClassForElement(gDvm.classJavaLangString);
-    ArrayObject* stringArray =
-        dvmAllocArrayByClass(elementClass, length, ALLOC_DEFAULT);
+    // Allocate an array to hold the String objects.
+    ClassObject* elementClass = dvmFindArrayClassForElement(gDvm.classJavaLangString);
+    ArrayObject* stringArray = dvmAllocArrayByClass(elementClass, strings.size(), ALLOC_DEFAULT);
     if (stringArray == NULL) {
-        /* probably OOM */
+        // Probably OOM.
         assert(dvmCheckException(self));
         return NULL;
     }
 
-    /*
-     * Create the individual String objects and add them to the array.
-     */
-    for (size_t i = 0; i < length; i++) {
-        Object* str =
-            (Object*) dvmCreateStringFromCstr(strings[i]);
+    // Create the individual String objects and add them to the array.
+    for (size_t i = 0; i < strings.size(); i++) {
+        Object* str = (Object*) dvmCreateStringFromCstr(strings[i]);
         if (str == NULL) {
-            /* probably OOM; drop out now */
+            // Probably OOM; drop out now.
             assert(dvmCheckException(self));
             dvmReleaseTrackedAlloc((Object*) stringArray, self);
             return NULL;

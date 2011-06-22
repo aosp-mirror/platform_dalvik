@@ -34,5 +34,10 @@ endif  # !TARGET_SIMULATOR
 
 LOCAL_STATIC_LIBRARIES += libdex
 
+ifneq ($(TARGET_SIMULATOR),true)
+  LOCAL_C_INCLUDES += external/stlport/stlport bionic/ bionic/libstdc++/include
+  LOCAL_SHARED_LIBRARIES += libstlport
+endif
+
 # Don't install on any build by default
 LOCAL_MODULE_TAGS := optional

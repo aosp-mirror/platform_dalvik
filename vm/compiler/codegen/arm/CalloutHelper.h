@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "Dalvik.h"
+#ifndef DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H_
+#define DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H_
 
-#ifndef _DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H
-#define _DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H
+#include "Dalvik.h"
 
 /*
  * Declare/comment prototypes of all native callout functions invoked by the
@@ -121,4 +121,4 @@ extern "C" double sqrt(double x);  // INLINE_MATH_SQRT
  *      dvmLockObject           // MONITOR_ENTER
  */
 
-#endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H */
+#endif  // DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H_

@@ -18,8 +18,8 @@
  * Functions to deal with class definition structures in DEX files
  */
 
-#ifndef _LIBDEX_DEXCLASS
-#define _LIBDEX_DEXCLASS
+#ifndef LIBDEX_DEXCLASS_H_
+#define LIBDEX_DEXCLASS_H_
 
 #include "DexFile.h"
 #include "Leb128.h"
@@ -159,4 +159,4 @@ DEX_INLINE void dexReadClassDataMethod(const u1** pData, DexMethod* pMethod,
     *lastIndex = index;
 }
 
-#endif
+#endif  // LIBDEX_DEXCLASS_H_

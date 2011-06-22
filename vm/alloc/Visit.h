@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_ALLOC_VISIT
-#define _DALVIK_ALLOC_VISIT
+#ifndef DALVIK_ALLOC_VISIT_H_
+#define DALVIK_ALLOC_VISIT_H_
 
 #include "Dalvik.h"
 
@@ -58,4 +58,4 @@ void dvmVisitObject(Visitor *visitor, Object *obj, void *arg);
  */
 void dvmVisitRoots(RootVisitor *visitor, void *arg);
 
-#endif /* _DALVIK_ALLOC_VISIT */
+#endif  // DALVIK_ALLOC_VISIT_H_

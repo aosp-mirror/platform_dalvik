@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_COMPILER_UTILITY
-#define _DALVIK_VM_COMPILER_UTILITY
+#ifndef DALVIK_VM_COMPILER_UTILITY_H_
+#define DALVIK_VM_COMPILER_UTILITY_H_
 
 #include "Dalvik.h"
 
@@ -76,4 +76,4 @@ void dvmGetBlockName(struct BasicBlock *bb, char *name);
 int dvmCompilerCacheFlush(long start, long end, long flags);
 
 
-#endif /* _DALVIK_COMPILER_UTILITY */
+#endif  // DALVIK_COMPILER_UTILITY_H_

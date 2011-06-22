@@ -19,8 +19,8 @@
  * You should follow the JNI function naming conventions, but prefix with
  * "Dalvik_" instead of "Java_".
  */
-#ifndef _DALVIK_NATIVE
-#define _DALVIK_NATIVE
+#ifndef DALVIK_NATIVE_H_
+#define DALVIK_NATIVE_H_
 
 /*
  * Method description; equivalent to a JNI struct.
@@ -109,4 +109,4 @@ void dvmLogNativeMethodEntry(const Method* method, const u4* newFp);
 void dvmLogNativeMethodExit(const Method* method, struct Thread* self,
         const JValue retval);
 
-#endif /*_DALVIK_NATIVE*/
+#endif  // DALVIK_NATIVE_H_

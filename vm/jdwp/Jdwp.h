@@ -21,8 +21,8 @@
  * attempts to remain independent of VM innards (e.g. it doesn't access VM
  * data structures directly).  All calls go through Debugger.c.
  */
-#ifndef _DALVIK_JDWP_JDWP
-#define _DALVIK_JDWP_JDWP
+#ifndef DALVIK_JDWP_JDWP_H_
+#define DALVIK_JDWP_JDWP_H_
 
 #include "jdwp/JdwpConstants.h"
 #include "jdwp/ExpandBuf.h"
@@ -233,4 +233,4 @@ bool dvmJdwpPostVMDeath(JdwpState* state);
 void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
     int iovcnt);
 
-#endif /*_DALVIK_JDWP_JDWP*/
+#endif  // DALVIK_JDWP_JDWP_H_

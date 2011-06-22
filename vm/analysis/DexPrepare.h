@@ -17,8 +17,8 @@
 /*
  * DEX preparation declarations.
  */
-#ifndef _DALVIK_DEXPREPARE
-#define _DALVIK_DEXPREPARE
+#ifndef DALVIK_DEXPREPARE_H_
+#define DALVIK_DEXPREPARE_H_
 
 /*
  * Global DEX optimizer control.  Determines the circumstances in which we
@@ -134,4 +134,4 @@ bool dvmPrepareDexInMemory(u1* addr, size_t len, DvmDex** ppDvmDex);
 bool dvmCreateInlineSubsTable(void);
 void dvmFreeInlineSubsTable(void);
 
-#endif /*_DALVIK_DEXPREPARE*/
+#endif  // DALVIK_DEXPREPARE_H_

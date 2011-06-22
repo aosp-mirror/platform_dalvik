@@ -17,8 +17,8 @@
 /*
  * Dalvik interpreter public definitions.
  */
-#ifndef _DALVIK_INTERP_INTERP
-#define _DALVIK_INTERP_INTERP
+#ifndef DALVIK_INTERP_INTERP_H_
+#define DALVIK_INTERP_INTERP_H_
 
 /*
  * Stash the dalvik PC in the frame.  Called  during interpretation.
@@ -115,4 +115,4 @@ extern void* dvmAsmInstructionStart[];
 extern void* dvmAsmAltInstructionStart[];
 #endif
 
-#endif /*_DALVIK_INTERP_INTERP*/
+#endif  // DALVIK_INTERP_INTERP_H_

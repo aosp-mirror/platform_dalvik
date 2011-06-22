@@ -16,8 +16,8 @@
 /*
  * Jit control
  */
-#ifndef _DALVIK_INTERP_JIT
-#define _DALVIK_INTERP_JIT
+#ifndef DALVIK_INTERP_JIT_H_
+#define DALVIK_INTERP_JIT_H_
 
 #include "InterpDefs.h"
 #include "mterp/common/jit-config.h"
@@ -177,4 +177,4 @@ void dvmJitUpdateThreadStateAll(void);
 void dvmJitResumeTranslation(Thread* self, const u2* pc, const u4* fp);
 }
 
-#endif /*_DALVIK_INTERP_JIT*/
+#endif  // DALVIK_INTERP_JIT_H_

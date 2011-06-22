@@ -17,8 +17,8 @@
 /*
  * Android's method call profiling goodies.
  */
-#ifndef _DALVIK_PROFILE
-#define _DALVIK_PROFILE
+#ifndef DALVIK_PROFILE_H_
+#define DALVIK_PROFILE_H_
 
 #ifndef NOT_VM      /* for utilities that sneakily include this file */
 
@@ -171,4 +171,4 @@ enum {
 #define METHOD_ACTION(_method)  (((unsigned int)(_method)) & METHOD_ACTION_MASK)
 #define METHOD_COMBINE(_method, _action)    ((_method) | (_action))
 
-#endif /*_DALVIK_PROFILE*/
+#endif  // DALVIK_PROFILE_H_

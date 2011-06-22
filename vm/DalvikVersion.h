@@ -17,8 +17,8 @@
 /*
  * Dalvik VM version info.
  */
-#ifndef _DALVIK_VERSION
-#define _DALVIK_VERSION
+#ifndef DALVIK_VERSION_H_
+#define DALVIK_VERSION_H_
 
 /*
  * The version we show to tourists.
@@ -34,4 +34,4 @@
  */
 #define DALVIK_VM_BUILD         27
 
-#endif /*_DALVIK_VERSION*/
+#endif  // DALVIK_VERSION_H_

@@ -17,8 +17,8 @@
 /*
  * System utilities.
  */
-#ifndef _LIBDEX_SYSUTIL
-#define _LIBDEX_SYSUTIL
+#ifndef LIBDEX_SYSUTIL_H_
+#define LIBDEX_SYSUTIL_H_
 
 #include <sys/types.h>
 
@@ -119,4 +119,4 @@ int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg);
  */
 int sysCopyFileToFile(int outFd, int inFd, size_t count);
 
-#endif /*_DALVIK_SYSUTIL*/
+#endif  // LIBDEX_SYSUTIL_H_

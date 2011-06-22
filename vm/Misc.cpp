@@ -218,8 +218,7 @@ char* dvmDotToSlash(const char* str)
     return newStr;
 }
 
-char* dvmHumanReadableDescriptor(const char* descriptor)
-{
+std::string dvmHumanReadableDescriptor(const char* descriptor) {
     // Count the number of '['s to get the dimensionality.
     const char* c = descriptor;
     size_t dim = 0;
@@ -228,11 +227,9 @@ char* dvmHumanReadableDescriptor(const char* descriptor)
         c++;
     }
 
-    // Work out how large the result will be.
-    size_t resultLength;
+    // Reference or primitive?
     if (*c == 'L') {
         // "[[La/b/C;" -> "a.b.C[][]".
-        resultLength = strlen(c) - 2 + 2*dim;
         c++; // Skip the 'L'.
     } else {
         // "[[B" -> "byte[][]".
@@ -247,34 +244,42 @@ char* dvmHumanReadableDescriptor(const char* descriptor)
         case 'J': c = "long;"; break;
         case 'S': c = "short;"; break;
         case 'Z': c = "boolean;"; break;
-        default: return strdup(descriptor);
+        default: return descriptor;
         }
-        resultLength = strlen(c) - 1 + 2*dim;
-    }
-
-    // Allocate enough space.
-    char* result = (char*)malloc(resultLength + 1);
-    if (result == NULL) {
-        return NULL;
     }
 
     // At this point, 'c' is a string of the form "fully/qualified/Type;"
     // or "primitive;". Rewrite the type with '.' instead of '/':
+    std::string result;
     const char* p = c;
-    char* q = result;
     while (*p != ';') {
         char ch = *p++;
         if (ch == '/') {
           ch = '.';
         }
-        *q++ = ch;
+        result.push_back(ch);
     }
     // ...and replace the semicolon with 'dim' "[]" pairs:
     while (dim--) {
-        *q++ = '[';
-        *q++ = ']';
+        result += "[]";
     }
-    *q = '\0';
+    return result;
+}
+
+std::string dvmHumanReadableType(const Object* obj)
+{
+    if (obj == NULL) {
+        return "(null)";
+    }
+    if (obj->clazz == NULL) {
+        /* should only be possible right after a plain dvmMalloc() */
+        return "(raw)";
+    }
+    std::string result(dvmHumanReadableDescriptor(obj->clazz->descriptor));
+    if (dvmIsClassObject(obj)) {
+        const ClassObject* clazz = reinterpret_cast<const ClassObject*>(obj);
+        result += "<" + dvmHumanReadableDescriptor(clazz->descriptor) + ">";
+    }
     return result;
 }
 
@@ -726,4 +731,66 @@ const char* dvmPathToAbsolutePortion(const char* path) {
     }
 
     return NULL;
+}
+
+// From RE2.
+static void StringAppendV(std::string* dst, const char* format, va_list ap) {
+    // First try with a small fixed size buffer
+    char space[1024];
+
+    // It's possible for methods that use a va_list to invalidate
+    // the data in it upon use.  The fix is to make a copy
+    // of the structure before using it and use that copy instead.
+    va_list backup_ap;
+    va_copy(backup_ap, ap);
+    int result = vsnprintf(space, sizeof(space), format, backup_ap);
+    va_end(backup_ap);
+
+    if ((result >= 0) && ((size_t) result < sizeof(space))) {
+        // It fit
+        dst->append(space, result);
+        return;
+    }
+
+    // Repeatedly increase buffer size until it fits
+    int length = sizeof(space);
+    while (true) {
+        if (result < 0) {
+            // Older behavior: just try doubling the buffer size
+            length *= 2;
+        } else {
+            // We need exactly "result+1" characters
+            length = result+1;
+        }
+        char* buf = new char[length];
+
+        // Restore the va_list before we use it again
+        va_copy(backup_ap, ap);
+        result = vsnprintf(buf, length, format, backup_ap);
+        va_end(backup_ap);
+
+        if ((result >= 0) && (result < length)) {
+            // It fit
+            dst->append(buf, result);
+            delete[] buf;
+            return;
+        }
+        delete[] buf;
+    }
+}
+
+std::string StringPrintf(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    std::string result;
+    StringAppendV(&result, fmt, ap);
+    va_end(ap);
+    return result;
+}
+
+void StringAppendF(std::string* dst, const char* format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    StringAppendV(dst, format, ap);
+    va_end(ap);
 }

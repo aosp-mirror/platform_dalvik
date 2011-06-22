@@ -241,14 +241,12 @@ private:
 #define kPinComplainThreshold       10
 
 bool dvmJniStartup() {
-    if (!dvmInitIndirectRefTable(&gDvm.jniGlobalRefTable,
-                                 kGlobalRefsTableInitialSize,
+    if (!gDvm.jniGlobalRefTable.init(kGlobalRefsTableInitialSize,
                                  kGlobalRefsTableMaxSize,
                                  kIndirectKindGlobal)) {
         return false;
     }
-    if (!dvmInitIndirectRefTable(&gDvm.jniWeakGlobalRefTable,
-                                 kWeakGlobalRefsTableInitialSize,
+    if (!gDvm.jniWeakGlobalRefTable.init(kWeakGlobalRefsTableInitialSize,
                                  kGlobalRefsTableMaxSize,
                                  kIndirectKindWeakGlobal)) {
         return false;
@@ -269,8 +267,8 @@ bool dvmJniStartup() {
 }
 
 void dvmJniShutdown() {
-    dvmClearIndirectRefTable(&gDvm.jniGlobalRefTable);
-    dvmClearIndirectRefTable(&gDvm.jniWeakGlobalRefTable);
+    gDvm.jniGlobalRefTable.destroy();
+    gDvm.jniWeakGlobalRefTable.destroy();
     dvmClearReferenceTable(&gDvm.jniPinRefTable);
 }
 
@@ -311,30 +309,24 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
         return NULL;
     }
 
-    Object* result;
-
-    switch (dvmGetIndirectRefType(jobj)) {
+    switch (indirectRefKind(jobj)) {
     case kIndirectKindLocal:
-        {
-            IndirectRefTable* pRefTable = getLocalRefTable(env);
-            result = dvmGetFromIndirectRefTable(pRefTable, jobj);
-        }
-        break;
+        return getLocalRefTable(env)->get(jobj);
     case kIndirectKindGlobal:
         {
             // TODO: find a way to avoid the mutex activity here
             IndirectRefTable* pRefTable = &gDvm.jniGlobalRefTable;
             ScopedPthreadMutexLock lock(&gDvm.jniGlobalRefLock);
-            result = dvmGetFromIndirectRefTable(pRefTable, jobj);
+            return pRefTable->get(jobj);
         }
-        break;
     case kIndirectKindWeakGlobal:
         {
-            // TODO: find a way to avoid the mutex activity here
-            IndirectRefTable* pRefTable = &gDvm.jniWeakGlobalRefTable;
+            Object* result;
             {
+                // TODO: find a way to avoid the mutex activity here
+                IndirectRefTable* pRefTable = &gDvm.jniWeakGlobalRefTable;
                 ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
-                result = dvmGetFromIndirectRefTable(pRefTable, jobj);
+                result = pRefTable->get(jobj);
             }
             /*
              * TODO: this is a temporary workaround for broken weak global
@@ -348,17 +340,14 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
                 LOGW("Warning: used weak global ref hack");
                 result = NULL;
             }
+            return result;
         }
-        break;
     case kIndirectKindInvalid:
     default:
         LOGW("Invalid indirect reference %p in decodeIndirectRef", jobj);
         dvmAbort();
-        result = kInvalidIndirectRefObject;
-        break;
+        return kInvalidIndirectRefObject;
     }
-
-    return result;
 }
 
 /*
@@ -381,19 +370,22 @@ static jobject addLocalReference(JNIEnv* env, Object* obj) {
     IndirectRefTable* pRefTable = getLocalRefTable(env);
     void* curFrame = ((JNIEnvExt*)env)->self->interpSave.curFrame;
     u4 cookie = SAVEAREA_FROM_FP(curFrame)->xtra.localRefCookie;
-    jobject jobj = (jobject) dvmAddToIndirectRefTable(pRefTable, cookie, obj);
+    jobject jobj = (jobject) pRefTable->add(cookie, obj);
     if (jobj == NULL) {
-        dvmDumpIndirectRefTable(pRefTable, "JNI local");
-        LOGE("Failed adding to JNI local ref table (has %d entries)",
-            (int) dvmIndirectRefTableEntries(pRefTable));
+        pRefTable->dump("JNI local");
+        LOGE("Failed adding to JNI local ref table (has %zd entries)",
+                pRefTable->capacity());
         dvmDumpThread(dvmThreadSelf(), false);
         dvmAbort();     // spec says call FatalError; this is equivalent
     } else {
-        LOGVV("LREF add %p  (%s.%s) (ent=%d)", obj,
-            dvmGetCurrentJNIMethod()->clazz->descriptor,
-            dvmGetCurrentJNIMethod()->name,
-            (int) dvmReferenceTableEntries(pRefTable));
+        if (false) {
+            LOGI("LREF add %p  (%s.%s) (ent=%zd)", obj,
+                    dvmGetCurrentJNIMethod()->clazz->descriptor,
+                    dvmGetCurrentJNIMethod()->name,
+                    pRefTable->capacity());
+        }
     }
+
     return jobj;
 }
 
@@ -403,7 +395,7 @@ static jobject addLocalReference(JNIEnv* env, Object* obj) {
  */
 static bool ensureLocalCapacity(JNIEnv* env, int capacity) {
     IndirectRefTable* pRefTable = getLocalRefTable(env);
-    int numEntries = dvmIndirectRefTableEntries(pRefTable);
+    int numEntries = pRefTable->capacity();
     // TODO: this isn't quite right, since "numEntries" includes holes
     return ((kJniLocalRefMax - numEntries) >= capacity);
 }
@@ -421,7 +413,7 @@ static void deleteLocalReference(JNIEnv* env, jobject jobj) {
     u4 cookie =
         SAVEAREA_FROM_FP(self->interpSave.curFrame)->xtra.localRefCookie;
 
-    if (!dvmRemoveFromIndirectRefTable(pRefTable, cookie, jobj)) {
+    if (!pRefTable->remove(cookie, jobj)) {
         /*
          * Attempting to delete a local reference that is not in the
          * topmost local reference frame is a no-op.  DeleteLocalRef returns
@@ -486,12 +478,11 @@ static jobject addGlobalReference(Object* obj) {
      * we're either leaking global ref table entries or we're going to
      * run out of space in the GC heap.
      */
-    jobject jobj = (jobject) dvmAddToIndirectRefTable(&gDvm.jniGlobalRefTable, IRT_FIRST_SEGMENT,
-            obj);
+    jobject jobj = (jobject) gDvm.jniGlobalRefTable.add(IRT_FIRST_SEGMENT, obj);
     if (jobj == NULL) {
-        dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable, "JNI global");
-        LOGE("Failed adding to JNI global ref table (%d entries)",
-            (int) dvmIndirectRefTableEntries(&gDvm.jniGlobalRefTable));
+        gDvm.jniGlobalRefTable.dump("JNI global");
+        LOGE("Failed adding to JNI global ref table (%zd entries)",
+                gDvm.jniGlobalRefTable.capacity());
         dvmAbort();
     }
 
@@ -501,7 +492,7 @@ static jobject addGlobalReference(Object* obj) {
 
     /* GREF usage tracking; should probably be disabled for production env */
     if (kTrackGrefUsage && gDvm.jniGrefLimit != 0) {
-        int count = dvmIndirectRefTableEntries(&gDvm.jniGlobalRefTable);
+        int count = gDvm.jniGlobalRefTable.capacity();
         // TODO: adjust for "holes"
         if (count > gDvm.jniGlobalRefHiMark) {
             LOGD("GREF has increased to %d", count);
@@ -513,7 +504,7 @@ static jobject addGlobalReference(Object* obj) {
                 if (gDvmJni.warnOnly) {
                     LOGW("Excessive JNI global references (%d)", count);
                 } else {
-                    dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable, "JNI global");
+                    gDvm.jniGlobalRefTable.dump("JNI global");
                     LOGE("Excessive JNI global references (%d)", count);
                     dvmAbort();
                 }
@@ -530,11 +521,11 @@ static jobject addWeakGlobalReference(Object* obj) {
 
     ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
-    jobject jobj = (jobject) dvmAddToIndirectRefTable(table, IRT_FIRST_SEGMENT, obj);
+    jobject jobj = (jobject) table->add(IRT_FIRST_SEGMENT, obj);
     if (jobj == NULL) {
-        dvmDumpIndirectRefTable(table, "JNI weak global");
+        table->dump("JNI weak global");
         LOGE("Failed adding to JNI weak global ref table (%zd entries)",
-             dvmIndirectRefTableEntries(table));
+                table->capacity());
     }
     return jobj;
 }
@@ -546,7 +537,7 @@ static void deleteWeakGlobalReference(jobject jobj) {
 
     ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
-    if (!dvmRemoveFromIndirectRefTable(table, IRT_FIRST_SEGMENT, jobj)) {
+    if (!table->remove(IRT_FIRST_SEGMENT, jobj)) {
         LOGW("JNI: DeleteWeakGlobalRef(%p) failed to find entry", jobj);
     }
 }
@@ -564,13 +555,13 @@ static void deleteGlobalReference(jobject jobj) {
     }
 
     ScopedPthreadMutexLock lock(&gDvm.jniGlobalRefLock);
-    if (!dvmRemoveFromIndirectRefTable(&gDvm.jniGlobalRefTable, IRT_FIRST_SEGMENT, jobj)) {
+    if (!gDvm.jniGlobalRefTable.remove(IRT_FIRST_SEGMENT, jobj)) {
         LOGW("JNI: DeleteGlobalRef(%p) failed to find entry", jobj);
         return;
     }
 
     if (kTrackGrefUsage && gDvm.jniGrefLimit != 0) {
-        int count = dvmIndirectRefTableEntries(&gDvm.jniGlobalRefTable);
+        int count = gDvm.jniGlobalRefTable.capacity();
         // TODO: not quite right, need to subtract holes
         if (count < gDvm.jniGlobalRefLoMark) {
             LOGD("GREF has decreased to %d", count);
@@ -653,8 +644,8 @@ void dvmDumpJniReferenceTables() {
     Thread* self = dvmThreadSelf();
     JNIEnv* env = self->jniEnv;
     IndirectRefTable* pLocalRefs = getLocalRefTable(env);
-    dvmDumpIndirectRefTable(pLocalRefs, "JNI local");
-    dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable, "JNI global");
+    pLocalRefs->dump("JNI local");
+    gDvm.jniGlobalRefTable.dump("JNI global");
     dvmDumpReferenceTable(&gDvm.jniPinRefTable, "JNI pinned array");
 }
 
@@ -683,7 +674,7 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj) {
     if (obj == kInvalidIndirectRefObject) {
         return JNIInvalidRefType;
     } else {
-        return (jobjectRefType) dvmGetIndirectRefType(jobj);
+        return (jobjectRefType) indirectRefKind(jobj);
     }
 }
 
@@ -716,6 +707,15 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
         return false;
     }
 
+    // If a signature starts with a '!', we take that as a sign that the native code doesn't
+    // need the extra JNI arguments (the JNIEnv* and the jclass).
+    bool needsJniEnv = true;
+    if (*signature == '!') {
+        needsJniEnv = false;
+        ++signature;
+        LOGV("fast JNI method %s.%s:%s detected", clazz->descriptor, methodName, signature);
+    }
+
     Method* method = dvmFindDirectMethodByDescriptor(clazz, methodName, signature);
     if (method == NULL) {
         method = dvmFindVirtualMethodByDescriptor(clazz, methodName, signature);
@@ -730,11 +730,31 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
         return false;
     }
 
+    if (!needsJniEnv) {
+        // In this case, we have extra constraints to check...
+        if (dvmIsSynchronizedMethod(method)) {
+            // Synchronization is usually provided by the JNI bridge,
+            // but we won't have one.
+            LOGE("fast JNI method %s.%s:%s cannot be synchronized",
+                    clazz->descriptor, methodName, signature);
+            return false;
+        }
+        if (!dvmIsStaticMethod(method)) {
+            // There's no real reason for this constraint, but since we won't
+            // be supplying a JNIEnv* or a jobject 'this', you're effectively
+            // static anyway, so it seems clearer to say so.
+            LOGE("fast JNI method %s.%s:%s cannot be non-static",
+                    clazz->descriptor, methodName, signature);
+            return false;
+        }
+    }
+
     if (method->nativeFunc != dvmResolveNativeMethod) {
         /* this is allowed, but unusual */
         LOGV("Note: %s.%s:%s was already registered", clazz->descriptor, methodName, signature);
     }
 
+    method->needsJniEnv = needsJniEnv;
     dvmUseJNIBridge(method, fnPtr);
 
     LOGV("JNI-registered %s.%s:%s", clazz->descriptor, methodName, signature);
@@ -1059,9 +1079,10 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult, const Method* met
     assert(method->insns != NULL);
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(env, (ClassObject*)staticMethodClass,
-        method->jniArgInfo, method->insSize, modArgs, method->shorty,
-        (void*)method->insns, pResult);
+    dvmPlatformInvoke(method->needsJniEnv ? env : NULL,
+            (ClassObject*)staticMethodClass,
+            method->jniArgInfo, method->insSize, modArgs, method->shorty,
+            (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
@@ -1117,9 +1138,9 @@ void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
     ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(self->jniEnv, NULL,
-        method->jniArgInfo, method->insSize, modArgs, method->shorty,
-        (void*)method->insns, pResult);
+    dvmPlatformInvoke(method->needsJniEnv ? self->jniEnv : NULL, NULL,
+            method->jniArgInfo, method->insSize, modArgs, method->shorty,
+            (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
@@ -1146,9 +1167,10 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(self->jniEnv, (ClassObject*)staticMethodClass,
-        method->jniArgInfo, method->insSize, args, method->shorty,
-        (void*)method->insns, pResult);
+    dvmPlatformInvoke(method->needsJniEnv ? self->jniEnv : NULL,
+            (ClassObject*)staticMethodClass,
+            method->jniArgInfo, method->insSize, args, method->shorty,
+            (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
@@ -1226,7 +1248,8 @@ static jclass FindClass(JNIEnv* env, const char* name) {
         /* hack for JNI_OnLoad */
         assert(strcmp(thisMethod->name, "nativeLoad") == 0);
         loader = ts.self()->classLoaderOverride;
-    } else if (thisMethod == gDvm.methDalvikSystemNativeStart_main) {
+    } else if (thisMethod == gDvm.methDalvikSystemNativeStart_main ||
+               thisMethod == gDvm.methDalvikSystemNativeStart_run) {
         /* start point of invocation interface */
         if (!gDvm.initializing) {
             loader = trackedLoader = dvmGetSystemClassLoader();
@@ -2115,7 +2138,7 @@ static jstring NewString(JNIEnv* env, const jchar* unicodeChars, jsize len) {
 static jsize GetStringLength(JNIEnv* env, jstring jstr) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    return dvmStringLen(strObj);
+    return strObj->length();
 }
 
 
@@ -2129,11 +2152,11 @@ static const jchar* GetStringChars(JNIEnv* env, jstring jstr, jboolean* isCopy) 
     ScopedJniThreadState ts(env);
 
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(strObj);
+    ArrayObject* strChars = strObj->array();
 
     pinPrimitiveArray(strChars);
 
-    const u2* data = dvmStringChars(strObj);
+    const u2* data = strObj->chars();
     if (isCopy != NULL) {
         *isCopy = JNI_FALSE;
     }
@@ -2146,7 +2169,7 @@ static const jchar* GetStringChars(JNIEnv* env, jstring jstr, jboolean* isCopy) 
 static void ReleaseStringChars(JNIEnv* env, jstring jstr, const jchar* chars) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(strObj);
+    ArrayObject* strChars = strObj->array();
     unpinPrimitiveArray(strChars);
 }
 
@@ -2174,7 +2197,10 @@ static jstring NewStringUTF(JNIEnv* env, const char* bytes) {
 static jsize GetStringUTFLength(JNIEnv* env, jstring jstr) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    return dvmStringUtf8ByteLen(strObj);
+    if (strObj == NULL) {
+        return 0; // Should we throw something or assert?
+    }
+    return strObj->utfLength();
 }
 
 /*
@@ -2551,12 +2577,12 @@ static jint GetJavaVM(JNIEnv* env, JavaVM** vm) {
 static void GetStringRegion(JNIEnv* env, jstring jstr, jsize start, jsize len, jchar* buf) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    int strLen = dvmStringLen(strObj);
-    if (((start|len) < 0) || (start + len > dvmStringLen(strObj))) {
+    int strLen = strObj->length();
+    if (((start|len) < 0) || (start + len > strLen)) {
         dvmThrowStringIndexOutOfBoundsExceptionWithRegion(strLen, start, len);
         return;
     }
-    memcpy(buf, dvmStringChars(strObj) + start, len * sizeof(u2));
+    memcpy(buf, strObj->chars() + start, len * sizeof(u2));
 }
 
 /*
@@ -2566,12 +2592,12 @@ static void GetStringRegion(JNIEnv* env, jstring jstr, jsize start, jsize len, j
 static void GetStringUTFRegion(JNIEnv* env, jstring jstr, jsize start, jsize len, char* buf) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    int strLen = dvmStringLen(strObj);
-    if (((start|len) < 0) || (start + len > dvmStringLen(strObj))) {
+    int strLen = strObj->length();
+    if (((start|len) < 0) || (start + len > strLen)) {
         dvmThrowStringIndexOutOfBoundsExceptionWithRegion(strLen, start, len);
         return;
     }
-    dvmCreateCstrFromStringRegion(strObj, start, len, buf);
+    dvmGetStringUtfRegion(strObj, start, len, buf);
 }
 
 /*
@@ -2611,11 +2637,11 @@ static const jchar* GetStringCritical(JNIEnv* env, jstring jstr, jboolean* isCop
     ScopedJniThreadState ts(env);
 
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(strObj);
+    ArrayObject* strChars = strObj->array();
 
     pinPrimitiveArray(strChars);
 
-    const u2* data = dvmStringChars(strObj);
+    const u2* data = strObj->chars();
     if (isCopy != NULL) {
         *isCopy = JNI_FALSE;
     }
@@ -2628,7 +2654,7 @@ static const jchar* GetStringCritical(JNIEnv* env, jstring jstr, jboolean* isCop
 static void ReleaseStringCritical(JNIEnv* env, jstring jstr, const jchar* carray) {
     ScopedJniThreadState ts(env);
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(strObj);
+    ArrayObject* strChars = strObj->array();
     unpinPrimitiveArray(strChars);
 }
 

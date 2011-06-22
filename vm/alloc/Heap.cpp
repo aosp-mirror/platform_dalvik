@@ -24,10 +24,7 @@
 #include "alloc/DdmHeap.h"
 #include "alloc/HeapSource.h"
 #include "alloc/MarkSweep.h"
-
-#include "utils/threads.h"      // need Android thread priorities
-
-#include <cutils/sched_policy.h>
+#include "os/os.h"
 
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -443,60 +440,6 @@ static void verifyRootsAndHeap()
 }
 
 /*
- * Raises the scheduling priority of the current thread.  Returns the
- * original priority if successful.  Otherwise, returns INT_MAX on
- * failure.
- */
-static int raiseThreadPriority()
-{
-    /* Get the priority (the "nice" value) of the current thread.  The
-     * getpriority() call can legitimately return -1, so we have to
-     * explicitly test errno.
-     */
-    errno = 0;
-    int oldThreadPriority = getpriority(PRIO_PROCESS, 0);
-    if (errno != 0) {
-        LOGI_HEAP("getpriority(self) failed: %s", strerror(errno));
-    } else if (oldThreadPriority > ANDROID_PRIORITY_NORMAL) {
-        /* Current value is numerically greater than "normal", which
-         * in backward UNIX terms means lower priority.
-         */
-        if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
-            set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
-        }
-        if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
-            LOGI_HEAP("Unable to elevate priority from %d to %d",
-                      oldThreadPriority, ANDROID_PRIORITY_NORMAL);
-        } else {
-            /*
-             * The priority has been elevated.  Return the old value
-             * so the caller can restore it later.
-             */
-            LOGD_HEAP("Elevating priority from %d to %d",
-                      oldThreadPriority, ANDROID_PRIORITY_NORMAL);
-            return oldThreadPriority;
-        }
-    }
-    return INT_MAX;
-}
-
-/*
- * Sets the current thread scheduling priority.
- */
-static void setThreadPriority(int newThreadPriority)
-{
-    if (setpriority(PRIO_PROCESS, 0, newThreadPriority) != 0) {
-        LOGW_HEAP("Unable to reset priority to %d: %s",
-                  newThreadPriority, strerror(errno));
-    } else {
-        LOGD_HEAP("Reset priority to %d", oldThreadPriority);
-    }
-    if (newThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
-        set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
-    }
-}
-
-/*
  * Initiate garbage collection.
  *
  * NOTES:
@@ -541,7 +484,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
      * thread performing the garbage collection.
      */
     if (!spec->isConcurrent) {
-        oldThreadPriority = raiseThreadPriority();
+        oldThreadPriority = os_raiseThreadPriority();
     }
     if (gDvm.preVerify) {
         LOGV_HEAP("Verifying roots and heap before GC");
@@ -704,7 +647,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
          * changed at the start of the current garbage collection.
          */
         if (oldThreadPriority != INT_MAX) {
-            setThreadPriority(oldThreadPriority);
+            os_lowerThreadPriority(oldThreadPriority);
         }
     }
 

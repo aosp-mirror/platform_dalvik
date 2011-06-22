@@ -293,11 +293,10 @@ static void verifyImmuneObjectsVisitor(void *addr, void *arg)
  * Visitor that searches for immune objects and verifies that all
  * threatened referents are marked.
  */
-static void verifyImmuneObjectsCallback(void *addr, void *arg)
+static void verifyImmuneObjectsCallback(Object *obj, void *arg)
 {
-    assert(addr != NULL);
+    assert(obj != NULL);
     assert(arg != NULL);
-    Object *obj = (Object *)addr;
     GcMarkContext *ctx = (GcMarkContext *)arg;
     if (obj->clazz == NULL) {
         LOGI("uninitialized object @ %p (has null clazz pointer)", obj);
@@ -686,11 +685,11 @@ void dvmHeapScanImmuneObjects(const GcMarkContext *ctx)
  * to the address corresponding to the lowest address in the next word
  * of bits in the bitmap.
  */
-static void scanBitmapCallback(void *addr, void *finger, void *arg)
+static void scanBitmapCallback(Object *obj, void *finger, void *arg)
 {
     GcMarkContext *ctx = (GcMarkContext *)arg;
     ctx->finger = (void *)finger;
-    scanObject((Object *)addr, ctx);
+    scanObject(obj, ctx);
 }
 
 /* Given bitmaps with the root set marked, find and mark all
@@ -1002,7 +1001,7 @@ void sweepWeakJniGlobals()
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
     Object **entry = table->table;
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
-    int numEntries = dvmIndirectRefTableEntries(table);
+    int numEntries = table->capacity();
     for (int i = 0; i < numEntries; ++i) {
         if (entry[i] != NULL && !isMarked(entry[i], ctx)) {
             entry[i] = NULL;

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_NATIVE_INTERNALNATIVE
-#define _DALVIK_NATIVE_INTERNALNATIVE
+#ifndef DALVIK_NATIVE_INTERNALNATIVE_H_
+#define DALVIK_NATIVE_INTERNALNATIVE_H_
 
 /*
  * Some setup for internal native functions.
@@ -29,4 +29,4 @@ DalvikNativeFunc dvmLookupInternalNativeMethod(const Method* method);
 /* exception-throwing stub for abstract methods (DalvikNativeFunc) */
 extern "C" void dvmAbstractMethodStub(const u4* args, JValue* pResult);
 
-#endif /*_DALVIK_NATIVE_INTERNALNATIVE*/
+#endif  // DALVIK_NATIVE_INTERNALNATIVE_H_

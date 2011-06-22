@@ -401,9 +401,16 @@ static void *gcDaemonThread(void* arg)
     while (gHs->gcThreadShutdown != true) {
         dvmWaitCond(&gHs->gcThreadCond, &gHs->gcThreadMutex);
         dvmLockHeap();
-        dvmChangeStatus(NULL, THREAD_RUNNING);
-        dvmCollectGarbageInternal(GC_CONCURRENT);
-        dvmChangeStatus(NULL, THREAD_VMWAIT);
+        /*
+         * Another thread may have started a concurrent garbage
+         * collection before we were scheduled.  Check for this
+         * condition before proceeding.
+         */
+        if (!gDvm.gcHeap->gcRunning) {
+            dvmChangeStatus(NULL, THREAD_RUNNING);
+            dvmCollectGarbageInternal(GC_CONCURRENT);
+            dvmChangeStatus(NULL, THREAD_VMWAIT);
+        }
         dvmUnlockHeap();
     }
     dvmChangeStatus(NULL, THREAD_RUNNING);
@@ -1045,6 +1052,7 @@ void dvmClearGrowthLimit()
     gHs->growthLimit = gHs->maximumSize;
     size_t overhead = oldHeapOverhead(gHs, false);
     gHs->heaps[0].maximumSize = gHs->maximumSize - overhead;
+    gHs->heaps[0].limit = gHs->heaps[0].base + gHs->heaps[0].maximumSize;
     dvmUnlockHeap();
 }
 

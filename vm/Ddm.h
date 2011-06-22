@@ -16,8 +16,8 @@
 /*
  * Dalvik Debug Monitor
  */
-#ifndef _DALVIK_DDM
-#define _DALVIK_DDM
+#ifndef DALVIK_DDM_H_
+#define DALVIK_DDM_H_
 
 /*
  * Handle a packet full of DDM goodness.
@@ -84,4 +84,4 @@ ArrayObject* dvmDdmGetStackTraceById(u4 threadId);
  */
 ArrayObject* dvmDdmGetRecentAllocations(void);
 
-#endif /*_DALVIK_DDM*/
+#endif  // DALVIK_DDM_H_

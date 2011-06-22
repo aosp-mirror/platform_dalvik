@@ -107,7 +107,6 @@ LOCAL_SRC_FILES := \
 	Native.cpp \
 	PointerSet.cpp \
 	Profile.cpp \
-	Properties.cpp \
 	RawDexFile.cpp \
 	ReferenceTable.cpp \
 	SignalCatcher.cpp \
@@ -189,6 +188,13 @@ LOCAL_SRC_FILES := \
 	test/TestHash.cpp \
 	test/TestIndirectRefTable.cpp
 
+# TODO: this is the wrong test, but what's the right one?
+ifeq ($(dvm_arch),arm)
+  LOCAL_SRC_FILES += os/android.cpp
+else
+  LOCAL_SRC_FILES += os/linux.cpp
+endif
+
 WITH_COPYING_GC := $(strip $(WITH_COPYING_GC))
 
 ifeq ($(WITH_COPYING_GC),true)
@@ -224,7 +230,6 @@ LOCAL_C_INCLUDES += \
 	dalvik/vm \
 	external/zlib \
 	libcore/include \
-	$(KERNEL_HEADERS)
 
 ifeq ($(dvm_simulator),true)
   LOCAL_LDLIBS += -lpthread -ldl

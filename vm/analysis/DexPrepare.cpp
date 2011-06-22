@@ -29,17 +29,21 @@
 #include "analysis/RegisterMap.h"
 #include "analysis/Optimize.h"
 
-#include <zlib.h>
+#include <string>
 
+#include <libgen.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <errno.h>
-
+#include <unistd.h>
+#include <zlib.h>
 
 /* fwd */
 static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
@@ -55,6 +59,49 @@ static bool writeOptData(int fd, const DexClassLookup* pClassLookup,\
     const RegisterMapBuilder* pRegMapBuilder);
 static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum);
 
+/*
+ * Get just the directory portion of the given path. Equivalent to dirname(3).
+ */
+static std::string saneDirName(const std::string& path) {
+    size_t n = path.rfind('/');
+    if (n == std::string::npos) {
+        return ".";
+    }
+    return path.substr(0, n);
+}
+
+/*
+ * Helper for dvmOpenCacheDexFile() in a known-error case: Check to
+ * see if the directory part of the given path (all but the last
+ * component) exists and is writable. Complain to the log if not.
+ */
+static bool directoryIsValid(const std::string& fileName)
+{
+    std::string dirName(saneDirName(fileName));
+
+    struct stat sb;
+    if (stat(dirName.c_str(), &sb) < 0) {
+        LOGE("Could not stat dex cache directory '%s': %s", dirName.c_str(), strerror(errno));
+        return false;
+    }
+
+    if (!S_ISDIR(sb.st_mode)) {
+        LOGE("Dex cache directory isn't a directory: %s", dirName.c_str());
+        return false;
+    }
+
+    if (access(dirName.c_str(), R_OK) < 0) {
+        LOGE("Dex cache directory isn't readable: %s", dirName.c_str());
+        return false;
+    }
+
+    if (access(dirName.c_str(), W_OK) < 0) {
+        LOGE("Dex cache directory isn't writable: %s", dirName.c_str());
+        return false;
+    }
+
+    return true;
+}
 
 /*
  * Return the fd of an open file in the DEX file cache area.  If the cache
@@ -98,8 +145,11 @@ retry:
         fd = open(cacheFileName, O_RDONLY, 0);
         if (fd < 0) {
             if (createIfMissing) {
-                LOGE("Can't open dex cache '%s': %s",
-                    cacheFileName, strerror(errno));
+                // TODO: write an equivalent of strerror_r that returns a std::string.
+                const std::string errnoString(strerror(errno));
+                if (directoryIsValid(cacheFileName)) {
+                    LOGE("Can't open dex cache file '%s': %s", cacheFileName, errnoString.c_str());
+                }
             }
             return fd;
         }

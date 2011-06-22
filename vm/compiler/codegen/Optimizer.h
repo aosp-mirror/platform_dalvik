@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_COMPILER_OPTIMIZATION_H
-#define _DALVIK_VM_COMPILER_OPTIMIZATION_H
+#ifndef DALVIK_VM_COMPILER_OPTIMIZATION_H_
+#define DALVIK_VM_COMPILER_OPTIMIZATION_H_
 
 #include "Dalvik.h"
 
@@ -42,4 +42,4 @@ void dvmCompilerApplyLocalOptimizations(struct CompilationUnit *cUnit,
 
 void dvmCompilerApplyGlobalOptimizations(struct CompilationUnit *cUnit);
 
-#endif /* _DALVIK_VM_COMPILER_OPTIMIZATION_H */
+#endif  // DALVIK_VM_COMPILER_OPTIMIZATION_H_
