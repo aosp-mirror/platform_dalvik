@@ -1228,13 +1228,13 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
             else
                 relPc = -1;
 
-            std::string className(dvmHumanReadableDescriptor(method->clazz->descriptor));
+            std::string methodName(dvmHumanReadableMethod(method, false));
             if (dvmIsNativeMethod(method)) {
-                dvmPrintDebugMessage(target, "  at %s.%s(Native Method)\n",
-                        className.c_str(), method->name);
+                dvmPrintDebugMessage(target, "  at %s(Native Method)\n",
+                        methodName.c_str());
             } else {
-                dvmPrintDebugMessage(target, "  at %s.%s(%s:%s%d)\n",
-                        className.c_str(), method->name, dvmGetMethodSourceFile(method),
+                dvmPrintDebugMessage(target, "  at %s(%s:%s%d)\n",
+                        methodName.c_str(), dvmGetMethodSourceFile(method),
                         (relPc >= 0 && first) ? "~" : "",
                         relPc < 0 ? -1 : dvmLineNumFromPC(method, relPc));
             }

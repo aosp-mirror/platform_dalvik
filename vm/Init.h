@@ -23,8 +23,8 @@
 /*
  * Standard VM initialization, usually invoked through JNI.
  */
-int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
-    JNIEnv* pEnv);
+std::string dvmStartup(int argc, const char* const argv[],
+        bool ignoreUnrecognized, JNIEnv* pEnv);
 void dvmShutdown(void);
 bool dvmInitAfterZygote(void);
 

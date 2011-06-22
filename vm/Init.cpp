@@ -1149,35 +1149,54 @@ static void blockSignals()
     }
 }
 
+class ScopedShutdown {
+public:
+    ScopedShutdown() : armed_(true) {
+    }
+
+    ~ScopedShutdown() {
+        if (armed_) {
+            dvmShutdown();
+        }
+    }
+
+    void disarm() {
+        armed_ = false;
+    }
+
+private:
+    bool armed_;
+};
+
 /*
  * VM initialization.  Pass in any options provided on the command line.
  * Do not pass in the class name or the options for the class.
  *
  * Returns 0 on success.
  */
-int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
-    JNIEnv* pEnv)
+std::string dvmStartup(int argc, const char* const argv[],
+        bool ignoreUnrecognized, JNIEnv* pEnv)
 {
-    int i, cc;
+    ScopedShutdown scopedShutdown;
 
     assert(gDvm.initializing);
 
     LOGV("VM init args (%d):", argc);
-    for (i = 0; i < argc; i++)
+    for (int i = 0; i < argc; i++) {
         LOGV("  %d: '%s'", i, argv[i]);
-
+    }
     setCommandLineDefaults();
 
     /*
      * Process the option flags (if any).
      */
-    cc = processOptions(argc, argv, ignoreUnrecognized);
+    int cc = processOptions(argc, argv, ignoreUnrecognized);
     if (cc != 0) {
         if (cc < 0) {
             dvmFprintf(stderr, "\n");
             usage("dalvikvm");
         }
-        goto fail;
+        return "syntax error";
     }
 
 #if WITH_EXTRA_GC_CHECKS > 1
@@ -1202,9 +1221,8 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 
     /* verify system page size */
     if (sysconf(_SC_PAGESIZE) != SYSTEM_PAGE_SIZE) {
-        LOGE("ERROR: expected page size %d, got %d",
-            SYSTEM_PAGE_SIZE, (int) sysconf(_SC_PAGESIZE));
-        goto fail;
+        return StringPrintf("expected page size %d, got %d",
+                SYSTEM_PAGE_SIZE, (int) sysconf(_SC_PAGESIZE));
     }
 
     /* mterp setup */
@@ -1214,20 +1232,27 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     /*
      * Initialize components.
      */
-    if (!dvmAllocTrackerStartup())
-        goto fail;
-    if (!dvmGcStartup())
-        goto fail;
-    if (!dvmThreadStartup())
-        goto fail;
-    if (!dvmInlineNativeStartup())
-        goto fail;
-    if (!dvmRegisterMapStartup())
-        goto fail;
-    if (!dvmInstanceofStartup())
-        goto fail;
-    if (!dvmClassStartup())
-        goto fail;
+    if (!dvmAllocTrackerStartup()) {
+        return "dvmAllocTrackerStartup failed";
+    }
+    if (!dvmGcStartup()) {
+        return "dvmGcStartup failed";
+    }
+    if (!dvmThreadStartup()) {
+        return "dvmThreadStartup failed";
+    }
+    if (!dvmInlineNativeStartup()) {
+        return "dvmInlineNativeStartup";
+    }
+    if (!dvmRegisterMapStartup()) {
+        return "dvmRegisterMapStartup failed";
+    }
+    if (!dvmInstanceofStartup()) {
+        return "dvmInstanceofStartup failed";
+    }
+    if (!dvmClassStartup()) {
+        return "dvmClassStartup failed";
+    }
 
     /*
      * At this point, the system is guaranteed to be sufficiently
@@ -1235,39 +1260,48 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * call populates the gDvm instance with all the class and member
      * references that the VM wants to use directly.
      */
-    if (!dvmFindRequiredClassesAndMembers())
-        goto fail;
+    if (!dvmFindRequiredClassesAndMembers()) {
+        return "dvmFindRequiredClassesAndMembers failed";
+    }
 
-    if (!dvmStringInternStartup())
-        goto fail;
-    if (!dvmNativeStartup())
-        goto fail;
-    if (!dvmInternalNativeStartup())
-        goto fail;
-    if (!dvmJniStartup())
-        goto fail;
-    if (!dvmProfilingStartup())
-        goto fail;
+    if (!dvmStringInternStartup()) {
+        return "dvmStringInternStartup failed";
+    }
+    if (!dvmNativeStartup()) {
+        return "dvmNativeStartup failed";
+    }
+    if (!dvmInternalNativeStartup()) {
+        return "dvmInternalNativeStartup failed";
+    }
+    if (!dvmJniStartup()) {
+        return "dvmJniStartup failed";
+    }
+    if (!dvmProfilingStartup()) {
+        return "dvmProfilingStartup failed";
+    }
 
     /*
      * Create a table of methods for which we will substitute an "inline"
      * version for performance.
      */
-    if (!dvmCreateInlineSubsTable())
-        goto fail;
+    if (!dvmCreateInlineSubsTable()) {
+        return "dvmCreateInlineSubsTable failed";
+    }
 
     /*
      * Miscellaneous class library validation.
      */
-    if (!dvmValidateBoxClasses())
-        goto fail;
+    if (!dvmValidateBoxClasses()) {
+        return "dvmValidateBoxClasses failed";
+    }
 
     /*
      * Do the last bits of Thread struct initialization we need to allow
      * JNI calls to work.
      */
-    if (!dvmPrepMainForJni(pEnv))
-        goto fail;
+    if (!dvmPrepMainForJni(pEnv)) {
+        return "dvmPrepMainForJni failed";
+    }
 
     /*
      * Explicitly initialize java.lang.Class.  This doesn't happen
@@ -1276,21 +1310,24 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * which make some calls that throw assertions if the classes they
      * operate on aren't initialized.
      */
-    if (!dvmInitClass(gDvm.classJavaLangClass))
-        goto fail;
+    if (!dvmInitClass(gDvm.classJavaLangClass)) {
+        return "couldn't initialized java.lang.Class";
+    }
 
     /*
      * Register the system native methods, which are registered through JNI.
      */
-    if (!registerSystemNatives(pEnv))
-        goto fail;
+    if (!registerSystemNatives(pEnv)) {
+        return "couldn't register system natives";
+    }
 
     /*
      * Do some "late" initialization for the memory allocator.  This may
      * allocate storage and initialize classes.
      */
-    if (!dvmCreateStockExceptions())
-        goto fail;
+    if (!dvmCreateStockExceptions()) {
+        return "dvmCreateStockExceptions failed";
+    }
 
     /*
      * At this point, the VM is in a pretty good state.  Finish prep on
@@ -1298,8 +1335,9 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * along with our Thread struct).  Note we will probably be executing
      * some interpreted class initializer code in here.
      */
-    if (!dvmPrepMainThread())
-        goto fail;
+    if (!dvmPrepMainThread()) {
+        return "dvmPrepMainThread failed";
+    }
 
     /*
      * Make sure we haven't accumulated any tracked references.  The main
@@ -1312,22 +1350,26 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     }
 
     /* general debugging setup */
-    if (!dvmDebuggerStartup())
-        goto fail;
+    if (!dvmDebuggerStartup()) {
+        return "dvmDebuggerStartup failed";
+    }
 
-    if (!dvmGcStartupClasses())
-        goto fail;
+    if (!dvmGcStartupClasses()) {
+        return "dvmGcStartupClasses failed";
+    }
 
     /*
      * Init for either zygote mode or non-zygote mode.  The key difference
      * is that we don't start any additional threads in Zygote mode.
      */
     if (gDvm.zygote) {
-        if (!initZygote())
-            goto fail;
+        if (!initZygote()) {
+            return "initZygote failed";
+        }
     } else {
-        if (!dvmInitAfterZygote())
-            goto fail;
+        if (!dvmInitAfterZygote()) {
+            return "dvmInitAfterZygote failed";
+        }
     }
 
 
@@ -1339,16 +1381,12 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 #endif
 
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGE("Exception pending at end of VM initialization");
         dvmLogExceptionStackTrace();
-        goto fail;
+        return "Exception pending at end of VM initialization";
     }
 
-    return 0;
-
-fail:
-    dvmShutdown();
-    return 1;
+    scopedShutdown.disarm();
+    return "";
 }
 
 /*

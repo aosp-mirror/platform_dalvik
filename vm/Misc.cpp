@@ -283,6 +283,34 @@ std::string dvmHumanReadableType(const Object* obj)
     return result;
 }
 
+std::string dvmHumanReadableField(const Field* field)
+{
+    if (field == NULL) {
+        return "(null)";
+    }
+    std::string result(dvmHumanReadableDescriptor(field->clazz->descriptor));
+    result += '.';
+    result += field->name;
+    return result;
+}
+
+std::string dvmHumanReadableMethod(const Method* method, bool withSignature)
+{
+    if (method == NULL) {
+        return "(null)";
+    }
+    std::string result(dvmHumanReadableDescriptor(method->clazz->descriptor));
+    result += '.';
+    result += method->name;
+    if (withSignature) {
+        // TODO: the types in this aren't human readable!
+        char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
+        result += signature;
+        free(signature);
+    }
+    return result;
+}
+
 /*
  * Return a newly-allocated string for the "dot version" of the class
  * name for the given type descriptor. That is, The initial "L" and
@@ -734,7 +762,7 @@ const char* dvmPathToAbsolutePortion(const char* path) {
 }
 
 // From RE2.
-static void StringAppendV(std::string* dst, const char* format, va_list ap) {
+void StringAppendV(std::string* dst, const char* format, va_list ap) {
     // First try with a small fixed size buffer
     char space[1024];
 

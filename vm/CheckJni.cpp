@@ -199,22 +199,6 @@ static inline const JNIInvokeInterface* baseVm(JavaVM* vm) {
     return ((JavaVMExt*) vm)->baseFuncTable;
 }
 
-/*
- * Prints trace messages when a native method calls a JNI function such as
- * NewByteArray. Enabled if both "-Xcheck:jni" and "-verbose:jni" are enabled.
- */
-static inline void jniTrace(bool hasMethod, const char* functionName) {
-    static const char* classDescriptor = "???";
-    static const char* methodName = "???";
-    if (hasMethod) {
-        const Method* method = dvmGetCurrentJNIMethod();
-        classDescriptor = method->clazz->descriptor;
-        methodName = method->name;
-    }
-    /* use +6 to drop the leading "Check_" */
-    LOGI("JNI: %s (from %s.%s)", functionName + 6, classDescriptor, methodName);
-}
-
 class ScopedJniThreadState {
 public:
     explicit ScopedJniThreadState(JNIEnv* env) {
@@ -231,25 +215,6 @@ private:
     void operator=(const ScopedJniThreadState&);
 };
 
-class ScopedVmCheck {
-public:
-    /*
-     * Set "hasMethod" to true if we have a valid thread with a method pointer.
-     * We won't have one before attaching a thread, after detaching a thread, or
-     * after destroying the VM.
-     */
-    ScopedVmCheck(bool hasMethod, const char* functionName) {
-        if (gDvm.verboseJni) {
-            jniTrace(hasMethod, functionName);
-        }
-    }
-
-private:
-    // Disallow copy and assignment.
-    ScopedVmCheck(const ScopedVmCheck&);
-    void operator=(const ScopedVmCheck&);
-};
-
 /*
  * Flags passed into ScopedCheck.
  */
@@ -264,6 +229,11 @@ private:
 #define kFlag_ExcepBad      0x0000      /* raised exceptions are bad */
 #define kFlag_ExcepOkay     0x0004      /* ...okay */
 
+#define kFlag_Release       0x0010      /* are we in a non-critical release function? */
+#define kFlag_NullableUtf   0x0020      /* are our UTF parameters nullable? */
+
+#define kFlag_Invocation    0x8000      /* Part of the invocation interface (JavaVM*) */
+
 static const char* indirectRefKindName(IndirectRef iref)
 {
     return indirectRefKindToString(indirectRefKind(iref));
@@ -271,47 +241,15 @@ static const char* indirectRefKindName(IndirectRef iref)
 
 class ScopedCheck {
 public:
-    explicit ScopedCheck(JNIEnv* env, int flags, const char* functionName)
-    : mEnv(env), mFunctionName(functionName)
-    {
-        if (gDvm.verboseJni) {
-            jniTrace(true, mFunctionName);
-        }
+    // For JNIEnv* functions.
+    explicit ScopedCheck(JNIEnv* env, int flags, const char* functionName) {
+        init(env, flags, functionName, true);
         checkThread(flags);
     }
 
-    /*
-     * Verify that "array" is non-NULL and points to an Array object.
-     *
-     * Since we're dealing with objects, switch to "running" mode.
-     */
-    void checkArray(jarray jarr) {
-        if (jarr == NULL) {
-            LOGW("JNI WARNING: received null array");
-            showLocation();
-            abortMaybe();
-            return;
-        }
-
-        ScopedJniThreadState ts(mEnv);
-        bool printWarn = false;
-
-        Object* obj = dvmDecodeIndirectRef(mEnv, jarr);
-
-        if (!dvmIsValidObject(obj)) {
-            LOGW("JNI WARNING: jarray is an invalid %s reference (%p)",
-                    indirectRefKindName(jarr), jarr);
-            printWarn = true;
-        } else if (obj->clazz->descriptor[0] != '[') {
-            LOGW("JNI WARNING: jarray arg has wrong type (expected array, got %s)",
-                    obj->clazz->descriptor);
-            printWarn = true;
-        }
-
-        if (printWarn) {
-            showLocation();
-            abortMaybe();
-        }
+    // For JavaVM* functions.
+    explicit ScopedCheck(bool hasMethod, const char* functionName) {
+        init(NULL, kFlag_Invocation, functionName, hasMethod);
     }
 
     /*
@@ -324,7 +262,7 @@ public:
      * This is incorrect and could cause strange behavior or compatibility
      * problems, so we want to screen that out here.
      *
-     * We expect "full-qualified" class names, like "java/lang/Thread" or
+     * We expect "fully-qualified" class names, like "java/lang/Thread" or
      * "[Ljava/lang/Object;".
      */
     void checkClassName(const char* className) {
@@ -430,68 +368,11 @@ public:
     }
 
     /*
-     * Verify that the length argument to array-creation calls is >= 0.
-     */
-    void checkLengthPositive(jsize length) {
-        if (length < 0) {
-            LOGW("JNI WARNING: negative length for array allocation (%s)", mFunctionName);
-            abortMaybe();
-        }
-    }
-
-    /*
      * Verify that the pointer value is non-NULL.
      */
     void checkNonNull(const void* ptr) {
         if (ptr == NULL) {
             LOGW("JNI WARNING: invalid null pointer (%s)", mFunctionName);
-            abortMaybe();
-        }
-    }
-
-    /*
-     * Verify that "jobj" is a valid object, and that it's an object that JNI
-     * is allowed to know about.  We allow NULL references.
-     *
-     * Switches to "running" mode before performing checks.
-     */
-    void checkObject(jobject jobj) {
-        if (jobj == NULL) {
-            return;
-        }
-
-        ScopedJniThreadState ts(mEnv);
-
-        bool printWarn = false;
-        if (dvmGetJNIRefType(mEnv, jobj) == JNIInvalidRefType) {
-            LOGW("JNI WARNING: %p is not a valid JNI reference", jobj);
-            printWarn = true;
-        } else {
-            Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
-
-            /*
-             * The decoded object will be NULL if this is a weak global ref
-             * with a cleared referent.
-             */
-            if (obj == kInvalidIndirectRefObject || (obj != NULL && !dvmIsValidObject(obj))) {
-                LOGW("JNI WARNING: native code passing in bad object %p %p", jobj, obj);
-                printWarn = true;
-            }
-        }
-
-        if (printWarn) {
-            showLocation();
-            abortMaybe();
-        }
-    }
-
-    /*
-     * Verify that the "mode" argument passed to a primitive array Release
-     * function is one of the valid values.
-     */
-    void checkReleaseMode(jint mode) {
-        if (mode != 0 && mode != JNI_COMMIT && mode != JNI_ABORT) {
-            LOGW("JNI WARNING: bad value for mode (%d) (%s)", mode, mFunctionName);
             abortMaybe();
         }
     }
@@ -568,39 +449,6 @@ public:
         }
     }
 
-    void checkString(jstring s) {
-        checkInstance(s, gDvm.classJavaLangString, "jstring");
-    }
-
-    void checkClass(jclass c) {
-        checkInstance(c, gDvm.classJavaLangClass, "jclass");
-    }
-
-    /*
-     * Verify that "bytes" points to valid "modified UTF-8" data.
-     * If "identifier" is NULL, "bytes" is allowed to be NULL; otherwise,
-     * "identifier" is the name to use when reporting the null pointer.
-     */
-    void checkUtfString(const char* bytes, const char* identifier) {
-        if (bytes == NULL) {
-            if (identifier != NULL) {
-                LOGW("JNI WARNING: %s == NULL", identifier);
-                showLocation();
-                abortMaybe();
-            }
-            return;
-        }
-
-        const char* errorKind = NULL;
-        u1 utf8 = checkUtfBytes(bytes, &errorKind);
-        if (errorKind != NULL) {
-            LOGW("JNI WARNING: input is not valid UTF-8: illegal %s byte %#x", errorKind, utf8);
-            LOGW("             string: '%s'", bytes);
-            showLocation();
-            abortMaybe();
-        }
-    }
-
     /*
      * Verify that "methodID" is appropriate for "jobj".
      *
@@ -622,9 +470,296 @@ public:
         }
     }
 
+    /**
+     * The format string is a sequence of the following characters,
+     * and must be followed by arguments of the corresponding types
+     * in the same order.
+     *
+     * TODO: BCDFIJSZ are reserved for the Java primitive types.
+     * a - jarray
+     * b - jboolean
+     * c - jclass
+     * f - jfieldID
+     * i - jint
+     * m - jmethodID
+     * o - jobject
+     * p - void*
+     * r - jint (for release mode arguments)
+     * s - jstring
+     * u - const char* (modified UTF-8)
+     * z - jsize (for lengths; use i if negative values are okay)
+     * V - JavaVM*
+     * E - JNIEnv*
+     * . - no argument; just print "..." (used for varargs JNI calls)
+     *
+     * Use the kFlag_NullableUtf flag where 'u' field(s) are nullable.
+     */
+    void trace(const char* fmt0, ...) {
+        va_list ap;
+
+        // If both "-Xcheck:jni" and "-Xjnitrace:" are enabled, we print trace messages
+        // when a native method that matches the Xjnitrace argument calls a JNI function
+        // such as NewByteArray.
+        bool shouldTrace = false;
+        const Method* method = NULL;
+        if (gDvm.jniTrace && mHasMethod) {
+            // We need to guard some of the invocation interface's calls: a bad caller might
+            // use DetachCurrentThread or GetEnv on a thread that's not yet attached.
+            if ((mFlags & kFlag_Invocation) == 0 || dvmThreadSelf() != NULL) {
+                method = dvmGetCurrentJNIMethod();
+                if (strstr(method->clazz->descriptor, gDvm.jniTrace) != NULL) {
+                    shouldTrace = true;
+                }
+            }
+        }
+
+        if (shouldTrace) {
+            va_start(ap, fmt0);
+            std::string msg(mFunctionName);
+            msg += '(';
+            for (const char* fmt = fmt0; *fmt;) {
+                char ch = *fmt++;
+                if (ch == 'V') {
+                    JavaVM* vm = va_arg(ap, JavaVM*);
+                    StringAppendF(&msg, "(JavaVM*)%p", vm);
+                } else if (ch == 'E') {
+                    JNIEnv* env = va_arg(ap, JNIEnv*);
+                    StringAppendF(&msg, "(JNIEnv*)%p", env);
+                } else if (ch == 'a' || ch == 'o' || ch == 's') {
+                    // For logging purposes, jarray, jobject, and jstring are identical.
+                    jobject o = va_arg(ap, jobject);
+                    if (o == NULL) {
+                        msg += "NULL";
+                    } else {
+                        StringAppendF(&msg, "%p", o);
+                    }
+                } else if (ch == 'b') {
+                    jboolean b = va_arg(ap, int);
+                    msg += (b ? "JNI_TRUE" : "JNI_FALSE");
+                } else if (ch == 'c') {
+                    jclass jc = va_arg(ap, jclass);
+                    Object* c = dvmDecodeIndirectRef(mEnv, jc);
+                    if (c == NULL) {
+                        msg += "NULL";
+                    } else if (c == kInvalidIndirectRefObject || !dvmIsValidObject(c)) {
+                        StringAppendF(&msg, "%p(INVALID)", jc);
+                    } else {
+                        std::string className(dvmHumanReadableType(c));
+                        StringAppendF(&msg, "%s", className.c_str());
+                    }
+                } else if (ch == 'f') {
+                    jfieldID fid = va_arg(ap, jfieldID);
+                    std::string name(dvmHumanReadableField((Field*) fid));
+                    StringAppendF(&msg, "%s", name.c_str());
+                } else if (ch == 'i' || ch == 'z') {
+                    // You might expect jsize to be size_t, but it's not; it's the same as jint.
+                    jint i = va_arg(ap, jint);
+                    StringAppendF(&msg, "%d", i);
+                } else if (ch == 'l') {
+                    jlong l = va_arg(ap, jlong);
+                    StringAppendF(&msg, "%lld", l);
+                } else if (ch == 'm') {
+                    jmethodID mid = va_arg(ap, jmethodID);
+                    std::string name(dvmHumanReadableMethod((Method*) mid, true));
+                    StringAppendF(&msg, "%s", name.c_str());
+                } else if (ch == 'p') {
+                    void* p = va_arg(ap, void*);
+                    if (p == NULL) {
+                        msg += "NULL";
+                    } else {
+                        StringAppendF(&msg, "(void*) %p", p);
+                    }
+                } else if (ch == 'r') {
+                    jint releaseMode = va_arg(ap, jint);
+                    if (releaseMode == 0) {
+                        msg += "0";
+                    } else if (releaseMode == JNI_ABORT) {
+                        msg += "JNI_ABORT";
+                    } else if (releaseMode == JNI_COMMIT) {
+                        msg += "JNI_COMMIT";
+                    } else {
+                        StringAppendF(&msg, "invalid release mode %d", releaseMode);
+                    }
+                } else if (ch == 'u') {
+                    const char* utf = va_arg(ap, const char*);
+                    if (utf == NULL) {
+                        msg += "NULL";
+                    } else {
+                        StringAppendF(&msg, "\"%s\"", utf);
+                    }
+                } else if (ch == '.') {
+                    msg += "...";
+                } else {
+                    LOGE("unknown trace format specifier %c", ch);
+                    dvmAbort();
+                }
+                if (*fmt) {
+                    StringAppendF(&msg, ", ");
+                }
+            }
+            msg += ')';
+            va_end(ap);
+            output(method, msg.c_str());
+        }
+
+        // We always do the thorough checks...
+        va_start(ap, fmt0);
+        for (const char* fmt = fmt0; *fmt; ++fmt) {
+            // TODO: BCDFIJSZ are reserved for the Java primitive types.
+            char ch = *fmt;
+            if (ch == 'a') {
+                checkArray(va_arg(ap, jarray));
+            } else if (ch == 'c') {
+                checkClass(va_arg(ap, jclass));
+            } else if (ch == 'o') {
+                checkObject(va_arg(ap, jobject));
+            } else if (ch == 'r') {
+                checkReleaseMode(va_arg(ap, jint));
+            } else if (ch == 's') {
+                checkString(va_arg(ap, jstring));
+            } else if (ch == 'u') {
+                if ((mFlags & kFlag_Release) != 0) {
+                    checkNonNull(va_arg(ap, const char*));
+                } else {
+                    bool nullable = ((mFlags & kFlag_NullableUtf) != 0);
+                    checkUtfString(va_arg(ap, const char*), nullable);
+                }
+            } else if (ch == 'z') {
+                checkLengthPositive(va_arg(ap, jsize));
+            } else if (ch == 'V' || ch == 'E' || ch == 'b' || ch == 'f' || ch == 'i' || ch == 'm' || ch == 'p') {
+                va_arg(ap, void*); // Skip this argument.
+            } else if (ch == '.') {
+            } else {
+                LOGE("unknown check format specifier %c", ch);
+                dvmAbort();
+            }
+        }
+        va_end(ap);
+    }
+
 private:
     JNIEnv* mEnv;
     const char* mFunctionName;
+    int mFlags;
+    bool mHasMethod;
+
+    void init(JNIEnv* env, int flags, const char* functionName, bool hasMethod) {
+        mEnv = env;
+        mFlags = flags;
+
+        // Use +6 to drop the leading "Check_"...
+        mFunctionName = functionName + 6;
+
+        // Set "hasMethod" to true if we have a valid thread with a method pointer.
+        // We won't have one before attaching a thread, after detaching a thread, or
+        // after destroying the VM.
+        mHasMethod = hasMethod;
+    }
+
+    void output(const Method* method, const char* msg) {
+        if (mHasMethod) {
+            std::string methodName(dvmHumanReadableMethod(method, false));
+            LOGI("JNI: %s called %s", methodName.c_str(), msg);
+        } else {
+            LOGI("JNI: call to %s", msg);
+        }
+    }
+
+    /*
+     * Verify that "array" is non-NULL and points to an Array object.
+     *
+     * Since we're dealing with objects, switch to "running" mode.
+     */
+    void checkArray(jarray jarr) {
+        if (jarr == NULL) {
+            LOGW("JNI WARNING: received null array");
+            showLocation();
+            abortMaybe();
+            return;
+        }
+
+        ScopedJniThreadState ts(mEnv);
+        bool printWarn = false;
+
+        Object* obj = dvmDecodeIndirectRef(mEnv, jarr);
+
+        if (!dvmIsValidObject(obj)) {
+            LOGW("JNI WARNING: jarray is an invalid %s reference (%p)",
+            indirectRefKindName(jarr), jarr);
+            printWarn = true;
+        } else if (obj->clazz->descriptor[0] != '[') {
+            LOGW("JNI WARNING: jarray arg has wrong type (expected array, got %s)",
+            obj->clazz->descriptor);
+            printWarn = true;
+        }
+
+        if (printWarn) {
+            showLocation();
+            abortMaybe();
+        }
+    }
+
+    void checkClass(jclass c) {
+        checkInstance(c, gDvm.classJavaLangClass, "jclass");
+    }
+
+    void checkLengthPositive(jsize length) {
+        if (length < 0) {
+            LOGW("JNI WARNING: negative jsize (%s)", mFunctionName);
+            abortMaybe();
+        }
+    }
+
+    /*
+     * Verify that "jobj" is a valid object, and that it's an object that JNI
+     * is allowed to know about.  We allow NULL references.
+     *
+     * Switches to "running" mode before performing checks.
+     */
+    void checkObject(jobject jobj) {
+        if (jobj == NULL) {
+            return;
+        }
+
+        ScopedJniThreadState ts(mEnv);
+
+        bool printWarn = false;
+        if (dvmGetJNIRefType(mEnv, jobj) == JNIInvalidRefType) {
+            LOGW("JNI WARNING: %p is not a valid JNI reference", jobj);
+            printWarn = true;
+        } else {
+            Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
+
+            /*
+             * The decoded object will be NULL if this is a weak global ref
+             * with a cleared referent.
+             */
+            if (obj == kInvalidIndirectRefObject || (obj != NULL && !dvmIsValidObject(obj))) {
+                LOGW("JNI WARNING: native code passing in bad object %p %p", jobj, obj);
+                printWarn = true;
+            }
+        }
+
+        if (printWarn) {
+            showLocation();
+            abortMaybe();
+        }
+    }
+
+    /*
+     * Verify that the "mode" argument passed to a primitive array Release
+     * function is one of the valid values.
+     */
+    void checkReleaseMode(jint mode) {
+        if (mode != 0 && mode != JNI_COMMIT && mode != JNI_ABORT) {
+            LOGW("JNI WARNING: bad value for mode (%d) (%s)", mode, mFunctionName);
+            abortMaybe();
+        }
+    }
+
+    void checkString(jstring s) {
+        checkInstance(s, gDvm.classJavaLangString, "jstring");
+    }
 
     void checkThread(int flags) {
         // Get the *correct* JNIEnv by going through our TLS pointer.
@@ -707,6 +842,29 @@ private:
             dvmLogExceptionStackTrace();
         }
         if (printWarn) {
+            abortMaybe();
+        }
+    }
+
+    /*
+     * Verify that "bytes" points to valid "modified UTF-8" data.
+     */
+    void checkUtfString(const char* bytes, bool nullable) {
+        if (bytes == NULL) {
+            if (!nullable) {
+                LOGW("JNI WARNING: non-nullable const char* was NULL");
+                showLocation();
+                abortMaybe();
+            }
+            return;
+        }
+
+        const char* errorKind = NULL;
+        u1 utf8 = checkUtfBytes(bytes, &errorKind);
+        if (errorKind != NULL) {
+            LOGW("JNI WARNING: input is not valid UTF-8: illegal %s byte %#x", errorKind, utf8);
+            LOGW("             string: '%s'", bytes);
+            showLocation();
             abortMaybe();
         }
     }
@@ -816,11 +974,9 @@ private:
     }
 
     void showLocation() {
-        // mFunctionName looks like "Check_DeleteLocalRef"; we drop the "Check_".
-        const char* name = mFunctionName + 6;
         const Method* method = dvmGetCurrentJNIMethod();
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGW("             in %s.%s:%s (%s)", method->clazz->descriptor, method->name, desc, name);
+        LOGW("             in %s.%s:%s (%s)", method->clazz->descriptor, method->name, desc, mFunctionName);
         free(desc);
     }
 
@@ -1089,6 +1245,7 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf, int m
 
 static jint Check_GetVersion(JNIEnv* env) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
+    sc.trace("E", env);
     return baseEnv(env)->GetVersion(env);
 }
 
@@ -1096,41 +1253,41 @@ static jclass Check_DefineClass(JNIEnv* env, const char* name, jobject loader,
     const jbyte* buf, jsize bufLen)
 {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(loader);
-    sc.checkUtfString(name, "name");
+    sc.trace("Euopz", env, name, loader, buf, bufLen);
     sc.checkClassName(name);
     return baseEnv(env)->DefineClass(env, name, loader, buf, bufLen);
 }
 
 static jclass Check_FindClass(JNIEnv* env, const char* name) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkUtfString(name, "name");
+    sc.trace("Eu", env, name);
     sc.checkClassName(name);
     return baseEnv(env)->FindClass(env, name);
 }
 
 static jclass Check_GetSuperclass(JNIEnv* env, jclass clazz) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
+    sc.trace("Ec", env, clazz);
     return baseEnv(env)->GetSuperclass(env, clazz);
 }
 
 static jboolean Check_IsAssignableFrom(JNIEnv* env, jclass clazz1, jclass clazz2) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz1);
-    sc.checkClass(clazz2);
+    sc.trace("Ecc", env, clazz1, clazz2);
     return baseEnv(env)->IsAssignableFrom(env, clazz1, clazz2);
 }
 
 static jmethodID Check_FromReflectedMethod(JNIEnv* env, jobject method) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(method);
+    sc.trace("Eo", env, method);
+    // TODO: check that 'field' is a java.lang.reflect.Method.
     return baseEnv(env)->FromReflectedMethod(env, method);
 }
 
 static jfieldID Check_FromReflectedField(JNIEnv* env, jobject field) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(field);
+    sc.trace("Eo", env, field);
+    // TODO: check that 'field' is a java.lang.reflect.Field.
     return baseEnv(env)->FromReflectedField(env, field);
 }
 
@@ -1138,7 +1295,7 @@ static jobject Check_ToReflectedMethod(JNIEnv* env, jclass cls,
         jmethodID methodID, jboolean isStatic)
 {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(cls);
+    sc.trace("Ecmb", env, cls, methodID, isStatic);
     return baseEnv(env)->ToReflectedMethod(env, cls, methodID, isStatic);
 }
 
@@ -1146,65 +1303,68 @@ static jobject Check_ToReflectedField(JNIEnv* env, jclass cls,
         jfieldID fieldID, jboolean isStatic)
 {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(cls);
+    sc.trace("Ecfb", env, cls, fieldID, isStatic);
     return baseEnv(env)->ToReflectedField(env, cls, fieldID, isStatic);
 }
 
 static jint Check_Throw(JNIEnv* env, jthrowable obj) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(obj);
+    sc.trace("Eo", env, obj);
     /* TODO: verify that "obj" is an instance of Throwable */
     return baseEnv(env)->Throw(env, obj);
 }
 
 static jint Check_ThrowNew(JNIEnv* env, jclass clazz, const char* message) {
-    ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
-    sc.checkUtfString(message, NULL);
+    ScopedCheck sc(env, kFlag_NullableUtf, __FUNCTION__);
+    sc.trace("Ecu", env, clazz, message);
     return baseEnv(env)->ThrowNew(env, clazz, message);
 }
 
 static jthrowable Check_ExceptionOccurred(JNIEnv* env) {
     ScopedCheck sc(env, kFlag_ExcepOkay, __FUNCTION__);
+    sc.trace("E", env);
     return baseEnv(env)->ExceptionOccurred(env);
 }
 
 static void Check_ExceptionDescribe(JNIEnv* env) {
     ScopedCheck sc(env, kFlag_ExcepOkay, __FUNCTION__);
+    sc.trace("E", env);
     baseEnv(env)->ExceptionDescribe(env);
 }
 
 static void Check_ExceptionClear(JNIEnv* env) {
     ScopedCheck sc(env, kFlag_ExcepOkay, __FUNCTION__);
+    sc.trace("E", env);
     baseEnv(env)->ExceptionClear(env);
 }
 
 static void Check_FatalError(JNIEnv* env, const char* msg) {
-    ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkUtfString(msg, NULL);
+    ScopedCheck sc(env, kFlag_NullableUtf, __FUNCTION__);
+    sc.trace("Eu", env, msg);
     baseEnv(env)->FatalError(env, msg);
 }
 
 static jint Check_PushLocalFrame(JNIEnv* env, jint capacity) {
     ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__);
+    sc.trace("Ei", env, capacity);
     return baseEnv(env)->PushLocalFrame(env, capacity);
 }
 
 static jobject Check_PopLocalFrame(JNIEnv* env, jobject res) {
     ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkObject(res);
+    sc.trace("Eo", env, res);
     return baseEnv(env)->PopLocalFrame(env, res);
 }
 
 static jobject Check_NewGlobalRef(JNIEnv* env, jobject obj) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(obj);
+    sc.trace("Eo", env, obj);
     return baseEnv(env)->NewGlobalRef(env, obj);
 }
 
 static void Check_DeleteGlobalRef(JNIEnv* env, jobject globalRef) {
     ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkObject(globalRef);
+    sc.trace("Eo", env, globalRef);
     if (globalRef != NULL && dvmGetJNIRefType(env, globalRef) != JNIGlobalRefType) {
         LOGW("JNI WARNING: DeleteGlobalRef on non-global %p (type=%d)",
             globalRef, dvmGetJNIRefType(env, globalRef));
@@ -1216,13 +1376,13 @@ static void Check_DeleteGlobalRef(JNIEnv* env, jobject globalRef) {
 
 static jobject Check_NewLocalRef(JNIEnv* env, jobject ref) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(ref);
+    sc.trace("Eo", env, ref);
     return baseEnv(env)->NewLocalRef(env, ref);
 }
 
 static void Check_DeleteLocalRef(JNIEnv* env, jobject localRef) {
     ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkObject(localRef);
+    sc.trace("Eo", env, localRef);
     if (localRef != NULL && dvmGetJNIRefType(env, localRef) != JNILocalRefType) {
         LOGW("JNI WARNING: DeleteLocalRef on non-local %p (type=%d)",
             localRef, dvmGetJNIRefType(env, localRef));
@@ -1234,25 +1394,25 @@ static void Check_DeleteLocalRef(JNIEnv* env, jobject localRef) {
 
 static jint Check_EnsureLocalCapacity(JNIEnv *env, jint capacity) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
+    sc.trace("Ei", env, capacity);
     return baseEnv(env)->EnsureLocalCapacity(env, capacity);
 }
 
 static jboolean Check_IsSameObject(JNIEnv* env, jobject ref1, jobject ref2) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(ref1);
-    sc.checkObject(ref2);
+    sc.trace("Eoo", env, ref1, ref2);
     return baseEnv(env)->IsSameObject(env, ref1, ref2);
 }
 
 static jobject Check_AllocObject(JNIEnv* env, jclass clazz) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
+    sc.trace("Ec", env, clazz);
     return baseEnv(env)->AllocObject(env, clazz);
 }
 
 static jobject Check_NewObject(JNIEnv* env, jclass clazz, jmethodID methodID, ...) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
+    sc.trace("Ecm.", env, clazz, methodID);
     va_list args;
 
     va_start(args, methodID);
@@ -1264,42 +1424,40 @@ static jobject Check_NewObject(JNIEnv* env, jclass clazz, jmethodID methodID, ..
 
 static jobject Check_NewObjectV(JNIEnv* env, jclass clazz, jmethodID methodID, va_list args) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
+    sc.trace("Ecm.", env, clazz, methodID);
     return baseEnv(env)->NewObjectV(env, clazz, methodID, args);
 }
 
 static jobject Check_NewObjectA(JNIEnv* env, jclass clazz, jmethodID methodID, jvalue* args) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
+    sc.trace("Ecm.", env, clazz, methodID);
     return baseEnv(env)->NewObjectA(env, clazz, methodID, args);
 }
 
 static jclass Check_GetObjectClass(JNIEnv* env, jobject obj) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(obj);
-    return baseEnv(env)->GetObjectClass(env, obj);
+    sc.trace("Eo", env, obj);
+    jclass result = baseEnv(env)->GetObjectClass(env, obj);
+    std::string className(dvmHumanReadableType((Object*) dvmDecodeIndirectRef(env, result)));
+    LOGI("Check_GetObjectClass returning %s", className.c_str());
+    return result;
 }
 
 static jboolean Check_IsInstanceOf(JNIEnv* env, jobject obj, jclass clazz) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(obj);
-    sc.checkClass(clazz);
+    sc.trace("Eoc", env, obj, clazz);
     return baseEnv(env)->IsInstanceOf(env, obj, clazz);
 }
 
 static jmethodID Check_GetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
-    sc.checkUtfString(name, "name");
-    sc.checkUtfString(sig, "sig");
+    sc.trace("Ecuu", env, clazz, name, sig);
     return baseEnv(env)->GetMethodID(env, clazz, name, sig);
 }
 
 static jfieldID Check_GetFieldID(JNIEnv* env, jclass clazz, const char* name, const char* sig) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
-    sc.checkUtfString(name, "name");
-    sc.checkUtfString(sig, "sig");
+    sc.trace("Ecuu", env, clazz, name, sig);
     return baseEnv(env)->GetFieldID(env, clazz, name, sig);
 }
 
@@ -1307,9 +1465,7 @@ static jmethodID Check_GetStaticMethodID(JNIEnv* env, jclass clazz,
         const char* name, const char* sig)
 {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
-    sc.checkUtfString(name, "name");
-    sc.checkUtfString(sig, "sig");
+    sc.trace("Ecuu", env, clazz, name, sig);
     return baseEnv(env)->GetStaticMethodID(env, clazz, name, sig);
 }
 
@@ -1317,9 +1473,7 @@ static jfieldID Check_GetStaticFieldID(JNIEnv* env, jclass clazz,
         const char* name, const char* sig)
 {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
-    sc.checkUtfString(name, "name");
-    sc.checkUtfString(sig, "sig");
+    sc.trace("Ecuu", env, clazz, name, sig);
     return baseEnv(env)->GetStaticFieldID(env, clazz, name, sig);
 }
 
@@ -1327,7 +1481,7 @@ static jfieldID Check_GetStaticFieldID(JNIEnv* env, jclass clazz,
     static _ctype Check_GetStatic##_jname##Field(JNIEnv* env, jclass clazz, jfieldID fieldID) \
     { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkClass(clazz); \
+        sc.trace("Ecf", env, clazz, fieldID); \
         sc.checkStaticFieldID(clazz, fieldID); \
         return baseEnv(env)->GetStatic##_jname##Field(env, clazz, fieldID); \
     }
@@ -1345,7 +1499,7 @@ GET_STATIC_TYPE_FIELD(jdouble, Double);
     static void Check_SetStatic##_jname##Field(JNIEnv* env, jclass clazz, \
         jfieldID fieldID, _ctype value) { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkClass(clazz); \
+        sc.trace("Ecf.", env, clazz, fieldID); /* TODO: value! */ \
         sc.checkStaticFieldID(clazz, fieldID); \
         /* "value" arg only used when type == ref */ \
         sc.checkFieldType((jobject)(u4)value, fieldID, _ftype, true); \
@@ -1361,12 +1515,12 @@ SET_STATIC_TYPE_FIELD(jlong, Long, PRIM_LONG);
 SET_STATIC_TYPE_FIELD(jfloat, Float, PRIM_FLOAT);
 SET_STATIC_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
 
-#define GET_TYPE_FIELD(_ctype, _jname)                                      \
+#define GET_TYPE_FIELD(_ctype, _jname) \
     static _ctype Check_Get##_jname##Field(JNIEnv* env, jobject obj, jfieldID fieldID) { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkObject(obj); \
+        sc.trace("Eof", env, obj, fieldID); \
         sc.checkInstanceFieldID(obj, fieldID); \
-        return baseEnv(env)->Get##_jname##Field(env, obj, fieldID);      \
+        return baseEnv(env)->Get##_jname##Field(env, obj, fieldID); \
     }
 GET_TYPE_FIELD(jobject, Object);
 GET_TYPE_FIELD(jboolean, Boolean);
@@ -1382,7 +1536,7 @@ GET_TYPE_FIELD(jdouble, Double);
     static void Check_Set##_jname##Field(JNIEnv* env, jobject obj, jfieldID fieldID, _ctype value) \
     { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkObject(obj); \
+        sc.trace("Eof.", env, obj, fieldID); /* TODO: value! */ \
         sc.checkInstanceFieldID(obj, fieldID); \
         /* "value" arg only used when type == ref */ \
         sc.checkFieldType((jobject)(u4) value, fieldID, _ftype, false); \
@@ -1398,45 +1552,42 @@ SET_TYPE_FIELD(jlong, Long, PRIM_LONG);
 SET_TYPE_FIELD(jfloat, Float, PRIM_FLOAT);
 SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
 
-#define CALL_VIRTUAL(_ctype, _jname, _retdecl, _retasgn, _retok, _retsig)   \
-    static _ctype Check_Call##_jname##Method(JNIEnv* env, jobject obj,      \
-        jmethodID methodID, ...)                                            \
-    {                                                                       \
+#define CALL_VIRTUAL(_ctype, _jname, _retdecl, _retasgn, _retok, _retsig) \
+    static _ctype Check_Call##_jname##Method(JNIEnv* env, jobject obj, \
+        jmethodID methodID, ...) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkObject(obj); \
+        sc.trace("Eom.", env, obj, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, false); \
         sc.checkVirtualMethod(obj, methodID); \
-        _retdecl;                                                           \
-        va_list args;                                                       \
-        va_start(args, methodID);                                           \
-        _retasgn baseEnv(env)->Call##_jname##MethodV(env, obj, methodID,   \
-            args);                                                          \
-        va_end(args);                                                       \
-        return _retok;                                                      \
-    }                                                                       \
-    static _ctype Check_Call##_jname##MethodV(JNIEnv* env, jobject obj,     \
-        jmethodID methodID, va_list args)                                   \
-    {                                                                       \
+        _retdecl; \
+        va_list args; \
+        va_start(args, methodID); \
+        _retasgn baseEnv(env)->Call##_jname##MethodV(env, obj, methodID, args); \
+        va_end(args); \
+        return _retok; \
+    } \
+    static _ctype Check_Call##_jname##MethodV(JNIEnv* env, jobject obj, \
+        jmethodID methodID, va_list args) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkObject(obj); \
+        sc.trace("Eom.", env, obj, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, false); \
         sc.checkVirtualMethod(obj, methodID); \
-        _retdecl;                                                           \
-        _retasgn baseEnv(env)->Call##_jname##MethodV(env, obj, methodID,   \
-            args);                                                          \
-        return _retok;                                                      \
-    }                                                                       \
-    static _ctype Check_Call##_jname##MethodA(JNIEnv* env, jobject obj,     \
-        jmethodID methodID, jvalue* args)                                   \
-    {                                                                       \
+        _retdecl; \
+        _retasgn baseEnv(env)->Call##_jname##MethodV(env, obj, methodID, args); \
+        return _retok; \
+    } \
+    static _ctype Check_Call##_jname##MethodA(JNIEnv* env, jobject obj, \
+        jmethodID methodID, jvalue* args) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkObject(obj); \
+        sc.trace("Eom.", env, obj, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, false); \
         sc.checkVirtualMethod(obj, methodID); \
-        _retdecl;                                                           \
-        _retasgn baseEnv(env)->Call##_jname##MethodA(env, obj, methodID,   \
-            args);                                                          \
-        return _retok;                                                      \
+        _retdecl; \
+        _retasgn baseEnv(env)->Call##_jname##MethodA(env, obj, methodID, args); \
+        return _retok; \
     }
 CALL_VIRTUAL(jobject, Object, Object* result, result=(Object*), (jobject) result, 'L');
 CALL_VIRTUAL(jboolean, Boolean, jboolean result, result=, (jboolean) result, 'Z');
@@ -1449,49 +1600,43 @@ CALL_VIRTUAL(jfloat, Float, jfloat result, result=, (jfloat) result, 'F');
 CALL_VIRTUAL(jdouble, Double, jdouble result, result=, (jdouble) result, 'D');
 CALL_VIRTUAL(void, Void, , , , 'V');
 
-#define CALL_NONVIRTUAL(_ctype, _jname, _retdecl, _retasgn, _retok,         \
-        _retsig)                                                            \
-    static _ctype Check_CallNonvirtual##_jname##Method(JNIEnv* env,         \
-        jobject obj, jclass clazz, jmethodID methodID, ...)                 \
-    {                                                                       \
+#define CALL_NONVIRTUAL(_ctype, _jname, _retdecl, _retasgn, _retok, \
+        _retsig) \
+    static _ctype Check_CallNonvirtual##_jname##Method(JNIEnv* env, \
+        jobject obj, jclass clazz, jmethodID methodID, ...) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkClass(clazz); \
-        sc.checkObject(obj); \
+        sc.trace("Eocm.", env, obj, clazz, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, false); \
         sc.checkVirtualMethod(obj, methodID); \
-        _retdecl;                                                           \
-        va_list args;                                                       \
-        va_start(args, methodID);                                           \
-        _retasgn baseEnv(env)->CallNonvirtual##_jname##MethodV(env, obj,   \
-            clazz, methodID, args);                                         \
-        va_end(args);                                                       \
-        return _retok;                                                      \
-    }                                                                       \
-    static _ctype Check_CallNonvirtual##_jname##MethodV(JNIEnv* env,        \
-        jobject obj, jclass clazz, jmethodID methodID, va_list args)        \
-    {                                                                       \
+        _retdecl; \
+        va_list args; \
+        va_start(args, methodID); \
+        _retasgn baseEnv(env)->CallNonvirtual##_jname##MethodV(env, obj, clazz, methodID, args); \
+        va_end(args); \
+        return _retok; \
+    } \
+    static _ctype Check_CallNonvirtual##_jname##MethodV(JNIEnv* env, \
+        jobject obj, jclass clazz, jmethodID methodID, va_list args) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkClass(clazz); \
-        sc.checkObject(obj); \
+        sc.trace("Eocm.", env, obj, clazz, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, false); \
         sc.checkVirtualMethod(obj, methodID); \
-        _retdecl;                                                           \
-        _retasgn baseEnv(env)->CallNonvirtual##_jname##MethodV(env, obj,   \
-            clazz, methodID, args);                                         \
-        return _retok;                                                      \
-    }                                                                       \
-    static _ctype Check_CallNonvirtual##_jname##MethodA(JNIEnv* env,        \
-        jobject obj, jclass clazz, jmethodID methodID, jvalue* args)        \
-    {                                                                       \
+        _retdecl; \
+        _retasgn baseEnv(env)->CallNonvirtual##_jname##MethodV(env, obj, clazz, methodID, args); \
+        return _retok; \
+    } \
+    static _ctype Check_CallNonvirtual##_jname##MethodA(JNIEnv* env, \
+        jobject obj, jclass clazz, jmethodID methodID, jvalue* args) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkClass(clazz); \
-        sc.checkObject(obj); \
+        sc.trace("Eocm.", env, obj, clazz, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, false); \
         sc.checkVirtualMethod(obj, methodID); \
-        _retdecl;                                                           \
-        _retasgn baseEnv(env)->CallNonvirtual##_jname##MethodA(env, obj,   \
-            clazz, methodID, args);                                         \
-        return _retok;                                                      \
+        _retdecl; \
+        _retasgn baseEnv(env)->CallNonvirtual##_jname##MethodA(env, obj, clazz, methodID, args); \
+        return _retok; \
     }
 CALL_NONVIRTUAL(jobject, Object, Object* result, result=(Object*), (jobject) result, 'L');
 CALL_NONVIRTUAL(jboolean, Boolean, jboolean result, result=, (jboolean) result, 'Z');
@@ -1505,45 +1650,42 @@ CALL_NONVIRTUAL(jdouble, Double, jdouble result, result=, (jdouble) result, 'D')
 CALL_NONVIRTUAL(void, Void, , , , 'V');
 
 
-#define CALL_STATIC(_ctype, _jname, _retdecl, _retasgn, _retok, _retsig)    \
-    static _ctype Check_CallStatic##_jname##Method(JNIEnv* env,             \
-        jclass clazz, jmethodID methodID, ...)                              \
-    {                                                                       \
+#define CALL_STATIC(_ctype, _jname, _retdecl, _retasgn, _retok, _retsig) \
+    static _ctype Check_CallStatic##_jname##Method(JNIEnv* env, \
+        jclass clazz, jmethodID methodID, ...) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkClass(clazz); \
+        sc.trace("Ecm.", env, clazz, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, true); \
         sc.checkStaticMethod(clazz, methodID); \
-        _retdecl;                                                           \
-        va_list args;                                                       \
-        va_start(args, methodID);                                           \
-        _retasgn baseEnv(env)->CallStatic##_jname##MethodV(env, clazz,     \
-            methodID, args);                                                \
-        va_end(args);                                                       \
-        return _retok;                                                      \
-    }                                                                       \
-    static _ctype Check_CallStatic##_jname##MethodV(JNIEnv* env,            \
-        jclass clazz, jmethodID methodID, va_list args)                     \
-    {                                                                       \
+        _retdecl; \
+        va_list args; \
+        va_start(args, methodID); \
+        _retasgn baseEnv(env)->CallStatic##_jname##MethodV(env, clazz, methodID, args); \
+        va_end(args); \
+        return _retok; \
+    } \
+    static _ctype Check_CallStatic##_jname##MethodV(JNIEnv* env, \
+        jclass clazz, jmethodID methodID, va_list args) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkClass(clazz); \
+        sc.trace("Ecm.", env, clazz, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, true); \
         sc.checkStaticMethod(clazz, methodID); \
-        _retdecl;                                                           \
-        _retasgn baseEnv(env)->CallStatic##_jname##MethodV(env, clazz,     \
-            methodID, args);                                                \
-        return _retok;                                                      \
-    }                                                                       \
-    static _ctype Check_CallStatic##_jname##MethodA(JNIEnv* env,            \
-        jclass clazz, jmethodID methodID, jvalue* args)                     \
-    {                                                                       \
+        _retdecl; \
+        _retasgn baseEnv(env)->CallStatic##_jname##MethodV(env, clazz, methodID, args); \
+        return _retok; \
+    } \
+    static _ctype Check_CallStatic##_jname##MethodA(JNIEnv* env, \
+        jclass clazz, jmethodID methodID, jvalue* args) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkClass(clazz); \
+        sc.trace("Ecm.", env, clazz, methodID); /* TODO: args! */ \
         sc.checkSig(methodID, _retsig, true); \
         sc.checkStaticMethod(clazz, methodID); \
-        _retdecl;                                                           \
-        _retasgn baseEnv(env)->CallStatic##_jname##MethodA(env, clazz,     \
-            methodID, args);                                                \
-        return _retok;                                                      \
+        _retdecl; \
+        _retasgn baseEnv(env)->CallStatic##_jname##MethodA(env, clazz, methodID, args); \
+        return _retok; \
     }
 CALL_STATIC(jobject, Object, Object* result, result=(Object*), (jobject) result, 'L');
 CALL_STATIC(jboolean, Boolean, jboolean result, result=, (jboolean) result, 'Z');
@@ -1558,18 +1700,19 @@ CALL_STATIC(void, Void, , , , 'V');
 
 static jstring Check_NewString(JNIEnv* env, const jchar* unicodeChars, jsize len) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
+    sc.trace("Epz", env, unicodeChars, len);
     return baseEnv(env)->NewString(env, unicodeChars, len);
 }
 
 static jsize Check_GetStringLength(JNIEnv* env, jstring string) {
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
-    sc.checkString(string);
+    sc.trace("Es", env, string);
     return baseEnv(env)->GetStringLength(env, string);
 }
 
 static const jchar* Check_GetStringChars(JNIEnv* env, jstring string, jboolean* isCopy) {
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
-    sc.checkString(string);
+    sc.trace("Esp", env, string, isCopy);
     const jchar* result = baseEnv(env)->GetStringChars(env, string, isCopy);
     if (gDvmJni.forceCopy && result != NULL) {
         ScopedJniThreadState ts(env);
@@ -1585,7 +1728,7 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string, jboolean* 
 
 static void Check_ReleaseStringChars(JNIEnv* env, jstring string, const jchar* chars) {
     ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkString(string);
+    sc.trace("Esp", env, string, chars);
     sc.checkNonNull(chars);
     if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(chars, false)) {
@@ -1599,20 +1742,20 @@ static void Check_ReleaseStringChars(JNIEnv* env, jstring string, const jchar* c
 }
 
 static jstring Check_NewStringUTF(JNIEnv* env, const char* bytes) {
-    ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkUtfString(bytes, NULL);
+    ScopedCheck sc(env, kFlag_NullableUtf, __FUNCTION__);
+    sc.trace("Eu", env, bytes); // TODO: show pointer and truncate string.
     return baseEnv(env)->NewStringUTF(env, bytes);
 }
 
 static jsize Check_GetStringUTFLength(JNIEnv* env, jstring string) {
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
-    sc.checkString(string);
+    sc.trace("Es", env, string);
     return baseEnv(env)->GetStringUTFLength(env, string);
 }
 
 static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string, jboolean* isCopy) {
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
-    sc.checkString(string);
+    sc.trace("Esp", env, string, isCopy);
     const char* result = baseEnv(env)->GetStringUTFChars(env, string, isCopy);
     if (gDvmJni.forceCopy && result != NULL) {
         result = (const char*) GuardedCopy::create(result, strlen(result) + 1, false);
@@ -1624,9 +1767,8 @@ static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string, jboolean
 }
 
 static void Check_ReleaseStringUTFChars(JNIEnv* env, jstring string, const char* utf) {
-    ScopedCheck sc(env, kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkString(string);
-    sc.checkNonNull(utf);
+    ScopedCheck sc(env, kFlag_ExcepOkay | kFlag_Release, __FUNCTION__);
+    sc.trace("Esu", env, string, utf); // TODO: show pointer and truncate string.
     if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(utf, false)) {
             LOGE("JNI: failed guarded copy check in ReleaseStringUTFChars");
@@ -1640,7 +1782,7 @@ static void Check_ReleaseStringUTFChars(JNIEnv* env, jstring string, const char*
 
 static jsize Check_GetArrayLength(JNIEnv* env, jarray array) {
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
-    sc.checkArray(array);
+    sc.trace("Ea", env, array);
     return baseEnv(env)->GetArrayLength(env, array);
 }
 
@@ -1648,29 +1790,27 @@ static jobjectArray Check_NewObjectArray(JNIEnv* env, jsize length,
     jclass elementClass, jobject initialElement)
 {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(elementClass);
-    sc.checkObject(initialElement);
-    sc.checkLengthPositive(length);
+    sc.trace("Ezco", env, length, elementClass, initialElement);
     return baseEnv(env)->NewObjectArray(env, length, elementClass, initialElement);
 }
 
 static jobject Check_GetObjectArrayElement(JNIEnv* env, jobjectArray array, jsize index) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkArray(array);
+    sc.trace("Eai", env, array, index);
     return baseEnv(env)->GetObjectArrayElement(env, array, index);
 }
 
 static void Check_SetObjectArrayElement(JNIEnv* env, jobjectArray array, jsize index, jobject value)
 {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkArray(array);
+    sc.trace("Eaio", env, array, index, value);
     baseEnv(env)->SetObjectArrayElement(env, array, index, value);
 }
 
 #define NEW_PRIMITIVE_ARRAY(_artype, _jname) \
     static _artype Check_New##_jname##Array(JNIEnv* env, jsize length) { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkLengthPositive(length); \
+        sc.trace("Ez", env, length); \
         return baseEnv(env)->New##_jname##Array(env, length); \
     }
 NEW_PRIMITIVE_ARRAY(jbooleanArray, Boolean);
@@ -1691,68 +1831,66 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
  */
 #define kNoCopyMagic    0xd5aab57f
 
-#define GET_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname)                        \
-    static _ctype* Check_Get##_jname##ArrayElements(JNIEnv* env,            \
-        _ctype##Array array, jboolean* isCopy)                              \
-    {                                                                       \
+#define GET_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname) \
+    static _ctype* Check_Get##_jname##ArrayElements(JNIEnv* env, \
+        _ctype##Array array, jboolean* isCopy) \
+    { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkArray(array); \
-        u4 noCopy = 0;                                                      \
+        sc.trace("Eap", env, array, isCopy); \
+        u4 noCopy = 0; \
         if (gDvmJni.forceCopy && isCopy != NULL) { \
-            /* capture this before the base call tramples on it */          \
-            noCopy = *(u4*) isCopy;                                         \
-        }                                                                   \
+            /* capture this before the base call tramples on it */ \
+            noCopy = *(u4*) isCopy; \
+        } \
         _ctype* result = baseEnv(env)->Get##_jname##ArrayElements(env, array, isCopy); \
         if (gDvmJni.forceCopy && result != NULL) { \
-            if (noCopy == kNoCopyMagic) {                                   \
+            if (noCopy == kNoCopyMagic) { \
                 LOGV("FC: not copying %p %x", array, noCopy); \
-            } else {                                                        \
+            } else { \
                 result = (_ctype*) createGuardedPACopy(env, array, isCopy); \
-            }                                                               \
-        }                                                                   \
-        return result;                                                      \
+            } \
+        } \
+        return result; \
     }
 
-#define RELEASE_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname)                    \
-    static void Check_Release##_jname##ArrayElements(JNIEnv* env,           \
-        _ctype##Array array, _ctype* elems, jint mode)                      \
-    {                                                                       \
+#define RELEASE_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname) \
+    static void Check_Release##_jname##ArrayElements(JNIEnv* env, \
+        _ctype##Array array, _ctype* elems, jint mode) \
+    { \
         ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__); \
-        sc.checkArray(array);                                            \
+        sc.trace("Eapr", env, array, elems, mode); \
         sc.checkNonNull(elems); \
-        sc.checkReleaseMode(mode); \
         if (gDvmJni.forceCopy) { \
-            if ((uintptr_t)elems == kNoCopyMagic) {                         \
+            if ((uintptr_t)elems == kNoCopyMagic) { \
                 LOGV("FC: not freeing %p", array); \
-                elems = NULL;   /* base JNI call doesn't currently need */  \
-            } else {                                                        \
-                elems = (_ctype*) releaseGuardedPACopy(env, array, elems,   \
-                        mode);                                              \
-            }                                                               \
-        }                                                                   \
+                elems = NULL;   /* base JNI call doesn't currently need */ \
+            } else { \
+                elems = (_ctype*) releaseGuardedPACopy(env, array, elems, mode); \
+            } \
+        } \
         baseEnv(env)->Release##_jname##ArrayElements(env, array, elems, mode); \
     }
 
 #define GET_PRIMITIVE_ARRAY_REGION(_ctype, _jname) \
     static void Check_Get##_jname##ArrayRegion(JNIEnv* env, \
-        _ctype##Array array, jsize start, jsize len, _ctype* buf) { \
+            _ctype##Array array, jsize start, jsize len, _ctype* buf) { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkArray(array); \
+        sc.trace("Eaiip", env, array, start, len, buf); \
         baseEnv(env)->Get##_jname##ArrayRegion(env, array, start, len, buf); \
     }
 
 #define SET_PRIMITIVE_ARRAY_REGION(_ctype, _jname) \
     static void Check_Set##_jname##ArrayRegion(JNIEnv* env, \
-        _ctype##Array array, jsize start, jsize len, const _ctype* buf) { \
+            _ctype##Array array, jsize start, jsize len, const _ctype* buf) { \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
-        sc.checkArray(array); \
+        sc.trace("Eaiip", env, array, start, len, buf); \
         baseEnv(env)->Set##_jname##ArrayRegion(env, array, start, len, buf); \
     }
 
-#define PRIMITIVE_ARRAY_FUNCTIONS(_ctype, _jname, _typechar)                \
-    GET_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname);                           \
-    RELEASE_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname);                       \
-    GET_PRIMITIVE_ARRAY_REGION(_ctype, _jname);                             \
+#define PRIMITIVE_ARRAY_FUNCTIONS(_ctype, _jname, _typechar) \
+    GET_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname); \
+    RELEASE_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname); \
+    GET_PRIMITIVE_ARRAY_REGION(_ctype, _jname); \
     SET_PRIMITIVE_ARRAY_REGION(_ctype, _jname);
 
 /* TODO: verify primitive array type matches call type */
@@ -1769,48 +1907,49 @@ static jint Check_RegisterNatives(JNIEnv* env, jclass clazz, const JNINativeMeth
         jint nMethods)
 {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
+    sc.trace("Ecpi", env, clazz, methods, nMethods);
     return baseEnv(env)->RegisterNatives(env, clazz, methods, nMethods);
 }
 
 static jint Check_UnregisterNatives(JNIEnv* env, jclass clazz) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkClass(clazz);
+    sc.trace("Ec", env, clazz);
     return baseEnv(env)->UnregisterNatives(env, clazz);
 }
 
 static jint Check_MonitorEnter(JNIEnv* env, jobject obj) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(obj);
+    sc.trace("Eo", env, obj);
     return baseEnv(env)->MonitorEnter(env, obj);
 }
 
 static jint Check_MonitorExit(JNIEnv* env, jobject obj) {
     ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkObject(obj);
+    sc.trace("Eo", env, obj);
     return baseEnv(env)->MonitorExit(env, obj);
 }
 
 static jint Check_GetJavaVM(JNIEnv *env, JavaVM **vm) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
+    sc.trace("Ep", env, vm);
     return baseEnv(env)->GetJavaVM(env, vm);
 }
 
 static void Check_GetStringRegion(JNIEnv* env, jstring str, jsize start, jsize len, jchar* buf) {
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
-    sc.checkString(str);
+    sc.trace("Esiip", env, str, start, len, buf);
     baseEnv(env)->GetStringRegion(env, str, start, len, buf);
 }
 
 static void Check_GetStringUTFRegion(JNIEnv* env, jstring str, jsize start, jsize len, char* buf) {
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
-    sc.checkString(str);
+    sc.trace("Esiip", env, str, start, len, buf);
     baseEnv(env)->GetStringUTFRegion(env, str, start, len, buf);
 }
 
 static void* Check_GetPrimitiveArrayCritical(JNIEnv* env, jarray array, jboolean* isCopy) {
     ScopedCheck sc(env, kFlag_CritGet, __FUNCTION__);
-    sc.checkArray(array);
+    sc.trace("Eap", env, array, isCopy);
     void* result = baseEnv(env)->GetPrimitiveArrayCritical(env, array, isCopy);
     if (gDvmJni.forceCopy && result != NULL) {
         result = createGuardedPACopy(env, array, isCopy);
@@ -1821,9 +1960,8 @@ static void* Check_GetPrimitiveArrayCritical(JNIEnv* env, jarray array, jboolean
 static void Check_ReleasePrimitiveArrayCritical(JNIEnv* env, jarray array, void* carray, jint mode)
 {
     ScopedCheck sc(env, kFlag_CritRelease | kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkArray(array);
+    sc.trace("Eapr", env, array, carray, mode);
     sc.checkNonNull(carray);
-    sc.checkReleaseMode(mode);
     if (gDvmJni.forceCopy) {
         carray = releaseGuardedPACopy(env, array, carray, mode);
     }
@@ -1832,7 +1970,7 @@ static void Check_ReleasePrimitiveArrayCritical(JNIEnv* env, jarray array, void*
 
 static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string, jboolean* isCopy) {
     ScopedCheck sc(env, kFlag_CritGet, __FUNCTION__);
-    sc.checkString(string);
+    sc.trace("Esp", env, string, isCopy);
     const jchar* result = baseEnv(env)->GetStringCritical(env, string, isCopy);
     if (gDvmJni.forceCopy && result != NULL) {
         ScopedJniThreadState ts(env);
@@ -1848,7 +1986,7 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string, jboolea
 
 static void Check_ReleaseStringCritical(JNIEnv* env, jstring string, const jchar* carray) {
     ScopedCheck sc(env, kFlag_CritRelease | kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkString(string);
+    sc.trace("Esp", env, string, carray);
     sc.checkNonNull(carray);
     if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(carray, false)) {
@@ -1863,29 +2001,31 @@ static void Check_ReleaseStringCritical(JNIEnv* env, jstring string, const jchar
 
 static jweak Check_NewWeakGlobalRef(JNIEnv* env, jobject obj) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(obj);
+    sc.trace("Eo", env, obj);
     return baseEnv(env)->NewWeakGlobalRef(env, obj);
 }
 
 static void Check_DeleteWeakGlobalRef(JNIEnv* env, jweak obj) {
     ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__);
-    sc.checkObject(obj);
+    sc.trace("Eo", env, obj);
     baseEnv(env)->DeleteWeakGlobalRef(env, obj);
 }
 
 static jboolean Check_ExceptionCheck(JNIEnv* env) {
     ScopedCheck sc(env, kFlag_CritOkay | kFlag_ExcepOkay, __FUNCTION__);
+    sc.trace("E", env);
     return baseEnv(env)->ExceptionCheck(env);
 }
 
 static jobjectRefType Check_GetObjectRefType(JNIEnv* env, jobject obj) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(obj);
+    sc.trace("Eo", env, obj);
     return baseEnv(env)->GetObjectRefType(env, obj);
 }
 
 static jobject Check_NewDirectByteBuffer(JNIEnv* env, void* address, jlong capacity) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
+    sc.trace("Epl", env, address, capacity);
     if (address == NULL || capacity < 0) {
         LOGW("JNI WARNING: invalid values for address (%p) or capacity (%ld)",
             address, (long) capacity);
@@ -1897,14 +2037,15 @@ static jobject Check_NewDirectByteBuffer(JNIEnv* env, void* address, jlong capac
 
 static void* Check_GetDirectBufferAddress(JNIEnv* env, jobject buf) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(buf);
+    sc.trace("Eo", env, buf);
+    // TODO: check that 'buf' is a java.nio.Buffer.
     return baseEnv(env)->GetDirectBufferAddress(env, buf);
 }
 
 static jlong Check_GetDirectBufferCapacity(JNIEnv* env, jobject buf) {
     ScopedCheck sc(env, kFlag_Default, __FUNCTION__);
-    sc.checkObject(buf);
-    /* TODO: verify "buf" is an instance of java.nio.Buffer */
+    sc.trace("Eo", env, buf);
+    // TODO: check that 'buf' is a java.nio.Buffer.
     return baseEnv(env)->GetDirectBufferCapacity(env, buf);
 }
 
@@ -1916,27 +2057,32 @@ static jlong Check_GetDirectBufferCapacity(JNIEnv* env, jobject buf) {
  */
 
 static jint Check_DestroyJavaVM(JavaVM* vm) {
-    ScopedVmCheck svc(false, __FUNCTION__);
+    ScopedCheck sc(false, __FUNCTION__);
+    sc.trace("V", vm);
     return baseVm(vm)->DestroyJavaVM(vm);
 }
 
 static jint Check_AttachCurrentThread(JavaVM* vm, JNIEnv** p_env, void* thr_args) {
-    ScopedVmCheck svc(false, __FUNCTION__);
+    ScopedCheck sc(false, __FUNCTION__);
+    sc.trace("Vpp", vm, p_env, thr_args);
     return baseVm(vm)->AttachCurrentThread(vm, p_env, thr_args);
 }
 
 static jint Check_AttachCurrentThreadAsDaemon(JavaVM* vm, JNIEnv** p_env, void* thr_args) {
-    ScopedVmCheck svc(false, __FUNCTION__);
+    ScopedCheck sc(false, __FUNCTION__);
+    sc.trace("Vpp", vm, p_env, thr_args);
     return baseVm(vm)->AttachCurrentThreadAsDaemon(vm, p_env, thr_args);
 }
 
 static jint Check_DetachCurrentThread(JavaVM* vm) {
-    ScopedVmCheck svc(true, __FUNCTION__);
+    ScopedCheck sc(true, __FUNCTION__);
+    sc.trace("V", vm);
     return baseVm(vm)->DetachCurrentThread(vm);
 }
 
 static jint Check_GetEnv(JavaVM* vm, void** env, jint version) {
-    ScopedVmCheck svc(true, __FUNCTION__);
+    ScopedCheck sc(true, __FUNCTION__);
+    sc.trace("V", vm);
     return baseVm(vm)->GetEnv(vm, env, version);
 }
 

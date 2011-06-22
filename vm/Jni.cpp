@@ -388,6 +388,18 @@ static jobject addLocalReference(JNIEnv* env, Object* obj) {
         }
     }
 
+#if 0 // TODO: fix this to understand PushLocalFrame, so we can turn it on.
+    if (gDvmJni.useCheckJni) {
+        size_t entryCount = pRefTable->capacity();
+        if (entryCount > 16) {
+            LOGW("Warning: more than 16 JNI local references: %d (most recent was a %s)", entryCount, obj->clazz->descriptor);
+            pRefTable->dump("JNI local");
+            dvmDumpThread(dvmThreadSelf(), false);
+            //dvmAbort();
+        }
+    }
+#endif
+
     return jobj;
 }
 
@@ -3523,13 +3535,14 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
 
     /* Initialize VM. */
     gDvm.initializing = true;
-    int rc = dvmStartup(argc, argv.get(), args->ignoreUnrecognized, (JNIEnv*)pEnv);
+    std::string status =
+            dvmStartup(argc, argv.get(), args->ignoreUnrecognized, (JNIEnv*)pEnv);
     gDvm.initializing = false;
 
-    if (rc != 0) {
+    if (!status.empty()) {
         free(pEnv);
         free(pVM);
-        LOGW("CreateJavaVM failed");
+        LOGW("CreateJavaVM failed: %s", status.c_str());
         return JNI_ERR;
     }
 

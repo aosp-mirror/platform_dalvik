@@ -155,6 +155,19 @@ std::string dvmHumanReadableDescriptor(const char* descriptor);
  */
 std::string dvmHumanReadableType(const Object* obj);
 
+/**
+ * Returns a human-readable string of the form "package.Class.fieldName".
+ */
+struct Field;
+std::string dvmHumanReadableField(const Field* field);
+
+/**
+ * Returns a human-readable string of the form "package.Class.methodName"
+ * or "package.Class.methodName(Ljava/lang/String;I)V".
+ */
+struct Method;
+std::string dvmHumanReadableMethod(const Method* method, bool withSignature);
+
 /*
  * Return a newly-allocated string for the "dot version" of the class
  * name for the given type descriptor. That is, The initial "L" and
@@ -323,5 +336,10 @@ std::string StringPrintf(const char* fmt, ...)
  */
 void StringAppendF(std::string* dst, const char* fmt, ...)
         __attribute__((__format__ (__printf__, 2, 3)));
+
+/**
+ * Appends a printf-like formatting of the arguments to 'dst'.
+ */
+void StringAppendV(std::string* dst, const char* format, va_list ap);
 
 #endif  // DALVIK_MISC_H_
