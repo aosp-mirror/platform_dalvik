@@ -303,6 +303,8 @@ static inline IndirectRefTable* getLocalRefTable(JNIEnv* env) {
  * If "jobj" is NULL, or is a weak global reference whose reference has
  * been cleared, this returns NULL.  If jobj is an invalid indirect
  * reference, kInvalidIndirectRefObject is returned.
+ *
+ * Note "env" may be NULL when decoding global references.
  */
 Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
     if (jobj == NULL) {
@@ -2831,7 +2833,7 @@ static jint attachThread(JavaVM* vm, JNIEnv** p_env, void* thr_args, bool isDaem
         argsCopy.version = args->version;
         argsCopy.name = args->name;
         if (args->group != NULL) {
-            argsCopy.group = args->group;
+            argsCopy.group = (jobject) dvmDecodeIndirectRef(NULL, args->group);
         } else {
             argsCopy.group = (jobject) dvmGetMainThreadGroup();
         }
