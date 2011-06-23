@@ -40,24 +40,6 @@ static void Dalvik_dalvik_system_VMStack_getCallingClassLoader(const u4* args,
 }
 
 /*
- * public static ClassLoader getCallingClassLoader2()
- *
- * Return the defining class loader of the caller's caller's caller.
- */
-static void Dalvik_dalvik_system_VMStack_getCallingClassLoader2(const u4* args,
-    JValue* pResult)
-{
-    ClassObject* clazz =
-        dvmGetCaller3Class(dvmThreadSelf()->interpSave.curFrame);
-
-    UNUSED_PARAMETER(args);
-
-    if (clazz == NULL)
-        RETURN_PTR(NULL);
-    RETURN_PTR(clazz->classLoader);
-}
-
-/*
  * public static Class<?> getStackClass2()
  *
  * Returns the class of the caller's caller's caller.
@@ -244,8 +226,6 @@ static void Dalvik_dalvik_system_VMStack_fillStackTraceElements(const u4* args,
 const DalvikNativeMethod dvm_dalvik_system_VMStack[] = {
     { "getCallingClassLoader",  "()Ljava/lang/ClassLoader;",
         Dalvik_dalvik_system_VMStack_getCallingClassLoader },
-    { "getCallingClassLoader2", "()Ljava/lang/ClassLoader;",
-        Dalvik_dalvik_system_VMStack_getCallingClassLoader2 },
     { "getStackClass2",         "()Ljava/lang/Class;",
         Dalvik_dalvik_system_VMStack_getStackClass2 },
     { "getClasses",             "(I)[Ljava/lang/Class;",
