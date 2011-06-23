@@ -709,9 +709,9 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
 
     // If a signature starts with a '!', we take that as a sign that the native code doesn't
     // need the extra JNI arguments (the JNIEnv* and the jclass).
-    bool needsJniEnv = true;
+    bool fastJni = false;
     if (*signature == '!') {
-        needsJniEnv = false;
+        fastJni = true;
         ++signature;
         LOGV("fast JNI method %s.%s:%s detected", clazz->descriptor, methodName, signature);
     }
@@ -730,7 +730,7 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
         return false;
     }
 
-    if (!needsJniEnv) {
+    if (fastJni) {
         // In this case, we have extra constraints to check...
         if (dvmIsSynchronizedMethod(method)) {
             // Synchronization is usually provided by the JNI bridge,
@@ -754,7 +754,7 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
         LOGV("Note: %s.%s:%s was already registered", clazz->descriptor, methodName, signature);
     }
 
-    method->needsJniEnv = needsJniEnv;
+    method->fastJni = fastJni;
     dvmUseJNIBridge(method, fnPtr);
 
     LOGV("JNI-registered %s.%s:%s", clazz->descriptor, methodName, signature);
@@ -1079,7 +1079,7 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult, const Method* met
     assert(method->insns != NULL);
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(method->needsJniEnv ? env : NULL,
+    dvmPlatformInvoke(method->fastJni ? NULL : env,
             (ClassObject*)staticMethodClass,
             method->jniArgInfo, method->insSize, modArgs, method->shorty,
             (void*)method->insns, pResult);
@@ -1138,7 +1138,7 @@ void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
     ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(method->needsJniEnv ? self->jniEnv : NULL, NULL,
+    dvmPlatformInvoke(method->fastJni ? NULL : self->jniEnv, NULL,
             method->jniArgInfo, method->insSize, modArgs, method->shorty,
             (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
@@ -1167,7 +1167,7 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(method->needsJniEnv ? self->jniEnv : NULL,
+    dvmPlatformInvoke(method->fastJni ? NULL : self->jniEnv,
             (ClassObject*)staticMethodClass,
             method->jniArgInfo, method->insSize, args, method->shorty,
             (void*)method->insns, pResult);
