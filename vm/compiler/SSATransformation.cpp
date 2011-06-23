@@ -535,7 +535,7 @@ static bool insertPhiNodeOperands(CompilationUnit *cUnit, BasicBlock *bb)
         mir->ssaRep->uses =
             (int *) dvmCompilerNew(sizeof(int) * numUses, false);
         mir->ssaRep->fpUse =
-            (bool *) dvmCompilerNew(sizeof(bool) * numUses, false);
+            (bool *) dvmCompilerNew(sizeof(bool) * numUses, true);
 
         BitVectorIterator phiIterator;
 
