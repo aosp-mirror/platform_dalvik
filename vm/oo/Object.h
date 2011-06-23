@@ -548,8 +548,12 @@ struct Method {
      */
     DalvikBridgeFunc nativeFunc;
 
-    /* Whether this native method needs a JNIEnv*. */
-    bool needsJniEnv;
+    /*
+     * True if this static non-synchronized native method (that has no
+     * reference arguments) needs a JNIEnv* and jclass/jobject. Libcore
+     * uses this.
+     */
+    bool fastJni;
 
     /*
      * Register map data, if available.  This will point into the DEX file
