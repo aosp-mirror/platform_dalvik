@@ -270,6 +270,9 @@ retry:
             sleep_ms += (sleep_ms >> 1);
             if (sleep_ms > sleep_max_ms)
                 sleep_ms = sleep_max_ms;
+
+            if (netState->shuttingDown)
+                return false;
         }
     }
 
