@@ -238,9 +238,9 @@ const char* dvmJdwpSuspendPolicyStr(JdwpSuspendPolicy policy)
 const char* dvmJdwpSuspendStatusStr(JdwpSuspendStatus status)
 {
     switch (status) {
-    case 0:                         return "Not SUSPENDED";
-    case SUSPEND_STATUS_SUSPENDED:  return "SUSPENDED";
-    default:                        return "?UNKNOWN?";
+    case SUSPEND_STATUS_NOT_SUSPENDED: return "Not SUSPENDED";
+    case SUSPEND_STATUS_SUSPENDED:     return "SUSPENDED";
+    default:                           return "?UNKNOWN?";
     }
 }
 
