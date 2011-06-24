@@ -440,7 +440,7 @@ static void Dalvik_java_lang_Class_isAssignableFrom(const u4* args,
     ClassObject* testClass = (ClassObject*) args[1];
 
     if (testClass == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("cls == null");
         RETURN_INT(false);
     }
     RETURN_INT(dvmInstanceof(testClass, thisPtr));

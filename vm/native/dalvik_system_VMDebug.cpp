@@ -505,7 +505,7 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
      * Only one of these may be NULL.
      */
     if (fileNameStr == NULL && fileDescriptor == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("fileName == null && fd == null");
         RETURN_VOID();
     }
 
@@ -588,7 +588,7 @@ static void Dalvik_dalvik_system_VMDebug_cacheRegisterMap(const u4* args,
     bool result = false;
 
     if (classAndMethodDescStr == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("classAndMethodDesc == null");
         RETURN_VOID();
     }
 

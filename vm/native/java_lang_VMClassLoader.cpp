@@ -85,7 +85,7 @@ static void Dalvik_java_lang_VMClassLoader_findLoadedClass(const u4* args,
     char* descriptor = NULL;
 
     if (nameObj == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("name == null");
         goto bail;
     }
 

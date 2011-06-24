@@ -113,24 +113,19 @@ static void move32(void* dest, const void* src, size_t n)
  */
 static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
 {
-    ArrayObject* srcArray;
-    ArrayObject* dstArray;
-    ClassObject* srcClass;
-    ClassObject* dstClass;
-    int srcPos, dstPos, length;
-    char srcType, dstType;
-    bool srcPrim, dstPrim;
+    ArrayObject* srcArray = (ArrayObject*) args[0];
+    int srcPos = args[1];
+    ArrayObject* dstArray = (ArrayObject*) args[2];
+    int dstPos = args[3];
+    int length = args[4];
 
-    srcArray = (ArrayObject*) args[0];
-    srcPos = args[1];
-    dstArray = (ArrayObject*) args[2];
-    dstPos = args[3];
-    length = args[4];
-
-    /* check for null pointer */
-    if ((Object*)srcArray == NULL || (Object*)dstArray == NULL) {
-        dvmThrowNullPointerException(NULL);
-        assert(dvmCheckException(dvmThreadSelf()));
+    /* Check for null pointers. */
+    if (srcArray == NULL) {
+        dvmThrowNullPointerException("src == null");
+        RETURN_VOID();
+    }
+    if (dstArray == NULL) {
+        dvmThrowNullPointerException("dst == null");
         RETURN_VOID();
     }
 
@@ -155,17 +150,17 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         RETURN_VOID();
     }
 
-    srcClass = srcArray->clazz;
-    dstClass = dstArray->clazz;
-    srcType = srcClass->descriptor[1];
-    dstType = dstClass->descriptor[1];
+    ClassObject* srcClass = srcArray->clazz;
+    ClassObject* dstClass = dstArray->clazz;
+    char srcType = srcClass->descriptor[1];
+    char dstType = dstClass->descriptor[1];
 
     /*
      * If one of the arrays holds a primitive type, the other array must
      * hold the same type.
      */
-    srcPrim = (srcType != '[' && srcType != 'L');
-    dstPrim = (dstType != '[' && dstType != 'L');
+    bool srcPrim = (srcType != '[' && srcType != 'L');
+    bool dstPrim = (dstType != '[' && dstType != 'L');
     if (srcPrim || dstPrim) {
         if (srcPrim != dstPrim || srcType != dstType) {
             dvmThrowArrayStoreExceptionIncompatibleArrays(srcClass, dstClass);
@@ -340,9 +335,6 @@ static void Dalvik_java_lang_System_identityHashCode(const u4* args,
     RETURN_INT(dvmIdentityHashCode(thisPtr));
 }
 
-/*
- * public static String mapLibraryName(String libname)
- */
 static void Dalvik_java_lang_System_mapLibraryName(const u4* args,
     JValue* pResult)
 {
@@ -352,7 +344,7 @@ static void Dalvik_java_lang_System_mapLibraryName(const u4* args,
     char* mappedName;
 
     if (nameObj == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("userLibName == null");
         RETURN_VOID();
     }
 

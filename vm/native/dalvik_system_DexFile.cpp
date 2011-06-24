@@ -160,7 +160,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
     char* outputName;
 
     if (sourceNameObj == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("sourceName == null");
         RETURN_VOID();
     }
 
@@ -255,7 +255,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
     DexOrJar* pDexOrJar = NULL;
 
     if (fileContentsObj == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("fileContents == null");
         RETURN_VOID();
     }
 
@@ -451,7 +451,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
 }
 
 /*
- * public static boolean isDexOptNeeded(String apkName)
+ * public static boolean isDexOptNeeded(String fileName)
  *         throws FileNotFoundException, IOException
  *
  * Returns true if the VM believes that the apk/jar file is out of date
@@ -477,7 +477,7 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
 
     name = dvmCreateCstrFromString(nameObj);
     if (name == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("fileName == null");
         RETURN_VOID();
     }
     if (access(name, R_OK) != 0) {

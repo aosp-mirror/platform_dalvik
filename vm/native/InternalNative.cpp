@@ -182,7 +182,7 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
     char* descriptor = NULL;
 
     if (nameObj == NULL) {
-        dvmThrowNullPointerException(NULL);
+        dvmThrowNullPointerException("name == null");
         goto bail;
     }
     name = dvmCreateCstrFromString(nameObj);

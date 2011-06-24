@@ -2263,7 +2263,7 @@ static jobjectArray NewObjectArray(JNIEnv* env, jsize length,
     ScopedJniThreadState ts(env);
 
     if (jelementClass == NULL) {
-        dvmThrowNullPointerException("JNI NewObjectArray element class");
+        dvmThrowNullPointerException("JNI NewObjectArray elementClass == NULL");
         return NULL;
     }
 
