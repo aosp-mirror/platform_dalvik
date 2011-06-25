@@ -1010,8 +1010,12 @@ static int processOptions(int argc, const char* const argv[],
         } else if (strcmp(argv[i], "-Xcheckdexsum") == 0) {
             gDvm.verifyDexChecksum = true;
 
+        } else if (strcmp(argv[i], "-Xprofile:threadcpuclock") == 0) {
+            gDvm.profilerClockSource = kProfilerClockSourceThreadCpu;
         } else if (strcmp(argv[i], "-Xprofile:wallclock") == 0) {
-            gDvm.profilerWallClock = true;
+            gDvm.profilerClockSource = kProfilerClockSourceWall;
+        } else if (strcmp(argv[i], "-Xprofile:dualclock") == 0) {
+            gDvm.profilerClockSource = kProfilerClockSourceDual;
 
         } else {
             if (!ignoreUnrecognized) {
@@ -1086,6 +1090,11 @@ static void setCommandLineDefaults()
      * dexopt target a differently-configured device.
      */
     gDvm.dexOptForSmp = (ANDROID_SMP != 0);
+
+    /*
+     * Default profiler configuration.
+     */
+    gDvm.profilerClockSource = kProfilerClockSourceThreadCpu;
 }
 
 
