@@ -105,7 +105,7 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
             LOGE("Unable to expand %s reference table from %d to %d (max=%d)",
                     indirectRefKindToString(kind), allocEntries,
                     newSize, maxEntries);
-            return false;
+            return NULL;
         }
         LOGV("Growing %s reference table %p from %d to %d (max=%d)",
                 indirectRefKindToString(kind), this,

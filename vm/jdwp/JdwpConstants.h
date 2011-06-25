@@ -179,7 +179,8 @@ const char* dvmJdwpSuspendPolicyStr(JdwpSuspendPolicy policy);
  * SuspendStatus constants.
  */
 enum JdwpSuspendStatus {
-    SUSPEND_STATUS_SUSPENDED = 1,
+    SUSPEND_STATUS_NOT_SUSPENDED = 0,
+    SUSPEND_STATUS_SUSPENDED     = 1,
 };
 const char* dvmJdwpSuspendStatusStr(JdwpSuspendStatus status);
 
