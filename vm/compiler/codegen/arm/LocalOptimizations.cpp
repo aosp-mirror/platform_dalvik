@@ -311,7 +311,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
         u8 stopDefRegMask = thisLIR->defMask & ~ENCODE_MEM;
 
         int nextSlot = 0;
-        bool stopHere;
+        bool stopHere = false;
 
         /* Try to hoist the load to a good spot */
         for (checkLIR = PREV_LIR(thisLIR);
