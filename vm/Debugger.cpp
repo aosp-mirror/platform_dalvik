@@ -1479,8 +1479,6 @@ void dvmDbgGetFieldValue(ObjectId objectId, FieldId fieldId, ExpandBuf* pReply)
         expandBufAddObjectId(pReply, objectToObjectId(objVal));
         LOGV("    --> ifieldId %x --> tag '%c' %p", fieldId, tag, objVal);
     } else {
-        JValue value;
-
         LOGV("    --> ifieldId %x --> tag '%c'", fieldId, tag);
         expandBufAdd1(pReply, tag);
 
@@ -1498,18 +1496,12 @@ void dvmDbgGetFieldValue(ObjectId objectId, FieldId fieldId, ExpandBuf* pReply)
             expandBufAdd2BE(pReply, dvmGetFieldChar(obj, ifield->byteOffset));
             break;
         case JT_INT:
+        case JT_FLOAT:
             expandBufAdd4BE(pReply, dvmGetFieldInt(obj, ifield->byteOffset));
             break;
-        case JT_FLOAT:
-            value.f = dvmGetFieldInt(obj, ifield->byteOffset);
-            expandBufAdd4BE(pReply, value.i);
-            break;
         case JT_LONG:
-            expandBufAdd8BE(pReply, dvmGetFieldLong(obj, ifield->byteOffset));
-            break;
         case JT_DOUBLE:
-            value.d = dvmGetFieldInt(obj, ifield->byteOffset);
-            expandBufAdd8BE(pReply, value.j);
+            expandBufAdd8BE(pReply, dvmGetFieldLong(obj, ifield->byteOffset));
             break;
         default:
             LOGE("ERROR: unhandled field type '%s'", ifield->signature);
