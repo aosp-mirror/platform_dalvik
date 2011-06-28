@@ -32,8 +32,10 @@
 #include <errno.h>
 #include <assert.h>
 
-/* Version number in the key file.  Version 1 uses one byte for the thread id.
+/* Version number in the key file.
+ * Version 1 uses one byte for the thread id.
  * Version 2 uses two bytes for the thread ids.
+ * Version 3 encodes the record size and adds an optional extra timestamp field.
  */
 int versionNumber;
 
@@ -119,6 +121,7 @@ typedef struct DataHeader {
     short version;
     short offsetToData;
     long long startWhen;
+    short recordSize;
 } DataHeader;
 
 /*
@@ -1065,12 +1068,26 @@ unsigned long long read8LE(FILE* fp)
  */
 int parseDataHeader(FILE *fp, DataHeader* pHeader)
 {
+    int bytesToRead;
+
     pHeader->magic = read4LE(fp);
     pHeader->version = read2LE(fp);
     pHeader->offsetToData = read2LE(fp);
     pHeader->startWhen = read8LE(fp);
+    bytesToRead = pHeader->offsetToData - 16;
+    if (pHeader->version == 1) {
+        pHeader->recordSize = 9;
+    } else if (pHeader->version == 2) {
+        pHeader->recordSize = 10;
+    } else if (pHeader->version == 3) {
+        pHeader->recordSize = read2LE(fp);
+        bytesToRead -= 2;
+    } else {
+        fprintf(stderr, "Unsupported trace file version: %d\n", pHeader->version);
+        return -1;
+    }
 
-    if (fseek(fp, pHeader->offsetToData - 16, SEEK_CUR) != 0) {
+    if (fseek(fp, bytesToRead, SEEK_CUR) != 0) {
         return -1;
     }
 
@@ -1111,20 +1128,19 @@ MethodEntry* lookupMethod(DataKeys* pKeys, unsigned int methodId)
  * and elapsedTime are unchanged.  Returns 1 on end-of-file, otherwise
  * returns 0.
  */
-int readDataRecord(FILE *dataFp, int *threadId, unsigned int *methodVal,
-                   uint64_t *elapsedTime)
+int readDataRecord(FILE *dataFp, DataHeader* dataHeader,
+        int *threadId, unsigned int *methodVal, uint64_t *elapsedTime)
 {
     int id;
+    int bytesToRead;
 
-    /*
-     * TODO:
-     * This SHOULD NOT be keyed off of the global version number!  Use
-     * a name=value setting in the version area instead!
-     */
-    if (versionNumber == 1) {
+    bytesToRead = dataHeader->recordSize;
+    if (dataHeader->version == 1) {
         id = getc(dataFp);
+        bytesToRead -= 1;
     } else {
         id = read2LE(dataFp);
+        bytesToRead -= 2;
     }
     if (id == EOF)
         return 1;
@@ -1132,6 +1148,12 @@ int readDataRecord(FILE *dataFp, int *threadId, unsigned int *methodVal,
 
     *methodVal = read4LE(dataFp);
     *elapsedTime = read4LE(dataFp);
+    bytesToRead -= 8;
+
+    while (bytesToRead-- > 0) {
+        getc(dataFp);
+    }
+
     if (feof(dataFp)) {
         fprintf(stderr, "WARNING: hit EOF mid-record\n");
         return 1;
@@ -1189,7 +1211,7 @@ void dumpTrace()
         /*
          * Extract values from file.
          */
-        if (readDataRecord(dataFp, &threadId, &methodVal, &elapsedTime))
+        if (readDataRecord(dataFp, &dataHeader, &threadId, &methodVal, &elapsedTime))
             break;
 
         action = METHOD_ACTION(methodVal);
@@ -2301,7 +2323,7 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName, uint64_
         /*
          * Extract values from file.
          */
-        if (readDataRecord(dataFp, &threadId, &methodVal, &currentTime))
+        if (readDataRecord(dataFp, &dataHeader, &threadId, &methodVal, &currentTime))
             break;
 
         action = METHOD_ACTION(methodVal);
