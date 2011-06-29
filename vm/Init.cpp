@@ -1094,7 +1094,7 @@ static void setCommandLineDefaults()
     /*
      * Default profiler configuration.
      */
-    gDvm.profilerClockSource = kProfilerClockSourceThreadCpu;
+    gDvm.profilerClockSource = kProfilerClockSourceDual;
 }
 
 
