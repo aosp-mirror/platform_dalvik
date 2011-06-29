@@ -19,6 +19,14 @@
  */
 #include "Dalvik.h"
 
+static void abortMaybe() {
+    // If CheckJNI is on, it'll give a more detailed error before aborting.
+    // Otherwise, we want to abort rather than hand back a bad reference.
+    if (!gDvmJni.useCheckJni) {
+        dvmAbort();
+    }
+}
+
 bool IndirectRefTable::init(size_t initialCount,
         size_t maxCount, IndirectRefKind desiredKind)
 {
@@ -67,8 +75,9 @@ bool IndirectRefTable::checkEntry(IndirectRef iref, int idx) const
     Object* obj = table[idx];
     IndirectRef checkRef = toIndirectRef(obj, idx);
     if (checkRef != iref) {
-        LOGE("Attempt to use stale %s reference (req=%p vs cur=%p; table=%p)",
+        LOGE("JNI ERROR (app bug): use of stale %s reference (req=%p vs cur=%p; table=%p)",
                 indirectRefKindToString(kind), iref, checkRef, this);
+        abortMaybe();
         return false;
     }
     return true;
@@ -89,9 +98,10 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
     if (topIndex == allocEntries) {
         /* reached end of allocated space; did we hit buffer max? */
         if (topIndex == maxEntries) {
-            LOGW("%s reference table overflow (max=%d)",
+            LOGE("JNI ERROR (app bug): %s reference table overflow (max=%d)",
                     indirectRefKindToString(kind), maxEntries);
-            return NULL;
+            dump(indirectRefKindToString(kind));
+            dvmAbort();
         }
 
         size_t newSize = allocEntries * 2;
@@ -102,14 +112,12 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
 
         Object** newTable = (Object**) realloc(table, newSize * sizeof(Object*));
         if (newTable == NULL) {
-            LOGE("Unable to expand %s reference table from %d to %d (max=%d)",
-                    indirectRefKindToString(kind), allocEntries,
-                    newSize, maxEntries);
-            return NULL;
+            LOGE("JNI ERROR (app bug): unable to expand %s reference table (from %d to %d, max=%d)",
+                    indirectRefKindToString(kind),
+                    allocEntries, newSize, maxEntries);
+            dump(indirectRefKindToString(kind));
+            dvmAbort();
         }
-        LOGV("Growing %s reference table %p from %d to %d (max=%d)",
-                indirectRefKindToString(kind), this,
-                allocEntries, newSize, maxEntries);
 
         /* update entries; adjust "nextEntry" in case memory moved */
         table = newTable;
@@ -161,8 +169,9 @@ bool IndirectRefTable::getChecked(IndirectRef iref) const
         return false;
     }
     if (indirectRefKind(iref) == kIndirectKindInvalid) {
-        LOGW("Invalid %s reference %p",
+        LOGE("JNI ERROR (app bug): invalid %s reference (%p)",
                 indirectRefKindToString(kind), iref);
+        abortMaybe();
         return false;
     }
 
@@ -170,15 +179,17 @@ bool IndirectRefTable::getChecked(IndirectRef iref) const
     int idx = extractIndex(iref);
     if (idx >= topIndex) {
         /* bad -- stale reference? */
-        LOGW("Attempt to access stale %s reference at index %d (top=%d)",
-            indirectRefKindToString(kind), idx, topIndex);
+        LOGE("JNI ERROR (app bug): accessed stale %s reference at index %d (top=%d)",
+                indirectRefKindToString(kind), idx, topIndex);
+        abortMaybe();
         return false;
     }
 
     Object* obj = table[idx];
     if (obj == NULL) {
-        LOGW("Attempt to access deleted %s reference (%p)",
+        LOGE("JNI ERROR (app bug): use of deleted %s reference (%p)",
                 indirectRefKindToString(kind), iref);
+        abortMaybe();
         return false;
     }
     if (!checkEntry(iref, idx)) {
