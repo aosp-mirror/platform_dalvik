@@ -649,7 +649,12 @@ static void *compilerThreadStart(void *arg)
                 CompilerWorkOrder work = workDequeue();
                 dvmUnlockMutex(&gDvmJit.compilerLock);
 #if defined(WITH_JIT_TUNING)
-                u8 startTime = dvmGetRelativeTimeUsec();
+                /*
+                 * This is live across setjmp().  Mark it volatile to suppress
+                 * a gcc warning.  We should not need this since it is assigned
+                 * only once but gcc is not smart enough.
+                 */
+                volatile u8 startTime = dvmGetRelativeTimeUsec();
 #endif
                 /*
                  * Check whether there is a suspend request on me.  This
