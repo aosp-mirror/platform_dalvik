@@ -195,6 +195,16 @@ static void checkStackSum(Thread* self) {
  * ===========================================================================
  */
 
+static inline Thread* self(JNIEnv* env) {
+    Thread* envSelf = ((JNIEnvExt*) env)->self;
+    Thread* self = gDvmJni.alwaysCheckThread ? dvmThreadSelf() : envSelf;
+    if (self != envSelf) {
+        LOGE("JNI ERROR: env->self != thread-self (%p vs. %p); auto-correcting",
+                envSelf, self);
+    }
+    return self;
+}
+
 /*
  * Entry/exit processing for all JNI calls.
  *
@@ -207,7 +217,7 @@ static void checkStackSum(Thread* self) {
 class ScopedJniThreadState {
 public:
     explicit ScopedJniThreadState(JNIEnv* env) {
-        mSelf = ((JNIEnvExt*) env)->self; // dvmThreadSelf() would be safer
+        mSelf = ::self(env);
         CHECK_STACK_SUM(mSelf);
         dvmChangeStatus(mSelf, THREAD_RUNNING);
     }
@@ -293,7 +303,7 @@ JNIEnvExt* dvmGetJNIEnvForThread() {
  * get weird if the JNI code is passing the wrong JNIEnv around.
  */
 static inline IndirectRefTable* getLocalRefTable(JNIEnv* env) {
-    return &((JNIEnvExt*)env)->self->jniLocalRefTable;
+    return &self(env)->jniLocalRefTable;
 }
 
 /*
@@ -370,7 +380,7 @@ static jobject addLocalReference(JNIEnv* env, Object* obj) {
     }
 
     IndirectRefTable* pRefTable = getLocalRefTable(env);
-    void* curFrame = ((JNIEnvExt*)env)->self->interpSave.curFrame;
+    void* curFrame = self(env)->interpSave.curFrame;
     u4 cookie = SAVEAREA_FROM_FP(curFrame)->xtra.localRefCookie;
     jobject jobj = (jobject) pRefTable->add(cookie, obj);
     if (jobj == NULL) {
@@ -423,10 +433,8 @@ static void deleteLocalReference(JNIEnv* env, jobject jobj) {
     }
 
     IndirectRefTable* pRefTable = getLocalRefTable(env);
-    Thread* self = ((JNIEnvExt*)env)->self;
-    u4 cookie =
-        SAVEAREA_FROM_FP(self->interpSave.curFrame)->xtra.localRefCookie;
-
+    void* curFrame = self(env)->interpSave.curFrame;
+    u4 cookie = SAVEAREA_FROM_FP(curFrame)->xtra.localRefCookie;
     if (!pRefTable->remove(cookie, jobj)) {
         /*
          * Attempting to delete a local reference that is not in the
@@ -846,11 +854,33 @@ static void dvmTraceCallJNIMethod(const u4* args, JValue* pResult,
     dvmLogNativeMethodExit(method, self, *pResult);
 }
 
-/**
- * Returns true if the -Xjnitrace setting implies we should trace 'method'.
- */
+static const char* builtInPrefixes[] = {
+    "Landroid/",
+    "Lcom/android/",
+    "Lcom/google/android/",
+    "Ldalvik/",
+    "Ljava/",
+    "Ljavax/",
+    "Llibcore/",
+    "Lorg/apache/harmony/",
+};
 static bool shouldTrace(Method* method) {
-    return gDvm.jniTrace && strstr(method->clazz->descriptor, gDvm.jniTrace);
+    const char* className = method->clazz->descriptor;
+    // Return true if the -Xjnitrace setting implies we should trace 'method'.
+    if (gDvm.jniTrace && strstr(className, gDvm.jniTrace)) {
+        return true;
+    }
+    // Return true if we're trying to log all third-party JNI activity and 'method' doesn't look
+    // like part of Android.
+    if (gDvmJni.logThirdPartyJni) {
+        for (size_t i = 0; i < NELEM(builtInPrefixes); ++i) {
+            if (strstr(className, builtInPrefixes[i]) == className) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
 }
 
 /*
@@ -3497,6 +3527,10 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
                     gDvmJni.warnOnly = true;
                 } else if (strcmp(jniOpt, "forcecopy") == 0) {
                     gDvmJni.forceCopy = true;
+                } else if (strcmp(jniOpt, "alwaysCheckThread") == 0) {
+                    gDvmJni.alwaysCheckThread = true;
+                } else if (strcmp(jniOpt, "logThirdPartyJni") == 0) {
+                    gDvmJni.logThirdPartyJni = true;
                 } else {
                     dvmFprintf(stderr, "ERROR: CreateJavaVM failed: unknown -Xjniopts option '%s'\n",
                             jniOpt);
@@ -3509,11 +3543,6 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
             /* regular option */
             argv[argc++] = optStr;
         }
-    }
-
-    if (sawJniOpts && !gDvmJni.useCheckJni) {
-        dvmFprintf(stderr, "ERROR: -Xjniopts only makes sense with -Xcheck:jni\n");
-        return JNI_ERR;
     }
 
     if (gDvmJni.useCheckJni) {

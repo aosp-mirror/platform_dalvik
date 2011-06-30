@@ -966,9 +966,13 @@ struct DvmJniGlobals {
     bool warnOnly;
     bool forceCopy;
 
-    /**
-     * The JNI JavaVM object. Dalvik only supports a single VM per process.
-     */
+    // Don't trust that we've been passed the right JNIEnv* for this thread.
+    bool alwaysCheckThread;
+
+    // Debugging help for third-party developers. Similar to -Xjnitrace.
+    bool logThirdPartyJni;
+
+    // We only support a single JavaVM per process.
     JavaVM*     jniVm;
 };
 
