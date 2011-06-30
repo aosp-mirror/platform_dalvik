@@ -118,6 +118,21 @@ struct JdwpState {
     bool            ddmActive;
 };
 
+/*
+ * Base class for JdwpNetState
+ */
+class JdwpNetStateBase {
+public:
+    int             clientSock;     /* active connection to debugger */
+
+    JdwpNetStateBase();
+    ssize_t writePacket(ExpandBuf* pReply);
+    ssize_t writeBufferedPacket(const struct iovec* iov, int iovcnt);
+
+private:
+    pthread_mutex_t socketLock;     /* socket synchronization */
+};
+
 
 /* reset all session-specific data */
 void dvmJdwpResetState(JdwpState* state);

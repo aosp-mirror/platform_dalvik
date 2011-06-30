@@ -30,6 +30,40 @@
 
 static void* jdwpThreadStart(void* arg);
 
+/*
+ * JdwpNetStateBase class implementation
+ */
+JdwpNetStateBase::JdwpNetStateBase()
+{
+    clientSock = -1;
+    dvmDbgInitMutex(&socketLock);
+}
+
+/*
+ * Write a packet. Grabs a mutex to assure atomicity.
+ */
+ssize_t JdwpNetStateBase::writePacket(ExpandBuf* pReply)
+{
+    dvmDbgLockMutex(&socketLock);
+    ssize_t cc = write(clientSock, expandBufGetBuffer(pReply),
+            expandBufGetLength(pReply));
+    dvmDbgUnlockMutex(&socketLock);
+
+    return cc;
+}
+
+/*
+ * Write a buffered packet. Grabs a mutex to assure atomicity.
+ */
+ssize_t JdwpNetStateBase::writeBufferedPacket(const struct iovec* iov,
+    int iovcnt)
+{
+    dvmDbgLockMutex(&socketLock);
+    ssize_t actual = writev(clientSock, iov, iovcnt);
+    dvmDbgUnlockMutex(&socketLock);
+
+    return actual;
+}
 
 /*
  * Initialize JDWP.

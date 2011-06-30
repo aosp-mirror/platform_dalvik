@@ -50,10 +50,9 @@ static void netFree(JdwpNetState* state);
  *
  * We only talk to one debugger at a time.
  */
-struct JdwpNetState {
+struct JdwpNetState : public JdwpNetStateBase {
     short   listenPort;
     int     listenSock;         /* listen for connection from debugger */
-    int     clientSock;         /* active connection to debugger */
     int     wakePipe[2];        /* break out of select */
 
     struct in_addr remoteAddr;
@@ -64,6 +63,18 @@ struct JdwpNetState {
     /* pending data from the network; would be more efficient as circular buf */
     unsigned char  inputBuffer[kInputBufferSize];
     int     inputCount;
+
+    JdwpNetState()
+    {
+        listenPort  = 0;
+        listenSock  = -1;
+        wakePipe[0] = -1;
+        wakePipe[1] = -1;
+
+        awaitingHandshake = false;
+
+        inputCount = 0;
+    }
 };
 
 static JdwpNetState* netStartup(short port);
@@ -129,15 +140,8 @@ static bool awaitingHandshake(JdwpState* state)
  */
 static JdwpNetState* netStartup(short port)
 {
-    JdwpNetState* netState;
     int one = 1;
-
-    netState = (JdwpNetState*) malloc(sizeof(*netState));
-    memset(netState, 0, sizeof(*netState));
-    netState->listenSock = -1;
-    netState->clientSock = -1;
-    netState->wakePipe[0] = -1;
-    netState->wakePipe[1] = -1;
+    JdwpNetState* netState = new JdwpNetState;
 
     if (port < 0)
         return netState;
@@ -251,7 +255,7 @@ static void netFree(JdwpNetState* netState)
         netState->wakePipe[1] = -1;
     }
 
-    free(netState);
+    delete netState;
 }
 static void netFreeExtern(JdwpState* state)
 {
@@ -614,16 +618,9 @@ static bool handlePacket(JdwpState* state)
         hdr.cmd = cmd;
         dvmJdwpProcessRequest(state, &hdr, buf, dataLen, pReply);
         if (expandBufGetLength(pReply) > 0) {
-            int cc;
+            ssize_t cc = netState->writePacket(pReply);
 
-            /*
-             * TODO: we currently assume the write() will complete in one
-             * go, which may not be safe for a network socket.  We may need
-             * to mutex this against sendRequest().
-             */
-            cc = write(netState->clientSock, expandBufGetBuffer(pReply),
-                    expandBufGetLength(pReply));
-            if (cc != (int) expandBufGetLength(pReply)) {
+            if (cc != (ssize_t) expandBufGetLength(pReply)) {
                 LOGE("Failed sending reply to debugger: %s", strerror(errno));
                 expandBufFree(pReply);
                 return false;
@@ -827,7 +824,6 @@ fail:
 static bool sendRequest(JdwpState* state, ExpandBuf* pReq)
 {
     JdwpNetState* netState = state->netState;
-    int cc;
 
     /*dumpPacket(expandBufGetBuffer(pReq));*/
     if (netState->clientSock < 0) {
@@ -836,17 +832,12 @@ static bool sendRequest(JdwpState* state, ExpandBuf* pReq)
         return false;
     }
 
-    /*
-     * TODO: we currently assume the write() will complete in one
-     * go, which may not be safe for a network socket.  We may need
-     * to mutex this against handlePacket().
-     */
     errno = 0;
-    cc = write(netState->clientSock, expandBufGetBuffer(pReq),
-            expandBufGetLength(pReq));
-    if (cc != (int) expandBufGetLength(pReq)) {
+    ssize_t cc = netState->writePacket(pReq);
+
+    if (cc != (ssize_t) expandBufGetLength(pReq)) {
         LOGE("Failed sending req to debugger: %s (%d of %d)",
-            strerror(errno), cc, (int) expandBufGetLength(pReq));
+            strerror(errno), (int) cc, (int) expandBufGetLength(pReq));
         return false;
     }
 
@@ -877,13 +868,8 @@ static bool sendBufferedRequest(JdwpState* state, const struct iovec* iov,
     for (i = 0; i < iovcnt; i++)
         expected += iov[i].iov_len;
 
-    /*
-     * TODO: we currently assume the writev() will complete in one
-     * go, which may not be safe for a network socket.  We may need
-     * to mutex this against handlePacket().
-     */
-    ssize_t actual;
-    actual = writev(netState->clientSock, iov, iovcnt);
+    ssize_t actual = netState->writeBufferedPacket(iov, iovcnt);
+
     if ((size_t)actual != expected) {
         LOGE("Failed sending b-req to debugger: %s (%d of %zu)",
             strerror(errno), (int) actual, expected);

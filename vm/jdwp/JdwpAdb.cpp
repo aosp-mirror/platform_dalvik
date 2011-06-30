@@ -47,9 +47,8 @@
 #define kJdwpControlName    "\0jdwp-control"
 #define kJdwpControlNameLen (sizeof(kJdwpControlName)-1)
 
-struct JdwpNetState {
+struct JdwpNetState : public JdwpNetStateBase {
     int                 controlSock;
-    int                 clientSock;
     bool                awaitingHandshake;
     bool                shuttingDown;
     int                 wakeFds[2];
@@ -62,6 +61,23 @@ struct JdwpNetState {
         struct sockaddr_un  controlAddrUn;
         struct sockaddr     controlAddrPlain;
     } controlAddr;
+
+    JdwpNetState()
+    {
+        controlSock = -1;
+        awaitingHandshake = false;
+        shuttingDown = false;
+        wakeFds[0] = -1;
+        wakeFds[1] = -1;
+
+        inputCount = 0;
+
+        controlAddr.controlAddrUn.sun_family = AF_UNIX;
+        controlAddrLen = sizeof(controlAddr.controlAddrUn.sun_family) +
+                kJdwpControlNameLen;
+        memcpy(controlAddr.controlAddrUn.sun_path, kJdwpControlName,
+                kJdwpControlNameLen);
+    }
 };
 
 static void
@@ -87,31 +103,8 @@ adbStateFree( JdwpNetState*  netState )
         netState->wakeFds[1] = -1;
     }
 
-    free(netState);
+    delete netState;
 }
-
-
-static JdwpNetState* adbStateAlloc()
-{
-    JdwpNetState* netState = (JdwpNetState*) calloc(sizeof(*netState),1);
-
-    netState->controlSock = -1;
-    netState->clientSock  = -1;
-
-    netState->controlAddr.controlAddrUn.sun_family = AF_UNIX;
-    netState->controlAddrLen =
-            sizeof(netState->controlAddr.controlAddrUn.sun_family) +
-            kJdwpControlNameLen;
-
-    memcpy(netState->controlAddr.controlAddrUn.sun_path,
-           kJdwpControlName, kJdwpControlNameLen);
-
-    netState->wakeFds[0] = -1;
-    netState->wakeFds[1] = -1;
-
-    return netState;
-}
-
 
 /*
  * Do initial prep work, e.g. binding to ports and opening files.  This
@@ -124,7 +117,7 @@ static bool startup(struct JdwpState* state, const JdwpStartupParams* pParams)
 
     LOGV("ADB transport startup");
 
-    state->netState = netState = adbStateAlloc();
+    state->netState = netState = new JdwpNetState;
     if (netState == NULL)
         return false;
 
@@ -469,16 +462,9 @@ static bool handlePacket(JdwpState* state)
         hdr.cmd = cmd;
         dvmJdwpProcessRequest(state, &hdr, buf, dataLen, pReply);
         if (expandBufGetLength(pReply) > 0) {
-            int cc;
+            ssize_t cc = netState->writePacket(pReply);
 
-            /*
-             * TODO: we currently assume the write() will complete in one
-             * go, which may not be safe for a network socket.  We may need
-             * to mutex this against sendRequest().
-             */
-            cc = write(netState->clientSock, expandBufGetBuffer(pReply),
-                    expandBufGetLength(pReply));
-            if (cc != (int) expandBufGetLength(pReply)) {
+            if (cc != (ssize_t) expandBufGetLength(pReply)) {
                 LOGE("Failed sending reply to debugger: %s", strerror(errno));
                 expandBufFree(pReply);
                 return false;
@@ -680,7 +666,6 @@ fail:
 static bool sendRequest(JdwpState* state, ExpandBuf* pReq)
 {
     JdwpNetState* netState = state->netState;
-    int cc;
 
     if (netState->clientSock < 0) {
         /* can happen with some DDMS events */
@@ -688,17 +673,13 @@ static bool sendRequest(JdwpState* state, ExpandBuf* pReq)
         return false;
     }
 
-    /*
-     * TODO: we currently assume the write() will complete in one
-     * go, which may not be safe for a network socket.  We may need
-     * to mutex this against handlePacket().
-     */
     errno = 0;
-    cc = write(netState->clientSock, expandBufGetBuffer(pReq),
-            expandBufGetLength(pReq));
-    if (cc != (int) expandBufGetLength(pReq)) {
+
+    ssize_t cc = netState->writePacket(pReq);
+
+    if (cc != (ssize_t) expandBufGetLength(pReq)) {
         LOGE("Failed sending req to debugger: %s (%d of %d)",
-            strerror(errno), cc, (int) expandBufGetLength(pReq));
+            strerror(errno), (int) cc, (int) expandBufGetLength(pReq));
         return false;
     }
 
@@ -729,13 +710,8 @@ static bool sendBufferedRequest(JdwpState* state, const struct iovec* iov,
     for (i = 0; i < iovcnt; i++)
         expected += iov[i].iov_len;
 
-    /*
-     * TODO: we currently assume the writev() will complete in one
-     * go, which may not be safe for a network socket.  We may need
-     * to mutex this against handlePacket().
-     */
-    ssize_t actual;
-    actual = writev(netState->clientSock, iov, iovcnt);
+    ssize_t actual = netState->writeBufferedPacket(iov, iovcnt);
+
     if ((size_t)actual != expected) {
         LOGE("Failed sending b-req to debugger: %s (%d of %zu)",
             strerror(errno), (int) actual, expected);
