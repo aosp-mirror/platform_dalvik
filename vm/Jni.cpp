@@ -783,77 +783,6 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     return true;
 }
 
-/*
- * Returns the appropriate JNI bridge for 'method', also taking into account
- * the -Xcheck:jni setting.
- */
-static DalvikBridgeFunc dvmSelectJNIBridge(const Method* method) {
-    enum {
-        kJNIGeneral = 0,
-        kJNISync = 1,
-        kJNIVirtualNoRef = 2,
-        kJNIStaticNoRef = 3,
-    } kind;
-    static const DalvikBridgeFunc stdFunc[] = {
-        dvmCallJNIMethod_general,
-        dvmCallJNIMethod_synchronized,
-        dvmCallJNIMethod_virtualNoRef,
-        dvmCallJNIMethod_staticNoRef
-    };
-    static const DalvikBridgeFunc checkFunc[] = {
-        dvmCheckCallJNIMethod_general,
-        dvmCheckCallJNIMethod_synchronized,
-        dvmCheckCallJNIMethod_virtualNoRef,
-        dvmCheckCallJNIMethod_staticNoRef
-    };
-
-    bool hasRefArg = false;
-
-    if (dvmIsSynchronizedMethod(method)) {
-        /* use version with synchronization; calls into general handler */
-        kind = kJNISync;
-    } else {
-        /*
-         * Do a quick scan through the "shorty" signature to see if the method
-         * takes any reference arguments.
-         */
-        const char* cp = method->shorty;
-        while (*++cp != '\0') {     /* pre-incr to skip return type */
-            if (*cp == 'L') {
-                /* 'L' used for both object and array references */
-                hasRefArg = true;
-                break;
-            }
-        }
-
-        if (hasRefArg) {
-            /* use general handler to slurp up reference args */
-            kind = kJNIGeneral;
-        } else {
-            /* virtual methods have a ref in args[0] (not in signature) */
-            if (dvmIsStaticMethod(method)) {
-                kind = kJNIStaticNoRef;
-            } else {
-                kind = kJNIVirtualNoRef;
-            }
-        }
-    }
-
-    return gDvmJni.useCheckJni ? checkFunc[kind] : stdFunc[kind];
-}
-
-/*
- * Trace a call into native code.
- */
-static void dvmTraceCallJNIMethod(const u4* args, JValue* pResult,
-        const Method* method, Thread* self)
-{
-    dvmLogNativeMethodEntry(method, args);
-    DalvikBridgeFunc bridge = dvmSelectJNIBridge(method);
-    (*bridge)(args, pResult, method, self);
-    dvmLogNativeMethodExit(method, self, *pResult);
-}
-
 static const char* builtInPrefixes[] = {
     "Landroid/",
     "Lcom/android/",
@@ -864,6 +793,7 @@ static const char* builtInPrefixes[] = {
     "Llibcore/",
     "Lorg/apache/harmony/",
 };
+
 static bool shouldTrace(Method* method) {
     const char* className = method->clazz->descriptor;
     // Return true if the -Xjnitrace setting implies we should trace 'method'.
@@ -888,10 +818,128 @@ static bool shouldTrace(Method* method) {
  * to point at the actual function.
  */
 void dvmUseJNIBridge(Method* method, void* func) {
-    DalvikBridgeFunc bridge = shouldTrace(method)
-        ? dvmTraceCallJNIMethod
-        : dvmSelectJNIBridge(method);
-    dvmSetNativeFunc(method, bridge, (const u2*)func);
+    method->shouldTrace = shouldTrace(method);
+
+    // Does the method take any reference arguments?
+    method->noRef = true;
+    const char* cp = method->shorty;
+    while (*++cp != '\0') { // Pre-increment to skip return type.
+        if (*cp == 'L') {
+            method->noRef = false;
+            break;
+        }
+    }
+
+    DalvikBridgeFunc bridge = gDvmJni.useCheckJni ? dvmCheckCallJNIMethod : dvmCallJNIMethod;
+    dvmSetNativeFunc(method, bridge, (const u2*) func);
+}
+
+// TODO: rewrite this to share code with CheckJNI's tracing...
+static void appendValue(char type, const JValue value, char* buf, size_t n, bool appendComma)
+{
+    size_t len = strlen(buf);
+    if (len >= n - 32) { // 32 should be longer than anything we could append.
+        buf[len - 1] = '.';
+        buf[len - 2] = '.';
+        buf[len - 3] = '.';
+        return;
+    }
+    char* p = buf + len;
+    switch (type) {
+    case 'B':
+        if (value.b >= 0 && value.b < 10) {
+            sprintf(p, "%d", value.b);
+        } else {
+            sprintf(p, "%#x (%d)", value.b, value.b);
+        }
+        break;
+    case 'C':
+        if (value.c < 0x7f && value.c >= ' ') {
+            sprintf(p, "U+%x ('%c')", value.c, value.c);
+        } else {
+            sprintf(p, "U+%x", value.c);
+        }
+        break;
+    case 'D':
+        sprintf(p, "%g", value.d);
+        break;
+    case 'F':
+        sprintf(p, "%g", value.f);
+        break;
+    case 'I':
+        sprintf(p, "%d", value.i);
+        break;
+    case 'L':
+        sprintf(p, "%#x", value.i);
+        break;
+    case 'J':
+        sprintf(p, "%lld", value.j);
+        break;
+    case 'S':
+        sprintf(p, "%d", value.s);
+        break;
+    case 'V':
+        strcpy(p, "void");
+        break;
+    case 'Z':
+        strcpy(p, value.z ? "true" : "false");
+        break;
+    default:
+        sprintf(p, "unknown type '%c'", type);
+        break;
+    }
+
+    if (appendComma) {
+        strcat(p, ", ");
+    }
+}
+
+static void logNativeMethodEntry(const Method* method, const u4* args)
+{
+    char thisString[32] = { 0 };
+    const u4* sp = args;
+    if (!dvmIsStaticMethod(method)) {
+        sprintf(thisString, "this=0x%08x ", *sp++);
+    }
+
+    char argsString[128]= { 0 };
+    const char* desc = &method->shorty[1];
+    while (*desc != '\0') {
+        char argType = *desc++;
+        JValue value;
+        if (argType == 'D' || argType == 'J') {
+            value.j = dvmGetArgLong(sp, 0);
+            sp += 2;
+        } else {
+            value.i = *sp++;
+        }
+        appendValue(argType, value, argsString, sizeof(argsString),
+        *desc != '\0');
+    }
+
+    std::string className(dvmHumanReadableDescriptor(method->clazz->descriptor));
+    char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
+    LOGI("-> %s %s%s %s(%s)", className.c_str(), method->name, signature, thisString, argsString);
+    free(signature);
+}
+
+static void logNativeMethodExit(const Method* method, Thread* self, const JValue returnValue)
+{
+    std::string className(dvmHumanReadableDescriptor(method->clazz->descriptor));
+    char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
+    if (dvmCheckException(self)) {
+        Object* exception = dvmGetException(self);
+        std::string exceptionClassName(dvmHumanReadableDescriptor(exception->clazz->descriptor));
+        LOGI("<- %s %s%s threw %s", className.c_str(),
+                method->name, signature, exceptionClassName.c_str());
+    } else {
+        char returnValueString[128] = { 0 };
+        char returnType = method->shorty[0];
+        appendValue(returnType, returnValue, returnValueString, sizeof(returnValueString), false);
+        LOGI("<- %s %s%s returned %s", className.c_str(),
+                method->name, signature, returnValueString);
+    }
+    free(signature);
 }
 
 /*
@@ -1057,10 +1105,13 @@ static inline void convertReferenceResult(JNIEnv* env, JValue* pResult,
 /*
  * General form, handles all cases.
  */
-void dvmCallJNIMethod_general(const u4* args, JValue* pResult, const Method* method, Thread* self) {
+void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method, Thread* self) {
     u4* modArgs = (u4*) args;
-    jclass staticMethodClass;
+    jclass staticMethodClass = NULL;
     JNIEnv* env = self->jniEnv;
+
+    bool isSynchronized = dvmIsSynchronizedMethod(method);
+    Object* lockObj;
 
     //LOGI("JNI calling %p (%s.%s:%s):", method->insns,
     //    method->clazz->descriptor, method->name, method->shorty);
@@ -1071,6 +1122,8 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult, const Method* met
      */
     int idx = 0;
     if (dvmIsStaticMethod(method)) {
+        lockObj = (Object*) method->clazz;
+
         /* add the class object we pass in */
         staticMethodClass = (jclass) addLocalReference(env, (Object*) method->clazz);
         if (staticMethodClass == NULL) {
@@ -1078,8 +1131,9 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult, const Method* met
             return;
         }
     } else {
+        lockObj = (Object*) args[0];
+
         /* add "this" */
-        staticMethodClass = NULL;
         jobject thisObj = addLocalReference(env, (Object*) modArgs[0]);
         if (thisObj == NULL) {
             assert(dvmCheckException(self));
@@ -1089,32 +1143,40 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult, const Method* met
         idx = 1;
     }
 
-    const char* shorty = &method->shorty[1];        /* skip return type */
-    while (*shorty != '\0') {
-        switch (*shorty++) {
-        case 'L':
-            //LOGI("  local %d: 0x%08x", idx, modArgs[idx]);
-            if (modArgs[idx] != 0) {
-                //if (!dvmIsValidObject((Object*) modArgs[idx]))
-                //    dvmAbort();
-                jobject argObj = addLocalReference(env, (Object*) modArgs[idx]);
-                if (argObj == NULL) {
-                    assert(dvmCheckException(self));
-                    return;
+    if (!method->noRef) {
+        const char* shorty = &method->shorty[1];        /* skip return type */
+        while (*shorty != '\0') {
+            switch (*shorty++) {
+            case 'L':
+                //LOGI("  local %d: 0x%08x", idx, modArgs[idx]);
+                if (modArgs[idx] != 0) {
+                    //if (!dvmIsValidObject((Object*) modArgs[idx]))
+                    //    dvmAbort();
+                    jobject argObj = addLocalReference(env, (Object*) modArgs[idx]);
+                    if (argObj == NULL) {
+                        assert(dvmCheckException(self));
+                        return;
+                    }
+                    modArgs[idx] = (u4) argObj;
                 }
-                modArgs[idx] = (u4) argObj;
+                break;
+            case 'D':
+            case 'J':
+                idx++;
+                break;
+            default:
+                /* Z B C S I -- do nothing */
+                break;
             }
-            break;
-        case 'D':
-        case 'J':
             idx++;
-            break;
-        default:
-            /* Z B C S I -- do nothing */
-            break;
         }
+    }
 
-        idx++;
+    if (method->shouldTrace) {
+        logNativeMethodEntry(method, args);
+    }
+    if (isSynchronized) {
+        dvmLockObject(self, lockObj);
     }
 
     ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
@@ -1124,102 +1186,21 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult, const Method* met
 
     COMPUTE_STACK_SUM(self);
     dvmPlatformInvoke(method->fastJni ? NULL : env,
-            (ClassObject*)staticMethodClass,
+            (ClassObject*) staticMethodClass,
             method->jniArgInfo, method->insSize, modArgs, method->shorty,
-            (void*)method->insns, pResult);
+            (void*) method->insns, pResult);
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
 
     convertReferenceResult(env, pResult, method, self);
-}
 
-/*
- * Handler for the unusual case of a synchronized native method.
- *
- * Lock the object, then call through the general function.
- */
-void dvmCallJNIMethod_synchronized(const u4* args, JValue* pResult,
-    const Method* method, Thread* self)
-{
-    Object* lockObj;
-
-    assert(dvmIsSynchronizedMethod(method));
-
-    if (dvmIsStaticMethod(method)) {
-        lockObj = (Object*) method->clazz;
-    } else {
-        lockObj = (Object*) args[0];
+    if (isSynchronized) {
+        dvmUnlockObject(self, lockObj);
     }
-    LOGVV("Calling %s.%s: locking %p (%s)",
-        method->clazz->descriptor, method->name,
-        lockObj, lockObj->clazz->descriptor);
-
-    dvmLockObject(self, lockObj);
-    dvmCallJNIMethod_general(args, pResult, method, self);
-    dvmUnlockObject(self, lockObj);
-}
-
-/*
- * Virtual method call, no reference arguments.
- *
- * We need to local-ref the "this" argument, found in args[0].
- */
-void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
-    const Method* method, Thread* self)
-{
-    u4* modArgs = (u4*) args;
-
-    jobject thisObj = addLocalReference(self->jniEnv, (Object*) args[0]);
-    if (thisObj == NULL) {
-        assert(dvmCheckException(self));
-        return;
+    if (method->shouldTrace) {
+        logNativeMethodExit(method, self, *pResult);
     }
-    modArgs[0] = (u4) thisObj;
-
-    ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
-
-    ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
-
-    COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(method->fastJni ? NULL : self->jniEnv, NULL,
-            method->jniArgInfo, method->insSize, modArgs, method->shorty,
-            (void*)method->insns, pResult);
-    CHECK_STACK_SUM(self);
-
-    dvmChangeStatus(self, oldStatus);
-
-    convertReferenceResult(self->jniEnv, pResult, method, self);
-}
-
-/*
- * Static method call, no reference arguments.
- *
- * We need to local-ref the class reference.
- */
-void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
-    const Method* method, Thread* self)
-{
-    jclass staticMethodClass = (jclass) addLocalReference(self->jniEnv, (Object*)method->clazz);
-    if (staticMethodClass == NULL) {
-        assert(dvmCheckException(self));
-        return;
-    }
-
-    ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
-
-    ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
-
-    COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(method->fastJni ? NULL : self->jniEnv,
-            (ClassObject*)staticMethodClass,
-            method->jniArgInfo, method->insSize, args, method->shorty,
-            (void*)method->insns, pResult);
-    CHECK_STACK_SUM(self);
-
-    dvmChangeStatus(self, oldStatus);
-
-    convertReferenceResult(self->jniEnv, pResult, method, self);
 }
 
 /*

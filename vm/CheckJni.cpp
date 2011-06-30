@@ -139,51 +139,14 @@ static inline bool callNeedsCheck(const u4* args, JValue* pResult,
 /*
  * Check a call into native code.
  */
-void dvmCheckCallJNIMethod_general(const u4* args, JValue* pResult,
+void dvmCheckCallJNIMethod(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
 {
-    dvmCallJNIMethod_general(args, pResult, method, self);
+    dvmCallJNIMethod(args, pResult, method, self);
     if (callNeedsCheck(args, pResult, method, self)) {
         checkCallResultCommon(args, pResult, method, self);
     }
 }
-
-/*
- * Check a synchronized call into native code.
- */
-void dvmCheckCallJNIMethod_synchronized(const u4* args, JValue* pResult,
-    const Method* method, Thread* self)
-{
-    dvmCallJNIMethod_synchronized(args, pResult, method, self);
-    if (callNeedsCheck(args, pResult, method, self)) {
-        checkCallResultCommon(args, pResult, method, self);
-    }
-}
-
-/*
- * Check a virtual call with no reference arguments (other than "this").
- */
-void dvmCheckCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
-    const Method* method, Thread* self)
-{
-    dvmCallJNIMethod_virtualNoRef(args, pResult, method, self);
-    if (callNeedsCheck(args, pResult, method, self)) {
-        checkCallResultCommon(args, pResult, method, self);
-    }
-}
-
-/*
- * Check a static call with no reference arguments (other than "clazz").
- */
-void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
-    const Method* method, Thread* self)
-{
-    dvmCallJNIMethod_staticNoRef(args, pResult, method, self);
-    if (callNeedsCheck(args, pResult, method, self)) {
-        checkCallResultCommon(args, pResult, method, self);
-    }
-}
-
 
 /*
  * ===========================================================================
@@ -508,19 +471,26 @@ public:
     void check(bool entry, const char* fmt0, ...) {
         va_list ap;
 
-        // If both "-Xcheck:jni" and "-Xjnitrace:" are enabled, we print trace messages
-        // when a native method that matches the Xjnitrace argument calls a JNI function
-        // such as NewByteArray.
         bool shouldTrace = false;
         const Method* method = NULL;
-        if (gDvm.jniTrace && mHasMethod) {
+        if ((gDvm.jniTrace || gDvmJni.logThirdPartyJni) && mHasMethod) {
             // We need to guard some of the invocation interface's calls: a bad caller might
             // use DetachCurrentThread or GetEnv on a thread that's not yet attached.
             if ((mFlags & kFlag_Invocation) == 0 || dvmThreadSelf() != NULL) {
                 method = dvmGetCurrentJNIMethod();
-                if (strstr(method->clazz->descriptor, gDvm.jniTrace) != NULL) {
-                    shouldTrace = true;
-                }
+            }
+        }
+        if (method != NULL) {
+            // If both "-Xcheck:jni" and "-Xjnitrace:" are enabled, we print trace messages
+            // when a native method that matches the Xjnitrace argument calls a JNI function
+            // such as NewByteArray.
+            if (gDvm.jniTrace && strstr(method->clazz->descriptor, gDvm.jniTrace) != NULL) {
+                shouldTrace = true;
+            }
+            // If -Xjniopts:logThirdPartyJni is on, we want to log any JNI function calls
+            // made by a third-party native method.
+            if (gDvmJni.logThirdPartyJni) {
+                shouldTrace |= method->shouldTrace;
             }
         }
 

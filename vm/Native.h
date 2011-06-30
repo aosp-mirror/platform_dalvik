@@ -101,12 +101,4 @@ INLINE s8 dvmGetArgLong(const u4* args, int elem)
     return val;
 }
 
-/*
- * Used to implement -Xjnitrace.
- */
-struct Thread;
-void dvmLogNativeMethodEntry(const Method* method, const u4* newFp);
-void dvmLogNativeMethodExit(const Method* method, struct Thread* self,
-        const JValue retval);
-
 #endif  // DALVIK_NATIVE_H_

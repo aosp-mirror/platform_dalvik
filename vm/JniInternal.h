@@ -103,26 +103,9 @@ INLINE void dvmSetJniEnvThreadId(JNIEnv* pEnv, Thread* self)
     ((JNIEnvExt*)pEnv)->self = self;
 }
 
-/*
- * JNI call bridges.  Not called directly.
- *
- * The "Check" versions are used when CheckJNI is enabled.
- */
-void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
+void dvmCallJNIMethod(const u4* args, JValue* pResult,
     const Method* method, Thread* self);
-void dvmCallJNIMethod_synchronized(const u4* args, JValue* pResult,
-    const Method* method, Thread* self);
-void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
-    const Method* method, Thread* self);
-void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
-    const Method* method, Thread* self);
-void dvmCheckCallJNIMethod_general(const u4* args, JValue* pResult,
-    const Method* method, Thread* self);
-void dvmCheckCallJNIMethod_synchronized(const u4* args, JValue* pResult,
-    const Method* method, Thread* self);
-void dvmCheckCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
-    const Method* method, Thread* self);
-void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
+void dvmCheckCallJNIMethod(const u4* args, JValue* pResult,
     const Method* method, Thread* self);
 
 /*

@@ -536,11 +536,11 @@ struct Method {
     /* the actual code */
     const u2*       insns;          /* instructions, in memory-mapped .dex */
 
-    /* cached JNI argument and return-type hints */
+    /* JNI: cached argument and return-type hints */
     int             jniArgInfo;
 
     /*
-     * Native method ptr; could be actual function or a JNI bridge.  We
+     * JNI: native method ptr; could be actual function or a JNI bridge.  We
      * don't currently discriminate between DalvikBridgeFunc and
      * DalvikNativeFunc; the former takes an argument superset (i.e. two
      * extra args) which will be ignored.  If necessary we can use
@@ -549,11 +549,27 @@ struct Method {
     DalvikBridgeFunc nativeFunc;
 
     /*
-     * True if this static non-synchronized native method (that has no
+     * JNI: true if this static non-synchronized native method (that has no
      * reference arguments) needs a JNIEnv* and jclass/jobject. Libcore
      * uses this.
      */
     bool fastJni;
+
+    /*
+     * JNI: true if this method has no reference arguments. This lets the JNI
+     * bridge avoid scanning the shorty for direct pointers that need to be
+     * converted to local references.
+     *
+     * TODO: replace this with a list of indexes of the reference arguments.
+     */
+    bool noRef;
+
+    /*
+     * JNI: true if we should log entry and exit. This is the only way
+     * developers can log the local references that are passed into their code.
+     * Used for debugging JNI problems in third-party code.
+     */
+    bool shouldTrace;
 
     /*
      * Register map data, if available.  This will point into the DEX file
