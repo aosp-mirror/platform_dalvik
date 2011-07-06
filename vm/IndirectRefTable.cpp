@@ -70,14 +70,16 @@ void IndirectRefTable::destroy()
 /*
  * Make sure that the entry at "idx" is correctly paired with "iref".
  */
-bool IndirectRefTable::checkEntry(IndirectRef iref, int idx) const
+bool IndirectRefTable::checkEntry(const char* what, IndirectRef iref, int idx) const
 {
     Object* obj = table[idx];
     IndirectRef checkRef = toIndirectRef(obj, idx);
     if (checkRef != iref) {
-        LOGE("JNI ERROR (app bug): use of stale %s reference (req=%p vs cur=%p; table=%p)",
-                indirectRefKindToString(kind), iref, checkRef, this);
-        abortMaybe();
+        if (indirectRefKind(iref) != kIndirectKindWeakGlobal) {
+            LOGE("JNI ERROR (app bug): attempt to %s stale %s reference (req=%p vs cur=%p; table=%p)",
+                    what, indirectRefKindToString(kind), iref, checkRef, this);
+            abortMaybe();
+        }
         return false;
     }
     return true;
@@ -185,14 +187,7 @@ bool IndirectRefTable::getChecked(IndirectRef iref) const
         return false;
     }
 
-    Object* obj = table[idx];
-    if (obj == NULL) {
-        LOGE("JNI ERROR (app bug): use of deleted %s reference (%p)",
-                indirectRefKindToString(kind), iref);
-        abortMaybe();
-        return false;
-    }
-    if (!checkEntry(iref, idx)) {
+    if (!checkEntry("use", iref, idx)) {
         return false;
     }
 
@@ -208,7 +203,7 @@ bool IndirectRefTable::getChecked(IndirectRef iref) const
  * required by JNI's DeleteLocalRef function.
  *
  * Note this is NOT called when a local frame is popped.  This is only used
- * for explict single removals.
+ * for explicit single removals.
  *
  * Returns "false" if nothing was removed.
  */
@@ -242,7 +237,7 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
          * Top-most entry.  Scan up and consume holes.  No need to NULL
          * out the entry, since the test vs. topIndex will catch it.
          */
-        if (!checkEntry(iref, idx)) {
+        if (!checkEntry("remove", iref, idx)) {
             return false;
         }
         updateSlotRemove(idx);
@@ -279,7 +274,7 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
             LOGV("--- WEIRD: removing null entry %d", idx);
             return false;
         }
-        if (!checkEntry(iref, idx)) {
+        if (!checkEntry("remove", iref, idx)) {
             return false;
         }
         updateSlotRemove(idx);

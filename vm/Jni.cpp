@@ -323,26 +323,36 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
 
     switch (indirectRefKind(jobj)) {
     case kIndirectKindLocal:
-        return getLocalRefTable(env)->get(jobj);
+        {
+            Object* result = getLocalRefTable(env)->get(jobj);
+            if (result == NULL) {
+                LOGE("JNI ERROR (app bug): use of deleted local reference (%p)", jobj);
+                dvmAbort();
+            }
+            return result;
+        }
     case kIndirectKindGlobal:
         {
             // TODO: find a way to avoid the mutex activity here
             IndirectRefTable* pRefTable = &gDvm.jniGlobalRefTable;
             ScopedPthreadMutexLock lock(&gDvm.jniGlobalRefLock);
-            return pRefTable->get(jobj);
+            Object* result = pRefTable->get(jobj);
+            if (result == NULL) {
+                LOGE("JNI ERROR (app bug): use of deleted global reference (%p)", jobj);
+                dvmAbort();
+            }
+            return result;
         }
     case kIndirectKindWeakGlobal:
         {
-            Object* result;
-            {
-                // TODO: find a way to avoid the mutex activity here
-                IndirectRefTable* pRefTable = &gDvm.jniWeakGlobalRefTable;
-                ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
-                result = pRefTable->get(jobj);
-            }
+            // TODO: find a way to avoid the mutex activity here
+            IndirectRefTable* pRefTable = &gDvm.jniWeakGlobalRefTable;
+            ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
+            Object* result = pRefTable->get(jobj);
+            // A cleared weak global reference means we might legitimately return NULL here.
             /*
              * TODO: this is a temporary workaround for broken weak global
-             * refs (bug 4260055).  We treat any invalid reference as if it
+             * refs (http://b/4260055).  We treat any invalid reference as if it
              * were a weak global with a cleared referent.  This means that
              * actual invalid references won't be detected, and if an empty
              * slot gets re-used we will return the new reference instead.

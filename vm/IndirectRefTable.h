@@ -333,7 +333,7 @@ private:
 
     /* extra debugging checks */
     bool getChecked(IndirectRef) const;
-    bool checkEntry(IndirectRef, int) const;
+    bool checkEntry(const char*, IndirectRef, int) const;
 };
 
 #endif  // DALVIK_INDIRECTREFTABLE_H_
