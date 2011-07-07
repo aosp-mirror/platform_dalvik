@@ -432,10 +432,9 @@ int hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                 int ifieldCount = sclass->ifieldCount;
                 for (int i = 0; i < ifieldCount; i++) {
                     const InstField *f = &sclass->ifields[i];
-                    hprof_basic_type t;
                     size_t size;
 
-                    t = signatureToBasicTypeAndSize(f->signature, &size);
+                    (void) signatureToBasicTypeAndSize(f->signature, &size);
                     if (size == 1) {
                         hprofAddU1ToRecord(rec,
                                 (u1)dvmGetFieldByte(obj, f->byteOffset));

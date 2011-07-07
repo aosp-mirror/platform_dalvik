@@ -1049,12 +1049,6 @@ void dvmLogRawStackTrace(const int* intVals, int stackDepth) {
         Method* meth = (Method*) *intVals++;
         int pc = *intVals++;
 
-        int lineNumber;
-        if (pc == -1)      // broken top frame?
-            lineNumber = 0;
-        else
-            lineNumber = dvmLineNumFromPC(meth, pc);
-
         std::string dotName(dvmHumanReadableDescriptor(meth->clazz->descriptor));
         if (dvmIsNativeMethod(meth)) {
             LOGI("\tat %s.%s(Native Method)", dotName.c_str(), meth->name);

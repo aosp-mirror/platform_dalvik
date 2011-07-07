@@ -3487,7 +3487,6 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
      * look for the -Xcheck:jni stuff here.
      */
     int argc = 0;
-    bool sawJniOpts = false;
     for (int i = 0; i < args->nOptions; i++) {
         const char* optStr = args->options[i].optionString;
         if (optStr == NULL) {
@@ -3504,7 +3503,6 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
         } else if (strcmp(optStr, "-Xcheck:jni") == 0) {
             gDvmJni.useCheckJni = true;
         } else if (strncmp(optStr, "-Xjniopts:", 10) == 0) {
-            sawJniOpts = true;
             char* jniOpts = strdup(optStr + 10);
             size_t jniOptCount = 1;
             for (char* p = jniOpts; *p != 0; ++p) {

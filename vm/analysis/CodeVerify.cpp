@@ -2840,7 +2840,6 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx,
     const DexCode* pCode;
     DexFile* pDexFile;
     ClassObject* commonSuper = NULL;
-    bool foundPossibleHandler = false;
     u4 handlersSize;
     u4 offset;
     u4 i;
@@ -2869,7 +2868,6 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx,
 
             if (handler->address == (u4) insnIdx) {
                 ClassObject* clazz;
-                foundPossibleHandler = true;
 
                 if (handler->typeIdx == kDexNoIndex)
                     clazz = gDvm.exThrowable;

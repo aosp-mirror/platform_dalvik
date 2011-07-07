@@ -243,12 +243,10 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
              * start from the front we could do a smear rather than a move.
              */
             Object** srcObj;
-            Object** dstObj;
             int copyCount;
             ClassObject*   clazz = NULL;
 
             srcObj = ((Object**)(void*)srcArray->contents) + srcPos;
-            dstObj = ((Object**)(void*)dstArray->contents) + dstPos;
 
             if (length > 0 && srcObj[0] != NULL)
             {

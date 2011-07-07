@@ -1300,7 +1300,6 @@ bool dvmJitResizeJitTable( unsigned int size )
     JitEntry *pNewTable;
     JitEntry *pOldTable;
     JitEntry tempEntry;
-    u4 newMask;
     unsigned int oldSize;
     unsigned int i;
 
@@ -1308,8 +1307,6 @@ bool dvmJitResizeJitTable( unsigned int size )
     assert(size && !(size & (size - 1)));   /* Is power of 2? */
 
     LOGI("Jit: resizing JitTable from %d to %d", gDvmJit.jitTableSize, size);
-
-    newMask = size - 1;
 
     if (size <= gDvmJit.jitTableSize) {
         return true;

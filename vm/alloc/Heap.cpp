@@ -456,9 +456,8 @@ static void verifyRootsAndHeap()
 void dvmCollectGarbageInternal(const GcSpec* spec)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
-    u4 rootSuspend, rootSuspendTime, rootStart = 0 , rootEnd = 0;
-    u4 dirtySuspend, dirtyStart = 0, dirtyEnd = 0;
-    u4 totalTime;
+    u4 rootStart = 0 , rootEnd = 0;
+    u4 dirtyStart = 0, dirtyEnd = 0;
     size_t numObjectsFreed, numBytesFreed;
     size_t currAllocated, currFootprint;
     size_t percentFree;
@@ -474,10 +473,8 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
 
     gcHeap->gcRunning = true;
 
-    rootSuspend = dvmGetRelativeTimeMsec();
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
     rootStart = dvmGetRelativeTimeMsec();
-    rootSuspendTime = rootStart - rootSuspend;
 
     /*
      * If we are not marking concurrently raise the priority of the
@@ -538,7 +535,6 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
          * suspension.
          */
         dvmLockHeap();
-        dirtySuspend = dvmGetRelativeTimeMsec();
         dvmSuspendAllThreads(SUSPEND_FOR_GC);
         dirtyStart = dvmGetRelativeTimeMsec();
         /*
@@ -660,7 +656,6 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     if (!spec->isConcurrent) {
         u4 markSweepTime = dirtyEnd - rootStart;
         bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
-        totalTime = rootSuspendTime + markSweepTime;
         LOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, paused %ums",
              spec->reason,
              isSmall ? "<" : "",
@@ -670,10 +665,8 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
              markSweepTime);
     } else {
         u4 rootTime = rootEnd - rootStart;
-        u4 dirtySuspendTime = dirtyStart - dirtySuspend;
         u4 dirtyTime = dirtyEnd - dirtyStart;
         bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
-        totalTime = rootSuspendTime + rootTime + dirtySuspendTime + dirtyTime;
         LOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, paused %ums+%ums",
              spec->reason,
              isSmall ? "<" : "",
