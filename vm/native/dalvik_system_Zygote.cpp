@@ -39,6 +39,7 @@ enum {
     DEBUG_ENABLE_CHECKJNI           = 1 << 1,
     DEBUG_ENABLE_ASSERT             = 1 << 2,
     DEBUG_ENABLE_SAFEMODE           = 1 << 3,
+    DEBUG_ENABLE_JNI_LOGGING        = 1 << 4,
 };
 
 /*
@@ -283,6 +284,10 @@ static void enableDebugFeatures(u4 debugFlags)
     if ((debugFlags & DEBUG_ENABLE_CHECKJNI) != 0) {
         /* turn it on if it's not already enabled */
         dvmLateEnableCheckedJni();
+    }
+
+    if ((debugFlags & DEBUG_ENABLE_JNI_LOGGING) != 0) {
+        gDvmJni.logThirdPartyJni = true;
     }
 
     if ((debugFlags & DEBUG_ENABLE_ASSERT) != 0) {
