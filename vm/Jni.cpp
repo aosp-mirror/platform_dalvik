@@ -349,7 +349,8 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
             IndirectRefTable* pRefTable = &gDvm.jniWeakGlobalRefTable;
             ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
             Object* result = pRefTable->get(jobj);
-            // A cleared weak global reference means we might legitimately return NULL here.
+            // There's no null check here because we might be dealing with
+            // a cleared weak global reference.
             /*
              * TODO: this is a temporary workaround for broken weak global
              * refs (http://b/4260055).  We treat any invalid reference as if it
