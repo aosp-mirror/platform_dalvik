@@ -160,7 +160,10 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
     /*
      * Pop open the (presumed) DEX file.
      */
-    fd = open(fileName, O_RDONLY);
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+    fd = open(fileName, O_RDONLY | O_BINARY);
     if (fd < 0) {
         if (!quiet) {
             fprintf(stderr, "ERROR: unable to open '%s': %s\n",
