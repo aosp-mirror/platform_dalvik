@@ -185,6 +185,18 @@ static void Dalvik_dalvik_system_VMRuntime_vmVersion(const u4* args,
     returnCString(pResult, buf);
 }
 
+static void Dalvik_dalvik_system_VMRuntime_setTargetSdkVersion(const u4* args,
+    JValue* pResult)
+{
+    // This is the target SDK version of the app we're about to run.
+    // Note that this value may be CUR_DEVELOPMENT (10000).
+    int targetSdkVersion = args[1];
+    if (targetSdkVersion <= 13 /* honeycomb-mr2 */) {
+        // TODO: turn on compatibility stuff when it's written!
+    }
+    RETURN_VOID();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
     { "addressOf", "(Ljava/lang/Object;)J",
         Dalvik_dalvik_system_VMRuntime_addressOf },
@@ -206,6 +218,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_newNonMovableArray },
     { "properties", "()[Ljava/lang/String;",
         Dalvik_dalvik_system_VMRuntime_properties },
+    { "setTargetSdkVersion", "(I)V",
+        Dalvik_dalvik_system_VMRuntime_setTargetSdkVersion },
     { "startJitCompilation", "()V",
         Dalvik_dalvik_system_VMRuntime_startJitCompilation },
     { "vmVersion", "()Ljava/lang/String;",
