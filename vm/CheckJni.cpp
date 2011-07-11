@@ -749,14 +749,16 @@ private:
             printWarn = true;
         } else {
             Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
-
-            /*
-             * The decoded object will be NULL if this is a weak global ref
-             * with a cleared referent.
-             */
-            if (obj == kInvalidIndirectRefObject || (obj != NULL && !dvmIsValidObject(obj))) {
-                LOGW("JNI WARNING: native code passing in bad object %p %p", jobj, obj);
-                printWarn = true;
+            if (obj != NULL) {
+                if (obj == kInvalidIndirectRefObject) {
+                    LOGW("JNI WARNING: native code passing in invalid reference %p", jobj);
+                    printWarn = true;
+                } else if (obj != kClearedJniWeakGlobal && !dvmIsValidObject(obj)) {
+                    // TODO: when we remove workAroundAppJniBugs, this should be impossible.
+                    LOGW("JNI WARNING: native code passing in reference to invalid object %p %p",
+                            jobj, obj);
+                    printWarn = true;
+                }
             }
         }
 

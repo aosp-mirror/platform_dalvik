@@ -157,8 +157,10 @@ bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** bottom,
 static size_t getElementCount(const Object* obj)
 {
     const ArrayObject* arrayObj = (ArrayObject*) obj;
-    if (arrayObj == NULL || arrayObj->clazz == NULL || !dvmIsArray(arrayObj))
+    if (arrayObj == NULL || arrayObj == kClearedJniWeakGlobal ||
+            arrayObj->clazz == NULL || !dvmIsArray(arrayObj)) {
         return 0;
+    }
     return arrayObj->length;
 }
 
@@ -171,7 +173,7 @@ static int compareObject(const void* vobj1, const void* vobj2)
     const Object* obj1 = *((Object* const*) vobj1);
     const Object* obj2 = *((Object* const*) vobj2);
 
-    /* ensure null references appear at the end */
+    // Ensure null references and cleared jweaks appear at the end.
     if (obj1 == NULL) {
         if (obj2 == NULL) {
             return 0;
@@ -179,6 +181,15 @@ static int compareObject(const void* vobj1, const void* vobj2)
             return 1;
         }
     } else if (obj2 == NULL) {
+        return -1;
+    }
+    if (obj1 == kClearedJniWeakGlobal) {
+        if (obj2 == kClearedJniWeakGlobal) {
+            return 0;
+        } else {
+            return 1;
+        }
+    } else if (obj2 == kClearedJniWeakGlobal) {
         return -1;
     }
 
@@ -205,7 +216,11 @@ static int compareObject(const void* vobj1, const void* vobj2)
 static void logSummaryLine(const Object* obj, size_t elems, int identical, int equiv)
 {
     if (obj == NULL) {
-        LOGW("  NULL reference (count=%d)", equiv);
+        LOGW("    NULL reference (count=%d)", equiv);
+        return;
+    }
+    if (obj == kClearedJniWeakGlobal) {
+        LOGW("    cleared jweak (count=%d)", equiv);
         return;
     }
 
@@ -224,7 +239,7 @@ static void logSummaryLine(const Object* obj, size_t elems, int identical, int e
     if (identical + equiv != 0) {
         StringAppendF(&msg, " (%d unique instances)", equiv + 1);
     }
-    LOGW("%s", msg.c_str());
+    LOGW("    %s", msg.c_str());
 }
 
 /*
@@ -236,30 +251,33 @@ static void logSummaryLine(const Object* obj, size_t elems, int identical, int e
 void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     const char* descr)
 {
+    LOGW("%s reference table (%p) dump:", descr, refs);
+
     if (count == 0) {
-        LOGW("%s reference table has no entries", descr);
+        LOGW("  (empty)");
         return;
     }
 
-    /*
-     * Dump the most recent N entries.
-     */
+    // Dump the most recent N entries.
     const size_t kLast = 10;
-    LOGW("Last %d entries in %s reference table:", kLast, descr);
     int first = count - kLast;
     if (first < 0) {
         first = 0;
     }
-
+    LOGW("  Last %d entries (of %d):", (count - first), count);
     for (int idx = count - 1; idx >= first; --idx) {
         const Object* ref = refs[idx];
         if (ref == NULL) {
             continue;
         }
+        if (ref == kClearedJniWeakGlobal) {
+            LOGW("    %5d: cleared jweak", idx);
+            continue;
+        }
         if (ref->clazz == NULL) {
-            /* should only be possible right after a plain dvmMalloc() */
+            // should only be possible right after a plain dvmMalloc().
             size_t size = dvmObjectSizeInHeap(ref);
-            LOGW("%5d: %p (raw) (%zd bytes)", idx, ref, size);
+            LOGW("    %5d: %p (raw) (%zd bytes)", idx, ref, size);
             continue;
         }
 
@@ -286,12 +304,10 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
             }
             free(s);
         }
-        LOGW("%5d: %p %s%s", idx, ref, className.c_str(), extras.c_str());
+        LOGW("    %5d: %p %s%s", idx, ref, className.c_str(), extras.c_str());
     }
 
-    /*
-     * Make a copy of the table, and sort it.
-     */
+    // Make a copy of the table, and sort it.
     Object** tableCopy = (Object**)malloc(sizeof(Object*) * count);
     if (tableCopy == NULL) {
         LOGE("Unable to copy table with %d elements", count);
@@ -301,23 +317,19 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     qsort(tableCopy, count, sizeof(Object*), compareObject);
     refs = tableCopy;       // use sorted list
 
-    /*
-     * Find and remove any "holes" in the list.  The sort moved them all
-     * to the end.
-     *
-     * A table with nothing but NULL entries should have count==0, which
-     * was handled above, so this operation should not leave us with an
-     * empty list.
-     */
-    while (refs[count-1] == NULL) {
-        count--;
+    // Remove any uninteresting stuff from the list. The sort moved them all to the end.
+    while (count > 0 && refs[count-1] == NULL) {
+        --count;
     }
-    assert(count > 0);
+    while (count > 0 && refs[count-1] == kClearedJniWeakGlobal) {
+        --count;
+    }
+    if (count == 0) {
+        return;
+    }
 
-    /*
-     * Dump uniquified table summary.
-     */
-    LOGW("%s reference table summary (%d entries):", descr, count);
+    // Dump a summary of the whole table.
+    LOGW("  Summary:");
     size_t equiv, identical;
     equiv = identical = 0;
     size_t idx;
@@ -326,21 +338,21 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
         elems = getElementCount(refs[idx-1]);
 
         if (refs[idx] == refs[idx-1]) {
-            /* same reference, added more than once */
+            // same reference, added more than once.
             identical++;
         } else if (refs[idx]->clazz == refs[idx-1]->clazz &&
             getElementCount(refs[idx]) == elems)
         {
-            /* same class / element count, different object */
+            // same class / element count, different object.
             equiv++;
         } else {
-            /* different class */
+            // different class.
             logSummaryLine(refs[idx-1], elems, identical, equiv);
             equiv = identical = 0;
         }
     }
 
-    /* handle the last entry (everything above outputs refs[i-1]) */
+    // Handle the last entry (everything above outputs refs[i-1]).
     elems = getElementCount(refs[idx-1]);
     logSummaryLine(refs[count-1], elems, identical, equiv);
 

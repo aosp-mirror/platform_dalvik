@@ -75,11 +75,9 @@ bool IndirectRefTable::checkEntry(const char* what, IndirectRef iref, int idx) c
     Object* obj = table[idx];
     IndirectRef checkRef = toIndirectRef(obj, idx);
     if (checkRef != iref) {
-        if (indirectRefKind(iref) != kIndirectKindWeakGlobal) {
-            LOGE("JNI ERROR (app bug): attempt to %s stale %s reference (req=%p vs cur=%p; table=%p)",
-                    what, indirectRefKindToString(kind), iref, checkRef, this);
-            abortMaybe();
-        }
+        LOGE("JNI ERROR (app bug): attempt to %s stale %s reference %p (should be %p)",
+                what, indirectRefKindToString(kind), iref, checkRef);
+        abortMaybe();
         return false;
     }
     return true;
@@ -112,27 +110,23 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
         }
         assert(newSize > allocEntries);
 
-        Object** newTable = (Object**) realloc(table, newSize * sizeof(Object*));
-        if (newTable == NULL) {
+        table = (Object**) realloc(table, newSize * sizeof(Object*));
+        if (table == NULL) {
             LOGE("JNI ERROR (app bug): unable to expand %s reference table (from %d to %d, max=%d)",
                     indirectRefKindToString(kind),
                     allocEntries, newSize, maxEntries);
             dump(indirectRefKindToString(kind));
             dvmAbort();
         }
-
-        /* update entries; adjust "nextEntry" in case memory moved */
-        table = newTable;
         allocEntries = newSize;
     }
-
-    IndirectRef result;
 
     /*
      * We know there's enough room in the table.  Now we just need to find
      * the right spot.  If there's a hole, find it and fill it; otherwise,
      * add to the end of the list.
      */
+    IndirectRef result;
     int numHoles = segmentState.parts.numHoles - prevState.parts.numHoles;
     if (numHoles > 0) {
         assert(topIndex > 1);
@@ -166,12 +160,11 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
 bool IndirectRefTable::getChecked(IndirectRef iref) const
 {
     if (iref == NULL) {
-        LOGW("Attempt to look up NULL %s reference",
-                indirectRefKindToString(kind));
+        LOGW("Attempt to look up NULL %s reference", indirectRefKindToString(kind));
         return false;
     }
     if (indirectRefKind(iref) == kIndirectKindInvalid) {
-        LOGE("JNI ERROR (app bug): invalid %s reference (%p)",
+        LOGE("JNI ERROR (app bug): invalid %s reference %p",
                 indirectRefKindToString(kind), iref);
         abortMaybe();
         return false;
@@ -181,8 +174,15 @@ bool IndirectRefTable::getChecked(IndirectRef iref) const
     int idx = extractIndex(iref);
     if (idx >= topIndex) {
         /* bad -- stale reference? */
-        LOGE("JNI ERROR (app bug): accessed stale %s reference at index %d (top=%d)",
-                indirectRefKindToString(kind), idx, topIndex);
+        LOGE("JNI ERROR (app bug): accessed stale %s reference %p (index %d in a table of size %d)",
+                indirectRefKindToString(kind), iref, idx, topIndex);
+        abortMaybe();
+        return false;
+    }
+
+    if (table[idx] == NULL) {
+        LOGI("JNI ERROR (app bug): accessed deleted %s reference %p",
+                indirectRefKindToString(kind), iref);
         abortMaybe();
         return false;
     }
@@ -232,11 +232,11 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
     assert(segmentState.parts.numHoles >= prevState.parts.numHoles);
 
     int idx = extractIndex(iref);
-    bool fakeDirectReferenceHack = false;
+    bool workAroundAppJniBugs = false;
 
     if (indirectRefKind(iref) == kIndirectKindInvalid && gDvmJni.workAroundAppJniBugs) {
         idx = linearScan(iref, bottomIndex, topIndex, table);
-        fakeDirectReferenceHack = true;
+        workAroundAppJniBugs = true;
         if (idx == -1) {
             LOGW("trying to work around app JNI bugs, but didn't find %p in table!", iref);
             return false;
@@ -257,31 +257,25 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
     }
 
     if (idx == topIndex-1) {
-        /*
-         * Top-most entry.  Scan up and consume holes.  No need to NULL
-         * out the entry, since the test vs. topIndex will catch it.
-         */
-        if (fakeDirectReferenceHack == false && !checkEntry("remove", iref, idx)) {
+        // Top-most entry.  Scan up and consume holes.
+
+        if (workAroundAppJniBugs == false && !checkEntry("remove", iref, idx)) {
             return false;
         }
 
-#ifndef NDEBUG
-        table[idx] = (Object*)0xd3d3d3d3;
-#endif
-
-        int numHoles =
-            segmentState.parts.numHoles - prevState.parts.numHoles;
+        table[idx] = NULL;
+        int numHoles = segmentState.parts.numHoles - prevState.parts.numHoles;
         if (numHoles != 0) {
             while (--topIndex > bottomIndex && numHoles != 0) {
                 LOGV("+++ checking for hole at %d (cookie=0x%08x) val=%p",
                     topIndex-1, cookie, table[topIndex-1]);
-                if (table[topIndex-1] != NULL)
+                if (table[topIndex-1] != NULL) {
                     break;
+                }
                 LOGV("+++ ate hole at %d", topIndex-1);
                 numHoles--;
             }
-            segmentState.parts.numHoles =
-                numHoles + prevState.parts.numHoles;
+            segmentState.parts.numHoles = numHoles + prevState.parts.numHoles;
             segmentState.parts.topIndex = topIndex;
         } else {
             segmentState.parts.topIndex = topIndex-1;
@@ -297,14 +291,13 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
             LOGV("--- WEIRD: removing null entry %d", idx);
             return false;
         }
-        if (fakeDirectReferenceHack == false && !checkEntry("remove", iref, idx)) {
+        if (workAroundAppJniBugs == false && !checkEntry("remove", iref, idx)) {
             return false;
         }
 
         table[idx] = NULL;
         segmentState.parts.numHoles++;
-        LOGV("+++ left hole at %d, holes=%d",
-            idx, segmentState.parts.numHoles);
+        LOGV("+++ left hole at %d, holes=%d", idx, segmentState.parts.numHoles);
     }
 
     return true;

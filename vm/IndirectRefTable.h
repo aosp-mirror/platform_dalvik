@@ -86,7 +86,9 @@
 typedef void* IndirectRef;
 
 /* magic failure value; must not pass dvmIsValidObject() */
-#define kInvalidIndirectRefObject ((Object*)0xdead4321)
+#define kInvalidIndirectRefObject reinterpret_cast<Object*>(0xdead4321)
+
+#define kClearedJniWeakGlobal reinterpret_cast<Object*>(0xdead1234)
 
 /*
  * Indirect reference kind, used as the two low bits of IndirectRef.
@@ -196,12 +198,54 @@ union IRTSegmentState {
         u4      numHoles:16;            /* #of holes in entire table */
     } parts;
 };
+
+class iref_iterator {
+public:
+    explicit iref_iterator(Object** table, size_t i, size_t capacity)
+    : table_(table), i_(i), capacity_(capacity)
+    {
+        skipNullsAndTombstones();
+    }
+
+    iref_iterator& operator++() {
+        ++i_;
+        skipNullsAndTombstones();
+        return *this;
+    }
+
+    Object** operator*() {
+        return &table_[i_];
+    }
+
+    bool equals(const iref_iterator& rhs) const {
+        return (i_ == rhs.i_ && table_ == rhs.table_);
+    }
+
+    size_t to_i() const { return i_; }
+
+private:
+    void skipNullsAndTombstones() {
+        // We skip NULLs and tombstones. Clients don't want to see implementation details.
+        while (i_ < capacity_ && (table_[i_] == NULL || table_[i_] == kClearedJniWeakGlobal)) {
+            ++i_;
+        }
+    }
+
+    Object** table_;
+    size_t i_;
+    size_t capacity_;
+};
+
+bool inline operator!=(const iref_iterator& lhs, const iref_iterator& rhs) {
+    return !lhs.equals(rhs);
+}
+
 struct IndirectRefTable {
+public:
+    typedef iref_iterator iterator;
+
     /* semi-public - read/write by interpreter in native call handler */
     IRTSegmentState segmentState;
-
-    /* semi-public - read-only during GC scan; pointer must not be kept */
-    Object**        table;              /* bottom of the stack */
 
     /*
      * private:
@@ -209,6 +253,7 @@ struct IndirectRefTable {
      * TODO: we can't make these private as long as the interpreter
      * uses offsetof, since private member data makes us non-POD.
      */
+    Object**        table;              /* bottom of the stack */
     IndirectRefKind kind;               /* bit mask, ORed into all irefs */
     IndirectRefSlot* slotData;          /* extended debugging info */
     size_t          allocEntries;       /* #of entries we have space for */
@@ -290,6 +335,14 @@ struct IndirectRefTable {
      */
     size_t capacity() const {
         return segmentState.parts.topIndex;
+    }
+
+    iterator begin() {
+        return iterator(table, 0, capacity());
+    }
+
+    iterator end() {
+        return iterator(table, capacity(), capacity());
     }
 
 private:

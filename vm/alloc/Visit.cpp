@@ -70,10 +70,9 @@ static void visitIndirectRefTable(RootVisitor *visitor, IndirectRefTable *table,
 {
     assert(visitor != NULL);
     assert(table != NULL);
-    Object **entry = table->table;
-    int numEntries = table->capacity();
-    for (int i = 0; i < numEntries; ++i) {
-        (*visitor)(&entry[i], threadId, type, arg);
+    typedef IndirectRefTable::iterator It; // TODO: C++0x auto
+    for (It it = table->begin(), end = table->end(); it != end; ++it) {
+        (*visitor)(*it, threadId, type, arg);
     }
 }
 

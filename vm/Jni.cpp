@@ -351,19 +351,11 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
             IndirectRefTable* pRefTable = &gDvm.jniWeakGlobalRefTable;
             ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
             Object* result = pRefTable->get(jobj);
-            // There's no null check here because we might be dealing with
-            // a cleared weak global reference.
-            /*
-             * TODO: this is a temporary workaround for broken weak global
-             * refs (http://b/4260055).  We treat any invalid reference as if it
-             * were a weak global with a cleared referent.  This means that
-             * actual invalid references won't be detected, and if an empty
-             * slot gets re-used we will return the new reference instead.
-             * This must be removed when weak global refs get fixed.
-             */
-            if (result == kInvalidIndirectRefObject) {
-                LOGW("Warning: used weak global ref hack");
+            if (result == kClearedJniWeakGlobal) {
                 result = NULL;
+            } else if (result == NULL) {
+                LOGE("JNI ERROR (app bug): use of deleted weak global reference (%p)", jobj);
+                dvmAbort();
             }
             return result;
         }
@@ -566,9 +558,7 @@ static jobject addWeakGlobalReference(Object* obj) {
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
     jobject jobj = (jobject) table->add(IRT_FIRST_SEGMENT, obj);
     if (jobj == NULL) {
-        table->dump("JNI weak global");
-        LOGE("Failed adding to JNI weak global ref table (%zd entries)",
-                table->capacity());
+        LOGE("Failed adding to JNI weak global ref table (%zd entries)", table->capacity());
     }
     return jobj;
 }

@@ -996,15 +996,15 @@ static int isUnmarkedObject(void *obj)
     return !isMarked((Object *)obj, &gDvm.gcHeap->markContext);
 }
 
-void sweepWeakJniGlobals()
+static void sweepWeakJniGlobals()
 {
-    IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
-    Object **entry = table->table;
-    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
-    int numEntries = table->capacity();
-    for (int i = 0; i < numEntries; ++i) {
-        if (entry[i] != NULL && !isMarked(entry[i], ctx)) {
-            entry[i] = NULL;
+    IndirectRefTable* table = &gDvm.jniWeakGlobalRefTable;
+    GcMarkContext* ctx = &gDvm.gcHeap->markContext;
+    typedef IndirectRefTable::iterator It; // TODO: C++0x auto
+    for (It it = table->begin(), end = table->end(); it != end; ++it) {
+        Object** entry = *it;
+        if (!isMarked(*entry, ctx)) {
+            *entry = kClearedJniWeakGlobal;
         }
     }
 }
