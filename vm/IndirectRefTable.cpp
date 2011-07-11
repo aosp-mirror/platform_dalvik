@@ -194,6 +194,19 @@ bool IndirectRefTable::getChecked(IndirectRef iref) const
     return true;
 }
 
+static int linearScan(IndirectRef iref, int bottomIndex, int topIndex, Object** table) {
+    for (int i = bottomIndex; i < topIndex; ++i) {
+        if (table[i] == reinterpret_cast<Object*>(iref)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool IndirectRefTable::contains(IndirectRef iref) const {
+    return linearScan(iref, 0, segmentState.parts.topIndex, table) != -1;
+}
+
 /*
  * Remove "obj" from "pRef".  We extract the table offset bits from "iref"
  * and zap the corresponding entry, leaving a hole if it's not at the top.
@@ -219,6 +232,17 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
     assert(segmentState.parts.numHoles >= prevState.parts.numHoles);
 
     int idx = extractIndex(iref);
+    bool fakeDirectReferenceHack = false;
+
+    if (indirectRefKind(iref) == kIndirectKindInvalid && gDvmJni.workAroundAppJniBugs) {
+        idx = linearScan(iref, bottomIndex, topIndex, table);
+        fakeDirectReferenceHack = true;
+        if (idx == -1) {
+            LOGW("trying to work around app JNI bugs, but didn't find %p in table!", iref);
+            return false;
+        }
+    }
+
     if (idx < bottomIndex) {
         /* wrong segment */
         LOGV("Attempt to remove index outside index area (%d vs %d-%d)",
@@ -237,10 +261,9 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
          * Top-most entry.  Scan up and consume holes.  No need to NULL
          * out the entry, since the test vs. topIndex will catch it.
          */
-        if (!checkEntry("remove", iref, idx)) {
+        if (fakeDirectReferenceHack == false && !checkEntry("remove", iref, idx)) {
             return false;
         }
-        updateSlotRemove(idx);
 
 #ifndef NDEBUG
         table[idx] = (Object*)0xd3d3d3d3;
@@ -274,10 +297,9 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
             LOGV("--- WEIRD: removing null entry %d", idx);
             return false;
         }
-        if (!checkEntry("remove", iref, idx)) {
+        if (fakeDirectReferenceHack == false && !checkEntry("remove", iref, idx)) {
             return false;
         }
-        updateSlotRemove(idx);
 
         table[idx] = NULL;
         segmentState.parts.numHoles++;

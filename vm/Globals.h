@@ -966,8 +966,8 @@ struct DvmJniGlobals {
     bool warnOnly;
     bool forceCopy;
 
-    // Don't trust that we've been passed the right JNIEnv* for this thread.
-    bool alwaysCheckThread;
+    // Provide backwards compatibility for pre-ICS apps on ICS.
+    bool workAroundAppJniBugs;
 
     // Debugging help for third-party developers. Similar to -Xjnitrace.
     bool logThirdPartyJni;

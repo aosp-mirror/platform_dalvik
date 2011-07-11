@@ -804,6 +804,11 @@ private:
                     threadEnv->envThreadId, ((JNIEnvExt*) mEnv)->envThreadId);
             printWarn = true;
 
+            // If we're keeping broken code limping along, we need to suppress the abort...
+            if (!gDvmJni.workAroundAppJniBugs) {
+                printWarn = false;
+            }
+
             /* this is a bad idea -- need to throw as we exit, or abort func */
             //dvmThrowRuntimeException("invalid use of JNI env ptr");
         } else if (((JNIEnvExt*) mEnv)->self != dvmThreadSelf()) {
@@ -1382,7 +1387,7 @@ static void Check_DeleteGlobalRef(JNIEnv* env, jobject globalRef) {
     CHECK_JNI_ENTRY(kFlag_Default | kFlag_ExcepOkay, "EL", env, globalRef);
     if (globalRef != NULL && dvmGetJNIRefType(env, globalRef) != JNIGlobalRefType) {
         LOGW("JNI WARNING: DeleteGlobalRef on non-global %p (type=%d)",
-            globalRef, dvmGetJNIRefType(env, globalRef));
+                globalRef, dvmGetJNIRefType(env, globalRef));
         abortMaybe();
     } else {
         baseEnv(env)->DeleteGlobalRef(env, globalRef);
@@ -1399,7 +1404,7 @@ static void Check_DeleteLocalRef(JNIEnv* env, jobject localRef) {
     CHECK_JNI_ENTRY(kFlag_Default | kFlag_ExcepOkay, "EL", env, localRef);
     if (localRef != NULL && dvmGetJNIRefType(env, localRef) != JNILocalRefType) {
         LOGW("JNI WARNING: DeleteLocalRef on non-local %p (type=%d)",
-            localRef, dvmGetJNIRefType(env, localRef));
+                localRef, dvmGetJNIRefType(env, localRef));
         abortMaybe();
     } else {
         baseEnv(env)->DeleteLocalRef(env, localRef);

@@ -197,7 +197,9 @@ static void checkStackSum(Thread* self) {
 
 static inline Thread* self(JNIEnv* env) {
     Thread* envSelf = ((JNIEnvExt*) env)->self;
-    Thread* self = gDvmJni.alwaysCheckThread ? dvmThreadSelf() : envSelf;
+    // When emulating direct pointers with indirect references, it's critical
+    // that we use the correct per-thread indirect reference table.
+    Thread* self = gDvmJni.workAroundAppJniBugs ? dvmThreadSelf() : envSelf;
     if (self != envSelf) {
         LOGE("JNI ERROR: env->self != thread-self (%p vs. %p); auto-correcting",
                 envSelf, self);
@@ -367,6 +369,10 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
         }
     case kIndirectKindInvalid:
     default:
+        if (gDvmJni.workAroundAppJniBugs) {
+            // Assume an invalid local reference is actually a direct pointer.
+            return reinterpret_cast<Object*>(jobj);
+        }
         LOGW("Invalid indirect reference %p in decodeIndirectRef", jobj);
         dvmAbort();
         return kInvalidIndirectRefObject;
@@ -421,6 +427,10 @@ static jobject addLocalReference(JNIEnv* env, Object* obj) {
     }
 #endif
 
+    if (gDvmJni.workAroundAppJniBugs) {
+        // Hand out direct pointers to support broken old apps.
+        return reinterpret_cast<jobject>(obj);
+    }
     return jobj;
 }
 
@@ -703,8 +713,11 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj) {
     assert(jobj != NULL);
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
-
-    if (obj == kInvalidIndirectRefObject) {
+    if (obj == reinterpret_cast<Object*>(jobj) && gDvmJni.workAroundAppJniBugs) {
+        // If we're handing out direct pointers, check whether 'jobj' is a direct reference
+        // to a local reference.
+        return getLocalRefTable(env)->contains(jobj) ? JNILocalRefType : JNIInvalidRefType;
+    } else if (obj == kInvalidIndirectRefObject) {
         return JNIInvalidRefType;
     } else {
         return (jobjectRefType) indirectRefKind(jobj);
@@ -3517,8 +3530,6 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
                     gDvmJni.warnOnly = true;
                 } else if (strcmp(jniOpt, "forcecopy") == 0) {
                     gDvmJni.forceCopy = true;
-                } else if (strcmp(jniOpt, "alwaysCheckThread") == 0) {
-                    gDvmJni.alwaysCheckThread = true;
                 } else if (strcmp(jniOpt, "logThirdPartyJni") == 0) {
                     gDvmJni.logThirdPartyJni = true;
                 } else {

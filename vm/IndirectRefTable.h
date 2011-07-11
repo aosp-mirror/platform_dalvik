@@ -239,6 +239,9 @@ struct IndirectRefTable {
         return table[extractIndex(iref)];
     }
 
+    // TODO: only used for workAroundAppJniBugs support.
+    bool contains(IndirectRef iref) const;
+
     /*
      * Remove an existing entry.
      *
@@ -323,12 +326,6 @@ private:
             pSlot->serial++;
             pSlot->previous[pSlot->serial % kIRTPrevCount] = obj;
         }
-    }
-
-    /*
-     * Update extended debug info when an entry is removed.
-     */
-    void updateSlotRemove(int slot) {
     }
 
     /* extra debugging checks */
