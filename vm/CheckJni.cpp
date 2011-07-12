@@ -749,16 +749,14 @@ private:
             printWarn = true;
         } else {
             Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
-            if (obj != NULL) {
-                if (obj == kInvalidIndirectRefObject) {
-                    LOGW("JNI WARNING: native code passing in invalid reference %p", jobj);
-                    printWarn = true;
-                } else if (obj != kClearedJniWeakGlobal && !dvmIsValidObject(obj)) {
-                    // TODO: when we remove workAroundAppJniBugs, this should be impossible.
-                    LOGW("JNI WARNING: native code passing in reference to invalid object %p %p",
-                            jobj, obj);
-                    printWarn = true;
-                }
+            if (obj == kInvalidIndirectRefObject) {
+                LOGW("JNI WARNING: native code passing in invalid reference %p", jobj);
+                printWarn = true;
+            } else if (obj != NULL && !dvmIsValidObject(obj)) {
+                // TODO: when we remove workAroundAppJniBugs, this should be impossible.
+                LOGW("JNI WARNING: native code passing in reference to invalid object %p %p",
+                        jobj, obj);
+                printWarn = true;
             }
         }
 
