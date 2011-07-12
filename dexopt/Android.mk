@@ -47,10 +47,8 @@ LOCAL_SHARED_LIBRARIES := $(local_shared_libraries) libcutils libexpat liblog li
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := dexopt
 
-ifneq ($(TARGET_SIMULATOR),true)
-    LOCAL_C_INCLUDES += external/stlport/stlport bionic/ bionic/libstdc++/include
-    LOCAL_SHARED_LIBRARIES += libstlport
-endif
+LOCAL_C_INCLUDES += external/stlport/stlport bionic/ bionic/libstdc++/include
+LOCAL_SHARED_LIBRARIES += libstlport
 
 include $(BUILD_EXECUTABLE)
 

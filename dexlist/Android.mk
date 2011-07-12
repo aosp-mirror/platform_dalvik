@@ -29,8 +29,6 @@ dexdump_shared_libraries :=
 dexdump_static_libraries := \
 		libdex
 
-ifneq ($(TARGET_SIMULATOR),true) # not 64 bit clean
-
 include $(CLEAR_VARS)
 LOCAL_MODULE := dexlist
 LOCAL_MODULE_TAGS := optional
@@ -50,5 +48,3 @@ LOCAL_SHARED_LIBRARIES := $(dexdump_shared_libraries)
 LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries) libcutils
 LOCAL_LDLIBS += -lpthread -lz
 include $(BUILD_HOST_EXECUTABLE)
-
-endif # TARGET_SIMULATOR

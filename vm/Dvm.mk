@@ -35,11 +35,7 @@ LOCAL_CFLAGS += -DARCH_VARIANT=\"$(dvm_arch_variant)\"
 # Make a debugging version when building the simulator (if not told
 # otherwise) and when explicitly asked.
 dvm_make_debug_vm := false
-ifeq ($(strip $(DEBUG_DALVIK_VM)),)
-  ifeq ($(dvm_simulator),true)
-    dvm_make_debug_vm := true
-  endif
-else
+ifneq ($(strip $(DEBUG_DALVIK_VM)),)
   dvm_make_debug_vm := $(DEBUG_DALVIK_VM)
 endif
 
@@ -230,14 +226,6 @@ LOCAL_C_INCLUDES += \
 	dalvik/vm \
 	external/zlib \
 	libcore/include \
-
-ifeq ($(dvm_simulator),true)
-  LOCAL_LDLIBS += -lpthread -ldl
-  ifeq ($(HOST_OS),linux)
-    # need this for clock_gettime() in profiling
-    LOCAL_LDLIBS += -lrt
-  endif
-endif
 
 MTERP_ARCH_KNOWN := false
 

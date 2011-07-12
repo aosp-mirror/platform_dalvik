@@ -18,7 +18,6 @@ include $(CLEAR_VARS)
 dvm_os := $(TARGET_OS)
 dvm_arch := $(TARGET_ARCH)
 dvm_arch_variant := $(TARGET_ARCH_VARIANT)
-dvm_simulator := $(TARGET_SIMULATOR)
 
 # for now, disable x86-atom variant
 ifeq ($(dvm_arch_variant),x86-atom)
@@ -27,17 +26,12 @@ endif
 
 include $(LOCAL_PATH)/Dvm.mk
 
-LOCAL_SHARED_LIBRARIES += liblog libcutils libnativehelper libz
-ifneq ($(TARGET_SIMULATOR),true)
-LOCAL_SHARED_LIBRARIES += libdl
-endif  # !TARGET_SIMULATOR
+LOCAL_SHARED_LIBRARIES += liblog libcutils libnativehelper libz libdl
 
 LOCAL_STATIC_LIBRARIES += libdex
 
-ifneq ($(TARGET_SIMULATOR),true)
-  LOCAL_C_INCLUDES += external/stlport/stlport bionic/ bionic/libstdc++/include
-  LOCAL_SHARED_LIBRARIES += libstlport
-endif
+LOCAL_C_INCLUDES += external/stlport/stlport bionic/ bionic/libstdc++/include
+LOCAL_SHARED_LIBRARIES += libstlport
 
 # Don't install on any build by default
 LOCAL_MODULE_TAGS := optional
