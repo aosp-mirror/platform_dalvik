@@ -63,7 +63,6 @@ endif # !SDK_ONLY
 ## Build the host command line tool dexdump
 ##
 ##
-ifneq ($(TARGET_SIMULATOR),true) # not 64 bit clean
 include $(CLEAR_VARS)
 LOCAL_MODULE := dexdump
 LOCAL_MODULE_TAGS := optional
@@ -79,4 +78,3 @@ LOCAL_LDLIBS += -lpthread -lz
 endif
 
 include $(BUILD_HOST_EXECUTABLE)
-endif # !TARGET_SIMULATOR
