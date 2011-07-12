@@ -26,6 +26,11 @@ REM Change current directory to where dx is, to avoid issues with directories
 REM containing whitespaces.
 cd /d %~dp0
 
+rem Check we have a valid Java.exe in the path.
+set java_exe=
+call ..\tools\lib\find_java.bat
+if not defined java_exe goto :EOF
+
 set jarfile=dx.jar
 set frameworkdir=
 
@@ -46,40 +51,33 @@ REM By default, give dx a max heap size of 1 gig. This can be overridden
 REM by using a "-JXmx..." option (see below).
 set defaultMx=-Xmx1024M
 
-REM capture all arguments to process them below
-set params=%*
+REM capture all arguments that are not -J options.
+REM Note that when reading the input arguments with %1, the cmd.exe
+REM automagically converts --name=value arguments into 2 arguments "--name"
+REM followed by "value". Dx has been changed to know how to deal with that.
+set params=
 
-:nextArg
-if "%params%"=="" goto endArgs
-    REM Note: advanced substitions don't work on %1..%N. We need to assign to
-    REM a variable first.
-    REM We also can't use %1..%N directly because an option such as --output=name
-    REM gets automagically converted into %1=--output and %2=name (yes, really!)
-    REM Instead we manually extract the first token from the params variable.
-    for /F "tokens=1*" %%a in ("%params%") do call :getArg "%%a" "%%b"
+:firstArg
+if [%1]==[] goto endArgs
+set a=%~1
 
-    if "%defaultMx%"=="" goto notXmx
-    if "%A:~0,5%" NEQ "-JXmx" goto notXmx
+    if [%defaultMx%]==[] goto notXmx
+    if %a:~0,5% NEQ -JXmx goto notXmx
         set defaultMx=
     :notXmx
 
-    if "%A:~0,2%" NEQ "-J" goto notJ
-        set javaOpts=%javaOpts% -%A:~2%
-        goto nextArg
+    if %a:~0,2% NEQ -J goto notJ
+        set javaOpts=%javaOpts% -%a:~2%
+        shift /1
+        goto firstArg
 
     :notJ
-        set args=%args% %A%
-        goto nextArg
-
-:getArg
-    REM this subroutine is called by the for /F with the first argument of params
-    REM and the rest of the line. The "goto :eof" actually exits the subroutine.
-    set A=%~1
-    set params=%~2
-    goto :eof
+    set params=%params% %1
+    shift /1
+    goto firstArg
 
 :endArgs
 
 set javaOpts=%javaOpts% %defaultMx%
 
-call java %javaOpts% -Djava.ext.dirs=%frameworkdir% -jar %jarpath% %args%
+call %java_exe% %javaOpts% -Djava.ext.dirs=%frameworkdir% -jar %jarpath% %params%
