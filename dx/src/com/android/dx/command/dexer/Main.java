@@ -954,54 +954,152 @@ public class Main {
         /** number of threads to run with */
         public int numThreads = 1;
 
+        private static class ArgumentsParser {
+
+            /** The arguments to process. */
+            private final String[] arguments;
+            /** The index of the next argument to process. */
+            private int index;
+            /** The current argument being processed after a {@link #getNext()} call. */
+            private String current;
+            /** The last value of an argument processed by {@link #isArg(String)}. */
+            private String lastValue;
+
+            public ArgumentsParser(String[] arguments) {
+                this.arguments = arguments;
+                index = 0;
+            }
+
+            public String getCurrent() {
+                return current;
+            }
+
+            public String getLastValue() {
+                return lastValue;
+            }
+
+            /**
+             * Moves on to the next argument.
+             * Returns false when we ran out of arguments that start with --.
+             */
+            public boolean getNext() {
+                if (index >= arguments.length) {
+                    return false;
+                }
+                current = arguments[index];
+                if (current.equals("--") || !current.startsWith("--")) {
+                    return false;
+                }
+                index++;
+                return true;
+            }
+
+            /**
+             * Similar to {@link #getNext()}, this moves on the to next argument.
+             * It does not check however whether the argument starts with --
+             * and thus can be used to retrieve values.
+             */
+            private boolean getNextValue() {
+                if (index >= arguments.length) {
+                    return false;
+                }
+                current = arguments[index];
+                index++;
+                return true;
+            }
+
+            /**
+             * Returns all the arguments that have not been processed yet.
+             */
+            public String[] getRemaining() {
+                int n = arguments.length - index;
+                String[] remaining = new String[n];
+                if (n > 0) {
+                    System.arraycopy(arguments, index, remaining, 0, n);
+                }
+                return remaining;
+            }
+
+            /**
+             * Checks the current argument against the given prefix.
+             * If prefix is in the form '--name=', an extra value is expected.
+             * The argument can then be in the form '--name=value' or as a 2-argument
+             * form '--name value'.
+             */
+            public boolean isArg(String prefix) {
+                int n = prefix.length();
+                if (n > 0 && prefix.charAt(n-1) == '=') {
+                    // Argument accepts a value. Capture it.
+                    if (current.startsWith(prefix)) {
+                        // Argument is in the form --name=value, split the value out
+                        lastValue = current.substring(n);
+                        return true;
+                    } else {
+                        // Check whether we have "--name value" as 2 arguments
+                        prefix = prefix.substring(0, n-1);
+                        if (current.equals(prefix)) {
+                            if (getNextValue()) {
+                                lastValue = current;
+                                return true;
+                            } else {
+                                System.err.println("Missing value after parameter " + prefix);
+                                throw new UsageException();
+                            }
+                        }
+                        return false;
+                    }
+                } else {
+                    // Argument does not accept a value.
+                    return current.equals(prefix);
+                }
+            }
+        }
+
         /**
          * Parses the given command-line arguments.
          *
          * @param args {@code non-null;} the arguments
          */
         public void parse(String[] args) {
-            int at = 0;
+            ArgumentsParser parser = new ArgumentsParser(args);
 
-            for (/*at*/; at < args.length; at++) {
-                String arg = args[at];
-                if (arg.equals("--") || !arg.startsWith("--")) {
-                    break;
-                } else if (arg.equals("--debug")) {
+            while(parser.getNext()) {
+                if (parser.isArg("--debug")) {
                     debug = true;
-                } else if (arg.equals("--verbose")) {
+                } else if (parser.isArg("--verbose")) {
                     verbose = true;
-                } else if (arg.equals("--verbose-dump")) {
+                } else if (parser.isArg("--verbose-dump")) {
                     verboseDump = true;
-                } else if (arg.equals("--no-files")) {
+                } else if (parser.isArg("--no-files")) {
                     emptyOk = true;
-                } else if (arg.equals("--no-optimize")) {
+                } else if (parser.isArg("--no-optimize")) {
                     optimize = false;
-                } else if (arg.equals("--no-strict")) {
+                } else if (parser.isArg("--no-strict")) {
                     strictNameCheck = false;
-                } else if (arg.equals("--core-library")) {
+                } else if (parser.isArg("--core-library")) {
                     coreLibrary = true;
-                } else if (arg.equals("--statistics")) {
+                } else if (parser.isArg("--statistics")) {
                     statistics = true;
-                } else if (arg.startsWith("--optimize-list=")) {
+                } else if (parser.isArg("--optimize-list=")) {
                     if (dontOptimizeListFile != null) {
                         System.err.println("--optimize-list and "
                                 + "--no-optimize-list are incompatible.");
                         throw new UsageException();
                     }
                     optimize = true;
-                    optimizeListFile = arg.substring(arg.indexOf('=') + 1);
-                } else if (arg.startsWith("--no-optimize-list=")) {
+                    optimizeListFile = parser.getLastValue();
+                } else if (parser.isArg("--no-optimize-list=")) {
                     if (dontOptimizeListFile != null) {
                         System.err.println("--optimize-list and "
                                 + "--no-optimize-list are incompatible.");
                         throw new UsageException();
                     }
                     optimize = true;
-                    dontOptimizeListFile = arg.substring(arg.indexOf('=') + 1);
-                } else if (arg.equals("--keep-classes")) {
+                    dontOptimizeListFile = parser.getLastValue();
+                } else if (parser.isArg("--keep-classes")) {
                     keepClassesInJar = true;
-                } else if (arg.startsWith("--output=")) {
-                    outName = arg.substring(arg.indexOf('=') + 1);
+                } else if (parser.isArg("--output=")) {
+                    outName = parser.getLastValue();
                     if (FileUtils.hasArchiveSuffix(outName)) {
                         jarOutput = true;
                     } else if (outName.endsWith(".dex") ||
@@ -1012,16 +1110,15 @@ public class Main {
                                            outName);
                         throw new UsageException();
                     }
-                } else if (arg.startsWith("--dump-to=")) {
-                    humanOutName = arg.substring(arg.indexOf('=') + 1);
-                } else if (arg.startsWith("--dump-width=")) {
-                    arg = arg.substring(arg.indexOf('=') + 1);
-                    dumpWidth = Integer.parseInt(arg);
-                } else if (arg.startsWith("--dump-method=")) {
-                    methodToDump = arg.substring(arg.indexOf('=') + 1);
+                } else if (parser.isArg("--dump-to=")) {
+                    humanOutName = parser.getLastValue();
+                } else if (parser.isArg("--dump-width=")) {
+                    dumpWidth = Integer.parseInt(parser.getLastValue());
+                } else if (parser.isArg("--dump-method=")) {
+                    methodToDump = parser.getLastValue();
                     jarOutput = false;
-                } else if (arg.startsWith("--target-api=")) {
-                    arg = arg.substring(arg.indexOf('=') + 1);
+                } else if (parser.isArg("--target-api=")) {
+                    String arg = parser.getLastValue();
                     int value;
                     try {
                         value = Integer.parseInt(arg);
@@ -1036,8 +1133,8 @@ public class Main {
                     // What we call 'target' is what developers call 'min', so
                     // they're accidentally turning on new opcodes.
                     // targetApiLevel = value;
-                } else if (arg.startsWith("--positions=")) {
-                    String pstr = arg.substring(arg.indexOf('=') + 1).intern();
+                } else if (parser.isArg("--positions=")) {
+                    String pstr = parser.getLastValue().intern();
                     if (pstr == "none") {
                         positionInfo = PositionList.NONE;
                     } else if (pstr == "important") {
@@ -1049,34 +1146,27 @@ public class Main {
                                            pstr);
                         throw new UsageException();
                     }
-                } else if (arg.equals("--no-locals")) {
+                } else if (parser.isArg("--no-locals")) {
                     localInfo = false;
-                } else if (arg.startsWith("--num-threads=")) {
-                    arg = arg.substring(arg.indexOf('=') + 1);
-                    numThreads = Integer.parseInt(arg);
-                } else if (arg.equals("--incremental")) {
+                } else if (parser.isArg("--num-threads=")) {
+                    numThreads = Integer.parseInt(parser.getLastValue());
+                } else if (parser.isArg("--incremental")) {
                     incremental = true;
                 } else {
-                    System.err.println("unknown option: " + arg);
+                    System.err.println("unknown option: " + parser.getCurrent());
                     throw new UsageException();
                 }
             }
 
-            int fileCount = args.length - at;
-
-            if (fileCount == 0) {
+            fileNames = parser.getRemaining();
+            if (fileNames.length == 0) {
                 if (!emptyOk) {
                     System.err.println("no input files specified");
                     throw new UsageException();
                 }
             } else if (emptyOk) {
                 System.out.println("ignoring input files");
-                at = 0;
-                fileCount = 0;
             }
-
-            fileNames = new String[fileCount];
-            System.arraycopy(args, at, fileNames, 0, fileCount);
 
             if ((humanOutName == null) && (methodToDump != null)) {
                 humanOutName = "-";
