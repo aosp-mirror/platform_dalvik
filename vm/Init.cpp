@@ -114,7 +114,6 @@ static void usage(const char* progName)
                 "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
     dvmFprintf(stderr, "  -Xjnitrace:substring (eg NativeClass or nativeMethod)\n");
-    dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
     dvmFprintf(stderr, "  -Xgc:[no]precise\n");
     dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
