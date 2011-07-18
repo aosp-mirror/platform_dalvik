@@ -805,7 +805,7 @@ private:
             printWarn = true;
 
             // If we're keeping broken code limping along, we need to suppress the abort...
-            if (!gDvmJni.workAroundAppJniBugs) {
+            if (gDvmJni.workAroundAppJniBugs) {
                 printWarn = false;
             }
 
