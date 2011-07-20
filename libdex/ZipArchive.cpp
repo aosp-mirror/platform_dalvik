@@ -142,35 +142,10 @@ static u4 get4LE(unsigned char const* pSrc)
 }
 
 static int mapCentralDirectory0(int fd, const char* debugFileName,
-    ZipArchive* pArchive, u1* scanBuf)
+        ZipArchive* pArchive, off_t fileLength, size_t readAmount, u1* scanBuf)
 {
-    /*
-     * Get and test file length.
-     */
-    off_t fileLength = lseek(fd, 0, SEEK_END);
-    if (fileLength < kEOCDLen) {
-        LOGV("Zip: length %ld is too small to be zip", (long) fileLength);
-        return -1;
-    }
-
-    /*
-     * Perform the traditional EOCD snipe hunt.
-     *
-     * We're searching for the End of Central Directory magic number,
-     * which appears at the start of the EOCD block.  It's followed by
-     * 18 bytes of EOCD stuff and up to 64KB of archive comment.  We
-     * need to read the last part of the file into a buffer, dig through
-     * it to find the magic number, parse some values out, and use those
-     * to determine the extent of the CD.
-     *
-     * We start by pulling in the last part of the file.
-     */
-    size_t readAmount = kMaxEOCDSearch;
-    if (readAmount > (size_t) fileLength)
-        readAmount = fileLength;
     off_t searchStart = fileLength - readAmount;
 
-    scanBuf = (u1*) malloc(readAmount);
     if (lseek(fd, searchStart, SEEK_SET) != searchStart) {
         LOGW("Zip: seek %ld failed: %s", (long) searchStart, strerror(errno));
         return -1;
@@ -253,13 +228,38 @@ static int mapCentralDirectory0(int fd, const char* debugFileName,
 static int mapCentralDirectory(int fd, const char* debugFileName,
     ZipArchive* pArchive)
 {
-    u1* scanBuf = (u1*) malloc(kMaxEOCDSearch);
+    /*
+     * Get and test file length.
+     */
+    off_t fileLength = lseek(fd, 0, SEEK_END);
+    if (fileLength < kEOCDLen) {
+        LOGV("Zip: length %ld is too small to be zip", (long) fileLength);
+        return -1;
+    }
 
+    /*
+     * Perform the traditional EOCD snipe hunt.
+     *
+     * We're searching for the End of Central Directory magic number,
+     * which appears at the start of the EOCD block.  It's followed by
+     * 18 bytes of EOCD stuff and up to 64KB of archive comment.  We
+     * need to read the last part of the file into a buffer, dig through
+     * it to find the magic number, parse some values out, and use those
+     * to determine the extent of the CD.
+     *
+     * We start by pulling in the last part of the file.
+     */
+    size_t readAmount = kMaxEOCDSearch;
+    if (fileLength < off_t(readAmount))
+        readAmount = fileLength;
+
+    u1* scanBuf = (u1*) malloc(readAmount);
     if (scanBuf == NULL) {
         return -1;
     }
 
-    int result = mapCentralDirectory0(fd, debugFileName, pArchive, scanBuf);
+    int result = mapCentralDirectory0(fd, debugFileName, pArchive,
+            fileLength, readAmount, scanBuf);
 
     free(scanBuf);
     return result;
