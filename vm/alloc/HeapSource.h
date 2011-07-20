@@ -155,12 +155,6 @@ size_t dvmHeapSourceGetIdealFootprint(void);
 void dvmHeapSourceGrowForUtilization(void);
 
 /*
- * Return unused memory to the system if possible.  If <bytesTrimmed>
- * is non-NULL, the number of bytes returned to the system is written to it.
- */
-void dvmHeapSourceTrim(size_t bytesTrimmed[], size_t arrayLen);
-
-/*
  * Walks over the heap source and passes every allocated and
  * free chunk to the callback.
  */

@@ -734,11 +734,6 @@ void dvmHeapSourceGrowForUtilization()
     /* do nothing */
 }
 
-void dvmHeapSourceTrim(size_t bytesTrimmed[], size_t arrayLen)
-{
-    /* do nothing */
-}
-
 void dvmHeapSourceWalk(void (*callback)(const void *chunkptr, size_t chunklen,
                                         const void *userptr, size_t userlen,
                                         void *arg),
