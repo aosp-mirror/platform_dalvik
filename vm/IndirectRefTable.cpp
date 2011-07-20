@@ -90,7 +90,7 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
     size_t topIndex = segmentState.parts.topIndex;
 
     assert(obj != NULL);
-    assert(dvmIsValidObject(obj));
+    assert(dvmIsHeapAddress(obj));
     assert(table != NULL);
     assert(allocEntries <= maxEntries);
     assert(segmentState.parts.numHoles >= prevState.parts.numHoles);

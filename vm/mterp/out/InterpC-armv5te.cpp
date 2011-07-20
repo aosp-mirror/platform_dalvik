@@ -320,7 +320,7 @@ static inline bool checkForNull(Object* obj)
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
-    if (!dvmIsValidObject(obj)) {
+    if (!dvmIsHeapAddressObject(obj)) {
         LOGE("Invalid object %p", obj);
         dvmAbort();
     }
@@ -352,7 +352,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
-    if (!dvmIsValidObject(obj)) {
+    if (!dvmIsHeapAddress(obj)) {
         LOGE("Invalid object %p", obj);
         dvmAbort();
     }

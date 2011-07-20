@@ -6340,10 +6340,8 @@ static void dumpRegTypes(const VerifierData* vdata,
         for (i = 0; i < regCount + kExtraRegs; i++) {
             if (regTypeIsReference(addrRegs[i]) && addrRegs[i] != kRegTypeZero)
             {
-                ClassObject* clazz;
-
-                clazz = regTypeReferenceToClass(addrRegs[i], uninitMap);
-                assert(dvmIsValidObject((Object*)clazz));
+                ClassObject* clazz = regTypeReferenceToClass(addrRegs[i], uninitMap);
+                assert(dvmIsHeapAddress((Object*)clazz));
                 if (i < regCount) {
                     LOGI("        %2d: 0x%08x %s%s",
                         i, addrRegs[i],

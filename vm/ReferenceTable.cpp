@@ -56,8 +56,8 @@ void dvmClearReferenceTable(ReferenceTable* pRef)
  */
 bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj)
 {
-    assert(dvmIsValidObject(obj));
     assert(obj != NULL);
+    assert(dvmIsHeapAddress(obj));
     assert(pRef->table != NULL);
     assert(pRef->allocEntries <= pRef->maxEntries);
 

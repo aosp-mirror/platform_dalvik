@@ -85,7 +85,7 @@
  */
 typedef void* IndirectRef;
 
-/* magic failure value; must not pass dvmIsValidObject() */
+/* magic failure value; must not pass dvmIsHeapAddress() */
 #define kInvalidIndirectRefObject reinterpret_cast<Object*>(0xdead4321)
 
 #define kClearedJniWeakGlobal reinterpret_cast<Object*>(0xdead1234)

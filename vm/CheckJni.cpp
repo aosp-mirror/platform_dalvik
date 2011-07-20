@@ -260,7 +260,7 @@ public:
              * obj will be NULL.  Otherwise, obj should always be non-NULL
              * and valid.
              */
-            if (obj != NULL && !dvmIsValidObject(obj)) {
+            if (obj != NULL && !dvmIsHeapAddress(obj)) {
                 LOGW("JNI WARNING: field operation on invalid %s reference (%p)",
                         indirectRefKindName(jobj), jobj);
                 printWarn = true;
@@ -305,7 +305,7 @@ public:
         ScopedJniThreadState ts(mEnv);
 
         Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
-        if (!dvmIsValidObject(obj)) {
+        if (!dvmIsHeapAddress(obj)) {
             LOGW("JNI ERROR: field operation on invalid reference (%p)", jobj);
             dvmAbort();
         }
@@ -545,7 +545,7 @@ public:
                     Object* c = dvmDecodeIndirectRef(mEnv, jc);
                     if (c == NULL) {
                         msg += "NULL";
-                    } else if (c == kInvalidIndirectRefObject || !dvmIsValidObject(c)) {
+                    } else if (c == kInvalidIndirectRefObject || !dvmIsHeapAddress(c)) {
                         StringAppendF(&msg, "%p(INVALID)", jc);
                     } else {
                         std::string className(dvmHumanReadableType(c));
@@ -702,8 +702,7 @@ private:
         bool printWarn = false;
 
         Object* obj = dvmDecodeIndirectRef(mEnv, jarr);
-
-        if (!dvmIsValidObject(obj)) {
+        if (!dvmIsHeapAddress(obj)) {
             LOGW("JNI WARNING: jarray is an invalid %s reference (%p)",
             indirectRefKindName(jarr), jarr);
             printWarn = true;
@@ -752,7 +751,7 @@ private:
             if (obj == kInvalidIndirectRefObject) {
                 LOGW("JNI WARNING: native code passing in invalid reference %p", jobj);
                 printWarn = true;
-            } else if (obj != NULL && !dvmIsValidObject(obj)) {
+            } else if (obj != NULL && !dvmIsHeapAddress(obj)) {
                 // TODO: when we remove workAroundAppJniBugs, this should be impossible.
                 LOGW("JNI WARNING: native code passing in reference to invalid object %p %p",
                         jobj, obj);
@@ -913,8 +912,7 @@ private:
         bool printWarn = false;
 
         Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
-
-        if (!dvmIsValidObject(obj)) {
+        if (!dvmIsHeapAddress(obj)) {
             LOGW("JNI WARNING: %s is an invalid %s reference (%p)",
                     argName, indirectRefKindName(jobj), jobj);
             printWarn = true;
