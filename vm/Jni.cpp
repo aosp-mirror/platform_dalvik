@@ -663,7 +663,7 @@ static void unpinPrimitiveArray(ArrayObject* arrayObj) {
             gDvm.jniPinRefTable.table, (Object*) arrayObj))
     {
         LOGW("JNI: unpinPrimitiveArray(%p) failed to find entry (valid=%d)",
-            arrayObj, dvmIsValidObject((Object*) arrayObj));
+            arrayObj, dvmIsHeapAddress((Object*) arrayObj));
         return;
     }
 }
@@ -1164,8 +1164,6 @@ void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method, Thr
             case 'L':
                 //LOGI("  local %d: 0x%08x", idx, modArgs[idx]);
                 if (modArgs[idx] != 0) {
-                    //if (!dvmIsValidObject((Object*) modArgs[idx]))
-                    //    dvmAbort();
                     jobject argObj = addLocalReference(env, (Object*) modArgs[idx]);
                     if (argObj == NULL) {
                         assert(dvmCheckException(self));

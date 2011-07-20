@@ -2225,7 +2225,7 @@ static Object* getThisObject(const u4* framePtr)
     else
         thisObj = (Object*) framePtr[argOffset];
 
-    if (thisObj != NULL && !dvmIsValidObject(thisObj)) {
+    if (thisObj != NULL && !dvmIsHeapAddress(thisObj)) {
         LOGW("Debugger: invalid 'this' pointer %p in %s.%s; returning NULL",
             framePtr, method->clazz->descriptor, method->name);
         thisObj = NULL;
@@ -2298,7 +2298,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
         {
             /* convert to "ObjectId" */
             objVal = (Object*)framePtr[slot];
-            if (objVal != NULL && !dvmIsValidObject(objVal)) {
+            if (objVal != NULL && !dvmIsHeapAddress(objVal)) {
                 LOGW("JDWP: slot %d expected to hold array, %p invalid",
                     slot, objVal);
                 dvmAbort();         // DEBUG: make it obvious
@@ -2314,7 +2314,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
             /* convert to "ObjectId" */
             objVal = (Object*)framePtr[slot];
 
-            if (objVal != NULL && !dvmIsValidObject(objVal)) {
+            if (objVal != NULL && !dvmIsHeapAddress(objVal)) {
                 LOGW("JDWP: slot %d expected to hold object, %p invalid",
                     slot, objVal);
                 dvmAbort();         // DEBUG: make it obvious

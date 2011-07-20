@@ -94,4 +94,9 @@ void dvmCollectGarbageInternal(const GcSpec *spec);
  */
 void dvmWaitForConcurrentGcToComplete(void);
 
+/*
+ * Returns true iff <obj> points to a valid allocated object.
+ */
+bool dvmIsValidObject(const Object* obj);
+
 #endif  // DALVIK_ALLOC_HEAP_H_

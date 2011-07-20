@@ -667,7 +667,7 @@ void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self, u4* fp)
 #endif
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
         Object* thisPtr = dvmGetThisPtr(self->interpSave.method, fp);
-        assert(thisPtr == NULL || dvmIsValidObject(thisPtr));
+        assert(thisPtr == NULL || dvmIsHeapAddress(thisPtr));
         dvmDbgPostLocationEvent(methodToCall, -1, thisPtr, DBG_METHOD_ENTRY);
     }
 }
@@ -681,7 +681,7 @@ void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self, u4* fp)
 {
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
         Object* thisPtr = dvmGetThisPtr(self->interpSave.method, fp);
-        assert(thisPtr == NULL || dvmIsValidObject(thisPtr));
+        assert(thisPtr == NULL || dvmIsHeapAddress(thisPtr));
         dvmDbgPostLocationEvent(methodToCall, -1, thisPtr, DBG_METHOD_EXIT);
     }
     if (self->interpBreak.ctl.subMode & kSubModeMethodTrace) {
@@ -858,7 +858,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      */
     if (eventFlags != 0) {
         Object* thisPtr = dvmGetThisPtr(method, fp);
-        if (thisPtr != NULL && !dvmIsValidObject(thisPtr)) {
+        if (thisPtr != NULL && !dvmIsHeapAddress(thisPtr)) {
             /*
              * TODO: remove this check if we're confident that the "this"
              * pointer is where it should be -- slows us down, especially

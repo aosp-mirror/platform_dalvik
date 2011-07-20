@@ -456,7 +456,7 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
     /* put "this" pointer into in0 if appropriate */
     if (!dvmIsStaticMethod(method)) {
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
-        assert(obj != NULL && dvmIsValidObject(obj));
+        assert(obj != NULL && dvmIsHeapAddress(obj));
 #endif
         *ins++ = (u4) obj;
         verifyCount++;
@@ -481,7 +481,7 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
             }
             case 'L': {     /* 'shorty' descr uses L for all refs, incl array */
                 void* arg = va_arg(args, void*);
-                assert(obj == NULL || dvmIsValidObject(obj));
+                assert(obj == NULL || dvmIsHeapAddress(obj));
                 jobject argObj = reinterpret_cast<jobject>(arg);
                 if (fromJni)
                     *ins++ = (u4) dvmDecodeIndirectRef(env, argObj);
@@ -1135,7 +1135,7 @@ static bool extractMonitorEnterObject(Thread* thread, Object** pLockObj,
     /* get and check the object in that register */
     u4* fp = (u4*) framePtr;
     Object* obj = (Object*) fp[reg];
-    if (!dvmIsValidObject(obj)) {
+    if (obj != NULL && !dvmIsHeapAddress(obj)) {
         LOGD("ExtrMon: invalid object %p at %p[%d]", obj, fp, reg);
         return false;
     }
