@@ -132,7 +132,7 @@ struct IndirectRefSlot {
  * most-recently-added entry).  For JNI local references, the common
  * operations are adding a new entry and removing an entire table segment.
  *
- * If "allocEntries" is not equal to "maxEntries", the table may expand
+ * If "alloc_entries_" is not equal to "max_entries_", the table may expand
  * when entries are added, which means the memory may move.  If you want
  * to keep pointers into "table" rather than offsets, you must use a
  * fixed-size table.
@@ -253,11 +253,16 @@ public:
      * TODO: we can't make these private as long as the interpreter
      * uses offsetof, since private member data makes us non-POD.
      */
-    Object**        table;              /* bottom of the stack */
-    IndirectRefKind kind;               /* bit mask, ORed into all irefs */
-    IndirectRefSlot* slotData;          /* extended debugging info */
-    size_t          allocEntries;       /* #of entries we have space for */
-    size_t          maxEntries;         /* max #of entries allowed */
+    /* bottom of the stack */
+    Object** table_;
+    /* bit mask, ORed into all irefs */
+    IndirectRefKind kind_;
+    /* extended debugging info */
+    IndirectRefSlot* slot_data_;
+    /* #of entries we have space for */
+    size_t          alloc_entries_;
+    /* max #of entries allowed */
+    size_t          max_entries_;
 
     // TODO: want hole-filling stats (#of holes filled, total entries scanned)
     //       for performance evaluation.
@@ -281,7 +286,7 @@ public:
         if (!getChecked(iref)) {
             return kInvalidIndirectRefObject;
         }
-        return table[extractIndex(iref)];
+        return table_[extractIndex(iref)];
     }
 
     // TODO: only used for workAroundAppJniBugs support.
@@ -338,11 +343,11 @@ public:
     }
 
     iterator begin() {
-        return iterator(table, 0, capacity());
+        return iterator(table_, 0, capacity());
     }
 
     iterator end() {
-        return iterator(table, capacity(), capacity());
+        return iterator(table_, capacity(), capacity());
     }
 
 private:
@@ -360,10 +365,8 @@ private:
      */
     IndirectRef toIndirectRef(Object* obj, u4 tableIndex) const {
         assert(tableIndex < 65536);
-        //u4 objChunk = (((u4) obj >> 3) ^ ((u4) obj >> 19)) & 0x3fff;
-        //u4 uref = objChunk << 18 | (tableIndex << 2) | kind;
-        u4 serialChunk = slotData[tableIndex].serial;
-        u4 uref = serialChunk << 20 | (tableIndex << 2) | kind;
+        u4 serialChunk = slot_data_[tableIndex].serial;
+        u4 uref = serialChunk << 20 | (tableIndex << 2) | kind_;
         return (IndirectRef) uref;
     }
 
@@ -374,8 +377,8 @@ private:
      * this slot.
      */
     void updateSlotAdd(Object* obj, int slot) {
-        if (slotData != NULL) {
-            IndirectRefSlot* pSlot = &slotData[slot];
+        if (slot_data_ != NULL) {
+            IndirectRefSlot* pSlot = &slot_data_[slot];
             pSlot->serial++;
             pSlot->previous[pSlot->serial % kIRTPrevCount] = obj;
         }

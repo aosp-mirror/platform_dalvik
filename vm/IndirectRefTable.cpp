@@ -32,26 +32,25 @@ bool IndirectRefTable::init(size_t initialCount,
 {
     assert(initialCount > 0);
     assert(initialCount <= maxCount);
-    assert(kind != kIndirectKindInvalid);
+    assert(desiredKind != kIndirectKindInvalid);
 
-    table = (Object**) malloc(initialCount * sizeof(Object*));
-    if (table == NULL) {
+    table_ = (Object**) malloc(initialCount * sizeof(Object*));
+    if (table_ == NULL) {
         return false;
     }
 #ifndef NDEBUG
-    memset(table, 0xd1, initialCount * sizeof(Object*));
+    memset(table_, 0xd1, initialCount * sizeof(Object*));
 #endif
 
-    slotData =
-        (IndirectRefSlot*) calloc(maxCount, sizeof(IndirectRefSlot));
-    if (slotData == NULL) {
+    slot_data_ = (IndirectRefSlot*) calloc(initialCount, sizeof(IndirectRefSlot));
+    if (slot_data_ == NULL) {
         return false;
     }
 
     segmentState.all = IRT_FIRST_SEGMENT;
-    allocEntries = initialCount;
-    maxEntries = maxCount;
-    kind = desiredKind;
+    alloc_entries_ = initialCount;
+    max_entries_ = maxCount;
+    kind_ = desiredKind;
 
     return true;
 }
@@ -61,10 +60,11 @@ bool IndirectRefTable::init(size_t initialCount,
  */
 void IndirectRefTable::destroy()
 {
-    free(table);
-    free(slotData);
-    table = NULL;
-    allocEntries = maxEntries = -1;
+    free(table_);
+    free(slot_data_);
+    table_ = NULL;
+    slot_data_ = NULL;
+    alloc_entries_ = max_entries_ = -1;
 }
 
 /*
@@ -72,11 +72,11 @@ void IndirectRefTable::destroy()
  */
 bool IndirectRefTable::checkEntry(const char* what, IndirectRef iref, int idx) const
 {
-    Object* obj = table[idx];
+    Object* obj = table_[idx];
     IndirectRef checkRef = toIndirectRef(obj, idx);
     if (checkRef != iref) {
         LOGE("JNI ERROR (app bug): attempt to %s stale %s reference %p (should be %p)",
-                what, indirectRefKindToString(kind), iref, checkRef);
+                what, indirectRefKindToString(kind_), iref, checkRef);
         abortMaybe();
         return false;
     }
@@ -91,34 +91,39 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
 
     assert(obj != NULL);
     assert(dvmIsHeapAddress(obj));
-    assert(table != NULL);
-    assert(allocEntries <= maxEntries);
+    assert(table_ != NULL);
+    assert(alloc_entries_ <= max_entries_);
     assert(segmentState.parts.numHoles >= prevState.parts.numHoles);
 
-    if (topIndex == allocEntries) {
+    if (topIndex == alloc_entries_) {
         /* reached end of allocated space; did we hit buffer max? */
-        if (topIndex == maxEntries) {
+        if (topIndex == max_entries_) {
             LOGE("JNI ERROR (app bug): %s reference table overflow (max=%d)",
-                    indirectRefKindToString(kind), maxEntries);
-            dump(indirectRefKindToString(kind));
+                    indirectRefKindToString(kind_), max_entries_);
+            dump(indirectRefKindToString(kind_));
             dvmAbort();
         }
 
-        size_t newSize = allocEntries * 2;
-        if (newSize > maxEntries) {
-            newSize = maxEntries;
+        size_t newSize = alloc_entries_ * 2;
+        if (newSize > max_entries_) {
+            newSize = max_entries_;
         }
-        assert(newSize > allocEntries);
+        assert(newSize > alloc_entries_);
 
-        table = (Object**) realloc(table, newSize * sizeof(Object*));
-        if (table == NULL) {
+        table_ = (Object**) realloc(table_, newSize * sizeof(Object*));
+        slot_data_ = (IndirectRefSlot*) realloc(slot_data_, newSize * sizeof(IndirectRefSlot));
+        if (table_ == NULL || slot_data_ == NULL) {
             LOGE("JNI ERROR (app bug): unable to expand %s reference table (from %d to %d, max=%d)",
-                    indirectRefKindToString(kind),
-                    allocEntries, newSize, maxEntries);
-            dump(indirectRefKindToString(kind));
+                    indirectRefKindToString(kind_),
+                    alloc_entries_, newSize, max_entries_);
+            dump(indirectRefKindToString(kind_));
             dvmAbort();
         }
-        allocEntries = newSize;
+
+        // Clear the newly-allocated slot_data_ elements.
+        memset(slot_data_ + alloc_entries_, 0, (newSize - alloc_entries_) * sizeof(IndirectRefSlot));
+
+        alloc_entries_ = newSize;
     }
 
     /*
@@ -131,20 +136,20 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
     if (numHoles > 0) {
         assert(topIndex > 1);
         /* find the first hole; likely to be near the end of the list */
-        Object** pScan = &table[topIndex - 1];
+        Object** pScan = &table_[topIndex - 1];
         assert(*pScan != NULL);
         while (*--pScan != NULL) {
-            assert(pScan >= table + prevState.parts.topIndex);
+            assert(pScan >= table_ + prevState.parts.topIndex);
         }
-        updateSlotAdd(obj, pScan - table);
-        result = toIndirectRef(obj, pScan - table);
+        updateSlotAdd(obj, pScan - table_);
+        result = toIndirectRef(obj, pScan - table_);
         *pScan = obj;
         segmentState.parts.numHoles--;
     } else {
         /* add to the end */
         updateSlotAdd(obj, topIndex);
         result = toIndirectRef(obj, topIndex);
-        table[topIndex++] = obj;
+        table_[topIndex++] = obj;
         segmentState.parts.topIndex = topIndex;
     }
 
@@ -160,12 +165,12 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
 bool IndirectRefTable::getChecked(IndirectRef iref) const
 {
     if (iref == NULL) {
-        LOGW("Attempt to look up NULL %s reference", indirectRefKindToString(kind));
+        LOGW("Attempt to look up NULL %s reference", indirectRefKindToString(kind_));
         return false;
     }
     if (indirectRefKind(iref) == kIndirectKindInvalid) {
         LOGE("JNI ERROR (app bug): invalid %s reference %p",
-                indirectRefKindToString(kind), iref);
+                indirectRefKindToString(kind_), iref);
         abortMaybe();
         return false;
     }
@@ -175,14 +180,14 @@ bool IndirectRefTable::getChecked(IndirectRef iref) const
     if (idx >= topIndex) {
         /* bad -- stale reference? */
         LOGE("JNI ERROR (app bug): accessed stale %s reference %p (index %d in a table of size %d)",
-                indirectRefKindToString(kind), iref, idx, topIndex);
+                indirectRefKindToString(kind_), iref, idx, topIndex);
         abortMaybe();
         return false;
     }
 
-    if (table[idx] == NULL) {
+    if (table_[idx] == NULL) {
         LOGI("JNI ERROR (app bug): accessed deleted %s reference %p",
-                indirectRefKindToString(kind), iref);
+                indirectRefKindToString(kind_), iref);
         abortMaybe();
         return false;
     }
@@ -204,7 +209,7 @@ static int linearScan(IndirectRef iref, int bottomIndex, int topIndex, Object** 
 }
 
 bool IndirectRefTable::contains(IndirectRef iref) const {
-    return linearScan(iref, 0, segmentState.parts.topIndex, table) != -1;
+    return linearScan(iref, 0, segmentState.parts.topIndex, table_) != -1;
 }
 
 /*
@@ -227,15 +232,15 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
     int topIndex = segmentState.parts.topIndex;
     int bottomIndex = prevState.parts.topIndex;
 
-    assert(table != NULL);
-    assert(allocEntries <= maxEntries);
+    assert(table_ != NULL);
+    assert(alloc_entries_ <= max_entries_);
     assert(segmentState.parts.numHoles >= prevState.parts.numHoles);
 
     int idx = extractIndex(iref);
     bool workAroundAppJniBugs = false;
 
     if (indirectRefKind(iref) == kIndirectKindInvalid && gDvmJni.workAroundAppJniBugs) {
-        idx = linearScan(iref, bottomIndex, topIndex, table);
+        idx = linearScan(iref, bottomIndex, topIndex, table_);
         workAroundAppJniBugs = true;
         if (idx == -1) {
             LOGW("trying to work around app JNI bugs, but didn't find %p in table!", iref);
@@ -263,13 +268,13 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
             return false;
         }
 
-        table[idx] = NULL;
+        table_[idx] = NULL;
         int numHoles = segmentState.parts.numHoles - prevState.parts.numHoles;
         if (numHoles != 0) {
             while (--topIndex > bottomIndex && numHoles != 0) {
                 LOGV("+++ checking for hole at %d (cookie=0x%08x) val=%p",
-                    topIndex-1, cookie, table[topIndex-1]);
-                if (table[topIndex-1] != NULL) {
+                    topIndex-1, cookie, table_[topIndex-1]);
+                if (table_[topIndex-1] != NULL) {
                     break;
                 }
                 LOGV("+++ ate hole at %d", topIndex-1);
@@ -287,7 +292,7 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
          * entry to prevent somebody from deleting it twice and screwing up
          * the hole count.
          */
-        if (table[idx] == NULL) {
+        if (table_[idx] == NULL) {
             LOGV("--- WEIRD: removing null entry %d", idx);
             return false;
         }
@@ -295,7 +300,7 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
             return false;
         }
 
-        table[idx] = NULL;
+        table_[idx] = NULL;
         segmentState.parts.numHoles++;
         LOGV("+++ left hole at %d, holes=%d", idx, segmentState.parts.numHoles);
     }
@@ -316,5 +321,5 @@ const char* indirectRefKindToString(IndirectRefKind kind)
 
 void IndirectRefTable::dump(const char* descr) const
 {
-    dvmDumpReferenceTableContents(table, capacity(), descr);
+    dvmDumpReferenceTableContents(table_, capacity(), descr);
 }
