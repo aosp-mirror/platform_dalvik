@@ -62,6 +62,15 @@ typedef enum ExecutionMode {
 } ExecutionMode;
 
 /*
+ * Profiler clock source.
+ */
+typedef enum ProfilerClockSource {
+    kProfilerClockSourceThreadCpu,
+    kProfilerClockSourceWall,
+    kProfilerClockSourceDual,
+} ProfilerClockSource;
+
+/*
  * All fields are initialized to zero.
  *
  * Storage allocated here must be freed by a subsystem shutdown function or
@@ -91,8 +100,7 @@ struct DvmGlobals {
     int         jdwpPort;
     bool        jdwpSuspend;
 
-    /* use wall clock as method profiler clock source? */
-    bool        profilerWallClock;
+    ProfilerClockSource profilerClockSource;
 
     /*
      * Lock profiling threshold value in milliseconds.  Acquires that
