@@ -232,7 +232,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      */
     private void handleLocalAssociatedOther() {
         for (ArrayList<RegisterSpec> specs : localVariables.values()) {
-            int ropReg = 0;
+            int ropReg = paramRangeEnd;
 
             boolean done;
             do {
@@ -361,13 +361,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      * @return {@code >= 0;} start of available register range.
      */
     private int findNextUnreservedRopReg(int startReg, int width) {
-        if (minimizeRegisters && !isThisPointerReg(startReg)) {
-            return startReg;
-        }
-
-        int reg;
-
-        reg = reservedRopRegs.nextClearBit(startReg);
+        int reg = reservedRopRegs.nextClearBit(startReg);
 
         while (true) {
             int i = 1;
@@ -394,13 +388,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      * @return {@code >= 0;} start of available register range.
      */
     private int findRopRegForLocal(int startReg, int width) {
-        if (minimizeRegisters && !isThisPointerReg(startReg)) {
-            return startReg;
-        }
-
-        int reg;
-
-        reg = usedRopRegs.nextClearBit(startReg);
+        int reg = usedRopRegs.nextClearBit(startReg);
 
         while (true) {
             int i = 1;
@@ -480,7 +468,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             int checkReg = checkRegSpec.getReg();
 
             // Assume none of the register is mapped yet
-            int ropReg = 0;
+            int ropReg = paramRangeEnd;
 
             /**
              * See if either register is already mapped. Most likely the move
@@ -522,7 +510,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
             int category = ssaSpec.getCategory();
             // Find a rop reg that does not interfere
-            int ropReg = findNextUnreservedRopReg(0, category);
+            int ropReg = findNextUnreservedRopReg(paramRangeEnd, category);
             while (!canMapReg(ssaSpec, ropReg)) {
                 ropReg = findNextUnreservedRopReg(ropReg + 1, category);
             }
@@ -830,7 +818,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      */
     private int findAnyFittingRange(NormalSsaInsn insn, int rangeLength,
             int[] categoriesForIndex, BitSet outMovesRequired) {
-        int rangeStart = 0;
+        int rangeStart = paramRangeEnd;
         while (true) {
             rangeStart = findNextUnreservedRopReg(rangeStart, rangeLength);
             int fitWidth
