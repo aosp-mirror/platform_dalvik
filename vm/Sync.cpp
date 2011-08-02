@@ -1008,7 +1008,7 @@ bool dvmUnlockObject(Thread* self, Object *obj)
      * Cache the lock word as its value can change while we are
      * examining its state.
      */
-    thin = obj->lock;
+    thin = *(volatile u4 *)&obj->lock;
     if (LW_SHAPE(thin) == LW_SHAPE_THIN) {
         /*
          * The lock is thin.  We must ensure that the lock is owned
@@ -1025,7 +1025,8 @@ bool dvmUnlockObject(Thread* self, Object *obj)
                  * case.  Unlock by clearing all bits except for the
                  * hash state.
                  */
-                obj->lock &= (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
+                thin &= (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
+                android_atomic_release_store(thin, (int32_t*)&obj->lock);
             } else {
                 /*
                  * The object was recursively acquired.  Decrement the
@@ -1064,7 +1065,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
     bool interruptShouldThrow)
 {
     Monitor* mon;
-    u4 thin = obj->lock;
+    u4 thin = *(volatile u4 *)&obj->lock;
 
     /* If the lock is still thin, we need to fatten it.
      */
@@ -1094,7 +1095,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
  */
 void dvmObjectNotify(Thread* self, Object *obj)
 {
-    u4 thin = obj->lock;
+    u4 thin = *(volatile u4 *)&obj->lock;
 
     /* If the lock is still thin, there aren't any waiters;
      * waiting on an object forces lock fattening.
@@ -1122,7 +1123,7 @@ void dvmObjectNotify(Thread* self, Object *obj)
  */
 void dvmObjectNotifyAll(Thread* self, Object *obj)
 {
-    u4 thin = obj->lock;
+    u4 thin = *(volatile u4 *)&obj->lock;
 
     /* If the lock is still thin, there aren't any waiters;
      * waiting on an object forces lock fattening.
