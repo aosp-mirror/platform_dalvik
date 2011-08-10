@@ -47,17 +47,31 @@
  *  u2  version
  *  u2  offset to data
  *  u8  start date/time in usec
+ *  u2  record size in bytes (version >= 2 only)
+ *  ... padding to 32 bytes
  *
- * Record format:
+ * Record format v1:
  *  u1  thread ID
  *  u4  method ID | method action
  *  u4  time delta since start, in usec
+ *
+ * Record format v2:
+ *  u2  thread ID
+ *  u4  method ID | method action
+ *  u4  time delta since start, in usec
+ *
+ * Record format v3:
+ *  u2  thread ID
+ *  u4  method ID | method action
+ *  u4  time delta since start, in usec
+ *  u4  wall time since start, in usec (when clock == "dual" only)
  *
  * 32 bits of microseconds is 70 minutes.
  *
  * All values are stored in little-endian order.
  */
-#define TRACE_REC_SIZE      9
+#define TRACE_REC_SIZE_SINGLE_CLOCK  10 // using v2
+#define TRACE_REC_SIZE_DUAL_CLOCK    14 // using v3 with two timestamps
 #define TRACE_MAGIC         0x574f4c53
 #define TRACE_HEADER_LEN    32
 
@@ -65,9 +79,31 @@
 
 
 /*
+ * Returns true if the thread CPU clock should be used.
+ */
+static inline bool useThreadCpuClock() {
+#if defined(HAVE_POSIX_CLOCKS)
+    return gDvm.profilerClockSource != kProfilerClockSourceWall;
+#else
+    return false;
+#endif
+}
+
+/*
+ * Returns true if the wall clock should be used.
+ */
+static inline bool useWallClock() {
+#if defined(HAVE_POSIX_CLOCKS)
+    return gDvm.profilerClockSource != kProfilerClockSourceThreadCpu;
+#else
+    return true;
+#endif
+}
+
+/*
  * Get the wall-clock date/time, in usec.
  */
-static inline u8 getTimeInUsec()
+static inline u8 getWallTimeInUsec()
 {
     struct timeval tv;
 
@@ -75,35 +111,35 @@ static inline u8 getTimeInUsec()
     return tv.tv_sec * 1000000LL + tv.tv_usec;
 }
 
+#if defined(HAVE_POSIX_CLOCKS)
 /*
- * Get the current time, in microseconds.
- *
- * This can mean one of two things.  In "global clock" mode, we get the
- * same time across all threads.  If we use CLOCK_THREAD_CPUTIME_ID, we
- * get a per-thread CPU usage timer.  The latter is better, but a bit
- * more complicated to implement.
+ * Get the thread-cpu time, in usec.
+ * We use this clock when we can because it enables us to track the time that
+ * a thread spends running and not blocked.
  */
-static inline u8 getClock()
+static inline u8 getThreadCpuTimeInUsec()
+{
+    struct timespec tm;
+
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tm);
+    if (!(tm.tv_nsec >= 0 && tm.tv_nsec < 1*1000*1000*1000)) {
+        LOGE("bad nsec: %ld", tm.tv_nsec);
+        dvmAbort();
+    }
+    return tm.tv_sec * 1000000LL + tm.tv_nsec / 1000;
+}
+#endif
+
+/*
+ * Get the clock used for stopwatch-like timing measurements on a single thread.
+ */
+static inline u8 getStopwatchClock()
 {
 #if defined(HAVE_POSIX_CLOCKS)
-    if (!gDvm.profilerWallClock) {
-        struct timespec tm;
-
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tm);
-        if (!(tm.tv_nsec >= 0 && tm.tv_nsec < 1*1000*1000*1000)) {
-            LOGE("bad nsec: %ld\n", tm.tv_nsec);
-            dvmAbort();
-        }
-
-        return tm.tv_sec * 1000000LL + tm.tv_nsec / 1000;
-    } else
+    return getThreadCpuTimeInUsec();
+#else
+    return getWallTimeInUsec();
 #endif
-    {
-        struct timeval tv;
-
-        gettimeofday(&tv, NULL);
-        return tv.tv_sec * 1000000LL + tv.tv_usec;
-    }
 }
 
 /*
@@ -395,16 +431,27 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
     /* reset our notion of the start time for all CPU threads */
     resetCpuClockBase();
 
-    state->startWhen = getTimeInUsec();
+    state->startWhen = getWallTimeInUsec();
+
+    if (useThreadCpuClock() && useWallClock()) {
+        state->traceVersion = 3;
+        state->recordSize = TRACE_REC_SIZE_DUAL_CLOCK;
+    } else {
+        state->traceVersion = 2;
+        state->recordSize = TRACE_REC_SIZE_SINGLE_CLOCK;
+    }
 
     /*
      * Output the header.
      */
     memset(state->buf, 0, TRACE_HEADER_LEN);
     storeIntLE(state->buf + 0, TRACE_MAGIC);
-    storeShortLE(state->buf + 4, TRACE_VERSION);
+    storeShortLE(state->buf + 4, state->traceVersion);
     storeShortLE(state->buf + 6, TRACE_HEADER_LEN);
     storeLongLE(state->buf + 8, state->startWhen);
+    if (state->traceVersion >= 3) {
+        storeShortLE(state->buf + 16, state->recordSize);
+    }
     state->curOffset = TRACE_HEADER_LEN;
 
     /*
@@ -438,16 +485,32 @@ static void markTouchedMethods(int endOffset)
 {
     u1* ptr = gDvm.methodTrace.buf + TRACE_HEADER_LEN;
     u1* end = gDvm.methodTrace.buf + endOffset;
+    size_t recordSize = gDvm.methodTrace.recordSize;
     unsigned int methodVal;
     Method* method;
 
     while (ptr < end) {
-        methodVal = *(ptr+1) | (*(ptr+2) << 8) | (*(ptr+3) << 16)
-                    | (*(ptr+4) << 24);
+        methodVal = ptr[2] | (ptr[3] << 8) | (ptr[4] << 16)
+                    | (ptr[5] << 24);
         method = (Method*) METHOD_ID(methodVal);
 
         method->inProfile = true;
-        ptr += TRACE_REC_SIZE;
+        ptr += recordSize;
+    }
+}
+
+/*
+ * Exercises the clocks in the same way they will be during profiling.
+ */
+static inline void measureClockOverhead()
+{
+#if defined(HAVE_POSIX_CLOCKS)
+    if (useThreadCpuClock()) {
+        getThreadCpuTimeInUsec();
+    }
+#endif
+    if (useWallClock()) {
+        getWallTimeInUsec();
     }
 }
 
@@ -462,19 +525,19 @@ static u4 getClockOverhead(void)
     u8 calStart, calElapsed;
     int i;
 
-    calStart = getClock();
+    calStart = getStopwatchClock();
     for (i = 1000 * 4; i > 0; i--) {
-        getClock();
-        getClock();
-        getClock();
-        getClock();
-        getClock();
-        getClock();
-        getClock();
-        getClock();
+        measureClockOverhead();
+        measureClockOverhead();
+        measureClockOverhead();
+        measureClockOverhead();
+        measureClockOverhead();
+        measureClockOverhead();
+        measureClockOverhead();
+        measureClockOverhead();
     }
 
-    calElapsed = getClock() - calStart;
+    calElapsed = getStopwatchClock() - calStart;
     return (int) (calElapsed / (8*4));
 }
 
@@ -512,7 +575,7 @@ void dvmMethodTraceStop(void)
     }
 
     /* compute elapsed time */
-    elapsed = getTimeInUsec() - state->startWhen;
+    elapsed = getWallTimeInUsec() - state->startWhen;
 
     /*
      * Globally disable it, and allow other threads to notice.  We want
@@ -551,29 +614,30 @@ void dvmMethodTraceStop(void)
      */
     int finalCurOffset = state->curOffset;
 
+    size_t recordSize = state->recordSize;
     if (finalCurOffset > TRACE_HEADER_LEN) {
         u4 fillVal = METHOD_ID(FILL_PATTERN);
         u1* scanPtr = state->buf + TRACE_HEADER_LEN;
 
         while (scanPtr < state->buf + finalCurOffset) {
-            u4 methodVal = scanPtr[1] | (scanPtr[2] << 8) | (scanPtr[3] << 16)
-                        | (scanPtr[4] << 24);
+            u4 methodVal = scanPtr[2] | (scanPtr[3] << 8) | (scanPtr[4] << 16)
+                        | (scanPtr[5] << 24);
             if (METHOD_ID(methodVal) == fillVal) {
                 u1* scanBase = state->buf + TRACE_HEADER_LEN;
-                LOGW("Found unfilled record at %d (of %d)\n",
-                    (scanPtr - scanBase) / TRACE_REC_SIZE,
-                    (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
+                LOGW("Found unfilled record at %d (of %d)",
+                    (scanPtr - scanBase) / recordSize,
+                    (finalCurOffset - TRACE_HEADER_LEN) / recordSize);
                 finalCurOffset = scanPtr - state->buf;
                 break;
             }
 
-            scanPtr += TRACE_REC_SIZE;
+            scanPtr += recordSize;
         }
     }
 
     LOGI("TRACE STOPPED%s: writing %d records\n",
         state->overflow ? " (NOTE: overflowed buffer)" : "",
-        (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
+        (finalCurOffset - TRACE_HEADER_LEN) / recordSize);
     if (gDvm.debuggerActive) {
         LOGW("WARNING: a debugger is active; method-tracing results "
              "will be skewed\n");
@@ -600,20 +664,21 @@ void dvmMethodTraceStop(void)
     assert(state->traceFile != NULL);
 
     fprintf(state->traceFile, "%cversion\n", TOKEN_CHAR);
-    fprintf(state->traceFile, "%d\n", TRACE_VERSION);
+    fprintf(state->traceFile, "%d\n", state->traceVersion);
     fprintf(state->traceFile, "data-file-overflow=%s\n",
         state->overflow ? "true" : "false");
-#if defined(HAVE_POSIX_CLOCKS)
-    if (!gDvm.profilerWallClock) {
-        fprintf(state->traceFile, "clock=thread-cpu\n");
-    } else
-#endif
-    {
+    if (useThreadCpuClock()) {
+        if (useWallClock()) {
+            fprintf(state->traceFile, "clock=dual\n");
+        } else {
+            fprintf(state->traceFile, "clock=thread-cpu\n");
+        }
+    } else {
         fprintf(state->traceFile, "clock=wall\n");
     }
     fprintf(state->traceFile, "elapsed-time-usec=%llu\n", elapsed);
     fprintf(state->traceFile, "num-method-calls=%d\n",
-        (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
+        (finalCurOffset - TRACE_HEADER_LEN) / state->recordSize);
     fprintf(state->traceFile, "clock-call-overhead-nsec=%d\n", clockNsec);
     fprintf(state->traceFile, "vm=dalvik\n");
     if ((state->flags & TRACE_ALLOC_COUNTS) != 0) {
@@ -674,10 +739,13 @@ void dvmMethodTraceStop(void)
 void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
 {
     MethodTraceState* state = &gDvm.methodTrace;
-    u4 clockDiff, methodVal;
+    u4 methodVal;
     int oldOffset, newOffset;
     u1* ptr;
 
+    assert(method != NULL);
+
+#if defined(HAVE_POSIX_CLOCKS)
     /*
      * We can only access the per-thread CPU clock from within the
      * thread, so we have to initialize the base time on the first use.
@@ -685,18 +753,19 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
      * want, but it doesn't appear to be defined on the device.)
      */
     if (!self->cpuClockBaseSet) {
-        self->cpuClockBase = getClock();
+        self->cpuClockBase = getThreadCpuTimeInUsec();
         self->cpuClockBaseSet = true;
         //LOGI("thread base id=%d 0x%llx\n",
         //    self->threadId, self->cpuClockBase);
     }
+#endif
 
     /*
      * Advance "curOffset" atomically.
      */
     do {
         oldOffset = state->curOffset;
-        newOffset = oldOffset + TRACE_REC_SIZE;
+        newOffset = oldOffset + state->recordSize;
         if (newOffset > state->bufferSize) {
             state->overflow = true;
             return;
@@ -706,24 +775,36 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
 
     //assert(METHOD_ACTION((u4) method) == 0);
 
-    u8 now = getClock();
-    clockDiff = (u4) (now - self->cpuClockBase);
-
     methodVal = METHOD_COMBINE((u4) method, action);
 
     /*
      * Write data into "oldOffset".
      */
     ptr = state->buf + oldOffset;
-    *ptr++ = self->threadId;
+    *ptr++ = (u1) self->threadId;
+    *ptr++ = (u1) (self->threadId >> 8);
     *ptr++ = (u1) methodVal;
     *ptr++ = (u1) (methodVal >> 8);
     *ptr++ = (u1) (methodVal >> 16);
     *ptr++ = (u1) (methodVal >> 24);
-    *ptr++ = (u1) clockDiff;
-    *ptr++ = (u1) (clockDiff >> 8);
-    *ptr++ = (u1) (clockDiff >> 16);
-    *ptr++ = (u1) (clockDiff >> 24);
+
+#if defined(HAVE_POSIX_CLOCKS)
+    if (useThreadCpuClock()) {
+        u4 cpuClockDiff = (u4) (getThreadCpuTimeInUsec() - self->cpuClockBase);
+        *ptr++ = (u1) cpuClockDiff;
+        *ptr++ = (u1) (cpuClockDiff >> 8);
+        *ptr++ = (u1) (cpuClockDiff >> 16);
+        *ptr++ = (u1) (cpuClockDiff >> 24);
+    }
+#endif
+
+    if (useWallClock()) {
+        u4 wallClockDiff = (u4) (getWallTimeInUsec() - state->startWhen);
+        *ptr++ = (u1) wallClockDiff;
+        *ptr++ = (u1) (wallClockDiff >> 8);
+        *ptr++ = (u1) (wallClockDiff >> 16);
+        *ptr++ = (u1) (wallClockDiff >> 24);
+    }
 }
 
 #if defined(WITH_INLINE_PROFILING)

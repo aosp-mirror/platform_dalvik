@@ -53,6 +53,9 @@ typedef struct MethodTraceState {
     volatile int curOffset;
     u8      startWhen;
     int     overflow;
+
+    int     traceVersion;
+    size_t  recordSize;
 } MethodTraceState;
 
 /*
@@ -176,7 +179,6 @@ enum {
 };
 
 #define TOKEN_CHAR      '*'
-#define TRACE_VERSION   1
 
 /*
  * Common definitions, shared with the dump tool.
