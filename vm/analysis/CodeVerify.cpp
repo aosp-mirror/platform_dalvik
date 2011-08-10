@@ -110,7 +110,7 @@ static void checkMergeTab();
 static bool isInitMethod(const Method* meth);
 static RegType getInvocationThis(const RegisterLine* registerLine,\
     const DecodedInstruction* pDecInsn, VerifyError* pFailure);
-static void verifyRegisterType(const RegisterLine* registerLine, \
+static void verifyRegisterType(RegisterLine* registerLine, \
     u4 vsrc, RegType checkType, VerifyError* pFailure);
 static bool doCodeVerification(VerifierData* vdata, RegisterTable* regTable);
 static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,\
@@ -139,16 +139,24 @@ enum {
 #define __  kRegTypeUnknown
 #define _U  kRegTypeUninit
 #define _X  kRegTypeConflict
-#define _F  kRegTypeFloat
 #define _0  kRegTypeZero
 #define _1  kRegTypeOne
 #define _Z  kRegTypeBoolean
+#define _y  kRegTypeConstPosByte
+#define _Y  kRegTypeConstByte
+#define _h  kRegTypeConstPosShort
+#define _H  kRegTypeConstShort
+#define _c  kRegTypeConstChar
+#define _i  kRegTypeConstInteger
 #define _b  kRegTypePosByte
 #define _B  kRegTypeByte
 #define _s  kRegTypePosShort
 #define _S  kRegTypeShort
 #define _C  kRegTypeChar
 #define _I  kRegTypeInteger
+#define _F  kRegTypeFloat
+#define _N  kRegTypeConstLo
+#define _n  kRegTypeConstHi
 #define _J  kRegTypeLongLo
 #define _j  kRegTypeLongHi
 #define _D  kRegTypeDoubleLo
@@ -162,8 +170,9 @@ enum {
  * is a register merge, not a widening conversion.  Only the "implicit"
  * widening within a category, e.g. byte to short, is allowed.
  *
- * Because Dalvik does not draw a distinction between int and float, we
- * have to allow free exchange between 32-bit int/float and 64-bit
+ * Dalvik does not draw a distinction between int and float, but we enforce
+ * that once a value is used as int, it can't be used as float, and vice
+ * versa. We do not allow free exchange between 32-bit int/float and 64-bit
  * long/double.
  *
  * Note that Uninit+Uninit=Uninit.  This holds true because we only
@@ -176,39 +185,55 @@ enum {
  */
 const char gDvmMergeTab[kRegTypeMAX][kRegTypeMAX] =
 {
-    /* chk:  _  U  X  F  0  1  Z  b  B  s  S  C  I  J  j  D  d */
-    { /*_*/ __,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X },
-    { /*U*/ _X,_U,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X },
-    { /*X*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X },
-    { /*F*/ _X,_X,_X,_F,_F,_F,_F,_F,_F,_F,_F,_F,_F,_X,_X,_X,_X },
-    { /*0*/ _X,_X,_X,_F,_0,_Z,_Z,_b,_B,_s,_S,_C,_I,_X,_X,_X,_X },
-    { /*1*/ _X,_X,_X,_F,_Z,_1,_Z,_b,_B,_s,_S,_C,_I,_X,_X,_X,_X },
-    { /*Z*/ _X,_X,_X,_F,_Z,_Z,_Z,_b,_B,_s,_S,_C,_I,_X,_X,_X,_X },
-    { /*b*/ _X,_X,_X,_F,_b,_b,_b,_b,_B,_s,_S,_C,_I,_X,_X,_X,_X },
-    { /*B*/ _X,_X,_X,_F,_B,_B,_B,_B,_B,_S,_S,_I,_I,_X,_X,_X,_X },
-    { /*s*/ _X,_X,_X,_F,_s,_s,_s,_s,_S,_s,_S,_C,_I,_X,_X,_X,_X },
-    { /*S*/ _X,_X,_X,_F,_S,_S,_S,_S,_S,_S,_S,_I,_I,_X,_X,_X,_X },
-    { /*C*/ _X,_X,_X,_F,_C,_C,_C,_C,_I,_C,_I,_C,_I,_X,_X,_X,_X },
-    { /*I*/ _X,_X,_X,_F,_I,_I,_I,_I,_I,_I,_I,_I,_I,_X,_X,_X,_X },
-    { /*J*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_J,_X,_J,_X },
-    { /*j*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_j,_X,_j },
-    { /*D*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_J,_X,_D,_X },
-    { /*d*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_j,_X,_d },
+    /* chk:  _  U  X  0  1  Z  y  Y  h  H  c  i  b  B  s  S  C  I  F  N  n  J  j  D  d */
+    { /*_*/ __,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X },
+    { /*U*/ _X,_U,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X },
+    { /*X*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X },
+    { /*0*/ _X,_X,_X,_0,_Z,_Z,_y,_Y,_h,_H,_c,_i,_b,_B,_s,_S,_C,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*1*/ _X,_X,_X,_Z,_1,_Z,_y,_Y,_h,_H,_c,_i,_b,_B,_s,_S,_C,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*Z*/ _X,_X,_X,_Z,_Z,_Z,_y,_Y,_h,_H,_c,_i,_b,_B,_s,_S,_C,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*y*/ _X,_X,_X,_y,_y,_y,_y,_Y,_h,_H,_c,_i,_b,_B,_s,_S,_C,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*Y*/ _X,_X,_X,_Y,_Y,_Y,_Y,_Y,_h,_H,_c,_i,_B,_B,_S,_S,_I,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*h*/ _X,_X,_X,_h,_h,_h,_h,_h,_h,_H,_c,_i,_s,_S,_s,_S,_C,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*H*/ _X,_X,_X,_H,_H,_H,_H,_H,_H,_H,_c,_i,_S,_S,_S,_S,_I,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*c*/ _X,_X,_X,_c,_c,_c,_c,_c,_c,_c,_c,_i,_C,_I,_C,_I,_C,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*i*/ _X,_X,_X,_i,_i,_i,_i,_i,_i,_i,_i,_i,_I,_I,_I,_I,_I,_I,_F,_X,_X,_X,_X,_X,_X },
+    { /*b*/ _X,_X,_X,_b,_b,_b,_b,_B,_s,_S,_C,_I,_b,_B,_s,_S,_C,_I,_X,_X,_X,_X,_X,_X,_X },
+    { /*B*/ _X,_X,_X,_B,_B,_B,_B,_B,_S,_S,_I,_I,_B,_B,_S,_S,_I,_I,_X,_X,_X,_X,_X,_X,_X },
+    { /*s*/ _X,_X,_X,_s,_s,_s,_s,_S,_s,_S,_C,_I,_s,_S,_s,_S,_C,_I,_X,_X,_X,_X,_X,_X,_X },
+    { /*S*/ _X,_X,_X,_S,_S,_S,_S,_S,_S,_S,_I,_I,_S,_S,_S,_S,_I,_I,_X,_X,_X,_X,_X,_X,_X },
+    { /*C*/ _X,_X,_X,_C,_C,_C,_C,_I,_C,_I,_C,_I,_C,_I,_C,_I,_C,_I,_X,_X,_X,_X,_X,_X,_X },
+    { /*I*/ _X,_X,_X,_I,_I,_I,_I,_I,_I,_I,_I,_I,_I,_I,_I,_I,_I,_I,_X,_X,_X,_X,_X,_X,_X },
+    { /*F*/ _X,_X,_X,_F,_F,_F,_F,_F,_F,_F,_F,_F,_X,_X,_X,_X,_X,_X,_F,_X,_X,_X,_X,_X,_X },
+    { /*N*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_N,_X,_J,_X,_D,_X },
+    { /*n*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_n,_X,_j,_X,_d },
+    { /*J*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_J,_X,_J,_X,_X,_X },
+    { /*j*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_j,_X,_j,_X,_X },
+    { /*D*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_D,_X,_X,_X,_D,_X },
+    { /*d*/ _X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_d,_X,_X,_X,_d },
 };
 
 #undef __
 #undef _U
 #undef _X
-#undef _F
 #undef _0
 #undef _1
 #undef _Z
+#undef _y
+#undef _Y
+#undef _h
+#undef _H
+#undef _c
+#undef _i
 #undef _b
 #undef _B
 #undef _s
 #undef _S
 #undef _C
 #undef _I
+#undef _F
+#undef _N
+#undef _n
 #undef _J
 #undef _j
 #undef _D
@@ -237,24 +262,30 @@ static void checkMergeTab()
  * Determine whether we can convert "srcType" to "checkType", where
  * "checkType" is one of the category-1 non-reference types.
  *
- * 32-bit int and float are interchangeable.
+ * Constant derived types may become floats, but other values may not.
  */
 static bool canConvertTo1nr(RegType srcType, RegType checkType)
 {
     static const char convTab
         [kRegType1nrEND-kRegType1nrSTART+1][kRegType1nrEND-kRegType1nrSTART+1] =
     {
-        /* chk: F  0  1  Z  b  B  s  S  C  I */
-        { /*F*/ 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { /*0*/ 1, 1, 0, 1, 1, 1, 1, 1, 1, 1 },
-        { /*1*/ 1, 0, 1, 1, 1, 1, 1, 1, 1, 1 },
-        { /*Z*/ 1, 0, 0, 1, 1, 1, 1, 1, 1, 1 },
-        { /*b*/ 1, 0, 0, 0, 1, 1, 1, 1, 1, 1 },
-        { /*B*/ 1, 0, 0, 0, 0, 1, 0, 1, 0, 1 },
-        { /*s*/ 1, 0, 0, 0, 0, 0, 1, 1, 1, 1 },
-        { /*S*/ 1, 0, 0, 0, 0, 0, 0, 1, 0, 1 },
-        { /*C*/ 1, 0, 0, 0, 0, 0, 0, 0, 1, 1 },
-        { /*I*/ 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        /* chk: 0  1  Z  y  Y  h  H  c  i  b  B  s  S  C  I  F */
+        { /*0*/ 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { /*1*/ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { /*Z*/ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
+        { /*y*/ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { /*Y*/ 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1 },
+        { /*h*/ 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1 },
+        { /*H*/ 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1 },
+        { /*c*/ 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1 },
+        { /*i*/ 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1 },
+        { /*b*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0 },
+        { /*B*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0 },
+        { /*s*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0 },
+        { /*S*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0 },
+        { /*C*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 },
+        { /*I*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
+        { /*F*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
     };
 
     assert(checkType >= kRegType1nrSTART && checkType <= kRegType1nrEND);
@@ -275,12 +306,11 @@ static bool canConvertTo1nr(RegType srcType, RegType checkType)
 }
 
 /*
- * Determine whether the types are compatible.  In Dalvik, 64-bit doubles
- * and longs are interchangeable.
+ * Determine whether the category-2 types are compatible.
  */
 static bool canConvertTo2(RegType srcType, RegType checkType)
 {
-    return ((srcType == kRegTypeLongLo || srcType == kRegTypeDoubleLo) &&
+    return ((srcType == kRegTypeConstLo || srcType == checkType) &&
             (checkType == kRegTypeLongLo || checkType == kRegTypeDoubleLo));
 }
 
@@ -294,7 +324,7 @@ static bool canConvertTo2(RegType srcType, RegType checkType)
  * At a minimum, source and destination must have the same width.  We
  * further refine this to assert that "short" and "char" are not
  * compatible, because the sign-extension is different on the "get"
- * operations.  As usual, "float" and "int" are interoperable.
+ * operations.
  *
  * We're not considering the actual contents of the register, so we'll
  * never get "pseudo-types" like kRegTypeZero or kRegTypePosShort.  We
@@ -303,16 +333,7 @@ static bool canConvertTo2(RegType srcType, RegType checkType)
  */
 static bool checkFieldArrayStore1nr(RegType instrType, RegType targetType)
 {
-    if (instrType == targetType)
-        return true;            /* quick positive; most common case */
-
-    if ((instrType == kRegTypeInteger && targetType == kRegTypeFloat) ||
-        (instrType == kRegTypeFloat && targetType == kRegTypeInteger))
-    {
-        return true;
-    }
-
-    return false;
+    return (instrType == targetType);
 }
 
 /*
@@ -338,29 +359,51 @@ static RegType primitiveTypeToRegType(PrimitiveType primType)
 }
 
 /*
+ * Convert a const derived RegType to the equivalent non-const RegType value.
+ * Does nothing if the argument type isn't const derived.
+ */
+static RegType constTypeToRegType(RegType constType)
+{
+    switch (constType) {
+        case kRegTypeConstPosByte: return kRegTypePosByte;
+        case kRegTypeConstByte: return kRegTypeByte;
+        case kRegTypeConstPosShort: return kRegTypePosShort;
+        case kRegTypeConstShort: return kRegTypeShort;
+        case kRegTypeConstChar: return kRegTypeChar;
+        case kRegTypeConstInteger: return kRegTypeInteger;
+        default: {
+            return constType;
+        }
+    }
+}
+
+/*
  * Given a 32-bit constant, return the most-restricted RegType enum entry
- * that can hold the value.
+ * that can hold the value. The types used here indicate the value came
+ * from a const instruction, and may not correctly represent the real type
+ * of the value. Upon use, a constant derived type is updated with the
+ * type from the use, which will be unambiguous.
  */
 static char determineCat1Const(s4 value)
 {
     if (value < -32768)
-        return kRegTypeInteger;
+        return kRegTypeConstInteger;
     else if (value < -128)
-        return kRegTypeShort;
+        return kRegTypeConstShort;
     else if (value < 0)
-        return kRegTypeByte;
+        return kRegTypeConstByte;
     else if (value == 0)
         return kRegTypeZero;
     else if (value == 1)
         return kRegTypeOne;
     else if (value < 128)
-        return kRegTypePosByte;
+        return kRegTypeConstPosByte;
     else if (value < 32768)
-        return kRegTypePosShort;
+        return kRegTypeConstPosShort;
     else if (value < 65536)
-        return kRegTypeChar;
+        return kRegTypeConstChar;
     else
-        return kRegTypeInteger;
+        return kRegTypeConstInteger;
 }
 
 /*
@@ -1058,7 +1101,7 @@ static bool isCorrectInvokeKind(MethodType methodType, Method* resMethod)
  * set appropriately).
  */
 static Method* verifyInvocationArgs(const Method* meth,
-    const RegisterLine* registerLine, const int insnRegCount,
+    RegisterLine* registerLine, const int insnRegCount,
     const DecodedInstruction* pDecInsn, UninitInstanceMap* uninitMap,
     MethodType methodType, bool isRange, bool isSuper, VerifyError* pFailure)
 {
@@ -1464,6 +1507,12 @@ static void setRegisterType(RegisterLine* registerLine, u4 vdst,
     case kRegTypeUnknown:
     case kRegTypeBoolean:
     case kRegTypeOne:
+    case kRegTypeConstByte:
+    case kRegTypeConstPosByte:
+    case kRegTypeConstShort:
+    case kRegTypeConstPosShort:
+    case kRegTypeConstChar:
+    case kRegTypeConstInteger:
     case kRegTypeByte:
     case kRegTypePosByte:
     case kRegTypeShort:
@@ -1475,11 +1524,13 @@ static void setRegisterType(RegisterLine* registerLine, u4 vdst,
     case kRegTypeUninit:
         insnRegs[vdst] = newType;
         break;
+    case kRegTypeConstLo:
     case kRegTypeLongLo:
     case kRegTypeDoubleLo:
         insnRegs[vdst] = newType;
         insnRegs[vdst+1] = newType+1;
         break;
+    case kRegTypeConstHi:
     case kRegTypeLongHi:
     case kRegTypeDoubleHi:
         /* should never set these explicitly */
@@ -1524,16 +1575,15 @@ static void setRegisterType(RegisterLine* registerLine, u4 vdst,
  * Verify that the contents of the specified register have the specified
  * type (or can be converted to it through an implicit widening conversion).
  *
- * In theory we could use this to modify the type of the source register,
- * e.g. a generic 32-bit constant, once used as a float, would thereafter
- * remain a float.  There is no compelling reason to require this though.
+ * This will modify the type of the source register if it was originally
+ * derived from a constant to prevent mixing of int/float and long/double.
  *
  * If "vsrc" is a reference, both it and the "vsrc" register must be
  * initialized ("vsrc" may be Zero).  This will verify that the value in
  * the register is an instance of checkType, or if checkType is an
  * interface, verify that the register implements checkType.
  */
-static void verifyRegisterType(const RegisterLine* registerLine, u4 vsrc,
+static void verifyRegisterType(RegisterLine* registerLine, u4 vsrc,
     RegType checkType, VerifyError* pFailure)
 {
     const RegType* insnRegs = registerLine->regTypes;
@@ -1554,6 +1604,13 @@ static void verifyRegisterType(const RegisterLine* registerLine, u4 vsrc,
                 vsrc, srcType, checkType);
             *pFailure = VERIFY_ERROR_GENERIC;
         }
+        /* Update type if result is float */
+        if (checkType == kRegTypeFloat) {
+            setRegisterType(registerLine, vsrc, checkType);
+        } else {
+            /* Update const type to actual type after use */
+            setRegisterType(registerLine, vsrc, constTypeToRegType(srcType));
+        }
         break;
     case kRegTypeLongLo:
     case kRegTypeDoubleLo:
@@ -1566,8 +1623,13 @@ static void verifyRegisterType(const RegisterLine* registerLine, u4 vsrc,
                 vsrc, srcType, checkType);
             *pFailure = VERIFY_ERROR_GENERIC;
         }
+        /* Update type if source is from const */
+        if (srcType == kRegTypeConstLo) {
+            setRegisterType(registerLine, vsrc, checkType);
+        }
         break;
-
+    case kRegTypeConstLo:
+    case kRegTypeConstHi:
     case kRegTypeLongHi:
     case kRegTypeDoubleHi:
     case kRegTypeZero:
@@ -1835,16 +1897,22 @@ static void checkTypeCategory(RegType type, TypeCategory cat,
     switch (cat) {
     case kTypeCategory1nr:
         switch (type) {
-        case kRegTypeFloat:
         case kRegTypeZero:
         case kRegTypeOne:
         case kRegTypeBoolean:
+        case kRegTypeConstPosByte:
+        case kRegTypeConstByte:
+        case kRegTypeConstPosShort:
+        case kRegTypeConstShort:
+        case kRegTypeConstChar:
+        case kRegTypeConstInteger:
         case kRegTypePosByte:
         case kRegTypeByte:
         case kRegTypePosShort:
         case kRegTypeShort:
         case kRegTypeChar:
         case kRegTypeInteger:
+        case kRegTypeFloat:
             break;
         default:
             *pFailure = VERIFY_ERROR_GENERIC;
@@ -1854,6 +1922,7 @@ static void checkTypeCategory(RegType type, TypeCategory cat,
 
     case kTypeCategory2:
         switch (type) {
+        case kRegTypeConstLo:
         case kRegTypeLongLo:
         case kRegTypeDoubleLo:
             break;
@@ -2127,6 +2196,9 @@ static RegType adjustForRightShift(RegisterLine* registerLine, int reg,
     RegType srcType = getRegisterType(registerLine, reg);
     RegType newType;
 
+    /* convert const derived types to their actual types */
+    srcType = constTypeToRegType(srcType);
+
     /* no-op */
     if (shiftCount == 0)
         return srcType;
@@ -2145,7 +2217,6 @@ static RegType adjustForRightShift(RegisterLine* registerLine, int reg,
 
     switch (srcType) {
     case kRegTypeInteger:               /* 32-bit signed value */
-    case kRegTypeFloat:                 /* (allowed; treat same as int) */
         if (isUnsignedShift) {
             if (shiftCount > 24)
                 newType = kRegTypePosByte;
@@ -3103,7 +3174,7 @@ static void freeRegisterLineInnards(VerifierData* vdata)
  * "resClass" is the class refered to by pDecInsn->vB.
  */
 static void verifyFilledNewArrayRegs(const Method* meth,
-    const RegisterLine* registerLine, const DecodedInstruction* pDecInsn,
+    RegisterLine* registerLine, const DecodedInstruction* pDecInsn,
     ClassObject* resClass, bool isRange, VerifyError* pFailure)
 {
     u4 argCount = pDecInsn->vA;
@@ -3937,9 +4008,20 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             if (!VERIFY_OK(failure))
                 LOG_VFY("VFY: return-1nr not expected");
 
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields. Also, it may use integer values for
+             * boolean, byte, short, and character return types.
+             */
+            RegType srcType = getRegisterType(workLine, decInsn.vA);
+            if ((returnType == kRegTypeBoolean && srcType == kRegTypeByte) ||
+                ((returnType == kRegTypeBoolean || returnType == kRegTypeByte ||
+                  returnType == kRegTypeShort || returnType == kRegTypeChar) &&
+                 srcType == kRegTypeInteger))
+                returnType = srcType;
+
             /* check the register contents */
-            returnType = getRegisterType(workLine, decInsn.vA);
-            checkTypeCategory(returnType, kTypeCategory1nr, &failure);
+            verifyRegisterType(workLine, decInsn.vA, returnType, &failure);
             if (!VERIFY_OK(failure)) {
                 LOG_VFY("VFY: return-1nr on invalid register v%d",
                     decInsn.vA);
@@ -3950,7 +4032,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         if (!checkConstructorReturn(meth, workLine, insnRegCount)) {
             failure = VERIFY_ERROR_GENERIC;
         } else {
-            RegType returnType, returnTypeHi;
+            RegType returnType;
 
             /* check the method signature */
             returnType = getMethodReturnType(meth);
@@ -3959,10 +4041,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
                 LOG_VFY("VFY: return-wide not expected");
 
             /* check the register contents */
-            returnType = getRegisterType(workLine, decInsn.vA);
-            returnTypeHi = getRegisterType(workLine, decInsn.vA +1);
-            checkTypeCategory(returnType, kTypeCategory2, &failure);
-            checkWidePair(returnType, returnTypeHi, &failure);
+            verifyRegisterType(workLine, decInsn.vA, returnType, &failure);
             if (!VERIFY_OK(failure)) {
                 LOG_VFY("VFY: return-wide on invalid register pair v%d",
                     decInsn.vA);
@@ -4030,8 +4109,8 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_CONST_WIDE_32:
     case OP_CONST_WIDE:
     case OP_CONST_WIDE_HIGH16:
-        /* could be long or double; default to long and allow conversion */
-        setRegisterType(workLine, decInsn.vA, kRegTypeLongLo);
+        /* could be long or double; resolved upon use */
+        setRegisterType(workLine, decInsn.vA, kRegTypeConstLo);
         break;
     case OP_CONST_STRING:
     case OP_CONST_STRING_JUMBO:
@@ -4406,7 +4485,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
 
     case OP_AGET:
-        tmpType = kRegTypeInteger;
+        tmpType = kRegTypeConstInteger;
         goto aget_1nr_common;
     case OP_AGET_BOOLEAN:
         tmpType = kRegTypeBoolean;
@@ -4446,6 +4525,10 @@ aget_1nr_common:
                 /* make sure array type matches instruction */
                 srcType = primitiveTypeToRegType(
                                         resClass->elementClass->primitiveType);
+
+                /* differentiate between float and int */
+                if (srcType == kRegTypeFloat || srcType == kRegTypeInteger)
+                    tmpType = srcType;
 
                 if (!checkFieldArrayStore1nr(tmpType, srcType)) {
                     LOG_VFY("VFY: invalid aget-1nr, array type=%d with"
@@ -4501,11 +4584,9 @@ aget_1nr_common:
             } else {
                 /*
                  * Null array ref; this code path will fail at runtime.  We
-                 * know this is either long or double, and we don't really
-                 * discriminate between those during verification, so we
-                 * call it a long.
+                 * know this is either long or double, so label it const.
                  */
-                dstType = kRegTypeLongLo;
+                dstType = kRegTypeConstLo;
             }
             setRegisterType(workLine, decInsn.vA, dstType);
         }
@@ -4592,15 +4673,6 @@ aput_1nr_common:
             if (!VERIFY_OK(failure))
                 break;
 
-            /* make sure the source register has the correct type */
-            srcType = getRegisterType(workLine, decInsn.vA);
-            if (!canConvertTo1nr(srcType, tmpType)) {
-                LOG_VFY("VFY: invalid reg type %d on aput instr (need %d)",
-                    srcType, tmpType);
-                failure = VERIFY_ERROR_GENERIC;
-                break;
-            }
-
             resClass = getClassFromRegister(workLine, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
@@ -4620,9 +4692,24 @@ aput_1nr_common:
             /* verify that instruction matches array */
             dstType = primitiveTypeToRegType(
                                     resClass->elementClass->primitiveType);
-            assert(dstType != kRegTypeUnknown);
 
-            if (!checkFieldArrayStore1nr(tmpType, dstType)) {
+            /* correct if float */
+            if (dstType == kRegTypeFloat)
+                tmpType = kRegTypeFloat;
+
+            /* make sure the source register has the correct type */
+            srcType = getRegisterType(workLine, decInsn.vA);
+            if (!canConvertTo1nr(srcType, tmpType)) {
+                LOG_VFY("VFY: invalid reg type %d on aput instr (need %d)",
+                    srcType, tmpType);
+                failure = VERIFY_ERROR_GENERIC;
+                break;
+            }
+
+            verifyRegisterType(workLine, decInsn.vA, dstType, &failure);
+
+            if (!VERIFY_OK(failure) || dstType == kRegTypeUnknown ||
+                !checkFieldArrayStore1nr(tmpType, dstType)) {
                 LOG_VFY("VFY: invalid aput-1nr on %s (inst=%d dst=%d)",
                         resClass->descriptor, tmpType, dstType);
                 failure = VERIFY_ERROR_GENERIC;
@@ -4633,15 +4720,6 @@ aput_1nr_common:
     case OP_APUT_WIDE:
         tmpType = getRegisterType(workLine, decInsn.vC);
         checkArrayIndexType(meth, tmpType, &failure);
-        if (!VERIFY_OK(failure))
-            break;
-
-        tmpType = getRegisterType(workLine, decInsn.vA);
-        {
-            RegType typeHi = getRegisterType(workLine, decInsn.vA+1);
-            checkTypeCategory(tmpType, kTypeCategory2, &failure);
-            checkWidePair(tmpType, typeHi, &failure);
-        }
         if (!VERIFY_OK(failure))
             break;
 
@@ -4661,8 +4739,10 @@ aput_1nr_common:
 
             switch (resClass->elementClass->primitiveType) {
             case PRIM_LONG:
+                verifyRegisterType(workLine, decInsn.vA, kRegTypeLongLo, &failure);
+                break;
             case PRIM_DOUBLE:
-                /* these are okay */
+                verifyRegisterType(workLine, decInsn.vA, kRegTypeDoubleLo, &failure);
                 break;
             default:
                 LOG_VFY("VFY: invalid aput-wide on %s",
@@ -4763,6 +4843,11 @@ iget_1nr_common:
 
             /* make sure the field's type is compatible with expectation */
             fieldType = primSigCharToRegType(instField->signature[0]);
+
+            /* correct if float */
+            if (fieldType == kRegTypeFloat)
+                tmpType = kRegTypeFloat;
+
             if (fieldType == kRegTypeUnknown ||
                 !checkFieldArrayStore1nr(tmpType, fieldType))
             {
@@ -4861,23 +4946,6 @@ iput_1nr_common:
             RegType srcType, fieldType, objType;
             InstField* instField;
 
-            srcType = getRegisterType(workLine, decInsn.vA);
-
-            /*
-             * javac generates synthetic functions that write byte values
-             * into boolean fields.
-             */
-            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
-                srcType = kRegTypeBoolean;
-
-            /* make sure the source register has the correct type */
-            if (!canConvertTo1nr(srcType, tmpType)) {
-                LOG_VFY("VFY: invalid reg type %d on iput instr (need %d)",
-                    srcType, tmpType);
-                failure = VERIFY_ERROR_GENERIC;
-                break;
-            }
-
             objType = getRegisterType(workLine, decInsn.vB);
             instField = getInstField(meth, uninitMap, objType, decInsn.vC,
                             &failure);
@@ -4889,7 +4957,32 @@ iput_1nr_common:
 
             /* get type of field we're storing into */
             fieldType = primSigCharToRegType(instField->signature[0]);
-            if (fieldType == kRegTypeUnknown ||
+            srcType = getRegisterType(workLine, decInsn.vA);
+
+            /* correct if float */
+            if (fieldType == kRegTypeFloat)
+                tmpType = kRegTypeFloat;
+
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields.
+             */
+            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
+                tmpType = kRegTypeByte;
+            if (fieldType == kRegTypeBoolean && srcType == kRegTypeByte)
+                fieldType = kRegTypeByte;
+
+            /* make sure the source register has the correct type */
+            if (!canConvertTo1nr(srcType, tmpType)) {
+                LOG_VFY("VFY: invalid reg type %d on iput instr (need %d)",
+                    srcType, tmpType);
+                failure = VERIFY_ERROR_GENERIC;
+                break;
+            }
+
+            verifyRegisterType(workLine, decInsn.vA, fieldType, &failure);
+
+            if (!VERIFY_OK(failure) || fieldType == kRegTypeUnknown ||
                 !checkFieldArrayStore1nr(tmpType, fieldType))
             {
                 LOG_VFY("VFY: invalid iput-1nr of %s.%s (inst=%d field=%d)",
@@ -4902,38 +4995,32 @@ iput_1nr_common:
         break;
     case OP_IPUT_WIDE:
     case OP_IPUT_WIDE_JUMBO:
-        tmpType = getRegisterType(workLine, decInsn.vA);
-        {
-            RegType typeHi = getRegisterType(workLine, decInsn.vA+1);
-            checkTypeCategory(tmpType, kTypeCategory2, &failure);
-            checkWidePair(tmpType, typeHi, &failure);
-        }
-        if (VERIFY_OK(failure)) {
-            InstField* instField;
-            RegType objType;
+        InstField* instField;
+        RegType objType;
 
-            objType = getRegisterType(workLine, decInsn.vB);
-            instField = getInstField(meth, uninitMap, objType, decInsn.vC,
-                            &failure);
-            if (!VERIFY_OK(failure))
-                break;
-            checkFinalFieldAccess(meth, instField, &failure);
-            if (!VERIFY_OK(failure))
-                break;
+        objType = getRegisterType(workLine, decInsn.vB);
+        instField = getInstField(meth, uninitMap, objType, decInsn.vC,
+                        &failure);
+        if (!VERIFY_OK(failure))
+            break;
+        checkFinalFieldAccess(meth, instField, &failure);
+        if (!VERIFY_OK(failure))
+            break;
 
-            /* check the type, which should be prim */
-            switch (instField->signature[0]) {
-            case 'D':
-            case 'J':
-                /* these are okay (and interchangeable) */
-                break;
-            default:
-                LOG_VFY("VFY: invalid iput-wide of %s.%s",
-                        instField->clazz->descriptor,
-                        instField->name);
-                failure = VERIFY_ERROR_GENERIC;
-                break;
-            }
+        /* check the type, which should be prim */
+        switch (instField->signature[0]) {
+        case 'D':
+            verifyRegisterType(workLine, decInsn.vA, kRegTypeDoubleLo, &failure);
+            break;
+        case 'J':
+            verifyRegisterType(workLine, decInsn.vA, kRegTypeLongLo, &failure);
+            break;
+        default:
+            LOG_VFY("VFY: invalid iput-wide of %s.%s",
+                    instField->clazz->descriptor,
+                    instField->name);
+            failure = VERIFY_ERROR_GENERIC;
+            break;
         }
         break;
     case OP_IPUT_OBJECT:
@@ -5026,10 +5113,14 @@ sget_1nr_common:
              * We can get ourselves into trouble if we mix & match loads
              * and stores with different widths, so rather than just checking
              * "canConvertTo1nr" we require that the field types have equal
-             * widths.  (We can't generally require an exact type match,
-             * because e.g. "int" and "float" are interchangeable.)
+             * widths.
              */
             fieldType = primSigCharToRegType(staticField->signature[0]);
+
+            /* correct if float */
+            if (fieldType == kRegTypeFloat)
+                tmpType = kRegTypeFloat;
+
             if (!checkFieldArrayStore1nr(tmpType, fieldType)) {
                 LOG_VFY("VFY: invalid sget-1nr of %s.%s (inst=%d actual=%d)",
                     staticField->clazz->descriptor,
@@ -5120,23 +5211,6 @@ sput_1nr_common:
             RegType srcType, fieldType;
             StaticField* staticField;
 
-            srcType = getRegisterType(workLine, decInsn.vA);
-
-            /*
-             * javac generates synthetic functions that write byte values
-             * into boolean fields.
-             */
-            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
-                srcType = kRegTypeBoolean;
-
-            /* make sure the source register has the correct type */
-            if (!canConvertTo1nr(srcType, tmpType)) {
-                LOG_VFY("VFY: invalid reg type %d on sput instr (need %d)",
-                    srcType, tmpType);
-                failure = VERIFY_ERROR_GENERIC;
-                break;
-            }
-
             staticField = getStaticField(meth, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
@@ -5152,7 +5226,33 @@ sput_1nr_common:
              * can lead to trouble if we do 16-bit writes.
              */
             fieldType = primSigCharToRegType(staticField->signature[0]);
-            if (!checkFieldArrayStore1nr(tmpType, fieldType)) {
+            srcType = getRegisterType(workLine, decInsn.vA);
+
+            /* correct if float */
+            if (fieldType == kRegTypeFloat)
+                tmpType = kRegTypeFloat;
+
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields.
+             */
+            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
+                tmpType = kRegTypeByte;
+            if (fieldType == kRegTypeBoolean && srcType == kRegTypeByte)
+                fieldType = kRegTypeByte;
+
+            /* make sure the source register has the correct type */
+            if (!canConvertTo1nr(srcType, tmpType)) {
+                LOG_VFY("VFY: invalid reg type %d on sput instr (need %d)",
+                    srcType, tmpType);
+                failure = VERIFY_ERROR_GENERIC;
+                break;
+            }
+
+            verifyRegisterType(workLine, decInsn.vA, fieldType, &failure);
+
+            if (!VERIFY_OK(failure) || fieldType == kRegTypeUnknown ||
+                !checkFieldArrayStore1nr(tmpType, fieldType)) {
                 LOG_VFY("VFY: invalid sput-1nr of %s.%s (inst=%d actual=%d)",
                     staticField->clazz->descriptor,
                     staticField->name, tmpType, fieldType);
@@ -5163,35 +5263,29 @@ sput_1nr_common:
         break;
     case OP_SPUT_WIDE:
     case OP_SPUT_WIDE_JUMBO:
-        tmpType = getRegisterType(workLine, decInsn.vA);
-        {
-            RegType typeHi = getRegisterType(workLine, decInsn.vA+1);
-            checkTypeCategory(tmpType, kTypeCategory2, &failure);
-            checkWidePair(tmpType, typeHi, &failure);
-        }
-        if (VERIFY_OK(failure)) {
-            StaticField* staticField;
+        StaticField* staticField;
 
-            staticField = getStaticField(meth, decInsn.vB, &failure);
-            if (!VERIFY_OK(failure))
-                break;
-            checkFinalFieldAccess(meth, staticField, &failure);
-            if (!VERIFY_OK(failure))
-                break;
+        staticField = getStaticField(meth, decInsn.vB, &failure);
+        if (!VERIFY_OK(failure))
+            break;
+        checkFinalFieldAccess(meth, staticField, &failure);
+        if (!VERIFY_OK(failure))
+            break;
 
-            /* check the type, which should be prim */
-            switch (staticField->signature[0]) {
-            case 'D':
-            case 'J':
-                /* these are okay */
-                break;
-            default:
-                LOG_VFY("VFY: invalid sput-wide of %s.%s",
-                        staticField->clazz->descriptor,
-                        staticField->name);
-                failure = VERIFY_ERROR_GENERIC;
-                break;
-            }
+        /* check the type, which should be prim */
+        switch (staticField->signature[0]) {
+        case 'D':
+            verifyRegisterType(workLine, decInsn.vA, kRegTypeDoubleLo, &failure);
+            break;
+        case 'J':
+            verifyRegisterType(workLine, decInsn.vA, kRegTypeLongLo, &failure);
+            break;
+        default:
+            LOG_VFY("VFY: invalid sput-wide of %s.%s",
+                    staticField->clazz->descriptor,
+                    staticField->name);
+            failure = VERIFY_ERROR_GENERIC;
+            break;
         }
         break;
     case OP_SPUT_OBJECT:
@@ -6275,16 +6369,24 @@ static void dumpRegTypes(const VerifierData* vdata,
         switch (addrRegs[i]) {
         case kRegTypeUnknown:       tch = '.';  break;
         case kRegTypeConflict:      tch = 'X';  break;
-        case kRegTypeFloat:         tch = 'F';  break;
         case kRegTypeZero:          tch = '0';  break;
         case kRegTypeOne:           tch = '1';  break;
         case kRegTypeBoolean:       tch = 'Z';  break;
+        case kRegTypeConstPosByte:  tch = 'y';  break;
+        case kRegTypeConstByte:     tch = 'Y';  break;
+        case kRegTypeConstPosShort: tch = 'h';  break;
+        case kRegTypeConstShort:    tch = 'H';  break;
+        case kRegTypeConstChar:     tch = 'c';  break;
+        case kRegTypeConstInteger:  tch = 'i';  break;
         case kRegTypePosByte:       tch = 'b';  break;
         case kRegTypeByte:          tch = 'B';  break;
         case kRegTypePosShort:      tch = 's';  break;
         case kRegTypeShort:         tch = 'S';  break;
         case kRegTypeChar:          tch = 'C';  break;
         case kRegTypeInteger:       tch = 'I';  break;
+        case kRegTypeFloat:         tch = 'F';  break;
+        case kRegTypeConstLo:       tch = 'N';  break;
+        case kRegTypeConstHi:       tch = 'n';  break;
         case kRegTypeLongLo:        tch = 'J';  break;
         case kRegTypeLongHi:        tch = 'j';  break;
         case kRegTypeDoubleLo:      tch = 'D';  break;
