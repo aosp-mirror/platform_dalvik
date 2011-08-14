@@ -269,7 +269,7 @@ std::string dvmHumanReadableDescriptor(const char* descriptor) {
 std::string dvmHumanReadableType(const Object* obj)
 {
     if (obj == NULL) {
-        return "(null)";
+        return "null";
     }
     if (obj->clazz == NULL) {
         /* should only be possible right after a plain dvmMalloc() */

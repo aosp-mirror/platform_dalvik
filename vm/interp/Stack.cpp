@@ -635,12 +635,7 @@ bail:
 
 static void throwArgumentTypeMismatch(int argIndex, ClassObject* expected, DataObject* arg) {
     std::string expectedClassName(dvmHumanReadableDescriptor(expected->descriptor));
-    std::string actualClassName;
-    if (arg != NULL) {
-        actualClassName = dvmHumanReadableType(arg);
-    } else {
-        actualClassName = "null";
-    }
+    std::string actualClassName = dvmHumanReadableType(arg);
     dvmThrowExceptionFmt(gDvm.exIllegalArgumentException, "argument %d should have type %s, got %s",
             argIndex + 1, expectedClassName.c_str(), actualClassName.c_str());
 }
