@@ -237,15 +237,52 @@ public:
         }
     }
 
+    void checkFieldTypeForGet(jfieldID fid, const char* expectedSignature, bool isStatic) {
+        if (fid == NULL) {
+            LOGW("JNI WARNING: null jfieldID");
+            showLocation();
+            abortMaybe();
+        }
+
+        bool printWarn = false;
+        Field* field = (Field*) fid;
+        const char* actualSignature = field->signature;
+        if (*expectedSignature == 'L') {
+            // 'actualSignature' has the exact type.
+            // We just know we're expecting some kind of reference.
+            if (*actualSignature != 'L' && *actualSignature != '[') {
+                printWarn = true;
+            }
+        } else if (*actualSignature != *expectedSignature) {
+            printWarn = true;
+        }
+
+        if (!printWarn && isStatic && !dvmIsStaticField(field)) {
+            if (isStatic) {
+                LOGW("JNI WARNING: accessing non-static field %s as static", field->name);
+            } else {
+                LOGW("JNI WARNING: accessing static field %s as non-static", field->name);
+            }
+            printWarn = true;
+        }
+
+        if (printWarn) {
+            LOGW("JNI WARNING: %s for field '%s' of expected type %s, got %s",
+                    mFunctionName, field->name, expectedSignature, actualSignature);
+            showLocation();
+            abortMaybe();
+        }
+    }
+
     /*
      * Verify that the field is of the appropriate type.  If the field has an
      * object type, "jobj" is the object we're trying to assign into it.
      *
      * Works for both static and instance fields.
      */
-    void checkFieldType(jobject jobj, jfieldID fieldID, PrimitiveType prim, bool isStatic) {
+    void checkFieldTypeForSet(jobject jobj, jfieldID fieldID, PrimitiveType prim, bool isStatic) {
         if (fieldID == NULL) {
-            LOGW("JNI WARNING: null field ID");
+            LOGW("JNI WARNING: null jfieldID");
             showLocation();
             abortMaybe();
         }
@@ -278,8 +315,8 @@ public:
                 }
             }
         } else if (dexGetPrimitiveTypeFromDescriptorChar(field->signature[0]) != prim) {
-            LOGW("JNI WARNING: set field '%s' expected type %s, got %s",
-                    field->name, field->signature, primitiveTypeToName(prim));
+            LOGW("JNI WARNING: %s for field '%s' expected type %s, got %s",
+                    mFunctionName, field->name, field->signature, primitiveTypeToName(prim));
             printWarn = true;
         } else if (isStatic && !dvmIsStaticField(field)) {
             if (isStatic) {
@@ -1482,18 +1519,20 @@ static jfieldID Check_GetStaticFieldID(JNIEnv* env, jclass clazz,
     static _ctype Check_GetStatic##_jname##Field(JNIEnv* env, jclass clazz, jfieldID fieldID) { \
         CHECK_JNI_ENTRY(kFlag_Default, "Ecf", env, clazz, fieldID); \
         sc.checkStaticFieldID(clazz, fieldID); \
+        sc.checkFieldTypeForGet(fieldID, _type, true); \
         return CHECK_JNI_EXIT(_type, baseEnv(env)->GetStatic##_jname##Field(env, clazz, fieldID)); \
     } \
     static _ctype Check_Get##_jname##Field(JNIEnv* env, jobject obj, jfieldID fieldID) { \
         CHECK_JNI_ENTRY(kFlag_Default, "ELf", env, obj, fieldID); \
         sc.checkInstanceFieldID(obj, fieldID); \
+        sc.checkFieldTypeForGet(fieldID, _type, false); \
         return CHECK_JNI_EXIT(_type, baseEnv(env)->Get##_jname##Field(env, obj, fieldID)); \
     } \
     static void Check_SetStatic##_jname##Field(JNIEnv* env, jclass clazz, jfieldID fieldID, _ctype value) { \
         CHECK_JNI_ENTRY(kFlag_Default, "Ecf" _type, env, clazz, fieldID, value); \
         sc.checkStaticFieldID(clazz, fieldID); \
         /* "value" arg only used when type == ref */ \
-        sc.checkFieldType((jobject)(u4)value, fieldID, _ftype, true); \
+        sc.checkFieldTypeForSet((jobject)(u4)value, fieldID, _ftype, true); \
         baseEnv(env)->SetStatic##_jname##Field(env, clazz, fieldID, value); \
         CHECK_JNI_EXIT_VOID(); \
     } \
@@ -1501,7 +1540,7 @@ static jfieldID Check_GetStaticFieldID(JNIEnv* env, jclass clazz,
         CHECK_JNI_ENTRY(kFlag_Default, "ELf" _type, env, obj, fieldID, value); \
         sc.checkInstanceFieldID(obj, fieldID); \
         /* "value" arg only used when type == ref */ \
-        sc.checkFieldType((jobject)(u4) value, fieldID, _ftype, false); \
+        sc.checkFieldTypeForSet((jobject)(u4) value, fieldID, _ftype, false); \
         baseEnv(env)->Set##_jname##Field(env, obj, fieldID, value); \
         CHECK_JNI_EXIT_VOID(); \
     }
