@@ -65,19 +65,27 @@ enum {
      * Category-1nr types.  The order of these is chiseled into a couple
      * of tables, so don't add, remove, or reorder if you can avoid it.
      */
-#define kRegType1nrSTART    kRegTypeFloat
-    kRegTypeFloat,
+#define kRegType1nrSTART    kRegTypeZero
     kRegTypeZero,           /* 32-bit 0, could be Boolean, Int, Float, or Ref */
     kRegTypeOne,            /* 32-bit 1, could be Boolean, Int, Float */
     kRegTypeBoolean,        /* must be 0 or 1 */
+    kRegTypeConstPosByte,   /* const derived byte, known positive */
+    kRegTypeConstByte,      /* const derived byte */
+    kRegTypeConstPosShort,  /* const derived short, known positive */
+    kRegTypeConstShort,     /* const derived short */
+    kRegTypeConstChar,      /* const derived char */
+    kRegTypeConstInteger,   /* const derived integer */
     kRegTypePosByte,        /* byte, known positive (can become char) */
     kRegTypeByte,
     kRegTypePosShort,       /* short, known positive (can become char) */
     kRegTypeShort,
     kRegTypeChar,
     kRegTypeInteger,
-#define kRegType1nrEND      kRegTypeInteger
+    kRegTypeFloat,
+#define kRegType1nrEND      kRegTypeFloat
 
+    kRegTypeConstLo,        /* const derived wide, lower half */
+    kRegTypeConstHi,        /* const derived wide, upper half */
     kRegTypeLongLo,         /* lower-numbered register; endian-independent */
     kRegTypeLongHi,
     kRegTypeDoubleLo,
