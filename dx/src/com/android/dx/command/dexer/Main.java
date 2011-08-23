@@ -1117,22 +1117,6 @@ public class Main {
                 } else if (parser.isArg("--dump-method=")) {
                     methodToDump = parser.getLastValue();
                     jarOutput = false;
-                } else if (parser.isArg("--target-api=")) {
-                    String arg = parser.getLastValue();
-                    int value;
-                    try {
-                        value = Integer.parseInt(arg);
-                    } catch (NumberFormatException ex) {
-                        value = -1;
-                    }
-                    if (value < 1) {
-                        System.err.println("improper target-api option: " + arg);
-                        throw new UsageException();
-                    }
-                    // TODO: this currently causes confusion for unbundled apps.
-                    // What we call 'target' is what developers call 'min', so
-                    // they're accidentally turning on new opcodes.
-                    // targetApiLevel = value;
                 } else if (parser.isArg("--positions=")) {
                     String pstr = parser.getLastValue().intern();
                     if (pstr == "none") {
