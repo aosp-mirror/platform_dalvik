@@ -47,11 +47,12 @@ set jarpath=%frameworkdir%%jarfile%
 set javaOpts=
 set args=
 
-REM By default, give dx a max heap size of 1 gig. This can be overridden
-REM by using a "-JXmx..." option (see below).
-set defaultMx=-Xmx1024M
+REM By default, give dx a max heap size of 1 gig and a stack size of 1meg.
+rem This can be overridden by using "-JXmx..." and "-JXss..." options below.
+set defaultXmx=-Xmx1024M
+set defaultXss=-Xss1m
 
-REM capture all arguments that are not -J options.
+REM Capture all arguments that are not -J options.
 REM Note that when reading the input arguments with %1, the cmd.exe
 REM automagically converts --name=value arguments into 2 arguments "--name"
 REM followed by "value". Dx has been changed to know how to deal with that.
@@ -61,10 +62,15 @@ set params=
 if [%1]==[] goto endArgs
 set a=%~1
 
-    if [%defaultMx%]==[] goto notXmx
+    if [%defaultXmx%]==[] goto notXmx
     if %a:~0,5% NEQ -JXmx goto notXmx
-        set defaultMx=
+        set defaultXmx=
     :notXmx
+
+    if [%defaultXss%]==[] goto notXss
+    if %a:~0,5% NEQ -JXss goto notXss
+        set defaultXss=
+    :notXss
 
     if %a:~0,2% NEQ -J goto notJ
         set javaOpts=%javaOpts% -%a:~2%
@@ -78,6 +84,6 @@ set a=%~1
 
 :endArgs
 
-set javaOpts=%javaOpts% %defaultMx%
+set javaOpts=%javaOpts% %defaultXmx% %defaultXss%
 
 call %java_exe% %javaOpts% -Djava.ext.dirs=%frameworkdir% -jar %jarpath% %params%
