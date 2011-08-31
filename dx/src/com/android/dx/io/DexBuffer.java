@@ -203,8 +203,9 @@ public final class DexBuffer {
     }
 
     public Section appendSection(int maxByteCount, String name) {
-        Section result = new Section(name, length, length + maxByteCount);
-        length += fourByteAlign(maxByteCount);
+        int limit = fourByteAlign(length + maxByteCount);
+        Section result = new Section(name, length, limit);
+        length = limit;
         return result;
     }
 
