@@ -360,40 +360,6 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
 }
 
 /*
- * static long currentTimeMillis()
- *
- * Current time, in miliseconds.  This doesn't need to be internal to the
- * VM, but we're already handling java.lang.System here.
- */
-static void Dalvik_java_lang_System_currentTimeMillis(const u4* args,
-    JValue* pResult)
-{
-    struct timeval tv;
-
-    UNUSED_PARAMETER(args);
-
-    gettimeofday(&tv, (struct timezone *) NULL);
-    long long when = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
-
-    RETURN_LONG(when);
-}
-
-/*
- * static long nanoTime()
- *
- * Current monotonically-increasing time, in nanoseconds.  This doesn't
- * need to be internal to the VM, but we're already handling
- * java.lang.System here.
- */
-static void Dalvik_java_lang_System_nanoTime(const u4* args, JValue* pResult)
-{
-    UNUSED_PARAMETER(args);
-
-    u8 when = dvmGetRelativeTimeNsec();
-    RETURN_LONG(when);
-}
-
-/*
  * static int identityHashCode(Object x)
  *
  * Returns that hash code that the default hashCode()
@@ -407,41 +373,10 @@ static void Dalvik_java_lang_System_identityHashCode(const u4* args,
     RETURN_INT(dvmIdentityHashCode(thisPtr));
 }
 
-static void Dalvik_java_lang_System_mapLibraryName(const u4* args,
-    JValue* pResult)
-{
-    StringObject* nameObj = (StringObject*) args[0];
-    StringObject* result = NULL;
-    char* name;
-    char* mappedName;
-
-    if (nameObj == NULL) {
-        dvmThrowNullPointerException("userLibName == null");
-        RETURN_VOID();
-    }
-
-    name = dvmCreateCstrFromString(nameObj);
-    mappedName = dvmCreateSystemLibraryName(name);
-    if (mappedName != NULL) {
-        result = dvmCreateStringFromCstr(mappedName);
-        dvmReleaseTrackedAlloc((Object*) result, NULL);
-    }
-
-    free(name);
-    free(mappedName);
-    RETURN_PTR(result);
-}
-
 const DalvikNativeMethod dvm_java_lang_System[] = {
     { "arraycopy",          "(Ljava/lang/Object;ILjava/lang/Object;II)V",
         Dalvik_java_lang_System_arraycopy },
-    { "currentTimeMillis",  "()J",
-        Dalvik_java_lang_System_currentTimeMillis },
     { "identityHashCode",  "(Ljava/lang/Object;)I",
         Dalvik_java_lang_System_identityHashCode },
-    { "mapLibraryName",     "(Ljava/lang/String;)Ljava/lang/String;",
-        Dalvik_java_lang_System_mapLibraryName },
-    { "nanoTime",  "()J",
-        Dalvik_java_lang_System_nanoTime },
     { NULL, NULL, NULL },
 };
