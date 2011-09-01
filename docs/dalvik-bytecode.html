@@ -482,10 +482,12 @@
 </tr>
 <tr>
   <td>24 35c</td>
-  <td>filled-new-array {vD, vE, vF, vG, vA}, type@CCCC</td>
-  <td><code>B:</code> array size and argument word count (4 bits)<br/>
-    <code>C:</code> type index (16 bits)<br/>
-    <code>D..G, A:</code> argument registers (4 bits each)</td>
+  <td>filled-new-array {vC, vD, vE, vF, vG}, type@BBBB</td>
+  <td>
+    <code>A:</code> array size and argument word count (4 bits)<br/>
+    <code>B:</code> type index (16 bits)<br/>
+    <code>C..G:</code> argument registers (4 bits each)
+  </td>
   <td>Construct an array of the given type and size, filling it with the
     supplied contents. The type must be an array type. The array's
     contents must be single-word (that is,
@@ -742,16 +744,18 @@
 </tr>
 <tr>
   <td>6e..72 35c</td>
-  <td>invoke-<i>kind</i> {vD, vE, vF, vG, vA}, meth@CCCC<br/>
+  <td>invoke-<i>kind</i> {vC, vD, vE, vF, vG}, meth@BBBB<br/>
     6e: invoke-virtual<br/>
     6f: invoke-super<br/>
     70: invoke-direct<br/>
     71: invoke-static<br/>
     72: invoke-interface
   </td>
-  <td><code>B:</code> argument word count (4 bits)<br/>
-    <code>C:</code> method reference index (16 bits)<br/>
-    <code>D..G, A:</code> argument registers (4 bits each)</td>
+  <td>
+    <code>A:</code> argument word count (4 bits)<br/>
+    <code>B:</code> method reference index (16 bits)<br/>
+    <code>C..G:</code> argument registers (4 bits each)
+  </td>
   <td>Call the indicated method. The result (if any) may be stored
     with an appropriate <code>move-result*</code> variant as the immediately
     subsequent instruction.
@@ -988,9 +992,11 @@
 </tr>
 <tr>
   <td>00ff 41c</td>
-  <td>const-class/jumbo vBBBB, type@AAAAAAAA</td>
-  <td><code>A:</code> type index (32 bits)<br/>
-    <code>B:</code> destination register (16 bits)</td>
+  <td>const-class/jumbo vAAAA, type@BBBBBBBB</td>
+  <td>
+    <code>A:</code> destination register (16 bits)<br/>
+    <code>B:</code> type index (32 bits)
+  </td>
   <td>Move a reference to the class specified by the given index into the
     specified register. See <code>const-class</code> description above
     for details, caveats, and suggestions.
@@ -998,9 +1004,10 @@
 </tr>
 <tr>
   <td>01ff 41c</td>
-  <td>check-cast/jumbo vBBBB, type@AAAAAAAA</td>
-  <td><code>A:</code> type index (32 bits)<br/>
-    <code>B:</code> reference-bearing register (16 bits)
+  <td>check-cast/jumbo vAAAA, type@BBBBBBBB</td>
+  <td>
+    <code>A:</code> reference-bearing register (16 bits)<br/>
+    <code>B:</code> type index (32 bits)
   </td>
   <td>Throw a <code>ClassCastException</code> if the reference in the
     given register cannot be cast to the indicated type. See
@@ -1010,10 +1017,11 @@
 </tr>
 <tr>
   <td>02ff 52c</td>
-  <td>instance-of/jumbo  vBBBB, vCCCC, type@AAAAAAAA</td>
-  <td><code>A:</code> type index (32 bits)<br/>
-    <code>B:</code> destination register (16 bits)<br/>
-    <code>C:</code> reference-bearing register (16 bits)
+  <td>instance-of/jumbo  vAAAA, vBBBB, type@CCCCCCCC</td>
+  <td>
+    <code>A:</code> destination register (16 bits)<br/>
+    <code>B:</code> reference-bearing register (16 bits)<br/>
+    <code>C:</code> type index (32 bits)
   </td>
   <td>Store in the given destination register <code>1</code>
     if the indicated reference is an instance of the given type,
@@ -1024,9 +1032,10 @@
 </tr>
 <tr>
   <td>03ff 41c</td>
-  <td>new-instance/jumbo vBBBB, type@AAAAAAAA</td>
-  <td><code>A:</code> type index (32 bits)<br/>
-    <code>B:</code> destination register (16 bits)
+  <td>new-instance/jumbo vAAAA, type@BBBBBBBB</td>
+  <td>
+    <code>A:</code> destination register (16 bits)<br/>
+    <code>B:</code> type index (32 bits)
   </td>
   <td>Construct a new instance of the indicated type. See
     <code>new-instance</code> description above for details,
@@ -1035,10 +1044,11 @@
 </tr>
 <tr>
   <td>04ff 52c</td>
-  <td>new-array/jumbo vBBBB, vCCCC, type@AAAAAAAA</td>
-  <td><code>A:</code> type index (32 bits)<br/>
-    <code>B:</code> destination register (16 bits)<br/>
-    <code>C:</code> size register (16 bits)
+  <td>new-array/jumbo vAAAA, vBBBB, type@CCCCCCCC</td>
+  <td>
+    <code>A:</code> destination register (16 bits)<br/>
+    <code>B:</code> size register (16 bits)<br/>
+    <code>C:</code> type index (32 bits)
   </td>
   <td>Construct a new array of the indicated type and size. See
     <code>new-array</code> description above for details,
@@ -1047,11 +1057,12 @@
 </tr>
 <tr>
   <td>05ff 5rc</td>
-  <td>filled-new-array/jumbo {vCCCC .. vNNNN}, type@AAAAAAAA</td>
-  <td><code>A:</code> type index (32 bits)<br/>
-    <code>B:</code> array size and argument word count (16 bits)<br/>
+  <td>filled-new-array/jumbo {vCCCC .. vNNNN}, type@BBBBBBBB</td>
+  <td>
+    <code>A:</code> array size and argument word count (16 bits)<br/>
+    <code>B:</code> type index (32 bits)<br/>
     <code>C:</code> first argument register (16 bits)<br/>
-    <code>N = B + C - 1</code>
+    <code>N = A + C - 1</code>
   </td>
   <td>Construct an array of the given type and size, filling it with the
     supplied contents. See first
@@ -1061,7 +1072,7 @@
 </tr>
 <tr>
   <td>06ff..13ff 52c</td>
-  <td>i<i>instanceop</i>/jumbo vBBBB, vCCCC, field@AAAAAAAA<br/>
+  <td>i<i>instanceop</i>/jumbo vAAAA, vBBBB, field@CCCCCCCC<br/>
     06ff: iget/jumbo<br/>
     07ff: iget-wide/jumbo<br/>
     08ff: iget-object/jumbo<br/>
@@ -1077,10 +1088,10 @@
     12ff: iput-char/jumbo<br/>
     13ff: iput-short/jumbo
   </td>
-  <td><code>A:</code> instance field reference index (32 bits)<br/>
-    <code>B:</code> value register or pair; may be source or dest
-      (16 bits)<br/>
-    <code>C:</code> object register (16 bits)
+  <td>
+    <code>A:</code> value register or pair; may be source or dest (16 bits)<br/>
+    <code>B:</code> object register (16 bits)<br/>
+    <code>C:</code> instance field reference index (32 bits)
   </td>
   <td>Perform the identified object instance field operation. See
     <code>i<i>instanceop</i></code> description above for details,
@@ -1089,7 +1100,7 @@
 </tr>
 <tr>
   <td>14ff..21ff 41c</td>
-  <td>s<i>staticop</i>/jumbo vBBBB, field@AAAAAAAA<br/>
+  <td>s<i>staticop</i>/jumbo vAAAA, field@BBBBBBBB<br/>
     14ff: sget/jumbo<br/>
     15ff: sget-wide/jumbo<br/>
     16ff: sget-object/jumbo<br/>
@@ -1105,9 +1116,9 @@
     20ff: sput-char/jumbo<br/>
     21ff: sput-short/jumbo
   </td>
-  <td><code>A:</code> instance field reference index (32 bits)<br/>
-    <code>B:</code> value register or pair; may be source or dest
-      (16 bits)
+  <td>
+    <code>A:</code> value register or pair; may be source or dest (16 bits)<br/>
+    <code>B:</code> instance field reference index (32 bits)
   </td>
   <td>Perform the identified object static field operation. See
     <code>s<i>staticop</i></code> description above for details,
@@ -1116,17 +1127,18 @@
 </tr>
 <tr>
   <td>22ff..26ff 5rc</td>
-  <td>invoke-<i>kind</i>/jumbo {vCCCC .. vNNNN}, meth@AAAAAAAA<br/>
+  <td>invoke-<i>kind</i>/jumbo {vCCCC .. vNNNN}, meth@BBBBBBBB<br/>
     22ff: invoke-virtual/jumbo<br/>
     23ff: invoke-super/jumbo<br/>
     24ff: invoke-direct/jumbo<br/>
     25ff: invoke-static/jumbo<br/>
     26ff: invoke-interface/jumbo
   </td>
-  <td><code>A:</code> method reference index (32 bits)<br/>
-    <code>B:</code> argument word count (16 bits)<br/>
+  <td>
+    <code>A:</code> argument word count (16 bits)<br/>
+    <code>B:</code> method reference index (32 bits)<br/>
     <code>C:</code> first argument register (16 bits)<br/>
-    <code>N = B + C - 1</code>
+    <code>N = A + C - 1</code>
   </td>
   <td>Call the indicated method. See first <code>invoke-<i>kind</i></code>
     description above for details, caveats, and suggestions.
