@@ -33,6 +33,9 @@ import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
 
+// BEGIN android-added
+import org.apache.harmony.xnet.provider.jsse.OpenSSLMessageDigest;
+// END android-added
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Sequence;
@@ -51,6 +54,9 @@ import org.bouncycastle.asn1.x509.IssuingDistributionPoint;
 import org.bouncycastle.asn1.x509.NameConstraints;
 import org.bouncycastle.asn1.x509.PolicyInformation;
 import org.bouncycastle.asn1.x509.X509Extensions;
+// BEGIN android-added
+import org.bouncycastle.crypto.Digest;
+// END android-added
 
 /**
  * CertPathValidatorSpi implemenation for X.509 Certificate validation ala rfc 3280<br />
@@ -91,8 +97,62 @@ public class PKIXCertPathValidatorSpi extends CertPathValidatorSpi
                                         "removeFromCRL",
                                         "privilegeWithdrawn",
                                         "aACompromise" };
-    
-    
+
+    // BEGIN android-added
+    // From http://src.chromium.org/viewvc/chrome/trunk/src/net/base/x509_certificate.cc?revision=78748&view=markup
+    private static final Set<BigInteger> SERIAL_BLACKLIST = new HashSet<BigInteger>(Arrays.asList(
+        // Not a real certificate. For testing only.
+        new BigInteger(1, new byte[] {(byte)0x07,(byte)0x7a,(byte)0x59,(byte)0xbc,(byte)0xd5,(byte)0x34,(byte)0x59,(byte)0x60,(byte)0x1c,(byte)0xa6,(byte)0x90,(byte)0x72,(byte)0x67,(byte)0xa6,(byte)0xdd,(byte)0x1c}),
+        new BigInteger(1, new byte[] {(byte)0x04,(byte)0x7e,(byte)0xcb,(byte)0xe9,(byte)0xfc,(byte)0xa5,(byte)0x5f,(byte)0x7b,(byte)0xd0,(byte)0x9e,(byte)0xae,(byte)0x36,(byte)0xe1,(byte)0x0c,(byte)0xae,(byte)0x1e}),
+        new BigInteger(1, new byte[] {(byte)0xd8,(byte)0xf3,(byte)0x5f,(byte)0x4e,(byte)0xb7,(byte)0x87,(byte)0x2b,(byte)0x2d,(byte)0xab,(byte)0x06,(byte)0x92,(byte)0xe3,(byte)0x15,(byte)0x38,(byte)0x2f,(byte)0xb0}),
+        new BigInteger(1, new byte[] {(byte)0xb0,(byte)0xb7,(byte)0x13,(byte)0x3e,(byte)0xd0,(byte)0x96,(byte)0xf9,(byte)0xb5,(byte)0x6f,(byte)0xae,(byte)0x91,(byte)0xc8,(byte)0x74,(byte)0xbd,(byte)0x3a,(byte)0xc0}),
+        new BigInteger(1, new byte[] {(byte)0x92,(byte)0x39,(byte)0xd5,(byte)0x34,(byte)0x8f,(byte)0x40,(byte)0xd1,(byte)0x69,(byte)0x5a,(byte)0x74,(byte)0x54,(byte)0x70,(byte)0xe1,(byte)0xf2,(byte)0x3f,(byte)0x43}),
+        new BigInteger(1, new byte[] {(byte)0xe9,(byte)0x02,(byte)0x8b,(byte)0x95,(byte)0x78,(byte)0xe4,(byte)0x15,(byte)0xdc,(byte)0x1a,(byte)0x71,(byte)0x0a,(byte)0x2b,(byte)0x88,(byte)0x15,(byte)0x44,(byte)0x47}),
+        new BigInteger(1, new byte[] {(byte)0xd7,(byte)0x55,(byte)0x8f,(byte)0xda,(byte)0xf5,(byte)0xf1,(byte)0x10,(byte)0x5b,(byte)0xb2,(byte)0x13,(byte)0x28,(byte)0x2b,(byte)0x70,(byte)0x77,(byte)0x29,(byte)0xa3}),
+        new BigInteger(1, new byte[] {(byte)0xf5,(byte)0xc8,(byte)0x6a,(byte)0xf3,(byte)0x61,(byte)0x62,(byte)0xf1,(byte)0x3a,(byte)0x64,(byte)0xf5,(byte)0x4f,(byte)0x6d,(byte)0xc9,(byte)0x58,(byte)0x7c,(byte)0x06}),
+        new BigInteger(1, new byte[] {(byte)0x39,(byte)0x2a,(byte)0x43,(byte)0x4f,(byte)0x0e,(byte)0x07,(byte)0xdf,(byte)0x1f,(byte)0x8a,(byte)0xa3,(byte)0x05,(byte)0xde,(byte)0x34,(byte)0xe0,(byte)0xc2,(byte)0x29}),
+        new BigInteger(1, new byte[] {(byte)0x3e,(byte)0x75,(byte)0xce,(byte)0xd4,(byte)0x6b,(byte)0x69,(byte)0x30,(byte)0x21,(byte)0x21,(byte)0x88,(byte)0x30,(byte)0xae,(byte)0x86,(byte)0xa8,(byte)0x2a,(byte)0x71})
+    ));
+
+    // From http://src.chromium.org/viewvc/chrome/branches/782/src/net/base/x509_certificate.cc?r1=98750&r2=98749&pathrev=98750
+    private static final byte[][] PUBLIC_KEY_SHA1_BLACKLIST = {
+        // C=NL, O=DigiNotar, CN=DigiNotar Root CA/emailAddress=info@diginotar.nl
+        {(byte)0x41, (byte)0x0f, (byte)0x36, (byte)0x36, (byte)0x32, (byte)0x58, (byte)0xf3, (byte)0x0b, (byte)0x34, (byte)0x7d,
+         (byte)0x12, (byte)0xce, (byte)0x48, (byte)0x63, (byte)0xe4, (byte)0x33, (byte)0x43, (byte)0x78, (byte)0x06, (byte)0xa8},
+        // Subject: CN=DigiNotar Cyber CA
+        // Issuer: CN=GTE CyberTrust Global Root
+        {(byte)0xba, (byte)0x3e, (byte)0x7b, (byte)0xd3, (byte)0x8c, (byte)0xd7, (byte)0xe1, (byte)0xe6, (byte)0xb9, (byte)0xcd,
+         (byte)0x4c, (byte)0x21, (byte)0x99, (byte)0x62, (byte)0xe5, (byte)0x9d, (byte)0x7a, (byte)0x2f, (byte)0x4e, (byte)0x37},
+        // Subject: CN=DigiNotar Services 1024 CA
+        // Issuer: CN=Entrust.net
+        {(byte)0xe2, (byte)0x3b, (byte)0x8d, (byte)0x10, (byte)0x5f, (byte)0x87, (byte)0x71, (byte)0x0a, (byte)0x68, (byte)0xd9,
+         (byte)0x24, (byte)0x80, (byte)0x50, (byte)0xeb, (byte)0xef, (byte)0xc6, (byte)0x27, (byte)0xbe, (byte)0x4c, (byte)0xa6},
+        // Subject: CN=DigiNotar PKIoverheid CA Organisatie - G2
+        // Issuer: CN=Staat der Nederlanden Organisatie CA - G2
+        {(byte)0x7b, (byte)0x2e, (byte)0x16, (byte)0xbc, (byte)0x39, (byte)0xbc, (byte)0xd7, (byte)0x2b, (byte)0x45, (byte)0x6e,
+         (byte)0x9f, (byte)0x05, (byte)0x5d, (byte)0x1d, (byte)0xe6, (byte)0x15, (byte)0xb7, (byte)0x49, (byte)0x45, (byte)0xdb},
+        // Subject: CN=DigiNotar PKIoverheid CA Overheid en Bedrijven
+        // Issuer: CN=Staat der Nederlanden Overheid CA
+        {(byte)0xe8, (byte)0xf9, (byte)0x12, (byte)0x00, (byte)0xc6, (byte)0x5c, (byte)0xee, (byte)0x16, (byte)0xe0, (byte)0x39,
+         (byte)0xb9, (byte)0xf8, (byte)0x83, (byte)0x84, (byte)0x16, (byte)0x61, (byte)0x63, (byte)0x5f, (byte)0x81, (byte)0xc5}
+    };
+
+    private static boolean isPublicKeyBlackListed(PublicKey publicKey) {
+        byte[] encoded = publicKey.getEncoded();
+        Digest digest = OpenSSLMessageDigest.getInstance("SHA1");
+        digest.update(encoded, 0, encoded.length);
+        byte[] out = new byte[digest.getDigestSize()];
+        digest.doFinal(out, 0);
+
+        for (byte[] sha1 : PUBLIC_KEY_SHA1_BLACKLIST) {
+            if (Arrays.equals(out, sha1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // END android-added
+
     public CertPathValidatorResult engineValidate(
         CertPath certPath,
         CertPathParameters params)
@@ -123,6 +183,22 @@ public class PKIXCertPathValidatorSpi extends CertPathValidatorSpi
         {
             throw new CertPathValidatorException("CertPath is empty", null, certPath, 0);
         }
+        // BEGIN android-added
+        {
+            X509Certificate cert = (X509Certificate) certs.get(0);
+
+            if (cert != null) {
+                BigInteger serial = cert.getSerialNumber();
+                if (serial != null && SERIAL_BLACKLIST.contains(serial)) {
+                    // emulate CRL exception message in RFC3280CertPathUtilities.checkCRLs
+                    String message = "Certificate revocation of serial 0x" + serial.toString(16);
+                    System.out.println(message);
+                    AnnotatedException e = new AnnotatedException(message);
+                    throw new CertPathValidatorException(e.getMessage(), e, certPath, 0);
+                }
+            }
+        }
+        // END android-added
 
         //
         // (b)
@@ -306,6 +382,15 @@ public class PKIXCertPathValidatorSpi extends CertPathValidatorSpi
 
         for (index = certs.size() - 1; index >= 0 ; index--)
         {
+            // BEGIN android-added
+            if (isPublicKeyBlackListed(workingPublicKey)) {
+                 // emulate CRL exception message in RFC3280CertPathUtilities.checkCRLs
+                 String message = "Certificate revocation of public key " + workingPublicKey;
+                 System.out.println(message);
+                 AnnotatedException e = new AnnotatedException(message);
+                 throw new CertPathValidatorException(e.getMessage(), e, certPath, index);
+            }
+            // END android-added
             try
             {
                 //
