@@ -1039,7 +1039,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
         for (int i = 0; i < sourcesSize; i++) {
             RegisterSpec source = sources.get(i);
-            int sourceReg = source.getReg();
+            SsaInsn def = ssaMeth.getDefinitionForRegister(source.getReg());
+            RegisterSpec sourceDef = def.getResult();
+            int sourceReg = sourceDef.getReg();
 
             /*
              * If a source of the phi has an existing mapping, get it.
@@ -1048,7 +1050,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             if (ssaRegsMapped.get(sourceReg)) {
                 mapSet.add(mapper.oldToNew(sourceReg));
             } else {
-                ssaRegs.add(source);
+                ssaRegs.add(sourceDef);
             }
         }
 
