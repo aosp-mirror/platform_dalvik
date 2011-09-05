@@ -640,9 +640,9 @@ type_ids list. The referenced entry must be a non-array reference type.
         </td>
 
         <td>
-          A register which holds the result of a <code>new-instance</code>code>
+          A register which holds the result of a <code>new-instance</code>
           instruction must not be used if the same
-          <code>new-instance</code>code> instruction is again executed before
+          <code>new-instance</code> instruction is again executed before
           the instance is initialized.
         </td>
 
@@ -832,7 +832,7 @@ type_ids list. The referenced entry must be a non-array reference type.
         <td>
           A <code>move-result&lt;kind&gt;</code> instruction must be immediately
           preceded (in the <code>insns</code> array) by an
-          <code>&lt;invoke-kind&gt;</code> instruction. The only exception is
+          <code>invoke-&lt;kind&gt;</code> instruction. The only exception is
           the <code>move-result-object</code> instruction, which may also be
           preceded by a <code>filled-new-array</code> instruction.
         </td>
