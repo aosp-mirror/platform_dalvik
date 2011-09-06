@@ -1732,7 +1732,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
         // Are we are a safe point?
         int flags;
         flags = dexGetFlagsFromOpcode(dexOpcodeFromCodeUnit(*pc));
-        if (flags & VERIFY_GC_INST_MASK) {
+        if (flags & (VERIFY_GC_INST_MASK & ~kInstrCanThrow)) {
             // Yes, at a safe point.  Pending callback?
             if (self->interpBreak.ctl.subMode & kSubModeCallbackPending) {
                 SafePointCallback callback;
