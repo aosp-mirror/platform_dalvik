@@ -52,12 +52,17 @@ public final class Grep {
         });
     }
 
-    private EncodedValueReader newEncodedValueReader(DexBuffer.Section section) {
-        return new EncodedValueReader(section) {
-            @Override protected void visitString(int type, int index) {
-                encounterString(index);
+    private void readArray(EncodedValueReader reader) {
+        for (int i = 0, size = reader.readArray(); i < size; i++) {
+            switch (reader.peek()) {
+            case EncodedValueReader.ENCODED_STRING:
+                encounterString(reader.readString());
+                break;
+            case EncodedValueReader.ENCODED_ARRAY:
+                readArray(reader);
+                break;
             }
-        };
+        }
     }
 
     private void encounterString(int index) {
@@ -94,7 +99,7 @@ public final class Grep {
             // find the strings in encoded constants
             int staticValuesOffset = classDef.getStaticValuesOffset();
             if (staticValuesOffset != 0) {
-                newEncodedValueReader(dex.open(staticValuesOffset)).readArray();
+                readArray(new EncodedValueReader(dex.open(staticValuesOffset)));
             }
 
             // find the strings in method bodies

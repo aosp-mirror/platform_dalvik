@@ -37,6 +37,7 @@ import com.android.dx.rop.cst.CstShort;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.util.AnnotatedOutput;
+import com.android.dx.util.EncodedValueUtils;
 import com.android.dx.util.Hex;
 import java.util.Collection;
 
@@ -133,49 +134,49 @@ public final class ValueEncoder {
             case VALUE_INT:
             case VALUE_LONG: {
                 long value = ((CstLiteralBits) cst).getLongBits();
-                writeSignedIntegralValue(type, value);
+                EncodedValueUtils.writeSignedIntegralValue(out, type, value);
                 break;
             }
             case VALUE_CHAR: {
                 long value = ((CstLiteralBits) cst).getLongBits();
-                writeUnsignedIntegralValue(type, value);
+                EncodedValueUtils.writeUnsignedIntegralValue(out, type, value);
                 break;
             }
             case VALUE_FLOAT: {
                 // Shift value left 32 so that right-zero-extension works.
                 long value = ((CstFloat) cst).getLongBits() << 32;
-                writeRightZeroExtendedValue(type, value);
+                EncodedValueUtils.writeRightZeroExtendedValue(out, type, value);
                 break;
             }
             case VALUE_DOUBLE: {
                 long value = ((CstDouble) cst).getLongBits();
-                writeRightZeroExtendedValue(type, value);
+                EncodedValueUtils.writeRightZeroExtendedValue(out, type, value);
                 break;
             }
             case VALUE_STRING: {
                 int index = file.getStringIds().indexOf((CstString) cst);
-                writeUnsignedIntegralValue(type, (long) index);
+                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_TYPE: {
                 int index = file.getTypeIds().indexOf((CstType) cst);
-                writeUnsignedIntegralValue(type, (long) index);
+                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_FIELD: {
                 int index = file.getFieldIds().indexOf((CstFieldRef) cst);
-                writeUnsignedIntegralValue(type, (long) index);
+                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_METHOD: {
                 int index = file.getMethodIds().indexOf((CstMethodRef) cst);
-                writeUnsignedIntegralValue(type, (long) index);
+                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_ENUM: {
                 CstFieldRef fieldRef = ((CstEnumRef) cst).getFieldRef();
                 int index = file.getFieldIds().indexOf(fieldRef);
-                writeUnsignedIntegralValue(type, (long) index);
+                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_ARRAY: {
@@ -377,109 +378,6 @@ public final class ValueEncoder {
 
         return sb.toString();
     }
-
-    /**
-     * Helper for {@link #writeConstant}, which writes out the value
-     * for any signed integral type.
-     *
-     * @param type the type constant
-     * @param value {@code long} bits of the value
-     */
-    private void writeSignedIntegralValue(int type, long value) {
-        /*
-         * Figure out how many bits are needed to represent the value,
-         * including a sign bit: The bit count is subtracted from 65
-         * and not 64 to account for the sign bit. The xor operation
-         * has the effect of leaving non-negative values alone and
-         * unary complementing negative values (so that a leading zero
-         * count always returns a useful number for our present
-         * purpose).
-         */
-        int requiredBits =
-            65 - Long.numberOfLeadingZeros(value ^ (value >> 63));
-
-        // Round up the requiredBits to a number of bytes.
-        int requiredBytes = (requiredBits + 0x07) >> 3;
-
-        /*
-         * Write the header byte, which includes the type and
-         * requiredBytes - 1.
-         */
-        out.writeByte(type | ((requiredBytes - 1) << 5));
-
-        // Write the value, per se.
-        while (requiredBytes > 0) {
-            out.writeByte((byte) value);
-            value >>= 8;
-            requiredBytes--;
-        }
-    }
-
-    /**
-     * Helper for {@link #writeConstant}, which writes out the value
-     * for any unsigned integral type.
-     *
-     * @param type the type constant
-     * @param value {@code long} bits of the value
-     */
-    private void writeUnsignedIntegralValue(int type, long value) {
-        // Figure out how many bits are needed to represent the value.
-        int requiredBits = 64 - Long.numberOfLeadingZeros(value);
-        if (requiredBits == 0) {
-            requiredBits = 1;
-        }
-
-        // Round up the requiredBits to a number of bytes.
-        int requiredBytes = (requiredBits + 0x07) >> 3;
-
-        /*
-         * Write the header byte, which includes the type and
-         * requiredBytes - 1.
-         */
-        out.writeByte(type | ((requiredBytes - 1) << 5));
-
-        // Write the value, per se.
-        while (requiredBytes > 0) {
-            out.writeByte((byte) value);
-            value >>= 8;
-            requiredBytes--;
-        }
-    }
-
-    /**
-     * Helper for {@link #writeConstant}, which writes out a
-     * right-zero-extended value.
-     *
-     * @param type the type constant
-     * @param value {@code long} bits of the value
-     */
-    private void writeRightZeroExtendedValue(int type, long value) {
-        // Figure out how many bits are needed to represent the value.
-        int requiredBits = 64 - Long.numberOfTrailingZeros(value);
-        if (requiredBits == 0) {
-            requiredBits = 1;
-        }
-
-        // Round up the requiredBits to a number of bytes.
-        int requiredBytes = (requiredBits + 0x07) >> 3;
-
-        // Scootch the first bits to be written down to the low-order bits.
-        value >>= 64 - (requiredBytes * 8);
-
-        /*
-         * Write the header byte, which includes the type and
-         * requiredBytes - 1.
-         */
-        out.writeByte(type | ((requiredBytes - 1) << 5));
-
-        // Write the value, per se.
-        while (requiredBytes > 0) {
-            out.writeByte((byte) value);
-            value >>= 8;
-            requiredBytes--;
-        }
-    }
-
 
     /**
      * Helper for {@code addContents()} methods, which adds
