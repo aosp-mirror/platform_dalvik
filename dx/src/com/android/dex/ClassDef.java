@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
 /**
  * A type definition.
  */
 public final class ClassDef {
     public static final int NO_INDEX = -1;
-    private final DexBuffer buffer;
+    private final Dex buffer;
     private final int offset;
     private final int typeIndex;
     private final int accessFlags;
@@ -32,7 +32,7 @@ public final class ClassDef {
     private final int classDataOffset;
     private final int staticValuesOffset;
 
-    public ClassDef(DexBuffer buffer, int offset, int typeIndex, int accessFlags,
+    public ClassDef(Dex buffer, int offset, int typeIndex, int accessFlags,
             int supertypeIndex, int interfacesOffset, int sourceFileIndex,
             int annotationsOffset, int classDataOffset, int staticValuesOffset) {
         this.buffer = buffer;

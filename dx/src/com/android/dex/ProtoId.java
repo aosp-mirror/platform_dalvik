@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
-import com.android.dx.util.Unsigned;
+import com.android.dex.util.Unsigned;
 
 public final class ProtoId implements Comparable<ProtoId> {
-    private final DexBuffer buffer;
+    private final Dex dex;
     private final int shortyIndex;
     private final int returnTypeIndex;
     private final int parametersOffset;
 
-    public ProtoId(DexBuffer buffer, int shortyIndex, int returnTypeIndex, int parametersOffset) {
-        this.buffer = buffer;
+    public ProtoId(Dex dex, int shortyIndex, int returnTypeIndex, int parametersOffset) {
+        this.dex = dex;
         this.shortyIndex = shortyIndex;
         this.returnTypeIndex = returnTypeIndex;
         this.parametersOffset = parametersOffset;
@@ -50,19 +50,19 @@ public final class ProtoId implements Comparable<ProtoId> {
         return parametersOffset;
     }
 
-    public void writeTo(DexBuffer.Section out) {
+    public void writeTo(Dex.Section out) {
         out.writeInt(shortyIndex);
         out.writeInt(returnTypeIndex);
         out.writeInt(parametersOffset);
     }
 
     @Override public String toString() {
-        if (buffer == null) {
+        if (dex == null) {
             return shortyIndex + " " + returnTypeIndex + " " + parametersOffset;
         }
 
-        return buffer.strings().get(shortyIndex)
-                + ": " + buffer.typeNames().get(returnTypeIndex)
-                + " " + buffer.readTypeList(parametersOffset);
+        return dex.strings().get(shortyIndex)
+                + ": " + dex.typeNames().get(returnTypeIndex)
+                + " " + dex.readTypeList(parametersOffset);
     }
 }

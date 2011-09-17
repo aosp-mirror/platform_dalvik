@@ -22,7 +22,6 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeMap;

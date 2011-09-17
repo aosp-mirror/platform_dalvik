@@ -26,7 +26,6 @@ import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
-
 import java.util.BitSet;
 
 /**

@@ -21,10 +21,9 @@ import com.android.dx.rop.cst.CstArray;
 import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.cst.Zeroes;
-import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.AnnotatedOutput;
+import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.Writers;
-
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;

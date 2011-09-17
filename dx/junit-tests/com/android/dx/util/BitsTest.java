@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dx.util._tests;
 
+import com.android.dx.util.Bits;
 import junit.framework.TestCase;
 
 public final class BitsTest extends TestCase {

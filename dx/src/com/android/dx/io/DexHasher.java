@@ -16,6 +16,7 @@
 
 package com.android.dx.io;
 
+import com.android.dex.Dex;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -35,7 +36,7 @@ public final class DexHasher {
      * first 32 bytes of dex files are not specified to be included in the
      * signature.
      */
-    public byte[] computeSignature(DexBuffer dex) throws IOException {
+    public byte[] computeSignature(Dex dex) throws IOException {
         MessageDigest digest;
         try {
             digest = MessageDigest.getInstance("SHA-1");
@@ -52,7 +53,7 @@ public final class DexHasher {
     /**
      * Returns the checksum of all but the first 12 bytes of {@code dex}.
      */
-    public int computeChecksum(DexBuffer dex) throws IOException {
+    public int computeChecksum(Dex dex) throws IOException {
         Adler32 adler32 = new Adler32();
         int offset = CHECKSUM_OFFSET + CHECKSUM_SIZE;
 
@@ -65,7 +66,7 @@ public final class DexHasher {
      * Generates the signature and checksum of the dex file {@code out} and
      * writes them to the file.
      */
-    public void writeHashes(DexBuffer dex) throws IOException {
+    public void writeHashes(Dex dex) throws IOException {
         byte[] signature = computeSignature(dex);
         dex.open(SIGNATURE_OFFSET).write(signature);
 

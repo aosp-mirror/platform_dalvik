@@ -16,11 +16,11 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.SizeOf;
 import com.android.dx.rop.cst.CstMemberRef;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
-import com.android.dx.dex.SizeOf;
 
 /**
  * Representation of a member (field or method) reference inside a

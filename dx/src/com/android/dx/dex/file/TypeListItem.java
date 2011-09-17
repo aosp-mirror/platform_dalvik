@@ -16,7 +16,6 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;

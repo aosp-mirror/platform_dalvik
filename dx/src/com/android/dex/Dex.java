@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
-import com.android.dx.dex.DexFormat;
-import com.android.dx.dex.SizeOf;
-import com.android.dx.dex.TableOfContents;
-import com.android.dx.io.Code.CatchHandler;
-import com.android.dx.io.Code.Try;
-import com.android.dx.merge.TypeList;
-import com.android.dx.util.ByteInput;
-import com.android.dx.util.ByteOutput;
-import com.android.dx.util.DexException;
-import com.android.dx.util.FileUtils;
-import com.android.dx.util.Leb128Utils;
-import com.android.dx.util.Mutf8;
+import com.android.dex.Code.CatchHandler;
+import com.android.dex.Code.Try;
+import com.android.dex.util.ByteInput;
+import com.android.dex.util.ByteOutput;
+import com.android.dex.util.FileUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,7 +43,7 @@ import java.util.zip.ZipFile;
  * The bytes of a dex file in memory for reading and writing. All int offsets
  * are unsigned.
  */
-public final class DexBuffer {
+public final class Dex {
     private byte[] data;
     private final TableOfContents tableOfContents = new TableOfContents();
     private int length = 0;
@@ -121,7 +115,7 @@ public final class DexBuffer {
     /**
      * Creates a new dex buffer defining no classes.
      */
-    public DexBuffer() {
+    public Dex() {
         this.data = new byte[0];
     }
 
@@ -129,7 +123,7 @@ public final class DexBuffer {
      * Creates a new dex buffer that reads from {@code data}. It is an error to
      * modify {@code data} after using it to create a dex buffer.
      */
-    public DexBuffer(byte[] data) throws IOException {
+    public Dex(byte[] data) throws IOException {
         this.data = data;
         this.length = data.length;
         this.tableOfContents.readFrom(this);
@@ -138,14 +132,14 @@ public final class DexBuffer {
     /**
      * Creates a new dex buffer of the dex in {@code in}, and closes {@code in}.
      */
-    public DexBuffer(InputStream in) throws IOException {
+    public Dex(InputStream in) throws IOException {
         loadFrom(in);
     }
 
     /**
      * Creates a new dex buffer from the dex file {@code file}.
      */
-    public DexBuffer(File file) throws IOException {
+    public Dex(File file) throws IOException {
         if (FileUtils.hasArchiveSuffix(file.getName())) {
             ZipFile zipFile = new ZipFile(file);
             ZipEntry entry = zipFile.getEntry(DexFormat.DEX_IN_JAR_NAME);
@@ -258,7 +252,7 @@ public final class DexBuffer {
                     return Collections.<ClassDef>emptySet().iterator();
                 }
                 return new Iterator<ClassDef>() {
-                    private DexBuffer.Section in = open(tableOfContents.classDefs.off);
+                    private Dex.Section in = open(tableOfContents.classDefs.off);
                     private int count = 0;
 
                     public boolean hasNext() {
@@ -361,15 +355,15 @@ public final class DexBuffer {
         }
 
         public int readUleb128() {
-            return Leb128Utils.readUnsignedLeb128(this);
+            return Leb128.readUnsignedLeb128(this);
         }
 
         public int readUleb128p1() {
-            return Leb128Utils.readUnsignedLeb128(this) - 1;
+            return Leb128.readUnsignedLeb128(this) - 1;
         }
 
         public int readSleb128() {
-            return Leb128Utils.readSignedLeb128(this);
+            return Leb128.readSignedLeb128(this);
         }
 
         public TypeList readTypeList() {
@@ -379,7 +373,7 @@ public final class DexBuffer {
                 types[i] = readShort();
             }
             alignToFourBytes();
-            return new TypeList(DexBuffer.this, types);
+            return new TypeList(Dex.this, types);
         }
 
         public String readString() {
@@ -405,21 +399,21 @@ public final class DexBuffer {
             int declaringClassIndex = readUnsignedShort();
             int typeIndex = readUnsignedShort();
             int nameIndex = readInt();
-            return new FieldId(DexBuffer.this, declaringClassIndex, typeIndex, nameIndex);
+            return new FieldId(Dex.this, declaringClassIndex, typeIndex, nameIndex);
         }
 
         public MethodId readMethodId() {
             int declaringClassIndex = readUnsignedShort();
             int protoIndex = readUnsignedShort();
             int nameIndex = readInt();
-            return new MethodId(DexBuffer.this, declaringClassIndex, protoIndex, nameIndex);
+            return new MethodId(Dex.this, declaringClassIndex, protoIndex, nameIndex);
         }
 
         public ProtoId readProtoId() {
             int shortyIndex = readInt();
             int returnTypeIndex = readInt();
             int parametersOffset = readInt();
-            return new ProtoId(DexBuffer.this, shortyIndex, returnTypeIndex, parametersOffset);
+            return new ProtoId(Dex.this, shortyIndex, returnTypeIndex, parametersOffset);
         }
 
         public ClassDef readClassDef() {
@@ -432,7 +426,7 @@ public final class DexBuffer {
             int annotationsOffset = readInt();
             int classDataOffset = readInt();
             int staticValuesOffset = readInt();
-            return new ClassDef(DexBuffer.this, offset, type, accessFlags, supertype,
+            return new ClassDef(Dex.this, offset, type, accessFlags, supertype,
                     interfacesOffset, sourceFileIndex, annotationsOffset, classDataOffset,
                     staticValuesOffset);
         }
@@ -555,7 +549,7 @@ public final class DexBuffer {
             int start = position;
             new EncodedValueReader(this, EncodedValueReader.ENCODED_ANNOTATION).skipValue();
             int end = position;
-            return new Annotation(DexBuffer.this, visibility,
+            return new Annotation(Dex.this, visibility,
                     new EncodedValue(Arrays.copyOfRange(data, start, end)));
         }
 
@@ -585,7 +579,7 @@ public final class DexBuffer {
          */
         public void alignToFourBytes() {
             int unalignedCount = position;
-            position = DexBuffer.fourByteAlign(position);
+            position = Dex.fourByteAlign(position);
             for (int i = unalignedCount; i < position; i++) {
                 data[i] = 0;
             }
@@ -640,7 +634,7 @@ public final class DexBuffer {
 
         public void writeUleb128(int i) {
             try {
-                Leb128Utils.writeUnsignedLeb128(this, i);
+                Leb128.writeUnsignedLeb128(this, i);
                 ensureCapacity(0);
             } catch (ArrayIndexOutOfBoundsException e) {
                 throw new DexException("Section limit " + limit + " exceeded by " + name);
@@ -653,7 +647,7 @@ public final class DexBuffer {
 
         public void writeSleb128(int i) {
             try {
-                Leb128Utils.writeSignedLeb128(this, i);
+                Leb128.writeSignedLeb128(this, i);
                 ensureCapacity(0);
             } catch (ArrayIndexOutOfBoundsException e) {
                 throw new DexException("Section limit " + limit + " exceeded by " + name);

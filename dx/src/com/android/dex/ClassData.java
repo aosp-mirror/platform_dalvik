@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
 public final class ClassData {
     private final Field[] staticFields;

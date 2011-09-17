@@ -21,9 +21,8 @@ import com.android.dx.rop.annotation.AnnotationVisibility;
 import com.android.dx.rop.annotation.NameValuePair;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstString;
-import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.AnnotatedOutput;
-
+import com.android.dx.util.ByteArrayAnnotatedOutput;
 import java.util.Arrays;
 import java.util.Comparator;
 

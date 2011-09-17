@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
-import com.android.dx.util.ByteInput;
-import com.android.dx.util.DexException;
-import com.android.dx.util.EncodedValueUtils;
-import com.android.dx.util.Leb128Utils;
+import com.android.dex.util.ByteInput;
 
 /**
  * Pull parser for encoded values.
@@ -98,7 +95,7 @@ public final class EncodedValueReader {
     public int readArray() {
         checkType(ENCODED_ARRAY);
         type = MUST_READ;
-        return Leb128Utils.readUnsignedLeb128(in);
+        return Leb128.readUnsignedLeb128(in);
     }
 
     /**
@@ -117,8 +114,8 @@ public final class EncodedValueReader {
     public int readAnnotation() {
         checkType(ENCODED_ANNOTATION);
         type = MUST_READ;
-        annotationType = Leb128Utils.readUnsignedLeb128(in);
-        return Leb128Utils.readUnsignedLeb128(in);
+        annotationType = Leb128.readUnsignedLeb128(in);
+        return Leb128.readUnsignedLeb128(in);
     }
 
     /**
@@ -131,79 +128,79 @@ public final class EncodedValueReader {
     }
 
     public int readAnnotationName() {
-        return Leb128Utils.readUnsignedLeb128(in);
+        return Leb128.readUnsignedLeb128(in);
     }
 
     public byte readByte() {
         checkType(ENCODED_BYTE);
         type = MUST_READ;
-        return (byte) EncodedValueUtils.readSignedInt(in, arg);
+        return (byte) EncodedValueCodec.readSignedInt(in, arg);
     }
 
     public short readShort() {
         checkType(ENCODED_SHORT);
         type = MUST_READ;
-        return (short) EncodedValueUtils.readSignedInt(in, arg);
+        return (short) EncodedValueCodec.readSignedInt(in, arg);
     }
 
     public char readChar() {
         checkType(ENCODED_CHAR);
         type = MUST_READ;
-        return (char) EncodedValueUtils.readUnsignedInt(in, arg, false);
+        return (char) EncodedValueCodec.readUnsignedInt(in, arg, false);
     }
 
     public int readInt() {
         checkType(ENCODED_INT);
         type = MUST_READ;
-        return EncodedValueUtils.readSignedInt(in, arg);
+        return EncodedValueCodec.readSignedInt(in, arg);
     }
 
     public long readLong() {
         checkType(ENCODED_LONG);
         type = MUST_READ;
-        return EncodedValueUtils.readSignedLong(in, arg);
+        return EncodedValueCodec.readSignedLong(in, arg);
     }
 
     public float readFloat() {
         checkType(ENCODED_FLOAT);
         type = MUST_READ;
-        return Float.intBitsToFloat(EncodedValueUtils.readUnsignedInt(in, arg, true));
+        return Float.intBitsToFloat(EncodedValueCodec.readUnsignedInt(in, arg, true));
     }
 
     public double readDouble() {
         checkType(ENCODED_DOUBLE);
         type = MUST_READ;
-        return Double.longBitsToDouble(EncodedValueUtils.readUnsignedLong(in, arg, true));
+        return Double.longBitsToDouble(EncodedValueCodec.readUnsignedLong(in, arg, true));
     }
 
     public int readString() {
         checkType(ENCODED_STRING);
         type = MUST_READ;
-        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+        return EncodedValueCodec.readUnsignedInt(in, arg, false);
     }
 
     public int readType() {
         checkType(ENCODED_TYPE);
         type = MUST_READ;
-        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+        return EncodedValueCodec.readUnsignedInt(in, arg, false);
     }
 
     public int readField() {
         checkType(ENCODED_FIELD);
         type = MUST_READ;
-        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+        return EncodedValueCodec.readUnsignedInt(in, arg, false);
     }
 
     public int readEnum() {
         checkType(ENCODED_ENUM);
         type = MUST_READ;
-        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+        return EncodedValueCodec.readUnsignedInt(in, arg, false);
     }
 
     public int readMethod() {
         checkType(ENCODED_METHOD);
         type = MUST_READ;
-        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+        return EncodedValueCodec.readUnsignedInt(in, arg, false);
     }
 
     public void readNull() {

@@ -39,7 +39,6 @@ import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.util.Bits;
 import com.android.dx.util.IntList;
-
 import java.util.ArrayList;
 
 /**

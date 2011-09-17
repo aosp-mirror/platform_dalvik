@@ -55,7 +55,6 @@ import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
-
 import java.io.IOException;
 
 /**

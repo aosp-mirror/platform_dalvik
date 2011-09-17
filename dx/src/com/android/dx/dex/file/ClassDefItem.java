@@ -16,7 +16,7 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.dex.SizeOf;
+import com.android.dex.SizeOf;
 import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.code.AccessFlags;
@@ -31,7 +31,6 @@ import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 import com.android.dx.util.Writers;
-
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;

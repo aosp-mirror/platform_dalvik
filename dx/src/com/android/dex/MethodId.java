@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
-import com.android.dx.util.Unsigned;
+import com.android.dex.util.Unsigned;
 
 public final class MethodId implements Comparable<MethodId> {
-    private final DexBuffer buffer;
+    private final Dex dex;
     private final int declaringClassIndex;
     private final int protoIndex;
     private final int nameIndex;
 
-    public MethodId(DexBuffer buffer, int declaringClassIndex, int protoIndex, int nameIndex) {
-        this.buffer = buffer;
+    public MethodId(Dex dex, int declaringClassIndex, int protoIndex, int nameIndex) {
+        this.dex = dex;
         this.declaringClassIndex = declaringClassIndex;
         this.protoIndex = protoIndex;
         this.nameIndex = nameIndex;
@@ -53,18 +53,18 @@ public final class MethodId implements Comparable<MethodId> {
         return Unsigned.compare(protoIndex, other.protoIndex);
     }
 
-    public void writeTo(DexBuffer.Section out) {
+    public void writeTo(Dex.Section out) {
         out.writeUnsignedShort(declaringClassIndex);
         out.writeUnsignedShort(protoIndex);
         out.writeInt(nameIndex);
     }
 
     @Override public String toString() {
-        if (buffer == null) {
+        if (dex == null) {
             return declaringClassIndex + " " + protoIndex + " " + nameIndex;
         }
-        return buffer.typeNames().get(declaringClassIndex)
-                + "." + buffer.strings().get(nameIndex)
-                + buffer.readTypeList(buffer.protoIds().get(protoIndex).getParametersOffset());
+        return dex.typeNames().get(declaringClassIndex)
+                + "." + dex.strings().get(nameIndex)
+                + dex.readTypeList(dex.protoIds().get(protoIndex).getParametersOffset());
     }
 }

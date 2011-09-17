@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dex;
+
+import com.android.dex.util.ByteInput;
+import com.android.dex.util.ByteOutput;
 
 /**
  * Reads and writes DWARFv3 LEB 128 signed and unsigned integers. See DWARF v3
  * section 7.6.
  */
-public final class Leb128Utils {
-    /**
-     * This class is uninstantiable.
-     */
-    private Leb128Utils() {
-        // This space intentionally left blank.
+public final class Leb128 {
+    private Leb128() {
     }
 
     /**

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dex.util;
 
 /**
  * A byte source.

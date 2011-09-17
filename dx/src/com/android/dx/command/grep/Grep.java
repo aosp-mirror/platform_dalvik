@@ -16,12 +16,12 @@
 
 package com.android.dx.command.grep;
 
-import com.android.dx.io.ClassData;
-import com.android.dx.io.ClassDef;
+import com.android.dex.ClassData;
+import com.android.dex.ClassDef;
+import com.android.dex.Dex;
+import com.android.dex.EncodedValueReader;
+import com.android.dex.MethodId;
 import com.android.dx.io.CodeReader;
-import com.android.dx.io.DexBuffer;
-import com.android.dx.io.EncodedValueReader;
-import com.android.dx.io.MethodId;
 import com.android.dx.io.instructions.DecodedInstruction;
 import java.io.PrintWriter;
 import java.util.HashSet;
@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public final class Grep {
-    private final DexBuffer dex;
+    private final Dex dex;
     private final CodeReader codeReader = new CodeReader();
     private final Set<Integer> stringIds;
 
@@ -39,7 +39,7 @@ public final class Grep {
     private ClassDef currentClass;
     private ClassData.Method currentMethod;
 
-    public Grep(final DexBuffer dex, Pattern pattern, final PrintWriter out) {
+    public Grep(final Dex dex, Pattern pattern, final PrintWriter out) {
         this.dex = dex;
         this.out = out;
 
@@ -116,7 +116,7 @@ public final class Grep {
         return count;
     }
 
-    private Set<Integer> getStringIds(DexBuffer dex, Pattern pattern) {
+    private Set<Integer> getStringIds(Dex dex, Pattern pattern) {
         Set<Integer> stringIds = new HashSet<Integer>();
         int stringIndex = 0;
         for (String s : dex.strings()) {

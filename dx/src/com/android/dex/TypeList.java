@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.dx.merge;
+package com.android.dex;
 
-import com.android.dx.io.DexBuffer;
-import com.android.dx.util.Unsigned;
-import java.util.Arrays;
+import com.android.dex.util.Unsigned;
 
 public final class TypeList implements Comparable<TypeList> {
 
     public static final TypeList EMPTY = new TypeList(null, new short[0]);
 
-    private final DexBuffer buffer;
+    private final Dex dex;
     private final short[] types;
 
-    public TypeList(DexBuffer buffer, short[] types) {
-        this.buffer = buffer;
+    public TypeList(Dex dex, short[] types) {
+        this.dex = dex;
         this.types = types;
     }
 
@@ -49,7 +47,7 @@ public final class TypeList implements Comparable<TypeList> {
         StringBuilder result = new StringBuilder();
         result.append("(");
         for (int i = 0, typesLength = types.length; i < typesLength; i++) {
-            result.append(buffer != null ? buffer.typeNames().get(types[i]) : types[i]);
+            result.append(dex != null ? dex.typeNames().get(types[i]) : types[i]);
         }
         result.append(")");
         return result.toString();

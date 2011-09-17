@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dex;
 
-public final class ByteArrayByteInput implements ByteInput {
+import com.android.dex.util.ExceptionWithContext;
 
-    private final byte[] bytes;
-    private int position;
-
-    public ByteArrayByteInput(byte... bytes) {
-        this.bytes = bytes;
+/**
+ * Thrown when there's a format problem reading, writing, or generally
+ * processing a dex file.
+ */
+public final class DexException extends ExceptionWithContext {
+    public DexException(String message) {
+        super(message);
     }
 
-    @Override public byte readByte() {
-        return bytes[position++];
+    public DexException(Throwable cause) {
+        super(cause);
     }
 }

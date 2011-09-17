@@ -16,7 +16,6 @@
 
 package com.android.dx.rop.code;
 
-import com.android.dx.util.Bits;
 import com.android.dx.util.Hex;
 import com.android.dx.util.IntList;
 

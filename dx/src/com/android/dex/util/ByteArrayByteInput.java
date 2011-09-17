@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dex.util;
 
-/**
- * An unsigned integer.
- */
-public final class Uint implements Comparable<Uint> {
-    public final int intValue;
+public final class ByteArrayByteInput implements ByteInput {
 
-    public Uint(int value) {
-        this.intValue = value;
+    private final byte[] bytes;
+    private int position;
+
+    public ByteArrayByteInput(byte... bytes) {
+        this.bytes = bytes;
     }
 
-    public int compareTo(Uint uint) {
-        return Unsigned.compare(intValue, uint.intValue);
+    @Override public byte readByte() {
+        return bytes[position++];
     }
 }

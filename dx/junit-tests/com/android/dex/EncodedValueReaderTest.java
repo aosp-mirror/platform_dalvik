@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
-import com.android.dx.util.ByteArrayByteInput;
+import com.android.dex.util.ByteArrayByteInput;
 import junit.framework.TestCase;
 
 public final class EncodedValueReaderTest extends TestCase {

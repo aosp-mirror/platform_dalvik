@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.dex;
+package com.android.dex;
 
 /**
  * Constants that show up in and are otherwise related to {@code .dex}

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
-import com.android.dx.util.ByteArrayByteInput;
-import com.android.dx.util.ByteInput;
+import com.android.dex.util.ByteArrayByteInput;
+import com.android.dex.util.ByteInput;
 
 /**
  * An encoded value or array.
@@ -37,7 +37,7 @@ public final class EncodedValue implements Comparable<EncodedValue> {
         return data;
     }
 
-    public void writeTo(DexBuffer.Section out) {
+    public void writeTo(Dex.Section out) {
         out.write(data);
     }
 

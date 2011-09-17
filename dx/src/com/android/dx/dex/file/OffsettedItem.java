@@ -16,8 +16,8 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.util.AnnotatedOutput;
-import com.android.dx.util.ExceptionWithContext;
 
 /**
  * An item in a Dalvik file which is referenced by absolute offset.

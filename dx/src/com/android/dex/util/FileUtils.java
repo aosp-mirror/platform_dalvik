@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dex.util;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,11 +24,7 @@ import java.io.IOException;
  * File I/O utilities.
  */
 public final class FileUtils {
-    /**
-     * This class is uninstantiable.
-     */
     private FileUtils() {
-        // This space intentionally left blank.
     }
 
     /**

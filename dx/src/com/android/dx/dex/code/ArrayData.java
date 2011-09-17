@@ -19,10 +19,12 @@ package com.android.dx.dex.code;
 import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.SourcePosition;
-import com.android.dx.rop.cst.*;
+import com.android.dx.rop.cst.Constant;
+import com.android.dx.rop.cst.CstLiteral32;
+import com.android.dx.rop.cst.CstLiteral64;
+import com.android.dx.rop.cst.CstType;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
-import com.android.dx.rop.type.Type;
 import java.util.ArrayList;
 
 /**

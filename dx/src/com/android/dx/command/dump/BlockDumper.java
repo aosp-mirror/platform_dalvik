@@ -16,7 +16,6 @@
 
 package com.android.dx.command.dump;
 
-import com.android.dx.cf.attrib.AttCode;
 import com.android.dx.cf.code.BasicBlocker;
 import com.android.dx.cf.code.ByteBlock;
 import com.android.dx.cf.code.ByteBlockList;
@@ -29,20 +28,19 @@ import com.android.dx.cf.direct.DirectClassFile;
 import com.android.dx.cf.direct.StdAttributeFactory;
 import com.android.dx.cf.iface.Member;
 import com.android.dx.cf.iface.Method;
+import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.code.BasicBlock;
 import com.android.dx.rop.code.BasicBlockList;
+import com.android.dx.rop.code.DexTranslationAdvice;
 import com.android.dx.rop.code.Insn;
 import com.android.dx.rop.code.InsnList;
 import com.android.dx.rop.code.RopMethod;
-import com.android.dx.rop.code.DexTranslationAdvice;
 import com.android.dx.rop.code.TranslationAdvice;
-import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.ssa.Optimizer;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
 import com.android.dx.util.IntList;
-
 import java.io.PrintStream;
 
 /**

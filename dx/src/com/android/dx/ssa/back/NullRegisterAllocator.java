@@ -20,9 +20,6 @@ import com.android.dx.ssa.BasicRegisterMapper;
 import com.android.dx.ssa.RegisterMapper;
 import com.android.dx.ssa.SsaMethod;
 
-import java.util.BitSet;
-import java.util.ArrayList;
-
 /**
  * A register allocator that maps SSA register n to Rop register 2*n,
  * essentially preserving the original mapping and remaining agnostic

@@ -16,8 +16,8 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.dex.DexFormat;
-import com.android.dx.dex.SizeOf;
+import com.android.dex.DexFormat;
+import com.android.dex.SizeOf;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dex.util;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -22,8 +22,7 @@ import java.io.PrintWriter;
 /**
  * Exception which carries around structured context.
  */
-public class ExceptionWithContext
-        extends RuntimeException {
+public class ExceptionWithContext extends RuntimeException {
     /** {@code non-null;} human-oriented context of the exception */
     private StringBuffer context;
 

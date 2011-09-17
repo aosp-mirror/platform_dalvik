@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dex;
+
+import com.android.dex.util.ByteInput;
+import com.android.dex.util.ByteOutput;
 
 /**
- * Helpers for {@code encoded_values} and parts thereof.
+ * Read and write {@code encoded_value} primitives.
  */
-public final class EncodedValueUtils {
-    private EncodedValueUtils() {
+public final class EncodedValueCodec {
+    private EncodedValueCodec() {
     }
 
     /**

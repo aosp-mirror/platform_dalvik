@@ -16,15 +16,8 @@
 
 package com.android.dx.ssa;
 
-import com.android.dx.rop.code.RegOps;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
-import com.android.dx.rop.code.Rop;
-import com.android.dx.rop.code.PlainInsn;
-import com.android.dx.rop.code.Rops;
-import com.android.dx.rop.code.SourcePosition;
-import com.android.dx.rop.code.Insn;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;

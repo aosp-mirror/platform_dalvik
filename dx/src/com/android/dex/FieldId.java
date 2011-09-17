@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
-import com.android.dx.util.Unsigned;
+import com.android.dex.util.Unsigned;
 
 public final class FieldId implements Comparable<FieldId> {
-    private final DexBuffer buffer;
+    private final Dex dex;
     private final int declaringClassIndex;
     private final int typeIndex;
     private final int nameIndex;
 
-    public FieldId(DexBuffer buffer, int declaringClassIndex, int typeIndex, int nameIndex) {
-        this.buffer = buffer;
+    public FieldId(Dex dex, int declaringClassIndex, int typeIndex, int nameIndex) {
+        this.dex = dex;
         this.declaringClassIndex = declaringClassIndex;
         this.typeIndex = typeIndex;
         this.nameIndex = nameIndex;
@@ -53,16 +53,16 @@ public final class FieldId implements Comparable<FieldId> {
         return Unsigned.compare(typeIndex, other.typeIndex); // should always be 0
     }
 
-    public void writeTo(DexBuffer.Section out) {
+    public void writeTo(Dex.Section out) {
         out.writeUnsignedShort(declaringClassIndex);
         out.writeUnsignedShort(typeIndex);
         out.writeInt(nameIndex);
     }
 
     @Override public String toString() {
-        if (buffer == null) {
+        if (dex == null) {
             return declaringClassIndex + " " + typeIndex + " " + nameIndex;
         }
-        return buffer.typeNames().get(typeIndex) + "." + buffer.strings().get(nameIndex);
+        return dex.typeNames().get(typeIndex) + "." + dex.strings().get(nameIndex);
     }
 }

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.dx.util;
+package com.android.dex;
 
+import com.android.dex.util.ByteInput;
 import java.io.UTFDataFormatException;
 
 /**

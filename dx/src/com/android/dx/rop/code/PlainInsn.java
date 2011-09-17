@@ -16,12 +16,12 @@
 
 package com.android.dx.rop.code;
 
-import com.android.dx.rop.type.StdTypeList;
-import com.android.dx.rop.type.Type;
-import com.android.dx.rop.type.TypeList;
-import com.android.dx.rop.type.TypeBearer;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstInteger;
+import com.android.dx.rop.type.StdTypeList;
+import com.android.dx.rop.type.Type;
+import com.android.dx.rop.type.TypeBearer;
+import com.android.dx.rop.type.TypeList;
 
 /**
  * Plain instruction, which has no embedded data and which cannot possibly

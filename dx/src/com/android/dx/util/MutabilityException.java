@@ -16,6 +16,8 @@
 
 package com.android.dx.util;
 
+import com.android.dex.util.ExceptionWithContext;
+
 /**
  * Exception due to a mutability problem.
  */

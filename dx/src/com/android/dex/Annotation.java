@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dex;
 
-import static com.android.dx.io.EncodedValueReader.ENCODED_ANNOTATION;
+import static com.android.dex.EncodedValueReader.ENCODED_ANNOTATION;
 
 /**
  * An annotation.
  */
 public final class Annotation implements Comparable<Annotation> {
-    private final DexBuffer buffer;
+    private final Dex dex;
     private final byte visibility;
     private final EncodedValue encodedAnnotation;
 
-    public Annotation(DexBuffer dexBuffer, byte visibility, EncodedValue encodedAnnotation) {
-        this.buffer = dexBuffer;
+    public Annotation(Dex dex, byte visibility, EncodedValue encodedAnnotation) {
+        this.dex = dex;
         this.visibility = visibility;
         this.encodedAnnotation = encodedAnnotation;
     }
@@ -46,7 +46,7 @@ public final class Annotation implements Comparable<Annotation> {
         return reader.getAnnotationType();
     }
 
-    public void writeTo(DexBuffer.Section out) {
+    public void writeTo(Dex.Section out) {
         out.writeByte(visibility);
         encodedAnnotation.writeTo(out);
     }
@@ -56,8 +56,8 @@ public final class Annotation implements Comparable<Annotation> {
     }
 
     @Override public String toString() {
-        return buffer == null
+        return dex == null
                 ? visibility + " " + getTypeIndex()
-                : visibility + " " + buffer.typeNames().get(getTypeIndex());
+                : visibility + " " + dex.typeNames().get(getTypeIndex());
     }
 }

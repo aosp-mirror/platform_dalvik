@@ -19,7 +19,6 @@ package com.android.dx.dex.cf;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.code.TranslationAdvice;
 import com.android.dx.ssa.Optimizer;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;

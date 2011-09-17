@@ -16,7 +16,7 @@
 
 package com.android.dx.merge;
 
-import com.android.dx.io.DexBuffer;
+import com.android.dex.Dex;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -139,9 +139,9 @@ public final class DexMergeTest extends TestCase {
         int steps = 100;
         int compactWasteThreshold = 1024;
 
-        DexBuffer dexA = resourceToDexBuffer("/testdata/Basic.dex");
-        DexBuffer dexB = resourceToDexBuffer("/testdata/TryCatchFinally.dex");
-        DexBuffer merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
+        Dex dexA = resourceToDexBuffer("/testdata/Basic.dex");
+        Dex dexB = resourceToDexBuffer("/testdata/TryCatchFinally.dex");
+        Dex merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
 
         int maxLength = 0;
         for (int i = 0; i < steps; i++) {
@@ -156,9 +156,9 @@ public final class DexMergeTest extends TestCase {
     }
 
     public ClassLoader mergeAndLoad(String dexAResource, String dexBResource) throws Exception {
-        DexBuffer dexA = resourceToDexBuffer(dexAResource);
-        DexBuffer dexB = resourceToDexBuffer(dexBResource);
-        DexBuffer merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
+        Dex dexA = resourceToDexBuffer(dexAResource);
+        Dex dexB = resourceToDexBuffer(dexBResource);
+        Dex merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
         File mergedDex = File.createTempFile("DexMergeTest", ".classes.dex");
         merged.writeTo(mergedDex);
         File mergedJar = dexToJar(mergedDex);
@@ -168,8 +168,8 @@ public final class DexMergeTest extends TestCase {
                 .newInstance(mergedJar.getPath(), getClass().getClassLoader());
     }
 
-    private DexBuffer resourceToDexBuffer(String resource) throws IOException {
-        return new DexBuffer(getClass().getResourceAsStream(resource));
+    private Dex resourceToDexBuffer(String resource) throws IOException {
+        return new Dex(getClass().getResourceAsStream(resource));
     }
 
     private File dexToJar(File dex) throws IOException {

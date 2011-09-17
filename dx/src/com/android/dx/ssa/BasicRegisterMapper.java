@@ -17,7 +17,6 @@
 package com.android.dx.ssa;
 
 import com.android.dx.rop.code.RegisterSpec;
-import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.util.IntList;
 
 /**

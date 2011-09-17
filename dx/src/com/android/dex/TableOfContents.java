@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.dx.dex;
+package com.android.dex;
 
-import com.android.dx.io.DexBuffer;
-import com.android.dx.util.DexException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -67,13 +65,13 @@ public final class TableOfContents {
         signature = new byte[20];
     }
 
-    public void readFrom(DexBuffer buffer) throws IOException {
-        readHeader(buffer.open(0));
-        readMap(buffer.open(mapList.off));
+    public void readFrom(Dex dex) throws IOException {
+        readHeader(dex.open(0));
+        readMap(dex.open(mapList.off));
         computeSizesFromOffsets();
     }
 
-    private void readHeader(DexBuffer.Section headerIn) throws UnsupportedEncodingException {
+    private void readHeader(Dex.Section headerIn) throws UnsupportedEncodingException {
         byte[] magic = headerIn.readByteArray(8);
         int apiTarget = DexFormat.magicToApi(magic);
 
@@ -114,7 +112,7 @@ public final class TableOfContents {
         dataOff = headerIn.readInt();
     }
 
-    private void readMap(DexBuffer.Section in) throws IOException {
+    private void readMap(Dex.Section in) throws IOException {
         int mapSize = in.readInt();
         Section previous = null;
         for (int i = 0; i < mapSize; i++) {
@@ -165,7 +163,7 @@ public final class TableOfContents {
         throw new IllegalArgumentException("No such map item: " + type);
     }
 
-    public void writeHeader(DexBuffer.Section out) throws IOException {
+    public void writeHeader(Dex.Section out) throws IOException {
         out.write(DexFormat.apiToMagic(DexFormat.API_NO_EXTENDED_OPCODES).getBytes("UTF-8"));
         out.writeInt(checksum);
         out.write(signature);
@@ -191,7 +189,7 @@ public final class TableOfContents {
         out.writeInt(dataOff);
     }
 
-    public void writeMap(DexBuffer.Section out) throws IOException {
+    public void writeMap(Dex.Section out) throws IOException {
         int count = 0;
         for (Section section : sections) {
             if (section.exists()) {
