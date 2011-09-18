@@ -10,6 +10,7 @@ ifeq ($(TARGET_BUILD_APPS),)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
+LOCAL_SRC_FILES += $(call all-java-files-under,../../../libcore/dex/src/main/java)
 LOCAL_JAR_MANIFEST := ../etc/manifest.txt
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE:= dx
