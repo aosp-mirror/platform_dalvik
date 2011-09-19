@@ -28,7 +28,6 @@ import com.android.dex.ProtoId;
 import com.android.dex.SizeOf;
 import com.android.dex.TableOfContents;
 import com.android.dex.TypeList;
-import com.android.dx.io.DexHasher;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ public final class DexMerger {
     private final CollisionPolicy collisionPolicy;
     private final WriterSizes writerSizes;
 
-    private final Dex dexOut = new Dex();
+    private final Dex dexOut;
 
     private final Dex.Section headerOut;
 
@@ -100,6 +99,8 @@ public final class DexMerger {
         this.collisionPolicy = collisionPolicy;
         this.writerSizes = writerSizes;
 
+        dexOut = new Dex(writerSizes.size());
+
         TableOfContents aContents = dexA.getTableOfContents();
         TableOfContents bContents = dexB.getTableOfContents();
         aIndexMap = new IndexMap(dexOut, aContents);
@@ -111,46 +112,45 @@ public final class DexMerger {
         idsDefsOut = dexOut.appendSection(writerSizes.idsDefs, "ids defs");
 
         contentsOut = dexOut.getTableOfContents();
-        contentsOut.dataOff = dexOut.getLength();
+        contentsOut.dataOff = dexOut.getNextSectionStart();
 
-        contentsOut.mapList.off = dexOut.getLength();
+        contentsOut.mapList.off = dexOut.getNextSectionStart();
         contentsOut.mapList.size = 1;
         mapListOut = dexOut.appendSection(writerSizes.mapList, "map list");
 
-        contentsOut.typeLists.off = dexOut.getLength();
+        contentsOut.typeLists.off = dexOut.getNextSectionStart();
         typeListOut = dexOut.appendSection(writerSizes.typeList, "type list");
 
-        contentsOut.annotationSetRefLists.off = dexOut.getLength();
+        contentsOut.annotationSetRefLists.off = dexOut.getNextSectionStart();
         annotationSetRefListOut = dexOut.appendSection(
                 writerSizes.annotationsSetRefList, "annotation set ref list");
 
-        contentsOut.annotationSets.off = dexOut.getLength();
+        contentsOut.annotationSets.off = dexOut.getNextSectionStart();
         annotationSetOut = dexOut.appendSection(writerSizes.annotationsSet, "annotation sets");
 
-        contentsOut.classDatas.off = dexOut.getLength();
+        contentsOut.classDatas.off = dexOut.getNextSectionStart();
         classDataOut = dexOut.appendSection(writerSizes.classData, "class data");
 
-        contentsOut.codes.off = dexOut.getLength();
+        contentsOut.codes.off = dexOut.getNextSectionStart();
         codeOut = dexOut.appendSection(writerSizes.code, "code");
 
-        contentsOut.stringDatas.off = dexOut.getLength();
+        contentsOut.stringDatas.off = dexOut.getNextSectionStart();
         stringDataOut = dexOut.appendSection(writerSizes.stringData, "string data");
 
-        contentsOut.debugInfos.off = dexOut.getLength();
+        contentsOut.debugInfos.off = dexOut.getNextSectionStart();
         debugInfoOut = dexOut.appendSection(writerSizes.debugInfo, "debug info");
 
-        contentsOut.annotations.off = dexOut.getLength();
+        contentsOut.annotations.off = dexOut.getNextSectionStart();
         annotationOut = dexOut.appendSection(writerSizes.annotation, "annotation");
 
-        contentsOut.encodedArrays.off = dexOut.getLength();
+        contentsOut.encodedArrays.off = dexOut.getNextSectionStart();
         encodedArrayOut = dexOut.appendSection(writerSizes.encodedArray, "encoded array");
 
-        contentsOut.annotationsDirectories.off = dexOut.getLength();
+        contentsOut.annotationsDirectories.off = dexOut.getNextSectionStart();
         annotationsDirectoryOut = dexOut.appendSection(
                 writerSizes.annotationsDirectory, "annotations directory");
 
-        dexOut.noMoreSections();
-        contentsOut.dataSize = dexOut.getLength() - contentsOut.dataOff;
+        contentsOut.dataSize = dexOut.getNextSectionStart() - contentsOut.dataOff;
     }
 
     public void setCompactWasteThreshold(int compactWasteThreshold) {
@@ -177,7 +177,7 @@ public final class DexMerger {
         contentsOut.writeMap(mapListOut);
 
         // generate and write the hashes
-        new DexHasher().writeHashes(dexOut);
+        dexOut.writeHashes();
 
         return dexOut;
     }
@@ -195,7 +195,7 @@ public final class DexMerger {
         int wastedByteCount = writerSizes.size() - compactedSizes.size();
         if (wastedByteCount >  + compactWasteThreshold) {
             DexMerger compacter = new DexMerger(
-                    dexOut, new Dex(), CollisionPolicy.FAIL, compactedSizes);
+                    dexOut, new Dex(0), CollisionPolicy.FAIL, compactedSizes);
             result = compacter.mergeDexes();
             System.out.printf("Result compacted from %.1fKiB to %.1fKiB to save %.1fKiB%n",
                     dexOut.getLength() / 1024f,
@@ -1021,6 +1021,7 @@ public final class DexMerger {
         public WriterSizes(Dex a, Dex b) {
             plus(a.getTableOfContents(), false);
             plus(b.getTableOfContents(), false);
+            fourByteAlign();
         }
 
         public WriterSizes(DexMerger dexMerger) {
@@ -1039,7 +1040,7 @@ public final class DexMerger {
             annotation = dexMerger.annotationOut.used();
         }
 
-        public void plus(TableOfContents contents, boolean exact) {
+        private void plus(TableOfContents contents, boolean exact) {
             idsDefs += contents.stringIds.size * SizeOf.STRING_ID_ITEM
                     + contents.typeIds.size * SizeOf.TYPE_ID_ITEM
                     + contents.protoIds.size * SizeOf.PROTO_ID_ITEM
@@ -1071,9 +1072,26 @@ public final class DexMerger {
                 // all of the bytes in a debug info section may be uleb/sleb
                 debugInfo += contents.debugInfos.byteCount * 2;
             }
+        }
 
-            typeList = Dex.fourByteAlign(typeList);
-            code = Dex.fourByteAlign(code);
+        private void fourByteAlign() {
+            header = fourByteAlign(header);
+            idsDefs = fourByteAlign(idsDefs);
+            mapList = fourByteAlign(mapList);
+            typeList = fourByteAlign(typeList);
+            classData = fourByteAlign(classData);
+            code = fourByteAlign(code);
+            stringData = fourByteAlign(stringData);
+            debugInfo = fourByteAlign(debugInfo);
+            encodedArray = fourByteAlign(encodedArray);
+            annotationsDirectory = fourByteAlign(annotationsDirectory);
+            annotationsSet = fourByteAlign(annotationsSet);
+            annotationsSetRefList = fourByteAlign(annotationsSetRefList);
+            annotation = fourByteAlign(annotation);
+        }
+
+        private static int fourByteAlign(int position) {
+            return (position + 3) & ~3;
         }
 
         public int size() {
