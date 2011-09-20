@@ -117,7 +117,7 @@ int os_raiseThreadPriority()
              * The priority has been elevated.  Return the old value
              * so the caller can restore it later.
              */
-            LOGD("Elevating priority from %d to %d",
+            LOGV("Elevating priority from %d to %d",
                     oldThreadPriority, ANDROID_PRIORITY_NORMAL);
             return oldThreadPriority;
         }
@@ -131,7 +131,7 @@ void os_lowerThreadPriority(int oldThreadPriority)
         LOGW("Unable to reset priority to %d: %s",
                 oldThreadPriority, strerror(errno));
     } else {
-        LOGD("Reset priority to %d", oldThreadPriority);
+        LOGV("Reset priority to %d", oldThreadPriority);
     }
     if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
         set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
