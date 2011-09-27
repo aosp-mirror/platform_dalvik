@@ -31,7 +31,7 @@
  * quasiatomic operations that are performed on partially-overlapping
  * memory.
  *
- * None of these provide a memory barrier.
+ * Only the "Sync" versions of these provide a memory barrier.
  */
 
 /*
@@ -39,6 +39,13 @@
  * value.
  */
 extern "C" int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr);
+
+/*
+ * Swap the 64-bit value at "addr" with "value".  Returns the previous
+ * value.  Provides memory barriers.
+ */
+extern "C" int64_t dvmQuasiAtomicSwap64Sync(int64_t value,
+                                            volatile int64_t* addr);
 
 /*
  * Read the 64-bit value at "addr".

@@ -183,9 +183,7 @@ INLINE void dvmSetFieldFloatVolatile(Object* obj, int offset, float val) {
 }
 INLINE void dvmSetFieldLongVolatile(Object* obj, int offset, s8 val) {
     s8* addr = (s8*)BYTE_OFFSET(obj, offset);
-    ANDROID_MEMBAR_STORE();
-    dvmQuasiAtomicSwap64(val, addr);
-    /* post-store barrier not required due to use of atomic op or mutex */
+    dvmQuasiAtomicSwap64Sync(val, addr);
 }
 INLINE void dvmSetFieldDoubleVolatile(Object* obj, int offset, double val) {
     union { s8 lval; double dval; } alias;
@@ -335,9 +333,7 @@ INLINE void dvmSetStaticFieldFloatVolatile(StaticField* sfield, float val) {
 }
 INLINE void dvmSetStaticFieldLongVolatile(StaticField* sfield, s8 val) {
     s8* addr = &sfield->value.j;
-    ANDROID_MEMBAR_STORE();
-    dvmQuasiAtomicSwap64(val, addr);
-    /* post-store barrier not required due to use of atomic op or mutex */
+    dvmQuasiAtomicSwap64Sync(val, addr);
 }
 INLINE void dvmSetStaticFieldDoubleVolatile(StaticField* sfield, double val) {
     union { s8 lval; double dval; } alias;

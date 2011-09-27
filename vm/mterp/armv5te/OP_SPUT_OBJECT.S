@@ -1,4 +1,4 @@
-%default { "barrier":"@ no-op " }
+%default { "postbarrier":"@ no-op ", "prebarrier":"@ no-op " }
 %verify "executed"
 %verify "field already resolved"
 %verify "field not yet resolved"
@@ -22,13 +22,14 @@
     ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
     ldr     r9, [r0, #offField_clazz]   @ r9<- field->clazz
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    $barrier                            @ releasing store
+    $prebarrier                        @ releasing store
     b       .L${opcode}_end
 %break
 
 
 .L${opcode}_end:
     str     r1, [r0, #offStaticField_value]  @ field<- vAA
+    $postbarrier
     cmp     r1, #0                      @ stored a null object?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card based on obj head
     GOTO_OPCODE(ip)                     @ jump to next instruction

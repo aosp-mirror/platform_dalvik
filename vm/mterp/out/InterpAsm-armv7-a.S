@@ -2892,8 +2892,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* ------------------------------ */
@@ -2918,7 +2919,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 0
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64Sync    @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
     .endif
@@ -2947,7 +2948,7 @@ dalvik_inst:
     ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
     ldr     r9, [r0, #offField_clazz]   @ r9<- field->clazz
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                         @ releasing store
     b       .LOP_SPUT_OBJECT_end
 
 /* ------------------------------ */
@@ -2972,8 +2973,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -2999,8 +3001,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -3026,8 +3029,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -3053,8 +3057,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -7060,8 +7065,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
+    SMP_DMB_ST                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
+    SMP_DMB
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -7195,7 +7201,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 1
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64Sync    @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
     .endif
@@ -7642,7 +7648,7 @@ dalvik_inst:
     ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
     ldr     r9, [r0, #offField_clazz]   @ r9<- field->clazz
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
+    SMP_DMB_ST                        @ releasing store
     b       .LOP_SPUT_OBJECT_VOLATILE_end
 
 
@@ -8438,8 +8444,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* ------------------------------ */
@@ -8466,7 +8473,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 0
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64Sync    @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vBBBB/vBBBB+1
     .endif
@@ -8495,7 +8502,7 @@ dalvik_inst:
     ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
     ldr     r9, [r0, #offField_clazz]   @ r9<- field->clazz
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                         @ releasing store
     b       .LOP_SPUT_OBJECT_JUMBO_end
 
 /* ------------------------------ */
@@ -8523,8 +8530,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -8553,8 +8561,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -8583,8 +8592,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -8613,8 +8623,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -10678,8 +10689,9 @@ dalvik_inst:
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
+    SMP_DMB_ST                        @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    SMP_DMB
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
@@ -10708,7 +10720,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 1
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64Sync    @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vBBBB/vBBBB+1
     .endif
@@ -10739,7 +10751,7 @@ dalvik_inst:
     ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
     ldr     r9, [r0, #offField_clazz]   @ r9<- field->clazz
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
+    SMP_DMB_ST                        @ releasing store
     b       .LOP_SPUT_OBJECT_VOLATILE_JUMBO_end
 
 
@@ -11505,8 +11517,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                         @ releasing store
     str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
+    @ no-op 
     cmp     r0, #0                      @ stored a null reference?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -11528,8 +11541,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                         @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_BYTE */
@@ -11549,8 +11563,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                         @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_CHAR */
@@ -11570,8 +11585,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                         @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_SHORT */
@@ -11591,8 +11607,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                         @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_SGET */
@@ -11840,6 +11857,7 @@ dvmAsmSisterStart:
 
 .LOP_SPUT_OBJECT_end:
     str     r1, [r0, #offStaticField_value]  @ field<- vAA
+    @ no-op 
     cmp     r1, #0                      @ stored a null object?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card based on obj head
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -12349,8 +12367,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
+    SMP_DMB_ST                        @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    SMP_DMB
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_SGET_VOLATILE */
@@ -12470,7 +12489,7 @@ d2l_doconv:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if     1
     add     r2, r9, r3                  @ r2<- target address
-    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64Sync    @ stores r0/r1 into addr r2
     .else
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
     .endif
@@ -12707,8 +12726,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
+    SMP_DMB_ST                        @ releasing store
     str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
+    SMP_DMB
     cmp     r0, #0                      @ stored a null reference?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -12744,6 +12764,7 @@ d2l_doconv:
 
 .LOP_SPUT_OBJECT_VOLATILE_end:
     str     r1, [r0, #offStaticField_value]  @ field<- vAA
+    SMP_DMB
     cmp     r1, #0                      @ stored a null object?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card based on obj head
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -13318,8 +13339,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                          @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_WIDE_JUMBO */
@@ -13350,7 +13372,7 @@ d2l_doconv:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if     0
     add     r2, r9, r3                  @ r2<- target address
-    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64Sync    @ stores r0/r1 into addr r2
     .else
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
     .endif
@@ -13383,8 +13405,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                         @ releasing store
     str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
+    @ no-op 
     cmp     r0, #0                      @ stored a null reference?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -13415,8 +13438,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                          @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_BYTE_JUMBO */
@@ -13445,8 +13469,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                          @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_CHAR_JUMBO */
@@ -13475,8 +13500,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                          @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_SHORT_JUMBO */
@@ -13505,8 +13531,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
+    @ no-op                          @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    @ no-op 
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_SGET_JUMBO */
@@ -13743,6 +13770,7 @@ d2l_doconv:
 
 .LOP_SPUT_OBJECT_JUMBO_end:
     str     r1, [r0, #offStaticField_value]  @ field<- vBBBB
+    @ no-op 
     cmp     r1, #0                      @ stored a null object?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card based on obj head
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -14121,8 +14149,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
+    SMP_DMB_ST                         @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    SMP_DMB
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_WIDE_VOLATILE_JUMBO */
@@ -14153,7 +14182,7 @@ d2l_doconv:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if     1
     add     r2, r9, r3                  @ r2<- target address
-    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64Sync    @ stores r0/r1 into addr r2
     .else
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
     .endif
@@ -14186,8 +14215,9 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
+    SMP_DMB_ST                        @ releasing store
     str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
+    SMP_DMB
     cmp     r0, #0                      @ stored a null reference?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -14322,6 +14352,7 @@ d2l_doconv:
 
 .LOP_SPUT_OBJECT_VOLATILE_JUMBO_end:
     str     r1, [r0, #offStaticField_value]  @ field<- vBBBB
+    SMP_DMB
     cmp     r1, #0                      @ stored a null object?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card based on obj head
     GOTO_OPCODE(ip)                     @ jump to next instruction

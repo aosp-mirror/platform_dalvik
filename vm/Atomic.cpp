@@ -47,12 +47,29 @@ int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
             (int64_t*)addr) == 0;
 }
 
-int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
+
+static inline int64_t dvmQuasiAtomicSwap64Body(int64_t value,
+                                               volatile int64_t* addr)
 {
     int64_t oldValue;
     do {
         oldValue = *addr;
     } while (dvmQuasiAtomicCas64(oldValue, value, addr));
+    return oldValue;
+}
+
+int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
+{
+    return dvmQuasiAtomicSwap64Body(value, adddr);
+}
+
+int64_t dvmQuasiAtomicSwap64Sync(int64_t value, volatile int64_t* addr)
+{
+    int64_t oldValue;
+    ANDROID_MEMBAR_STORE();
+    oldValue = dvmQuasiAtomicSwap64Body(value, addr);
+    /* TUNING: barriers can be avoided on some architectures */
+    ANDROID_MEMBAR_FULL();
     return oldValue;
 }
 
@@ -69,7 +86,8 @@ int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr)
 #include <machine/cpu-features.h>
 
 #ifdef __ARM_HAVE_LDREXD
-int64_t dvmQuasiAtomicSwap64(int64_t newvalue, volatile int64_t* addr)
+static inline int64_t dvmQuasiAtomicSwap64Body(int64_t newvalue,
+                                               volatile int64_t* addr)
 {
     int64_t prev;
     int status;
@@ -81,6 +99,20 @@ int64_t dvmQuasiAtomicSwap64(int64_t newvalue, volatile int64_t* addr)
             : "r" (addr), "r" (newvalue)
             : "cc");
     } while (__builtin_expect(status != 0, 0));
+    return prev;
+}
+
+int64_t dvmQuasiAtomicSwap64(int64_t newvalue, volatile int64_t* addr)
+{
+    return dvmQuasiAtomicSwap64Body(newvalue, addr);
+}
+
+int64_t dvmQuasiAtomicSwap64Sync(int64_t newvalue, volatile int64_t* addr)
+{
+    int64_t prev;
+    ANDROID_MEMBAR_STORE();
+    prev = dvmQuasiAtomicSwap64Body(newvalue, addr);
+    ANDROID_MEMBAR_FULL();
     return prev;
 }
 
@@ -151,6 +183,12 @@ int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
 
     pthread_mutex_unlock(lock);
     return oldValue;
+}
+
+/* Same as dvmQuasiAtomicSwap64 - mutex handles barrier */
+int64_t dvmQuasiAtomicSwap64Sync(int64_t value, volatile int64_t* addr)
+{
+    return dvmQuasiAtomicSwap64(value, addr);
 }
 
 int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
@@ -277,6 +315,12 @@ int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
     android_atomic_release_store(0, &quasiatomic_spinlock);
 
     return result;
+}
+
+/* Same as dvmQuasiAtomicSwap64 - syscall handles barrier */
+int64_t dvmQuasiAtomicSwap64Sync(int64_t value, volatile int64_t* addr)
+{
+    return dvmQuasiAtomicSwap64(value, addr);
 }
 
 #endif /*NEED_QUASIATOMICS*/

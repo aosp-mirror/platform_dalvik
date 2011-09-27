@@ -1,4 +1,4 @@
-%default { "barrier":"@ no-op ", "sqnum":"0" }
+%default { "postbarrier":"@ no-op ", "prebarrier":"@ no-op ", "sqnum":"0" }
 %verify "executed"
 %verify "null object"
 %verify "field already resolved"
@@ -43,8 +43,9 @@
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    $barrier                            @ releasing store
+    $prebarrier                        @ releasing store
     str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
+    $postbarrier
     cmp     r0, #0                      @ stored a null reference?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction

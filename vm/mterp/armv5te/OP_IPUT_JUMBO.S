@@ -1,4 +1,4 @@
-%default { "store":"str", "barrier":"@ no-op ", "sqnum":"0" }
+%default { "store":"str", "postbarrier":"@ no-op ", "prebarrier":"@ no-op ", "sqnum":"0" }
 %verify "executed"
 %verify "null object"
 %verify "field already resolved"
@@ -52,6 +52,7 @@
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    $barrier                            @ releasing store
+    $prebarrier                         @ releasing store
     $store  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    $postbarrier
     GOTO_OPCODE(ip)                     @ jump to next instruction

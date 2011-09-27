@@ -23,7 +23,7 @@
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if $volatile
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64Sync    @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vBBBB/vBBBB+1
     .endif

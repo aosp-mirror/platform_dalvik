@@ -384,11 +384,14 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                  NULL);/* null object? */
 
     if (isVolatile) {
-        dvmCompilerGenMemBarrier(cUnit, kSY);
+        dvmCompilerGenMemBarrier(cUnit, kST);
     }
     HEAP_ACCESS_SHADOW(true);
     storeBaseDisp(cUnit, rlObj.lowReg, fieldOffset, rlSrc.lowReg, size);
     HEAP_ACCESS_SHADOW(false);
+    if (isVolatile) {
+        dvmCompilerGenMemBarrier(cUnit, kSY);
+    }
     if (isObject) {
         /* NOTE: marking card based on object head */
         markCard(cUnit, rlSrc.lowReg, rlObj.lowReg);
@@ -1756,6 +1759,9 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
             if (isSputObject) {
                 objHead = dvmCompilerAllocTemp(cUnit);
                 loadWordDisp(cUnit, tReg, OFFSETOF_MEMBER(Field, clazz), objHead);
+            }
+            if (isVolatile) {
+                dvmCompilerGenMemBarrier(cUnit, kST);
             }
             HEAP_ACCESS_SHADOW(true);
             storeWordDisp(cUnit, tReg, valOffset ,rlSrc.lowReg);
