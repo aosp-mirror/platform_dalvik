@@ -60,7 +60,7 @@ static inline int64_t dvmQuasiAtomicSwap64Body(int64_t value,
 
 int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
 {
-    return dvmQuasiAtomicSwap64Body(value, adddr);
+    return dvmQuasiAtomicSwap64Body(value, addr);
 }
 
 int64_t dvmQuasiAtomicSwap64Sync(int64_t value, volatile int64_t* addr)
