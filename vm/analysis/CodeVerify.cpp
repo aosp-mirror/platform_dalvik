@@ -1603,6 +1603,7 @@ static void verifyRegisterType(RegisterLine* registerLine, u4 vsrc,
             LOG_VFY("VFY: register1 v%u type %d, wanted %d",
                 vsrc, srcType, checkType);
             *pFailure = VERIFY_ERROR_GENERIC;
+            break;
         }
         /* Update type if result is float */
         if (checkType == kRegTypeFloat) {
@@ -1618,10 +1619,12 @@ static void verifyRegisterType(RegisterLine* registerLine, u4 vsrc,
             LOG_VFY("VFY: register2 v%u-%u values %d,%d",
                 vsrc, vsrc+1, insnRegs[vsrc], insnRegs[vsrc+1]);
             *pFailure = VERIFY_ERROR_GENERIC;
+            break;
         } else if (!canConvertTo2(srcType, checkType)) {
             LOG_VFY("VFY: register2 v%u type %d, wanted %d",
                 vsrc, srcType, checkType);
             *pFailure = VERIFY_ERROR_GENERIC;
+            break;
         }
         /* Update type if source is from const */
         if (srcType == kRegTypeConstLo) {
