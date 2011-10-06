@@ -1057,8 +1057,6 @@ static void setCommandLineDefaults()
     gDvm.heapGrowthLimit = 0;  // 0 means no growth limit
     gDvm.stackSize = kDefaultStackSize;
 
-    gDvm.concurrentMarkSweep = true;
-
     /* gDvm.jdwpSuspend = true; */
 
     /* allowed unless zygote config doesn't allow it */
