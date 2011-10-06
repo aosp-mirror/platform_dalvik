@@ -2833,11 +2833,13 @@ static void checkArrayIndexType(const Method* meth, RegType regType,
 {
     if (VERIFY_OK(*pFailure)) {
         /*
-         * The 1nr types are interchangeable at this level.  We could
-         * do something special if we can definitively identify it as a
-         * float, but there's no real value in doing so.
+         * The 1nr types are interchangeable at this level. However,
+         * check that a float is not used as the index.
          */
         checkTypeCategory(regType, kTypeCategory1nr, pFailure);
+        if (regType == kRegTypeFloat) {
+          *pFailure = VERIFY_ERROR_GENERIC;
+        }
         if (!VERIFY_OK(*pFailure)) {
             LOG_VFY_METH(meth, "Invalid reg type for array index (%d)",
                 regType);
@@ -4445,6 +4447,9 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             /* both category-1nr? */
             checkTypeCategory(type1, kTypeCategory1nr, &failure);
             checkTypeCategory(type2, kTypeCategory1nr, &failure);
+            if (type1 == kRegTypeFloat || type2 == kRegTypeFloat) {
+              failure = VERIFY_ERROR_GENERIC;
+            }
             if (!VERIFY_OK(failure)) {
                 LOG_VFY("VFY: args to if-eq/if-ne must both be refs or cat1");
                 break;
@@ -4457,14 +4462,20 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_IF_LE:
         tmpType = getRegisterType(workLine, decInsn.vA);
         checkTypeCategory(tmpType, kTypeCategory1nr, &failure);
+        if (tmpType == kRegTypeFloat) {
+          failure = VERIFY_ERROR_GENERIC;
+        }
         if (!VERIFY_OK(failure)) {
-            LOG_VFY("VFY: args to 'if' must be cat-1nr");
+            LOG_VFY("VFY: args to 'if' must be cat-1nr and not float");
             break;
         }
         tmpType = getRegisterType(workLine, decInsn.vB);
         checkTypeCategory(tmpType, kTypeCategory1nr, &failure);
+        if (tmpType == kRegTypeFloat) {
+          failure = VERIFY_ERROR_GENERIC;
+        }
         if (!VERIFY_OK(failure)) {
-            LOG_VFY("VFY: args to 'if' must be cat-1nr");
+            LOG_VFY("VFY: args to 'if' must be cat-1nr and not float");
             break;
         }
         break;
@@ -4474,8 +4485,11 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         if (regTypeIsReference(tmpType))
             break;
         checkTypeCategory(tmpType, kTypeCategory1nr, &failure);
+        if (tmpType == kRegTypeFloat) {
+          failure = VERIFY_ERROR_GENERIC;
+        }
         if (!VERIFY_OK(failure))
-            LOG_VFY("VFY: expected cat-1 arg to if");
+            LOG_VFY("VFY: expected non-float cat-1 arg to if");
         break;
     case OP_IF_LTZ:
     case OP_IF_GEZ:
@@ -4483,12 +4497,15 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_IF_LEZ:
         tmpType = getRegisterType(workLine, decInsn.vA);
         checkTypeCategory(tmpType, kTypeCategory1nr, &failure);
+        if (tmpType == kRegTypeFloat) {
+          failure = VERIFY_ERROR_GENERIC;
+        }
         if (!VERIFY_OK(failure))
-            LOG_VFY("VFY: expected cat-1 arg to if");
+            LOG_VFY("VFY: expected non-float cat-1 arg to if");
         break;
 
     case OP_AGET:
-        tmpType = kRegTypeConstInteger;
+        tmpType = kRegTypeInteger;
         goto aget_1nr_common;
     case OP_AGET_BOOLEAN:
         tmpType = kRegTypeBoolean;
@@ -4529,9 +4546,9 @@ aget_1nr_common:
                 srcType = primitiveTypeToRegType(
                                         resClass->elementClass->primitiveType);
 
-                /* differentiate between float and int */
-                if (srcType == kRegTypeFloat || srcType == kRegTypeInteger)
-                    tmpType = srcType;
+                /* correct if float */
+                if (srcType == kRegTypeFloat && tmpType == kRegTypeInteger)
+                    tmpType = kRegTypeFloat;
 
                 if (!checkFieldArrayStore1nr(tmpType, srcType)) {
                     LOG_VFY("VFY: invalid aget-1nr, array type=%d with"
@@ -4676,6 +4693,20 @@ aput_1nr_common:
             if (!VERIFY_OK(failure))
                 break;
 
+            srcType = getRegisterType(workLine, decInsn.vA);
+
+            /* correct if float */
+            if (srcType == kRegTypeFloat && tmpType == kRegTypeInteger)
+                tmpType = kRegTypeFloat;
+
+            /* make sure the source register has the correct type */
+            if (!canConvertTo1nr(srcType, tmpType)) {
+                LOG_VFY("VFY: invalid reg type %d on aput instr (need %d)",
+                    srcType, tmpType);
+                failure = VERIFY_ERROR_GENERIC;
+                break;
+            }
+
             resClass = getClassFromRegister(workLine, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
@@ -4697,21 +4728,12 @@ aput_1nr_common:
                                     resClass->elementClass->primitiveType);
 
             /* correct if float */
-            if (dstType == kRegTypeFloat)
+            if (dstType == kRegTypeFloat && tmpType == kRegTypeInteger)
                 tmpType = kRegTypeFloat;
-
-            /* make sure the source register has the correct type */
-            srcType = getRegisterType(workLine, decInsn.vA);
-            if (!canConvertTo1nr(srcType, tmpType)) {
-                LOG_VFY("VFY: invalid reg type %d on aput instr (need %d)",
-                    srcType, tmpType);
-                failure = VERIFY_ERROR_GENERIC;
-                break;
-            }
 
             verifyRegisterType(workLine, decInsn.vA, dstType, &failure);
 
-            if (!VERIFY_OK(failure) || dstType == kRegTypeUnknown ||
+            if (dstType == kRegTypeUnknown ||
                 !checkFieldArrayStore1nr(tmpType, dstType)) {
                 LOG_VFY("VFY: invalid aput-1nr on %s (inst=%d dst=%d)",
                         resClass->descriptor, tmpType, dstType);
@@ -4848,7 +4870,7 @@ iget_1nr_common:
             fieldType = primSigCharToRegType(instField->signature[0]);
 
             /* correct if float */
-            if (fieldType == kRegTypeFloat)
+            if (fieldType == kRegTypeFloat && tmpType == kRegTypeInteger)
                 tmpType = kRegTypeFloat;
 
             if (fieldType == kRegTypeUnknown ||
@@ -4949,6 +4971,27 @@ iput_1nr_common:
             RegType srcType, fieldType, objType;
             InstField* instField;
 
+            srcType = getRegisterType(workLine, decInsn.vA);
+
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields.
+             */
+            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
+                tmpType = kRegTypeByte;
+
+            /* correct if float */
+            if (srcType == kRegTypeFloat && tmpType == kRegTypeInteger)
+              tmpType = kRegTypeFloat;
+
+            /* make sure the source register has the correct type */
+            if (!canConvertTo1nr(srcType, tmpType)) {
+                LOG_VFY("VFY: invalid reg type %d on iput instr (need %d)",
+                    srcType, tmpType);
+                failure = VERIFY_ERROR_GENERIC;
+                break;
+            }
+
             objType = getRegisterType(workLine, decInsn.vB);
             instField = getInstField(meth, uninitMap, objType, decInsn.vC,
                             &failure);
@@ -4960,32 +5003,17 @@ iput_1nr_common:
 
             /* get type of field we're storing into */
             fieldType = primSigCharToRegType(instField->signature[0]);
-            srcType = getRegisterType(workLine, decInsn.vA);
 
             /* correct if float */
-            if (fieldType == kRegTypeFloat)
+            if (fieldType == kRegTypeFloat && tmpType == kRegTypeInteger)
                 tmpType = kRegTypeFloat;
 
-            /*
-             * javac generates synthetic functions that write byte values
-             * into boolean fields.
-             */
-            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
-                tmpType = kRegTypeByte;
             if (fieldType == kRegTypeBoolean && srcType == kRegTypeByte)
                 fieldType = kRegTypeByte;
 
-            /* make sure the source register has the correct type */
-            if (!canConvertTo1nr(srcType, tmpType)) {
-                LOG_VFY("VFY: invalid reg type %d on iput instr (need %d)",
-                    srcType, tmpType);
-                failure = VERIFY_ERROR_GENERIC;
-                break;
-            }
-
             verifyRegisterType(workLine, decInsn.vA, fieldType, &failure);
 
-            if (!VERIFY_OK(failure) || fieldType == kRegTypeUnknown ||
+            if (fieldType == kRegTypeUnknown ||
                 !checkFieldArrayStore1nr(tmpType, fieldType))
             {
                 LOG_VFY("VFY: invalid iput-1nr of %s.%s (inst=%d field=%d)",
@@ -4998,6 +5026,15 @@ iput_1nr_common:
         break;
     case OP_IPUT_WIDE:
     case OP_IPUT_WIDE_JUMBO:
+        tmpType = getRegisterType(workLine, decInsn.vA);
+        {
+            RegType typeHi = getRegisterType(workLine, decInsn.vA + 1);
+            checkTypeCategory(tmpType, kTypeCategory2, &failure);
+            checkWidePair(tmpType, typeHi, &failure);
+        }
+        if (!VERIFY_OK(failure))
+            break;
+
         InstField* instField;
         RegType objType;
 
@@ -5121,7 +5158,7 @@ sget_1nr_common:
             fieldType = primSigCharToRegType(staticField->signature[0]);
 
             /* correct if float */
-            if (fieldType == kRegTypeFloat)
+            if (fieldType == kRegTypeFloat && tmpType == kRegTypeInteger)
                 tmpType = kRegTypeFloat;
 
             if (!checkFieldArrayStore1nr(tmpType, fieldType)) {
@@ -5214,6 +5251,27 @@ sput_1nr_common:
             RegType srcType, fieldType;
             StaticField* staticField;
 
+            srcType = getRegisterType(workLine, decInsn.vA);
+
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields.
+             */
+            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
+                tmpType = kRegTypeByte;
+
+            /* correct if float */
+            if (srcType == kRegTypeFloat && tmpType == kRegTypeInteger)
+              tmpType = kRegTypeFloat;
+
+            /* make sure the source register has the correct type */
+            if (!canConvertTo1nr(srcType, tmpType)) {
+                LOG_VFY("VFY: invalid reg type %d on sput instr (need %d)",
+                    srcType, tmpType);
+                failure = VERIFY_ERROR_GENERIC;
+                break;
+            }
+
             staticField = getStaticField(meth, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
@@ -5229,32 +5287,17 @@ sput_1nr_common:
              * can lead to trouble if we do 16-bit writes.
              */
             fieldType = primSigCharToRegType(staticField->signature[0]);
-            srcType = getRegisterType(workLine, decInsn.vA);
 
             /* correct if float */
-            if (fieldType == kRegTypeFloat)
+            if (fieldType == kRegTypeFloat && tmpType == kRegTypeInteger)
                 tmpType = kRegTypeFloat;
 
-            /*
-             * javac generates synthetic functions that write byte values
-             * into boolean fields.
-             */
-            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
-                tmpType = kRegTypeByte;
             if (fieldType == kRegTypeBoolean && srcType == kRegTypeByte)
                 fieldType = kRegTypeByte;
 
-            /* make sure the source register has the correct type */
-            if (!canConvertTo1nr(srcType, tmpType)) {
-                LOG_VFY("VFY: invalid reg type %d on sput instr (need %d)",
-                    srcType, tmpType);
-                failure = VERIFY_ERROR_GENERIC;
-                break;
-            }
-
             verifyRegisterType(workLine, decInsn.vA, fieldType, &failure);
 
-            if (!VERIFY_OK(failure) || fieldType == kRegTypeUnknown ||
+            if (fieldType == kRegTypeUnknown ||
                 !checkFieldArrayStore1nr(tmpType, fieldType)) {
                 LOG_VFY("VFY: invalid sput-1nr of %s.%s (inst=%d actual=%d)",
                     staticField->clazz->descriptor,
@@ -5266,6 +5309,15 @@ sput_1nr_common:
         break;
     case OP_SPUT_WIDE:
     case OP_SPUT_WIDE_JUMBO:
+        tmpType = getRegisterType(workLine, decInsn.vA);
+        {
+            RegType typeHi = getRegisterType(workLine, decInsn.vA + 1);
+            checkTypeCategory(tmpType, kTypeCategory2, &failure);
+            checkWidePair(tmpType, typeHi, &failure);
+        }
+        if (!VERIFY_OK(failure))
+            break;
+
         StaticField* staticField;
 
         staticField = getStaticField(meth, decInsn.vB, &failure);
