@@ -923,7 +923,7 @@ private:
         const char* errorKind = NULL;
         u1 utf8 = checkUtfBytes(bytes, &errorKind);
         if (errorKind != NULL) {
-            LOGW("JNI WARNING: input is not valid UTF-8: illegal %s byte %#x", errorKind, utf8);
+            LOGW("JNI WARNING: input is not valid Modified UTF-8: illegal %s byte %#x", errorKind, utf8);
             LOGW("             string: '%s'", bytes);
             showLocation();
             abortMaybe();
