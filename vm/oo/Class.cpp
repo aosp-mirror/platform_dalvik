@@ -738,6 +738,7 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
          * case, so just bail out (reasonably) gracefully.
          */
         LOGE("No valid entries found in bootclasspath '%s'", pathStr);
+        gDvm.lastMessage = pathStr;
         dvmAbort();
     }
 
