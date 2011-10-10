@@ -49,7 +49,7 @@ struct GcMarkContext {
 bool dvmHeapBeginMarkStep(bool isPartial);
 void dvmHeapMarkRootSet(void);
 void dvmHeapReMarkRootSet(void);
-void dvmHeapScanMarkedObjects(bool isPartial);
+void dvmHeapScanMarkedObjects(void);
 void dvmHeapReScanMarkedObjects(void);
 void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
                               Object **weakReferences,

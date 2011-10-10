@@ -44,7 +44,11 @@
  * byte is equal to GC_DIRTY_CARD. See dvmCardTableStartup for details.
  */
 
-static bool allocCardTable(size_t heapMaximumSize)
+/*
+ * Initializes the card table; must be called before any other
+ * dvmCardTable*() functions.
+ */
+bool dvmCardTableStartup(size_t heapMaximumSize)
 {
     size_t length;
     void *allocBase;
@@ -56,7 +60,6 @@ static bool allocCardTable(size_t heapMaximumSize)
 
     /* Set up the card table */
     length = heapMaximumSize / GC_CARD_SIZE;
-    assert(length * GC_CARD_SIZE == heapMaximumSize);
     /* Allocate an extra 256 bytes to allow fixed low-byte of base */
     allocBase = dvmAllocRegion(length + 0x100, PROT_READ | PROT_WRITE,
                             "dalvik-card-table");
@@ -82,108 +85,19 @@ static bool allocCardTable(size_t heapMaximumSize)
     return true;
 }
 
-static bool allocModUnionTable(size_t heapSize)
-{
-    size_t cardsPerHeap = heapSize / GC_CARD_SIZE;
-    size_t byteLength = cardsPerHeap / CHAR_BIT;
-    assert(byteLength * GC_CARD_SIZE * CHAR_BIT == heapSize);
-    int prot = PROT_READ | PROT_WRITE;
-    void *allocBase = dvmAllocRegion(byteLength, prot, "dalvik-modunion-table");
-    if (allocBase == NULL) {
-        return false;
-    }
-    GcHeap *gcHeap = gDvm.gcHeap;
-    gcHeap->modUnionTableBase = (u1*)allocBase;
-    gcHeap->modUnionTableLength = byteLength;
-    return true;
-}
-
-/*
- * Initializes the card table; must be called before any other
- * dvmCardTable*() functions.
- */
-bool dvmCardTableStartup(size_t heapMaximumSize)
-{
-    return allocCardTable(heapMaximumSize) && allocModUnionTable(heapMaximumSize);
-}
-
-/*
- * Releases storage for the card table and clears its globals.
- */
-static void freeCardTable()
-{
-    if (gDvm.biasedCardTableBase == NULL) {
-        return;
-    }
-    gDvm.biasedCardTableBase = NULL;
-    munmap(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength + 0x100);
-    gDvm.gcHeap->cardTableBase = NULL;
-    gDvm.gcHeap->cardTableLength = 0;
-}
-
-/*
- * Releases storage for the mod union table and clears its globals.
- */
-static void freeModUnionTable()
-{
-    if (gDvm.gcHeap->modUnionTableBase == NULL) {
-        return;
-    }
-    munmap(gDvm.gcHeap->modUnionTableBase, gDvm.gcHeap->modUnionTableLength);
-    gDvm.gcHeap->modUnionTableBase = NULL;
-    gDvm.gcHeap->modUnionTableLength = 0;
-}
-
 /*
  * Tears down the entire CardTable.
  */
 void dvmCardTableShutdown()
 {
-    freeCardTable();
-    freeModUnionTable();
-}
-
-/*
- * Set a bit in the mod union table for each dirty byte in the card
- * table.  Clears the corresponding byte in the card table.
- */
-static void moveCardsToModUnion(u1 *base, u1 *limit)
-{
-    GcHeap *h = gDvm.gcHeap;
-    u1 *baseCard = dvmCardFromAddr(base);
-    u1 *limitCard = dvmCardFromAddr(limit);
-    u4 *bits = (u4*)h->modUnionTableBase;
-    u1 *heapBase = (u1*)dvmHeapSourceGetBase();
-    for (u1 *card = baseCard; card < limitCard; ++card) {
-        if (*card == GC_CARD_CLEAN) {
-            continue;
-        }
-        u1 *addr = (u1*)dvmAddrFromCard(card);
-        u1 *biased = (u1*)((uintptr_t)addr - (uintptr_t)heapBase);
-        size_t offset = (uintptr_t)biased / GC_CARD_SIZE / HB_BITS_PER_WORD;
-        u4 bit = 1 << (((uintptr_t)biased / GC_CARD_SIZE) % HB_BITS_PER_WORD);
-        assert((u1*)&bits[offset] >= h->modUnionTableBase);
-        assert((u1*)&bits[offset] < h->modUnionTableBase+h->modUnionTableLength);
-        bits[offset] |= bit;
-        *card = GC_CARD_CLEAN;
-    }
+    gDvm.biasedCardTableBase = NULL;
+    munmap(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength);
 }
 
 void dvmClearCardTable()
 {
-    uintptr_t base[HEAP_SOURCE_MAX_HEAP_COUNT];
-    uintptr_t limit[HEAP_SOURCE_MAX_HEAP_COUNT];
-    size_t numHeaps = dvmHeapSourceGetNumHeaps();
-    dvmHeapSourceGetRegions(base, NULL, limit, numHeaps);
-    for (size_t i = 0; i < numHeaps; ++i) {
-        if (i != 0) {
-            moveCardsToModUnion((u1*)base[i], (u1*)limit[i]);
-        } else {
-            u1 *baseCard = dvmCardFromAddr((u1*)base[i]);
-            size_t length = (limit[i] - base[i]) >> GC_CARD_SHIFT;
-            memset(baseCard, GC_CARD_CLEAN, length);
-        }
-    }
+    assert(gDvm.gcHeap->cardTableBase != NULL);
+    memset(gDvm.gcHeap->cardTableBase, GC_CARD_CLEAN, gDvm.gcHeap->cardTableLength);
 }
 
 /*
