@@ -722,6 +722,9 @@ struct DvmGlobals {
 #ifdef VERIFIER_STATS
     VerifierStats verifierStats;
 #endif
+
+    /* String pointed here will be deposited on the stack frame of dvmAbort */
+    const char *lastMessage;
 };
 
 extern struct DvmGlobals gDvm;

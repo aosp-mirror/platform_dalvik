@@ -1791,6 +1791,43 @@ void dvmPrintNativeBackTrace() {
  */
 void dvmAbort()
 {
+    /*
+     * Leave gDvm.lastMessage on the stack frame which can be decoded in the
+     * tombstone file. This is for situations where we only have tombstone files
+     * but no logs (ie b/5372634).
+     *
+     * For example, in the tombstone file you usually see this:
+     *
+     *   #00  pc 00050ef2  /system/lib/libdvm.so (dvmAbort)
+     *   #01  pc 00077670  /system/lib/libdvm.so (_Z15dvmClassStartupv)
+     *     :
+     *
+     * stack:
+     *     :
+     * #00 beed2658  00000000
+     *     beed265c  7379732f
+     *     beed2660  2f6d6574
+     *     beed2664  6d617266
+     *     beed2668  726f7765
+     *     beed266c  6f632f6b
+     *     beed2670  6a2e6572
+     *     beed2674  00007261
+     *     beed2678  00000000
+     *
+     * The ascii values between beed265c and beed2674 belongs to messageBuffer
+     * and it can be decoded as "/system/framework/core.jar".
+     */
+    const int messageLength = 512;
+    char messageBuffer[messageLength] = {0};
+    int result = 0;
+
+    snprintf(messageBuffer, messageLength, "%s", gDvm.lastMessage);
+
+    /* So that messageBuffer[] looks like useful stuff to the compiler */
+    for (int i = 0; i < messageLength && messageBuffer[i]; i++) {
+        result += messageBuffer[i];
+    }
+
     LOGE("VM aborting");
 
     fflush(NULL);       // flush all open file buffers
@@ -1815,7 +1852,7 @@ void dvmAbort()
      * We can also trivially tell the difference between a VM crash and
      * a deliberate abort by looking at the fault address.
      */
-    *((char*)0xdeadd00d) = 38;
+    *((char*)0xdeadd00d) = result;
     abort();
 
     /* notreached */
