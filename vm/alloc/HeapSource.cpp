@@ -605,6 +605,8 @@ bool dvmHeapSourceStartupAfterZygote()
  */
 bool dvmHeapSourceStartupBeforeFork()
 {
+    HeapSource *hs = gHs; // use a local to avoid the implicit "volatile"
+
     HS_BOILERPLATE();
 
     assert(gDvm.zygote);
@@ -615,8 +617,7 @@ bool dvmHeapSourceStartupBeforeFork()
          */
         LOGV("Splitting out new zygote heap");
         gDvm.newZygoteHeapAllocated = true;
-        dvmClearCardTable();
-        return addNewHeap(gHs);
+        return addNewHeap(hs);
     }
     return true;
 }
@@ -701,8 +702,7 @@ size_t dvmHeapSourceGetValue(HeapSourceValueSpec spec, size_t perHeapStats[],
     return total;
 }
 
-void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, uintptr_t *limit,
-                             size_t numHeaps)
+void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, size_t numHeaps)
 {
     HeapSource *hs = gHs;
 
@@ -711,12 +711,7 @@ void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, uintptr_t *limit,
     assert(numHeaps <= hs->numHeaps);
     for (size_t i = 0; i < numHeaps; ++i) {
         base[i] = (uintptr_t)hs->heaps[i].base;
-        if (max != NULL) {
-            max[i] = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
-        }
-        if (limit != NULL) {
-            limit[i] = (uintptr_t)hs->heaps[i].limit;
-        }
+        max[i] = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
     }
 }
 

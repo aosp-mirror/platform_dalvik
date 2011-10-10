@@ -500,7 +500,6 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     /* Mark the set of objects that are strongly reachable from the roots.
      */
     LOGD_HEAP("Marking...");
-    dvmClearCardTable();
     dvmHeapMarkRootSet();
 
     /* dvmHeapScanMarkedObjects() will build the lists of known
@@ -518,6 +517,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
          * heap to allow mutator threads to allocate from free space.
          */
         rootEnd = dvmGetRelativeTimeMsec();
+        dvmClearCardTable();
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
     }
@@ -527,7 +527,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
      * objects will also be marked.
      */
     LOGD_HEAP("Recursing...");
-    dvmHeapScanMarkedObjects(spec->isPartial);
+    dvmHeapScanMarkedObjects();
 
     if (spec->isConcurrent) {
         /*
