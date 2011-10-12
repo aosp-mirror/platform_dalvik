@@ -232,7 +232,7 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag)
         if (*cp == '\n' || (*cp == '\r' && i != 0 && *(cp+1) != '\n')) {
             *cp = '\0';
             //LOGW("GOT %d at %d '%s'", cp - start, start - data->buf, start);
-            LOG(LOG_INFO, tag, "%s", start);
+            ALOG(LOG_INFO, tag, "%s", start);
             start = cp+1;
         }
     }
@@ -242,7 +242,7 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag)
      */
     if (start == data->buf && data->count == kMaxLine) {
         data->buf[kMaxLine] = '\0';
-        LOG(LOG_INFO, tag, "%s!", start);
+        ALOG(LOG_INFO, tag, "%s!", start);
         start = cp + kMaxLine;
     }
 

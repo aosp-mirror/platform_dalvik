@@ -205,7 +205,7 @@ static void logClassLoadWithTime(char type, ClassObject* clazz, u8 time) {
     pid_t pid = getpid();
     unsigned int tid = (unsigned int) pthread_self();
 
-    LOG(LOG_INFO, "PRELOAD", "%c%d:%d:%d:%s:%d:%s:%lld", type, ppid, pid, tid,
+    ALOG(LOG_INFO, "PRELOAD", "%c%d:%d:%d:%s:%d:%s:%lld", type, ppid, pid, tid,
         get_process_name(), (int) clazz->classLoader, clazz->descriptor,
         time);
 }
@@ -1604,7 +1604,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
             dvmUnlockObject(self, (Object*) clazz);
 
 #if LOG_CLASS_LOADING
-            LOG(LOG_INFO, "DVMLINK FAILED FOR CLASS ", "%s in %s",
+            ALOG(LOG_INFO, "DVMLINK FAILED FOR CLASS ", "%s in %s",
                 clazz->descriptor, get_process_name());
 
             /*

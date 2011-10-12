@@ -53,38 +53,38 @@ static void sigchldHandler(int s)
 
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         /* Log process-death status that we care about.  In general it is not
-           safe to call LOG(...) from a signal handler because of possible
+           safe to call ALOG(...) from a signal handler because of possible
            reentrancy.  However, we know a priori that the current implementation
-           of LOG() is safe to call from a SIGCHLD handler in the zygote process.
-           If the LOG() implementation changes its locking strategy or its use
+           of ALOG() is safe to call from a SIGCHLD handler in the zygote process.
+           If the ALOG() implementation changes its locking strategy or its use
            of syscalls within the lazy-init critical section, its use here may
            become unsafe. */
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status)) {
-                LOG(LOG_DEBUG, ZYGOTE_LOG_TAG, "Process %d exited cleanly (%d)",
+                ALOG(LOG_DEBUG, ZYGOTE_LOG_TAG, "Process %d exited cleanly (%d)",
                     (int) pid, WEXITSTATUS(status));
             } else {
                 IF_LOGV(/*should use ZYGOTE_LOG_TAG*/) {
-                    LOG(LOG_VERBOSE, ZYGOTE_LOG_TAG,
+                    ALOG(LOG_VERBOSE, ZYGOTE_LOG_TAG,
                         "Process %d exited cleanly (%d)",
                         (int) pid, WEXITSTATUS(status));
                 }
             }
         } else if (WIFSIGNALED(status)) {
             if (WTERMSIG(status) != SIGKILL) {
-                LOG(LOG_DEBUG, ZYGOTE_LOG_TAG,
+                ALOG(LOG_DEBUG, ZYGOTE_LOG_TAG,
                     "Process %d terminated by signal (%d)",
                     (int) pid, WTERMSIG(status));
             } else {
                 IF_LOGV(/*should use ZYGOTE_LOG_TAG*/) {
-                    LOG(LOG_VERBOSE, ZYGOTE_LOG_TAG,
+                    ALOG(LOG_VERBOSE, ZYGOTE_LOG_TAG,
                         "Process %d terminated by signal (%d)",
                         (int) pid, WTERMSIG(status));
                 }
             }
 #ifdef WCOREDUMP
             if (WCOREDUMP(status)) {
-                LOG(LOG_INFO, ZYGOTE_LOG_TAG, "Process %d dumped core",
+                ALOG(LOG_INFO, ZYGOTE_LOG_TAG, "Process %d dumped core",
                     (int) pid);
             }
 #endif /* ifdef WCOREDUMP */
@@ -96,7 +96,7 @@ static void sigchldHandler(int s)
          * from there.
          */
         if (pid == gDvm.systemServerPid) {
-            LOG(LOG_INFO, ZYGOTE_LOG_TAG,
+            ALOG(LOG_INFO, ZYGOTE_LOG_TAG,
                 "Exit zygote because system server (%d) has terminated",
                 (int) pid);
             kill(getpid(), SIGKILL);
@@ -104,7 +104,7 @@ static void sigchldHandler(int s)
     }
 
     if (pid < 0) {
-        LOG(LOG_WARN, ZYGOTE_LOG_TAG,
+        ALOG(LOG_WARN, ZYGOTE_LOG_TAG,
             "Zygote SIGCHLD error in waitpid: %s",strerror(errno));
     }
 }

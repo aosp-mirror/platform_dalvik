@@ -77,16 +77,16 @@ void dvmUnlockHeap(void);
 #define LOGV_HEAP(...)    ((void)0)
 #define LOGD_HEAP(...)    ((void)0)
 #else
-#define LOGV_HEAP(...)    LOG(LOG_VERBOSE, HEAP_LOG_TAG, __VA_ARGS__)
-#define LOGD_HEAP(...)    LOG(LOG_DEBUG, HEAP_LOG_TAG, __VA_ARGS__)
+#define LOGV_HEAP(...)    ALOG(LOG_VERBOSE, HEAP_LOG_TAG, __VA_ARGS__)
+#define LOGD_HEAP(...)    ALOG(LOG_DEBUG, HEAP_LOG_TAG, __VA_ARGS__)
 #endif
 #define LOGI_HEAP(...) \
     do { \
-        if (!gDvm.zygote) { LOG(LOG_INFO, HEAP_LOG_TAG, __VA_ARGS__); } \
+        if (!gDvm.zygote) { ALOG(LOG_INFO, HEAP_LOG_TAG, __VA_ARGS__); } \
     } while (0)
 
-#define LOGW_HEAP(...)    LOG(LOG_WARN, HEAP_LOG_TAG, __VA_ARGS__)
-#define LOGE_HEAP(...)    LOG(LOG_ERROR, HEAP_LOG_TAG, __VA_ARGS__)
+#define LOGW_HEAP(...)    ALOG(LOG_WARN, HEAP_LOG_TAG, __VA_ARGS__)
+#define LOGE_HEAP(...)    ALOG(LOG_ERROR, HEAP_LOG_TAG, __VA_ARGS__)
 
 #define FRACTIONAL_MB(n)    (n) / (1024 * 1024), \
                             ((((n) % (1024 * 1024)) / 1024) * 1000) / 1024

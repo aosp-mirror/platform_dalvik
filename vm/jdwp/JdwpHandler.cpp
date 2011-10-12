@@ -1950,7 +1950,7 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
         set4BE(replyBuf + 0, kJDWPHeaderLen);
 
     respLen = expandBufGetLength(pReply) - kJDWPHeaderLen;
-    IF_LOG(LOG_VERBOSE, LOG_TAG) {
+    IF_ALOG(LOG_VERBOSE, LOG_TAG) {
         LOGV("reply: dataLen=%d err=%s(%d)%s", respLen,
             dvmJdwpErrorStr(result), result,
             result != ERR_NONE ? " **FAILED**" : "");

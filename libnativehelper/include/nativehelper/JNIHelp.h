@@ -167,7 +167,7 @@ inline void jniLogException(JNIEnv* env, int priority, const char* tag, jthrowab
  * from the JNI environment, if any.
  */
 #define LOG_EX(env, priority, tag, ...) \
-    IF_LOG(priority, tag) jniLogException(env, ANDROID_##priority, tag, ##__VA_ARGS__)
+    IF_ALOG(priority, tag) jniLogException(env, ANDROID_##priority, tag, ##__VA_ARGS__)
 #define LOGV_EX(env, ...) LOG_EX(env, LOG_VERBOSE, LOG_TAG, ##__VA_ARGS__)
 #define LOGD_EX(env, ...) LOG_EX(env, LOG_DEBUG, LOG_TAG, ##__VA_ARGS__)
 #define LOGI_EX(env, ...) LOG_EX(env, LOG_INFO, LOG_TAG, ##__VA_ARGS__)

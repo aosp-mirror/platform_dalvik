@@ -952,14 +952,14 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
 
     localCount = method->registersSize - method->insSize;
 
-    LOG(LOG_VERBOSE, LOG_TAG"i", "Registers (fp=%p):", framePtr);
+    ALOG(LOG_VERBOSE, LOG_TAG"i", "Registers (fp=%p):", framePtr);
     for (i = method->registersSize-1; i >= 0; i--) {
         if (i >= localCount) {
-            LOG(LOG_VERBOSE, LOG_TAG"i", "  v%-2d in%-2d : 0x%08x",
+            ALOG(LOG_VERBOSE, LOG_TAG"i", "  v%-2d in%-2d : 0x%08x",
                 i, i-localCount, framePtr[i]);
         } else {
             if (inOnly) {
-                LOG(LOG_VERBOSE, LOG_TAG"i", "  [...]");
+                ALOG(LOG_VERBOSE, LOG_TAG"i", "  [...]");
                 break;
             }
             const char* name = "";
@@ -976,7 +976,7 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
                 }
             }
 #endif
-            LOG(LOG_VERBOSE, LOG_TAG"i", "  v%-2d      : 0x%08x %s",
+            ALOG(LOG_VERBOSE, LOG_TAG"i", "  v%-2d      : 0x%08x %s",
                 i, framePtr[i], name);
         }
     }
