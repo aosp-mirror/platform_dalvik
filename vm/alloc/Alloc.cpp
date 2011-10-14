@@ -350,10 +350,7 @@ size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz)
 
 bool dvmIsHeapAddress(void *address)
 {
-    dvmLockHeap();
-    bool result = dvmHeapSourceContainsAddress(address);
-    dvmUnlockHeap();
-    return result;
+    return address != NULL && (((uintptr_t) address & (8-1)) == 0);
 }
 
 bool dvmIsNonMovingObject(const Object* object)

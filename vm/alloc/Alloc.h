@@ -140,7 +140,9 @@ size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz);
 void dvmClearGrowthLimit(void);
 
 /*
- * Returns true if the address is within the bounds of the heap.
+ * Returns true if the address is aligned appropriately for a heap object.
+ * Does not require the caller to hold the heap lock, and does not take the
+ * heap lock internally.
  */
 bool dvmIsHeapAddress(void *address);
 
