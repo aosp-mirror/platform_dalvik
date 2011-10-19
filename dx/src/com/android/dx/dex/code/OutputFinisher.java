@@ -29,6 +29,7 @@ import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 
+import com.android.dx.util.DexException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -522,7 +523,7 @@ public final class OutputFinisher {
     private Dop findExpandedOpcodeForInsn(DalvInsn insn) {
         Dop result = findOpcodeForInsn(insn.getLowRegVersion(), insn.getOpcode());
         if (result == null) {
-            throw new AssertionError();
+            throw new DexException("No expanded opcode for " + insn);
         }
         return result;
     }
