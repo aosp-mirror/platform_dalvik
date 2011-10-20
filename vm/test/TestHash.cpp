@@ -83,7 +83,7 @@ bool dvmTestHash()
     u4 hash;
     int i;
 
-    LOGV("TestHash BEGIN");
+    ALOGV("TestHash BEGIN");
 
     pTab = dvmHashTableCreate(dvmHashSize(12), free);
     if (pTab == NULL)
@@ -185,7 +185,7 @@ bool dvmTestHash()
     }
 
     dvmHashTableFree(pTab);
-    LOGV("TestHash END");
+    ALOGV("TestHash END");
 
     return true;
 }

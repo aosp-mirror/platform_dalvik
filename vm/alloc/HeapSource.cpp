@@ -615,7 +615,7 @@ bool dvmHeapSourceStartupBeforeFork()
         /* Create a new heap for post-fork zygote allocations.  We only
          * try once, even if it fails.
          */
-        LOGV("Splitting out new zygote heap");
+        ALOGV("Splitting out new zygote heap");
         gDvm.newZygoteHeapAllocated = true;
         return addNewHeap(hs);
     }
@@ -1211,7 +1211,7 @@ void dvmSetTargetHeapUtilization(float newTarget)
 
     hs->targetUtilization =
             (size_t)(newTarget * (float)HEAP_UTILIZATION_MAX);
-    LOGV("Set heap target utilization to %zd/%d (%f)",
+    ALOGV("Set heap target utilization to %zd/%d (%f)",
             hs->targetUtilization, HEAP_UTILIZATION_MAX, newTarget);
 }
 

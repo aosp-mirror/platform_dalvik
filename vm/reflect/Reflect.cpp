@@ -984,7 +984,7 @@ int dvmConvertPrimitiveValue(PrimitiveType srcType,
         case ItoF: *(float*) dstPtr = (float) (*(int*) srcPtr);         return 1;
         case JtoF: *(float*) dstPtr = (float) (*(long long*) srcPtr);   return 1;
         case bad: {
-            LOGV("illegal primitive conversion: '%s' to '%s'",
+            ALOGV("illegal primitive conversion: '%s' to '%s'",
                     dexGetPrimitiveTypeDescriptor(srcType),
                     dexGetPrimitiveTypeDescriptor(dstType));
             return -1;
@@ -1129,7 +1129,7 @@ bool dvmUnboxPrimitive(Object* value, ClassObject* returnType,
     if (dvmConvertPrimitiveValue(valueIndex, typeIndex,
             (s4*) ((DataObject*)value)->instanceData, (s4*)pResult) < 0)
     {
-        LOGV("Prim conversion failed");
+        ALOGV("Prim conversion failed");
         return false;
     }
 

@@ -241,7 +241,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
      */
     bufSize = kHeaderSize + gcPointCount * (bytesForAddr + regWidth);
 
-    LOGV("+++ grm: %s.%s (adr=%d gpc=%d rwd=%d bsz=%d)",
+    ALOGV("+++ grm: %s.%s (adr=%d gpc=%d rwd=%d bsz=%d)",
         vdata->method->clazz->descriptor, vdata->method->name,
         bytesForAddr, gcPointCount, regWidth, bufSize);
 
@@ -270,7 +270,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
         }
     }
 
-    LOGV("mapData=%p pMap=%p bufSize=%d", mapData, pMap, bufSize);
+    ALOGV("mapData=%p pMap=%p bufSize=%d", mapData, pMap, bufSize);
     assert(mapData - (const u1*) pMap == bufSize);
 
     if (REGISTER_MAP_VERIFY && !verifyMap(vdata, pMap))
@@ -757,7 +757,7 @@ static size_t writeMapsAllClasses(DvmDex* pDvmDex, u1* basePtr, size_t length)
                 clazz->directMethodCount, clazz->virtualMethodCount,
                 (ptr - basePtr) - offsetTable[idx]);
         } else {
-            LOGV("%4d NOT mapadding '%s'", idx, classDescriptor);
+            ALOGV("%4d NOT mapadding '%s'", idx, classDescriptor);
             assert(offsetTable[idx] == 0);
         }
     }
@@ -813,7 +813,7 @@ RegisterMapBuilder* dvmGenerateRegisterMaps(DvmDex* pDvmDex)
         return NULL;
     }
 
-    LOGV("TOTAL size of register maps: %d", actual);
+    ALOGV("TOTAL size of register maps: %d", actual);
 
     pBuilder->data = pBuilder->memMap.addr;
     pBuilder->size = actual;
@@ -855,7 +855,7 @@ const void* dvmRegisterMapGetClassData(const DexFile* pDexFile, u4 classIdx,
 
     u4 classOffset = pClassPool->classDataOffset[classIdx];
     if (classOffset == 0) {
-        LOGV("+++ no map for classIdx=%d", classIdx);
+        ALOGV("+++ no map for classIdx=%d", classIdx);
         return NULL;
     }
 
@@ -1059,9 +1059,9 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
     }
 #endif
 
-    IF_LOGV() {
+    IF_ALOGV() {
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGV("Expanding map -> %s.%s:%s",
+        ALOGV("Expanding map -> %s.%s:%s",
             method->clazz->descriptor, method->name, desc);
         free(desc);
     }
@@ -1479,7 +1479,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
     }
 
     if (numEntries <= 1) {
-        LOGV("Can't compress map with 0 or 1 entries");
+        ALOGV("Can't compress map with 0 or 1 entries");
         return NULL;
     }
 
@@ -1515,7 +1515,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
         addr |= (*mapData++) << 8;
 
     if (addr >= 128) {
-        LOGV("Can't compress map with starting address >= 128");
+        ALOGV("Can't compress map with starting address >= 128");
         return NULL;
     }
 

@@ -250,7 +250,7 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
 
     if (idx < bottomIndex) {
         /* wrong segment */
-        LOGV("Attempt to remove index outside index area (%d vs %d-%d)",
+        ALOGV("Attempt to remove index outside index area (%d vs %d-%d)",
             idx, bottomIndex, topIndex);
         return false;
     }
@@ -272,19 +272,19 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
         int numHoles = segmentState.parts.numHoles - prevState.parts.numHoles;
         if (numHoles != 0) {
             while (--topIndex > bottomIndex && numHoles != 0) {
-                LOGV("+++ checking for hole at %d (cookie=0x%08x) val=%p",
+                ALOGV("+++ checking for hole at %d (cookie=0x%08x) val=%p",
                     topIndex-1, cookie, table_[topIndex-1]);
                 if (table_[topIndex-1] != NULL) {
                     break;
                 }
-                LOGV("+++ ate hole at %d", topIndex-1);
+                ALOGV("+++ ate hole at %d", topIndex-1);
                 numHoles--;
             }
             segmentState.parts.numHoles = numHoles + prevState.parts.numHoles;
             segmentState.parts.topIndex = topIndex;
         } else {
             segmentState.parts.topIndex = topIndex-1;
-            LOGV("+++ ate last entry %d", topIndex-1);
+            ALOGV("+++ ate last entry %d", topIndex-1);
         }
     } else {
         /*
@@ -293,7 +293,7 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
          * the hole count.
          */
         if (table_[idx] == NULL) {
-            LOGV("--- WEIRD: removing null entry %d", idx);
+            ALOGV("--- WEIRD: removing null entry %d", idx);
             return false;
         }
         if (workAroundAppJniBugs == false && !checkEntry("remove", iref, idx)) {
@@ -302,7 +302,7 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
 
         table_[idx] = NULL;
         segmentState.parts.numHoles++;
-        LOGV("+++ left hole at %d, holes=%d", idx, segmentState.parts.numHoles);
+        ALOGV("+++ left hole at %d, holes=%d", idx, segmentState.parts.numHoles);
     }
 
     return true;

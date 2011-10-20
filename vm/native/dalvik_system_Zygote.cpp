@@ -64,7 +64,7 @@ static void sigchldHandler(int s)
                 ALOG(LOG_DEBUG, ZYGOTE_LOG_TAG, "Process %d exited cleanly (%d)",
                     (int) pid, WEXITSTATUS(status));
             } else {
-                IF_LOGV(/*should use ZYGOTE_LOG_TAG*/) {
+                IF_ALOGV(/*should use ZYGOTE_LOG_TAG*/) {
                     ALOG(LOG_VERBOSE, ZYGOTE_LOG_TAG,
                         "Process %d exited cleanly (%d)",
                         (int) pid, WEXITSTATUS(status));
@@ -76,7 +76,7 @@ static void sigchldHandler(int s)
                     "Process %d terminated by signal (%d)",
                     (int) pid, WTERMSIG(status));
             } else {
-                IF_LOGV(/*should use ZYGOTE_LOG_TAG*/) {
+                IF_ALOGV(/*should use ZYGOTE_LOG_TAG*/) {
                     ALOG(LOG_VERBOSE, ZYGOTE_LOG_TAG,
                         "Process %d terminated by signal (%d)",
                         (int) pid, WTERMSIG(status));
@@ -277,7 +277,7 @@ static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
  */
 static void enableDebugFeatures(u4 debugFlags)
 {
-    LOGV("debugFlags is 0x%02x", debugFlags);
+    ALOGV("debugFlags is 0x%02x", debugFlags);
 
     gDvm.jdwpAllowed = ((debugFlags & DEBUG_ENABLE_DEBUGGER) != 0);
 
@@ -347,7 +347,7 @@ static int setCapabilities(int64_t permitted, int64_t effective)
     capdata.effective = effective;
     capdata.permitted = permitted;
 
-    LOGV("CAPSET perm=%llx eff=%llx", permitted, effective);
+    ALOGV("CAPSET perm=%llx eff=%llx", permitted, effective);
     if (capset(&capheader, &capdata) != 0)
         return errno;
 #endif /*HAVE_ANDROID_OS*/

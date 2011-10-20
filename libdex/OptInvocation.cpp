@@ -102,7 +102,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
      */
     strncat(nameBuf, absoluteFile, kBufLen);
 
-    LOGV("Cache file for '%s' '%s' is '%s'", fileName, subFileName, nameBuf);
+    ALOGV("Cache file for '%s' '%s' is '%s'", fileName, subFileName, nameBuf);
     return strdup(nameBuf);
 }
 

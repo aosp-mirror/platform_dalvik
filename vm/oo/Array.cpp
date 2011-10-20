@@ -245,11 +245,11 @@ ClassObject* dvmFindArrayClass(const char* descriptor, Object* loader)
     ClassObject* clazz;
 
     assert(descriptor[0] == '[');
-    //LOGV("dvmFindArrayClass: '%s' %p", descriptor, loader);
+    //ALOGV("dvmFindArrayClass: '%s' %p", descriptor, loader);
 
     clazz = dvmLookupClass(descriptor, loader, false);
     if (clazz == NULL) {
-        LOGV("Array class '%s' %p not found; creating", descriptor, loader);
+        ALOGV("Array class '%s' %p not found; creating", descriptor, loader);
         clazz = createArrayClass(descriptor, loader);
         if (clazz != NULL)
             dvmAddInitiatingLoader(clazz, loader);
@@ -345,7 +345,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
             descriptor, loader, elementClass->classLoader);
         newClass = dvmLookupClass(descriptor, elementClass->classLoader, false);
         if (newClass != NULL) {
-            LOGV("--- we already have %s in %p, don't need in %p",
+            ALOGV("--- we already have %s in %p, don't need in %p",
                 descriptor, elementClass->classLoader, loader);
             return newClass;
         }
@@ -477,7 +477,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
     }
     dvmReleaseTrackedAlloc((Object*) newClass, NULL);
 
-    LOGV("Created array class '%s' %p (access=0x%04x.%04x)",
+    ALOGV("Created array class '%s' %p (access=0x%04x.%04x)",
         descriptor, newClass->classLoader,
         newClass->accessFlags >> 16,
         newClass->accessFlags & JAVA_FLAGS_MASK);

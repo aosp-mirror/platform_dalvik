@@ -157,7 +157,7 @@ void dvmThrowChainedException(ClassObject* excepClass, const char* msg,
      */
     if (gDvm.optimizing) {
         /* need the exception object, but can't invoke interpreted code */
-        LOGV("Skipping init of exception %s '%s'",
+        ALOGV("Skipping init of exception %s '%s'",
             excepClass->descriptor, msg);
     } else {
         assert(excepClass == exception->clazz);
@@ -625,7 +625,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
 
             if (handler->typeIdx == kDexNoIndex) {
                 /* catch-all */
-                LOGV("Match on catch-all block at 0x%02x in %s.%s for %s",
+                ALOGV("Match on catch-all block at 0x%02x in %s.%s for %s",
                         relPc, method->clazz->descriptor,
                         method->name, excepClass->descriptor);
                 return handler->address;
@@ -685,7 +685,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
             //    excepClass->descriptor, pEntry->excepClass->descriptor);
 
             if (dvmInstanceof(excepClass, throwable)) {
-                LOGV("Match on catch block at 0x%02x in %s.%s for %s",
+                ALOGV("Match on catch block at 0x%02x in %s.%s for %s",
                         relPc, method->clazz->descriptor,
                         method->name, excepClass->descriptor);
                 return handler->address;
@@ -693,7 +693,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
         }
     }
 
-    LOGV("No matching catch block at 0x%02x in %s for %s",
+    ALOGV("No matching catch block at 0x%02x in %s for %s",
         relPc, method->name, excepClass->descriptor);
     return -1;
 }

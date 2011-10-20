@@ -133,7 +133,7 @@ static bool addToPredecessor(VerifierData* vdata, VfyBasicBlock* curBlock,
          * (pointless) conditional branch to the next instruction will
          * trip over this.
          */
-        LOGV("ODD: point set for targ=0x%04x (%p) already had block "
+        ALOGV("ODD: point set for targ=0x%04x (%p) already had block "
              "fir=0x%04x (%p)",
             targetIdx, targetBlock, curBlock->firstAddr, curBlock);
     }
@@ -391,7 +391,7 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
                     handlerList = handlerListAlloc;
                 }
 
-                LOGV("+++ start=%x end=%x numHan=%d",
+                ALOGV("+++ start=%x end=%x numHan=%d",
                     tryStart, tryEnd, numHandlers);
 
                 tryIndex++;

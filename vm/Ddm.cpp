@@ -118,7 +118,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     offset = dvmGetFieldInt(chunk, gDvm.offDalvikDdmcChunk_offset);
     length = dvmGetFieldInt(chunk, gDvm.offDalvikDdmcChunk_length);
 
-    LOGV("DDM reply: type=0x%08x data=%p offset=%d length=%d",
+    ALOGV("DDM reply: type=0x%08x data=%p offset=%d length=%d",
         type, replyData, offset, length);
 
     if (length == 0 || replyData == NULL)
@@ -143,7 +143,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     *pReplyLen = length + kChunkHdrLen;
     result = true;
 
-    LOGV("dvmHandleDdm returning type=%.4s buf=%p len=%d",
+    ALOGV("dvmHandleDdm returning type=%.4s buf=%p len=%d",
         (char*) reply, reply, length);
 
 bail:
@@ -196,7 +196,7 @@ void dvmDdmConnected()
 {
     // TODO: any init
 
-    LOGV("Broadcasting DDM connect");
+    ALOGV("Broadcasting DDM connect");
     broadcast(CONNECTED);
 }
 
@@ -207,7 +207,7 @@ void dvmDdmConnected()
  */
 void dvmDdmDisconnected()
 {
-    LOGV("Broadcasting DDM disconnect");
+    ALOGV("Broadcasting DDM disconnect");
     broadcast(DISCONNECTED);
 
     gDvm.ddmThreadNotification = false;

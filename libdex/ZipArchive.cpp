@@ -165,7 +165,7 @@ static int mapCentralDirectory0(int fd, const char* debugFileName,
     int i;
     for (i = readAmount - kEOCDLen; i >= 0; i--) {
         if (scanBuf[i] == 0x50 && get4LE(&scanBuf[i]) == kEOCDSignature) {
-            LOGV("+++ Found EOCD at buf+%d", i);
+            ALOGV("+++ Found EOCD at buf+%d", i);
             break;
         }
     }
@@ -197,7 +197,7 @@ static int mapCentralDirectory0(int fd, const char* debugFileName,
         return -1;
     }
 
-    LOGV("+++ numEntries=%d dirSize=%d dirOffset=%d",
+    ALOGV("+++ numEntries=%d dirSize=%d dirOffset=%d",
         numEntries, dirSize, dirOffset);
 
     /*
@@ -233,7 +233,7 @@ static int mapCentralDirectory(int fd, const char* debugFileName,
      */
     off_t fileLength = lseek(fd, 0, SEEK_END);
     if (fileLength < kEOCDLen) {
-        LOGV("Zip: length %ld is too small to be zip", (long) fileLength);
+        ALOGV("Zip: length %ld is too small to be zip", (long) fileLength);
         return -1;
     }
 
@@ -325,7 +325,7 @@ static int parseZipArchive(ZipArchive* pArchive)
             goto bail;
         }
     }
-    LOGV("+++ zip good scan %d entries", numEntries);
+    ALOGV("+++ zip good scan %d entries", numEntries);
 
     result = 0;
 
@@ -348,14 +348,14 @@ int dexZipOpenArchive(const char* fileName, ZipArchive* pArchive)
 {
     int fd, err;
 
-    LOGV("Opening as zip '%s' %p", fileName, pArchive);
+    ALOGV("Opening as zip '%s' %p", fileName, pArchive);
 
     memset(pArchive, 0, sizeof(ZipArchive));
 
     fd = open(fileName, O_RDONLY | O_BINARY, 0);
     if (fd < 0) {
         err = errno ? errno : -1;
-        LOGV("Unable to open '%s': %s", fileName, strerror(err));
+        ALOGV("Unable to open '%s': %s", fileName, strerror(err));
         return err;
     }
 
@@ -378,7 +378,7 @@ int dexZipPrepArchive(int fd, const char* debugFileName, ZipArchive* pArchive)
         goto bail;
 
     if (parseZipArchive(pArchive) != 0) {
-        LOGV("Zip: parsing '%s' failed", debugFileName);
+        ALOGV("Zip: parsing '%s' failed", debugFileName);
         goto bail;
     }
 
@@ -399,7 +399,7 @@ bail:
  */
 void dexZipCloseArchive(ZipArchive* pArchive)
 {
-    LOGV("Closing archive %p", pArchive);
+    ALOGV("Closing archive %p", pArchive);
 
     if (pArchive->mFd >= 0)
         close(pArchive->mFd);

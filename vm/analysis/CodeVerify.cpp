@@ -635,7 +635,7 @@ static ClassObject* lookupClassByDescriptor(const Method* meth,
     if (clazz == NULL) {
         dvmClearOptException(dvmThreadSelf());
         if (strchr(pDescriptor, '$') != NULL) {
-            LOGV("VFY: unable to find class referenced in signature (%s)",
+            ALOGV("VFY: unable to find class referenced in signature (%s)",
                 pDescriptor);
         } else {
             LOG_VFY("VFY: unable to find class referenced in signature (%s)",
@@ -1388,7 +1388,7 @@ static ClassObject* getFieldClass(const Method* meth, const Field* field)
 
     if (fieldClass == NULL) {
         dvmClearOptException(dvmThreadSelf());
-        LOGV("VFY: unable to find class '%s' for field %s.%s, trying Object",
+        ALOGV("VFY: unable to find class '%s' for field %s.%s, trying Object",
             field->signature, meth->clazz->descriptor, field->name);
         fieldClass = gDvm.classJavaLangObject;
     } else {

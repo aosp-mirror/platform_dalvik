@@ -2821,7 +2821,7 @@ int dexSwapAndVerify(u1* addr, int len)
     bool okay = true;
 
     memset(&state, 0, sizeof(state));
-    LOGV("+++ swapping and verifying");
+    ALOGV("+++ swapping and verifying");
 
     /*
      * Note: The caller must have verified that "len" is at least as

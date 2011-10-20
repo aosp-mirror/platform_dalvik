@@ -73,7 +73,7 @@ static int openAlternateSuffix(const char *fileName, const char *suffix,
         *pCachedName = buf;
         return fd;
     }
-    LOGV("Couldn't open %s: %s", buf, strerror(errno));
+    ALOGV("Couldn't open %s: %s", buf, strerror(errno));
 bail:
     free(buf);
     return -1;
@@ -116,7 +116,7 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
          * See if there's an up-to-date copy of the optimized dex
          * in the cache, but don't create one if there isn't.
          */
-        LOGV("dvmDexCacheStatus: Checking cache for %s", fileName);
+        ALOGV("dvmDexCacheStatus: Checking cache for %s", fileName);
         cachedName = dexOptGenerateCacheFileName(fileName, kDexInJarName);
         if (cachedName == NULL)
             return DEX_CACHE_BAD_ARCHIVE;
@@ -125,7 +125,7 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
                 dexGetZipEntryModTime(&archive, entry),
                 dexGetZipEntryCrc32(&archive, entry),
                 /*isBootstrap=*/false, &newFile, /*createIfMissing=*/false);
-        LOGV("dvmOpenCachedDexFile returned fd %d", fd);
+        ALOGV("dvmOpenCachedDexFile returned fd %d", fd);
         if (fd < 0) {
             result = DEX_CACHE_STALE;
             goto bail;
@@ -156,14 +156,14 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
             goto bail;
         }
 
-        LOGV("Using alternate file (odex) for %s ...", fileName);
+        ALOGV("Using alternate file (odex) for %s ...", fileName);
         if (!dvmCheckOptHeaderAndDependencies(fd, false, 0, 0, true, true)) {
             LOGE("%s odex has stale dependencies", fileName);
             LOGE("odex source not available -- failing");
             result = DEX_CACHE_STALE_ODEX;
             goto bail;
         } else {
-            LOGV("%s odex has good dependencies", fileName);
+            ALOGV("%s odex has good dependencies", fileName);
         }
     }
     result = DEX_CACHE_OK;
@@ -217,7 +217,7 @@ int dvmJarFileOpen(const char* fileName, const char* odexOutputName,
      */
     fd = openAlternateSuffix(fileName, "odex", O_RDONLY, &cachedName);
     if (fd >= 0) {
-        LOGV("Using alternate file (odex) for %s ...", fileName);
+        ALOGV("Using alternate file (odex) for %s ...", fileName);
         if (!dvmCheckOptHeaderAndDependencies(fd, false, 0, 0, true, true)) {
             LOGE("%s odex has stale dependencies", fileName);
             free(cachedName);
@@ -226,7 +226,7 @@ int dvmJarFileOpen(const char* fileName, const char* odexOutputName,
             fd = -1;
             goto tryArchive;
         } else {
-            LOGV("%s odex has good dependencies", fileName);
+            ALOGV("%s odex has good dependencies", fileName);
             //TODO: make sure that the .odex actually corresponds
             //      to the classes.dex inside the archive (if present).
             //      For typical use there will be no classes.dex.
@@ -262,7 +262,7 @@ tryArchive:
             } else {
                 cachedName = strdup(odexOutputName);
             }
-            LOGV("dvmJarFileOpen: Checking cache for %s (%s)",
+            ALOGV("dvmJarFileOpen: Checking cache for %s (%s)",
                 fileName, cachedName);
             fd = dvmOpenCachedDexFile(fileName, cachedName,
                     dexGetZipEntryModTime(&archive, entry),
@@ -341,7 +341,7 @@ tryArchive:
         locked = false;
     }
 
-    LOGV("Successfully opened '%s' in '%s'", kDexInJarName, fileName);
+    ALOGV("Successfully opened '%s' in '%s'", kDexInJarName, fileName);
 
     *ppJarFile = (JarFile*) calloc(1, sizeof(JarFile));
     (*ppJarFile)->archive = archive;

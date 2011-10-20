@@ -74,7 +74,7 @@ static void Dalvik_java_lang_reflect_Array_createMultiArray(const u4* args,
     int numDim, i;
     int* dimensions;
 
-    LOGV("createMultiArray: '%s' [%d]",
+    ALOGV("createMultiArray: '%s' [%d]",
         elementClass->descriptor, dimArray->length);
 
     assert(elementClass != NULL);       // verified by caller

@@ -211,7 +211,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
 
     dvmInitMutex(&pHdr->lock);
 
-    LOGV("LinearAlloc: created region at %p-%p",
+    ALOGV("LinearAlloc: created region at %p-%p",
         pHdr->mapAddr, pHdr->mapAddr + pHdr->mapLength-1);
 
     return pHdr;
@@ -237,7 +237,7 @@ void dvmLinearAllocDestroy(Object* classLoader)
     //dvmLinearAllocDump(classLoader);
 
     if (gDvm.verboseShutdown) {
-        LOGV("Unmapping linear allocator base=%p", pHdr->mapAddr);
+        ALOGV("Unmapping linear allocator base=%p", pHdr->mapAddr);
         LOGD("LinearAlloc %p used %d of %d (%d%%)",
             classLoader, pHdr->curOffset, pHdr->mapLength,
             (pHdr->curOffset * 100) / pHdr->mapLength);
@@ -426,7 +426,7 @@ void* dvmLinearRealloc(Object* classLoader, void* mem, size_t newSize)
                           getHeader(classLoader)->curOffset));
 
     const u4* pLen = getBlockHeader(mem);
-    LOGV("--- LinearRealloc(%d) old=%d", newSize, *pLen);
+    ALOGV("--- LinearRealloc(%d) old=%d", newSize, *pLen);
 
     /* handle size reduction case */
     if (*pLen >= newSize) {

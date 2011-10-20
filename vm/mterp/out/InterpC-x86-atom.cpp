@@ -1307,7 +1307,7 @@ HANDLE_OPCODE(OP_BREAKPOINT)
          * the thread resumed.
          */
         u1 originalOpcode = dvmGetOriginalOpcode(pc);
-        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)", originalOpcode, inst,
+        ALOGV("+++ break 0x%02x (0x%04x -> 0x%04x)", originalOpcode, inst,
             INST_REPLACE_OP(inst, originalOpcode));
         inst = INST_REPLACE_OP(inst, originalOpcode);
         FINISH_BKPT(originalOpcode);
@@ -2171,7 +2171,7 @@ GOTO_TARGET(exceptionThrown)
         dvmAddTrackedAlloc(exception, self);
         dvmClearException(self);
 
-        LOGV("Handling exception %s at %s:%d",
+        ALOGV("Handling exception %s at %s:%d",
             exception->clazz->descriptor, curMethod->name,
             dvmLineNumFromPC(curMethod, pc - curMethod->insns));
 
@@ -2401,7 +2401,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             bottom = (u1*) newSaveArea - methodToCall->outsSize * sizeof(u4);
             if (bottom < self->interpStackEnd) {
                 /* stack overflow */
-                LOGV("Stack overflow on method call (start=%p end=%p newBot=%p(%d) size=%d '%s')",
+                ALOGV("Stack overflow on method call (start=%p end=%p newBot=%p(%d) size=%d '%s')",
                     self->interpStackStart, self->interpStackEnd, bottom,
                     (u1*) fp - bottom, self->interpStackSize,
                     methodToCall->name);
@@ -2500,7 +2500,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              * it, jump to our local exception handling.
              */
             if (dvmCheckException(self)) {
-                LOGV("Exception thrown by/below native code");
+                ALOGV("Exception thrown by/below native code");
                 GOTO_exceptionThrown();
             }
 

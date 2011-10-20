@@ -654,9 +654,9 @@ static int processOptions(int argc, const char* const argv[],
 {
     int i;
 
-    LOGV("VM options (%d):", argc);
+    ALOGV("VM options (%d):", argc);
     for (i = 0; i < argc; i++)
-        LOGV("  %d: '%s'", i, argv[i]);
+        ALOGV("  %d: '%s'", i, argv[i]);
 
     /*
      * Over-allocate AssertionControl array for convenience.  If allocated,
@@ -1004,7 +1004,7 @@ static int processOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;
             }
-            LOGV("Precise GC configured %s", gDvm.preciseGc ? "ON" : "OFF");
+            ALOGV("Precise GC configured %s", gDvm.preciseGc ? "ON" : "OFF");
 
         } else if (strcmp(argv[i], "-Xcheckdexsum") == 0) {
             gDvm.verifyDexChecksum = true;
@@ -1180,9 +1180,9 @@ std::string dvmStartup(int argc, const char* const argv[],
 
     assert(gDvm.initializing);
 
-    LOGV("VM init args (%d):", argc);
+    ALOGV("VM init args (%d):", argc);
     for (int i = 0; i < argc; i++) {
-        LOGV("  %d: '%s'", i, argv[i]);
+        ALOGV("  %d: '%s'", i, argv[i]);
     }
     setCommandLineDefaults();
 
@@ -1208,10 +1208,10 @@ std::string dvmStartup(int argc, const char* const argv[],
 
     /* Configure group scheduling capabilities */
     if (!access("/dev/cpuctl/tasks", F_OK)) {
-        LOGV("Using kernel group scheduling");
+        ALOGV("Using kernel group scheduling");
         gDvm.kernelGroupScheduling = 1;
     } else {
-        LOGV("Using kernel scheduler policies");
+        ALOGV("Using kernel scheduler policies");
     }
 
     /* configure signal handling */
@@ -1225,7 +1225,7 @@ std::string dvmStartup(int argc, const char* const argv[],
     }
 
     /* mterp setup */
-    LOGV("Using executionMode %d", gDvm.executionMode);
+    ALOGV("Using executionMode %d", gDvm.executionMode);
     dvmCheckAsmConstants();
 
     /*
@@ -1480,7 +1480,7 @@ bool dvmInitAfterZygote()
 
     endJdwp = dvmGetRelativeTimeUsec();
 
-    LOGV("thread-start heap=%d quit=%d jdwp=%d total=%d usec",
+    ALOGV("thread-start heap=%d quit=%d jdwp=%d total=%d usec",
         (int)(endHeap-startHeap), (int)(endQuit-startQuit),
         (int)(endJdwp-startJdwp), (int)(endJdwp-startHeap));
 
@@ -1653,7 +1653,7 @@ fail:
  */
 void dvmShutdown()
 {
-    LOGV("VM shutting down");
+    ALOGV("VM shutting down");
 
     if (CALC_CACHE_STATS)
         dvmDumpAtomicCacheStats(gDvm.instanceofCache);

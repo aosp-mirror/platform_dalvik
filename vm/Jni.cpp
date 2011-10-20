@@ -749,7 +749,7 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     if (*signature == '!') {
         fastJni = true;
         ++signature;
-        LOGV("fast JNI method %s.%s:%s detected", clazz->descriptor, methodName, signature);
+        ALOGV("fast JNI method %s.%s:%s detected", clazz->descriptor, methodName, signature);
     }
 
     Method* method = dvmFindDirectMethodByDescriptor(clazz, methodName, signature);
@@ -787,13 +787,13 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
 
     if (method->nativeFunc != dvmResolveNativeMethod) {
         /* this is allowed, but unusual */
-        LOGV("Note: %s.%s:%s was already registered", clazz->descriptor, methodName, signature);
+        ALOGV("Note: %s.%s:%s was already registered", clazz->descriptor, methodName, signature);
     }
 
     method->fastJni = fastJni;
     dvmUseJNIBridge(method, fnPtr);
 
-    LOGV("JNI-registered %s.%s:%s", clazz->descriptor, methodName, signature);
+    ALOGV("JNI-registered %s.%s:%s", clazz->descriptor, methodName, signature);
     return true;
 }
 
@@ -2363,7 +2363,7 @@ static void SetObjectArrayElement(JNIEnv* env, jobjectArray jarr, jsize index, j
         return;
     }
 
-    //LOGV("JNI: set element %d in array %p to %p", index, array, value);
+    //ALOGV("JNI: set element %d in array %p to %p", index, array, value);
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
     dvmSetObjectArrayElement(arrayObj, index, obj);
@@ -2847,7 +2847,7 @@ static jint attachThread(JavaVM* vm, JNIEnv** p_env, void* thr_args, bool isDaem
     dvmLockThreadList(NULL);
     if (gDvm.nonDaemonThreadCount == 0) {
         // dead or dying
-        LOGV("Refusing to attach thread '%s' -- VM is shutting down",
+        ALOGV("Refusing to attach thread '%s' -- VM is shutting down",
             (thr_args == NULL) ? "(unknown)" : args->name);
         dvmUnlockThreadList();
         return JNI_ERR;
@@ -2989,11 +2989,11 @@ static jint DestroyJavaVM(JavaVM* vm) {
     if (self == NULL) {
         JNIEnv* tmpEnv;
         if (AttachCurrentThread(vm, &tmpEnv, NULL) != JNI_OK) {
-            LOGV("Unable to reattach main for Destroy; assuming VM is shutting down (count=%d)",
+            ALOGV("Unable to reattach main for Destroy; assuming VM is shutting down (count=%d)",
                 gDvm.nonDaemonThreadCount);
             goto shutdown;
         } else {
-            LOGV("Attached to wait for shutdown in Destroy");
+            ALOGV("Attached to wait for shutdown in Destroy");
         }
     }
     dvmChangeStatus(self, THREAD_VMWAIT);
@@ -3570,6 +3570,6 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
     dvmChangeStatus(NULL, THREAD_NATIVE);
     *p_env = (JNIEnv*) pEnv;
     *p_vm = (JavaVM*) pVM;
-    LOGV("CreateJavaVM succeeded");
+    ALOGV("CreateJavaVM succeeded");
     return JNI_OK;
 }

@@ -54,7 +54,7 @@ pid_t gettid() { return syscall(__NR_gettid);}
 // Change this to enable logging on cgroup errors
 #define ENABLE_CGROUP_ERR_LOGGING 0
 
-// change this to LOGV/LOGD to debug thread activity
+// change this to ALOGV/LOGD to debug thread activity
 #define LOG_THREAD  LOGVV
 
 /*
@@ -553,7 +553,7 @@ void dvmSlayDaemons()
         }
 
         std::string threadName(dvmGetThreadName(target));
-        LOGV("threadid=%d: suspending daemon id=%d name='%s'",
+        ALOGV("threadid=%d: suspending daemon id=%d name='%s'",
                 threadId, target->threadId, threadName.c_str());
 
         /* mark as suspended */
@@ -613,7 +613,7 @@ void dvmSlayDaemons()
             }
 
             if (allSuspended) {
-                LOGV("threadid=%d: all daemons have suspended", threadId);
+                ALOGV("threadid=%d: all daemons have suspended", threadId);
                 break;
             } else {
                 if (!complained) {
@@ -684,7 +684,7 @@ bool dvmPrepMainThread()
     Method* init;
     JValue unused;
 
-    LOGV("+++ finishing prep on main VM thread");
+    ALOGV("+++ finishing prep on main VM thread");
 
     /* main thread is always first in list at this point */
     thread = gDvm.threadList;
@@ -907,7 +907,7 @@ static bool prepareThread(Thread* thread)
      */
     setThreadSelf(thread);
 
-    LOGV("threadid=%d: interp stack at %p",
+    ALOGV("threadid=%d: interp stack at %p",
         thread->threadId, thread->interpStackStart - thread->interpStackSize);
 
     /*
@@ -1053,7 +1053,7 @@ static void threadExitCheck(void* arg)
     Thread* self = (Thread*) arg;
     assert(self != NULL);
 
-    LOGV("threadid=%d: threadExitCheck(%p) count=%d",
+    ALOGV("threadid=%d: threadExitCheck(%p) count=%d",
         self->threadId, arg, self->threadExitCheckCount);
 
     if (self->status == THREAD_ZOMBIE) {
@@ -1529,10 +1529,10 @@ static void* interpThreadStart(void* arg)
     Method* run = self->threadObj->clazz->vtable[gDvm.voffJavaLangThread_run];
     JValue unused;
 
-    LOGV("threadid=%d: calling run()", self->threadId);
+    ALOGV("threadid=%d: calling run()", self->threadId);
     assert(strcmp(run->name, "run") == 0);
     dvmCallMethod(self, run, self->threadObj, &unused);
-    LOGV("threadid=%d: exiting", self->threadId);
+    ALOGV("threadid=%d: exiting", self->threadId);
 
     /*
      * Remove the thread from various lists, report its death, and free
@@ -2144,7 +2144,7 @@ void dvmDetachCurrentThread()
         if (gDvm.nonDaemonThreadCount == 0) {
             int cc;
 
-            LOGV("threadid=%d: last non-daemon thread", self->threadId);
+            ALOGV("threadid=%d: last non-daemon thread", self->threadId);
             //dvmDumpAllThreads(false);
             // cond var guarded by threadListLock, which we already hold
             cc = pthread_cond_signal(&gDvm.vmExitCond);
@@ -2152,7 +2152,7 @@ void dvmDetachCurrentThread()
         }
     }
 
-    LOGV("threadid=%d: bye!", self->threadId);
+    ALOGV("threadid=%d: bye!", self->threadId);
     releaseThreadId(self);
     dvmUnlockThreadList();
 

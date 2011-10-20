@@ -87,7 +87,7 @@ static void checkCallResultCommon(const u4* args, const JValue* pResult,
     const char* objType = objClazz->descriptor;
     if (strcmp(declType, objType) == 0) {
         /* names match; ignore class loader issues and allow it */
-        LOGV("Check %s.%s: %s io %s (FAST-OK)",
+        ALOGV("Check %s.%s: %s io %s (FAST-OK)",
             method->clazz->descriptor, method->name, objType, declType);
     } else {
         /*
@@ -118,7 +118,7 @@ static void checkCallResultCommon(const u4* args, const JValue* pResult,
             abortMaybe();
             return;
         } else {
-            LOGV("Check %s.%s: %s io %s (SLOW-OK)",
+            ALOGV("Check %s.%s: %s io %s (SLOW-OK)",
                 method->clazz->descriptor, method->name, objType, declType);
         }
     }
@@ -1809,7 +1809,7 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
         _ctype* result = baseEnv(env)->Get##_jname##ArrayElements(env, array, isCopy); \
         if (gDvmJni.forceCopy && result != NULL) { \
             if (noCopy == kNoCopyMagic) { \
-                LOGV("FC: not copying %p %x", array, noCopy); \
+                ALOGV("FC: not copying %p %x", array, noCopy); \
             } else { \
                 result = (_ctype*) createGuardedPACopy(env, array, isCopy); \
             } \
@@ -1825,7 +1825,7 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
         sc.checkNonNull(elems); \
         if (gDvmJni.forceCopy) { \
             if ((uintptr_t)elems == kNoCopyMagic) { \
-                LOGV("FC: not freeing %p", array); \
+                ALOGV("FC: not freeing %p", array); \
                 elems = NULL;   /* base JNI call doesn't currently need */ \
             } else { \
                 elems = (_ctype*) releaseGuardedPACopy(env, array, elems, mode); \

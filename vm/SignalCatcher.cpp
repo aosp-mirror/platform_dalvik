@@ -65,7 +65,7 @@ void dvmSignalCatcherShutdown()
     pthread_kill(gDvm.signalCatcherHandle, SIGQUIT);
 
     pthread_join(gDvm.signalCatcherHandle, NULL);
-    LOGV("signal catcher has shut down");
+    ALOGV("signal catcher has shut down");
 }
 
 
@@ -257,7 +257,7 @@ static void* signalCatcherThreadStart(void* arg)
 
     UNUSED_PARAMETER(arg);
 
-    LOGV("Signal catcher thread started (threadid=%d)", self->threadId);
+    ALOGV("Signal catcher thread started (threadid=%d)", self->threadId);
 
     /* set up mask with signals we want to handle */
     sigemptyset(&mask);
@@ -285,7 +285,7 @@ loop:
         cc = sigwait(&mask, &rcvd);
         if (cc != 0) {
             if (cc == EINTR) {
-                //LOGV("sigwait: EINTR");
+                //ALOGV("sigwait: EINTR");
                 goto loop;
             }
             assert(!"bad result from sigwait");

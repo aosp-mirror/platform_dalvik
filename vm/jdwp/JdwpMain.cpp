@@ -257,7 +257,7 @@ static void* jdwpThreadStart(void* arg)
 {
     JdwpState* state = (JdwpState*) arg;
 
-    LOGV("JDWP: thread running");
+    ALOGV("JDWP: thread running");
 
     /*
      * Finish initializing "state", then notify the creating thread that
@@ -366,7 +366,7 @@ static void* jdwpThreadStart(void* arg)
     /* back to running, for thread shutdown */
     dvmDbgThreadRunning();
 
-    LOGV("JDWP: thread exiting");
+    ALOGV("JDWP: thread exiting");
     return NULL;
 }
 
@@ -436,7 +436,7 @@ s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
 
     /* initializing or in the middle of something? */
     if (last == 0) {
-        LOGV("+++ last=busy");
+        ALOGV("+++ last=busy");
         return 0;
     }
 
@@ -444,6 +444,6 @@ s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
     s8 now = dvmJdwpGetNowMsec();
     assert(now > last);
 
-    LOGV("+++ debugger interval=%lld", now - last);
+    ALOGV("+++ debugger interval=%lld", now - last);
     return now - last;
 }

@@ -68,7 +68,7 @@ extern "C" int jniRegisterNativeMethods(C_JNIEnv* env, const char* className,
 {
     JNIEnv* e = reinterpret_cast<JNIEnv*>(env);
 
-    LOGV("Registering %s natives", className);
+    ALOGV("Registering %s natives", className);
 
     scoped_local_ref<jclass> c(env, findClass(env, className));
     if (c.get() == NULL) {

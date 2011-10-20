@@ -155,7 +155,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
         cachedName = strdup(odexOutputName);
     }
 
-    LOGV("dvmRawDexFileOpen: Checking cache for %s (%s)",
+    ALOGV("dvmRawDexFileOpen: Checking cache for %s (%s)",
             fileName, cachedName);
 
     optFd = dvmOpenCachedDexFile(fileName, cachedName, modTime,
@@ -224,7 +224,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
         locked = false;
     }
 
-    LOGV("Successfully opened '%s'", fileName);
+    ALOGV("Successfully opened '%s'", fileName);
 
     *ppRawDexFile = (RawDexFile*) calloc(1, sizeof(RawDexFile));
     (*ppRawDexFile)->cacheFileName = cachedName;

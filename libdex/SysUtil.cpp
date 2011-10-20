@@ -244,7 +244,7 @@ int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap)
     if (mprotect(memPtr, length, PROT_READ) < 0) {
         /* this fails with EACCESS on FAT filesystems, e.g. /sdcard */
         int err = errno;
-        LOGV("mprotect(%p, %d, PROT_READ) failed: %s",
+        ALOGV("mprotect(%p, %d, PROT_READ) failed: %s",
             memPtr, length, strerror(err));
         LOGD("mprotect(RO) failed (%d), file will remain read-write", err);
     }
@@ -338,7 +338,7 @@ int sysChangeMapAccess(void* addr, size_t length, int wantReadWrite,
     int prot = wantReadWrite ? (PROT_READ|PROT_WRITE) : (PROT_READ);
     if (mprotect(alignAddr, alignLength, prot) != 0) {
         int err = errno;
-        LOGV("mprotect (%p,%zd,%d) failed: %s",
+        ALOGV("mprotect (%p,%zd,%d) failed: %s",
             alignAddr, alignLength, prot, strerror(errno));
         return (errno != 0) ? errno : -1;
     }
@@ -361,7 +361,7 @@ void sysReleaseShmem(MemMapping* pMap)
         LOGW("munmap(%p, %d) failed: %s",
             pMap->baseAddr, (int)pMap->baseLength, strerror(errno));
     } else {
-        LOGV("munmap(%p, %d) succeeded", pMap->baseAddr, pMap->baseLength);
+        ALOGV("munmap(%p, %d) succeeded", pMap->baseAddr, pMap->baseLength);
         pMap->baseAddr = NULL;
         pMap->baseLength = 0;
     }

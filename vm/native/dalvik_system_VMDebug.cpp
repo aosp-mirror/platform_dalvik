@@ -657,15 +657,15 @@ static void Dalvik_dalvik_system_VMDebug_cacheRegisterMap(const u4* args,
         const RegisterMap* pMap;
         pMap = dvmGetExpandedRegisterMap(method);
         if (pMap == NULL) {
-            LOGV("No map for %s.%s %s",
+            ALOGV("No map for %s.%s %s",
                 classAndMethodDesc, methodName, methodDescr);
         } else {
-            LOGV("Found map %s.%s %s",
+            ALOGV("Found map %s.%s %s",
                 classAndMethodDesc, methodName, methodDescr);
             result = true;
         }
     } else {
-        LOGV("Unable to find %s.%s %s",
+        ALOGV("Unable to find %s.%s %s",
             classAndMethodDesc, methodName, methodDescr);
     }
 

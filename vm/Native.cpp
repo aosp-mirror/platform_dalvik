@@ -274,7 +274,7 @@ static bool checkOnLoadResult(SharedLib* pEntry)
         return true;
     }
 
-    LOGV("+++ retrieving %s OnLoad status", pEntry->pathName);
+    ALOGV("+++ retrieving %s OnLoad status", pEntry->pathName);
     bool result;
 
     dvmLockMutex(&pEntry->onLoadLock);
@@ -286,10 +286,10 @@ static bool checkOnLoadResult(SharedLib* pEntry)
         dvmChangeStatus(self, oldStatus);
     }
     if (pEntry->onLoadResult == kOnLoadOkay) {
-        LOGV("+++ earlier OnLoad(%s) okay", pEntry->pathName);
+        ALOGV("+++ earlier OnLoad(%s) okay", pEntry->pathName);
         result = true;
     } else {
-        LOGV("+++ earlier OnLoad(%s) failed", pEntry->pathName);
+        ALOGV("+++ earlier OnLoad(%s) failed", pEntry->pathName);
         result = false;
     }
     dvmUnlockMutex(&pEntry->onLoadLock);
@@ -696,11 +696,11 @@ static int findMethodInLib(void* vlib, void* vmethod)
     int len;
 
     if (meth->clazz->classLoader != pLib->classLoader) {
-        LOGV("+++ not scanning '%s' for '%s' (wrong CL)",
+        ALOGV("+++ not scanning '%s' for '%s' (wrong CL)",
             pLib->pathName, meth->name);
         return 0;
     } else
-        LOGV("+++ scanning '%s' for '%s'", pLib->pathName, meth->name);
+        ALOGV("+++ scanning '%s' for '%s'", pLib->pathName, meth->name);
 
     /*
      * First, we try it without the signature.
@@ -714,7 +714,7 @@ static int findMethodInLib(void* vlib, void* vmethod)
     if (mangleCM == NULL)
         goto bail;
 
-    LOGV("+++ calling dlsym(%s)", mangleCM);
+    ALOGV("+++ calling dlsym(%s)", mangleCM);
     func = dlsym(pLib->handle, mangleCM);
     if (func == NULL) {
         mangleSig =
@@ -728,13 +728,13 @@ static int findMethodInLib(void* vlib, void* vmethod)
 
         sprintf(mangleCMSig, "%s__%s", mangleCM, mangleSig);
 
-        LOGV("+++ calling dlsym(%s)", mangleCMSig);
+        ALOGV("+++ calling dlsym(%s)", mangleCMSig);
         func = dlsym(pLib->handle, mangleCMSig);
         if (func != NULL) {
-            LOGV("Found '%s' with dlsym", mangleCMSig);
+            ALOGV("Found '%s' with dlsym", mangleCMSig);
         }
     } else {
-        LOGV("Found '%s' with dlsym", mangleCM);
+        ALOGV("Found '%s' with dlsym", mangleCM);
     }
 
 bail:

@@ -109,7 +109,7 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
             pDexFile->pClassLookup = (const DexClassLookup*) pOptData;
             break;
         case kDexChunkRegisterMaps:
-            LOGV("+++ found register maps, size=%u", size);
+            ALOGV("+++ found register maps, size=%u", size);
             pDexFile->pRegisterMapPool = pOptData;
             break;
         default:

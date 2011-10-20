@@ -203,7 +203,7 @@ bool dvmProfilingStartup()
      */
     int fd = open("/dev/qemu_trace", O_RDWR);
     if (fd < 0) {
-        LOGV("Unable to open /dev/qemu_trace");
+        ALOGV("Unable to open /dev/qemu_trace");
     } else {
         gDvm.emulatorTracePage = mmap(0, SYSTEM_PAGE_SIZE, PROT_READ|PROT_WRITE,
                                       MAP_SHARED, fd, 0);

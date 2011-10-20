@@ -243,7 +243,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
             int newSize = pSet->alloc + kBreakpointGrowth;
             Breakpoint* newVec;
 
-            LOGV("+++ increasing breakpoint set size to %d", newSize);
+            ALOGV("+++ increasing breakpoint set size to %d", newSize);
 
             /* pSet->breakpoints will be NULL on first entry */
             newVec = (Breakpoint*)realloc(pSet->breakpoints, newSize * sizeof(Breakpoint));
@@ -275,10 +275,10 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
          */
         assert(*(u1*)addr != OP_BREAKPOINT);
         if (dvmIsClassVerified(method->clazz)) {
-            LOGV("Class %s verified, adding breakpoint at %p",
+            ALOGV("Class %s verified, adding breakpoint at %p",
                 method->clazz->descriptor, addr);
             if (instructionIsMagicNop(addr)) {
-                LOGV("Refusing to set breakpoint on %04x at %s.%s + %#x",
+                ALOGV("Refusing to set breakpoint on %04x at %s.%s + %#x",
                     *addr, method->clazz->descriptor, method->name,
                     instrOffset);
             } else {
@@ -287,7 +287,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
                     OP_BREAKPOINT);
             }
         } else {
-            LOGV("Class %s NOT verified, deferring breakpoint at %p",
+            ALOGV("Class %s NOT verified, deferring breakpoint at %p",
                 method->clazz->descriptor, addr);
         }
     } else {
@@ -372,10 +372,10 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
              * It might already be there or it might not; either way,
              * flush it out.
              */
-            LOGV("Flushing breakpoint at %p for %s",
+            ALOGV("Flushing breakpoint at %p for %s",
                 pBreak->addr, clazz->descriptor);
             if (instructionIsMagicNop(pBreak->addr)) {
-                LOGV("Refusing to flush breakpoint on %04x at %s.%s + %#x",
+                ALOGV("Refusing to flush breakpoint on %04x at %s.%s + %#x",
                     *pBreak->addr, pBreak->method->clazz->descriptor,
                     pBreak->method->name, pBreak->addr - pBreak->method->insns);
             } else {
@@ -562,7 +562,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
          * frames are only inserted when calling from native->interp, so we
          * don't need to worry about one being here.
          */
-        LOGV("##### init step while in native method");
+        ALOGV("##### init step while in native method");
         fp = prevFp;
         assert(!dvmIsBreakFrame((u4*)fp));
         assert(dvmIsNativeMethod(SAVEAREA_FROM_FP(fp)->method));
@@ -592,7 +592,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
         dvmComputeVagueFrameDepth(thread, thread->interpSave.curFrame);
     pCtrl->active = true;
 
-    LOGV("##### step init: thread=%p meth=%p '%s' line=%d frameDepth=%d depth=%s size=%s",
+    ALOGV("##### step init: thread=%p meth=%p '%s' line=%d frameDepth=%d depth=%s size=%s",
         pCtrl->thread, pCtrl->method, pCtrl->method->name,
         pCtrl->line, pCtrl->frameDepth,
         dvmJdwpStepDepthStr(pCtrl->depth),
@@ -754,7 +754,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      * we may or may not actually send a message to the debugger.
      */
     if (GET_OPCODE(*pc) == OP_BREAKPOINT) {
-        LOGV("+++ breakpoint hit at %p", pc);
+        ALOGV("+++ breakpoint hit at %p", pc);
         eventFlags |= DBG_BREAKPOINT;
     }
 
@@ -829,7 +829,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
         }
 
         if (doStop) {
-            LOGV("#####S %s", msg);
+            ALOGV("#####S %s", msg);
             eventFlags |= DBG_SINGLE_STEP;
         }
     }
@@ -1251,7 +1251,7 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
     if (absMethod == NULL) {
         absMethod = dvmResolveInterfaceMethod(method->clazz, methodIdx);
         if (absMethod == NULL) {
-            LOGV("+ unknown method");
+            ALOGV("+ unknown method");
             return NULL;
         }
     }

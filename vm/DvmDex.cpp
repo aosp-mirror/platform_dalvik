@@ -69,7 +69,7 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
     pDvmDex->pResFields = (struct Field**)
         calloc(fieldCount, sizeof(struct Field*));
 
-    LOGV("+++ DEX %p: allocateAux %d+%d+%d+%d * 4 = %d bytes",
+    ALOGV("+++ DEX %p: allocateAux %d+%d+%d+%d * 4 = %d bytes",
         pDvmDex, stringCount, classCount, methodCount, fieldCount,
         (stringCount + classCount + methodCount + fieldCount) * 4);
 
@@ -196,7 +196,7 @@ void dvmDexFileFree(DvmDex* pDvmDex)
 
     dexFileFree(pDvmDex->pDexFile);
 
-    LOGV("+++ DEX %p: freeing aux structs", pDvmDex);
+    ALOGV("+++ DEX %p: freeing aux structs", pDvmDex);
     free(pDvmDex->pResStrings);
     free(pDvmDex->pResClasses);
     free(pDvmDex->pResMethods);
@@ -232,7 +232,7 @@ void dvmDexFileFree(DvmDex* pDvmDex)
 bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
 {
     if (*addr == newVal) {
-        LOGV("+++ byte at %p is already 0x%02x", addr, newVal);
+        ALOGV("+++ byte at %p is already 0x%02x", addr, newVal);
         return true;
     }
 
@@ -242,7 +242,7 @@ bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
      */
     dvmLockMutex(&pDvmDex->modLock);
 
-    LOGV("+++ change byte at %p from 0x%02x to 0x%02x", addr, *addr, newVal);
+    ALOGV("+++ change byte at %p from 0x%02x to 0x%02x", addr, *addr, newVal);
     if (sysChangeMapAccess(addr, 1, true, &pDvmDex->memMap) != 0) {
         LOGD("NOTE: DEX page access change (->RW) failed");
         /* expected on files mounted from FAT; keep going (may crash) */
@@ -269,7 +269,7 @@ bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
 bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
 {
     if (*addr == newVal) {
-        LOGV("+++ value at %p is already 0x%04x", addr, newVal);
+        ALOGV("+++ value at %p is already 0x%04x", addr, newVal);
         return true;
     }
 
@@ -279,7 +279,7 @@ bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
      */
     dvmLockMutex(&pDvmDex->modLock);
 
-    LOGV("+++ change 2byte at %p from 0x%04x to 0x%04x", addr, *addr, newVal);
+    ALOGV("+++ change 2byte at %p from 0x%04x to 0x%04x", addr, *addr, newVal);
     if (sysChangeMapAccess(addr, 2, true, &pDvmDex->memMap) != 0) {
         LOGD("NOTE: DEX page access change (->RW) failed");
         /* expected on files mounted from FAT; keep going (may crash) */

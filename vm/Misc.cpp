@@ -670,7 +670,7 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
     sprintf(nameBuf, "/proc/self/task/%d/stat", (int) tid);
     fd = open(nameBuf, O_RDONLY);
     if (fd < 0) {
-        LOGV("Unable to open '%s': %s", nameBuf, strerror(errno));
+        ALOGV("Unable to open '%s': %s", nameBuf, strerror(errno));
         return false;
     }
 

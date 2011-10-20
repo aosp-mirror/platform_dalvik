@@ -559,7 +559,7 @@ static void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
 #endif
     endSec = ts->tv_sec + msec / 1000;
     if (endSec >= 0x7fffffff) {
-        LOGV("NOTE: end time exceeds epoch");
+        ALOGV("NOTE: end time exceeds epoch");
         endSec = 0x7ffffffe;
     }
     ts->tv_sec = endSec;
@@ -902,7 +902,7 @@ retry:
                 goto retry;
             }
         } else {
-            LOGV("(%d) spin on lock %p: %#x (%#x) %#x",
+            ALOGV("(%d) spin on lock %p: %#x (%#x) %#x",
                  threadId, &obj->lock, 0, *thinp, thin);
             /*
              * The lock is owned by another thread.  Notify the VM
@@ -964,13 +964,13 @@ retry:
                      * Let the VM know we are no longer waiting and
                      * try again.
                      */
-                    LOGV("(%d) lock %p surprise-fattened",
+                    ALOGV("(%d) lock %p surprise-fattened",
                              threadId, &obj->lock);
                     dvmChangeStatus(self, oldStatus);
                     goto retry;
                 }
             }
-            LOGV("(%d) spin on lock done %p: %#x (%#x) %#x",
+            ALOGV("(%d) spin on lock done %p: %#x (%#x) %#x",
                  threadId, &obj->lock, 0, *thinp, thin);
             /*
              * We have acquired the thin lock.  Let the VM know that
@@ -981,7 +981,7 @@ retry:
              * Fatten the lock.
              */
             inflateMonitor(self, obj);
-            LOGV("(%d) lock %p fattened", threadId, &obj->lock);
+            ALOGV("(%d) lock %p fattened", threadId, &obj->lock);
         }
     } else {
         /*
@@ -1084,7 +1084,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
          * any other thread gets a chance.
          */
         inflateMonitor(self, obj);
-        LOGV("(%d) lock %p fattened by wait()", self->threadId, &obj->lock);
+        ALOGV("(%d) lock %p fattened by wait()", self->threadId, &obj->lock);
     }
     mon = LW_MONITOR(obj->lock);
     waitMonitor(self, mon, msec, nsec, interruptShouldThrow);

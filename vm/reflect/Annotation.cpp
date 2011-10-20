@@ -330,7 +330,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     valueArg = valueType >> kDexAnnotationValueArgShift;
     width = valueArg + 1;       /* assume, correct later */
 
-    LOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]",
+    ALOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]",
         valueType & kDexAnnotationValueTypeMask, valueArg, ptr-1,
         (ptr-1) - (u1*)clazz->pDvmDex->pDexFile->baseAddr);
 
@@ -596,7 +596,7 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
     } else {
         dstElemClass = dvmFindPrimitiveClass(firstChar);
     }
-    LOGV("HEY: converting valueObj from [%s to [%s",
+    ALOGV("HEY: converting valueObj from [%s to [%s",
         srcElemClass->descriptor, dstElemClass->descriptor);
 
     ArrayObject* srcArray = (ArrayObject*) valueObj;
@@ -762,7 +762,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
         }
     }
 
-    LOGV("----- processEnc ptr=%p [0x%06x]  typeIdx=%d size=%d class=%s",
+    ALOGV("----- processEnc ptr=%p [0x%06x]  typeIdx=%d size=%d class=%s",
         *pPtr, *pPtr - (u1*) clazz->pDvmDex->pDexFile->baseAddr,
         typeIdx, size, annoClass->descriptor);
 
@@ -960,7 +960,7 @@ static bool skipAnnotationValue(const ClassObject* clazz, const u1** pPtr)
     valueArg = valueType >> kDexAnnotationValueArgShift;
     width = valueArg + 1;       /* assume */
 
-    LOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]",
+    ALOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]",
         valueType & kDexAnnotationValueTypeMask, valueArg, ptr-1,
         (ptr-1) - (u1*)clazz->pDvmDex->pDexFile->baseAddr);
 

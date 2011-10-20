@@ -141,10 +141,10 @@ bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** bottom,
     if (moveCount != 0) {
         /* remove from middle, slide the rest down */
         memmove(ptr, ptr+1, moveCount * sizeof(Object*));
-        //LOGV("LREF delete %p, shift %d down", obj, moveCount);
+        //ALOGV("LREF delete %p, shift %d down", obj, moveCount);
     } else {
         /* last entry, falls off the end */
-        //LOGV("LREF delete %p from end", obj);
+        //ALOGV("LREF delete %p from end", obj);
     }
 
     return true;

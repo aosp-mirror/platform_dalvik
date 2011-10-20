@@ -118,7 +118,7 @@ DalvikNativeFunc dvmLookupInternalNativeMethod(const Method* method)
                     pMeth->signature, method) == 0)
                 {
                     /* match */
-                    //LOGV("+++  match on %s.%s %s at %p",
+                    //ALOGV("+++  match on %s.%s %s at %p",
                     //    className, methodName, methodSignature, pMeth->fnPtr);
                     return pMeth->fnPtr;
                 }

@@ -252,7 +252,7 @@ DexClassLookup* dexCreateClassLookup(DexFile* pDexFile)
         totalProbes += numProbes;
     }
 
-    LOGV("Class lookup: classes=%d slots=%d (%d%% occ) alloc=%d"
+    ALOGV("Class lookup: classes=%d slots=%d (%d%% occ) alloc=%d"
          " total=%d max=%d",
         pDexFile->pHeader->classDefsSize, numEntries,
         (100 * pDexFile->pHeader->classDefsSize) / numEntries,
@@ -315,7 +315,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
         }
 
         pDexFile->pOptHeader = (const DexOptHeader*) data;
-        LOGV("Good opt header, DEX offset is %d, flags=0x%02x",
+        ALOGV("Good opt header, DEX offset is %d, flags=0x%02x",
             pDexFile->pOptHeader->dexOffset, pDexFile->pOptHeader->flags);
 
         /* parse the optimized dex file tables */
@@ -353,7 +353,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
             if (!(flags & kDexParseContinueOnError))
                 goto bail;
         } else {
-            LOGV("+++ adler32 checksum (%08x) verified", adler);
+            ALOGV("+++ adler32 checksum (%08x) verified", adler);
         }
 
         const DexOptHeader* pOptHeader = pDexFile->pOptHeader;
@@ -365,7 +365,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
                 if (!(flags & kDexParseContinueOnError))
                     goto bail;
             } else {
-                LOGV("+++ adler32 opt checksum (%08x) verified", adler);
+                ALOGV("+++ adler32 opt checksum (%08x) verified", adler);
             }
         }
     }
@@ -391,7 +391,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
             if (!(flags & kDexParseContinueOnError))
                 goto bail;
         } else {
-            LOGV("+++ sha1 digest verified");
+            ALOGV("+++ sha1 digest verified");
         }
     }
 

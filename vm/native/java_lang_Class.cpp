@@ -69,10 +69,10 @@ static void Dalvik_java_lang_Class_desiredAssertionStatus(const u4* args,
             if (pCtrl->pkgOrClassLen > pkgLen ||
                 memcmp(pCtrl->pkgOrClass, className, pCtrl->pkgOrClassLen) != 0)
             {
-                LOGV("ASRT: pkg no match: '%s'(%d) vs '%s'",
+                ALOGV("ASRT: pkg no match: '%s'(%d) vs '%s'",
                     className, pkgLen, pCtrl->pkgOrClass);
             } else {
-                LOGV("ASRT: pkg match: '%s'(%d) vs '%s' --> %d",
+                ALOGV("ASRT: pkg match: '%s'(%d) vs '%s' --> %d",
                     className, pkgLen, pCtrl->pkgOrClass, pCtrl->enable);
                 enable = pCtrl->enable;
             }
@@ -84,22 +84,22 @@ static void Dalvik_java_lang_Class_desiredAssertionStatus(const u4* args,
             if (pCtrl->pkgOrClass == NULL) {
                 /* -esa/-dsa; see if class is a "system" class */
                 if (strncmp(className, "java/", 5) != 0) {
-                    LOGV("ASRT: sys no match: '%s'", className);
+                    ALOGV("ASRT: sys no match: '%s'", className);
                 } else {
-                    LOGV("ASRT: sys match: '%s' --> %d",
+                    ALOGV("ASRT: sys match: '%s' --> %d",
                         className, pCtrl->enable);
                     enable = pCtrl->enable;
                 }
             } else if (*pCtrl->pkgOrClass == '\0') {
-                LOGV("ASRT: class all: '%s' --> %d",
+                ALOGV("ASRT: class all: '%s' --> %d",
                     className, pCtrl->enable);
                 enable = pCtrl->enable;
             } else {
                 if (strcmp(pCtrl->pkgOrClass, className) != 0) {
-                    LOGV("ASRT: cls no match: '%s' vs '%s'",
+                    ALOGV("ASRT: cls no match: '%s' vs '%s'",
                         className, pCtrl->pkgOrClass);
                 } else {
-                    LOGV("ASRT: cls match: '%s' vs '%s' --> %d",
+                    ALOGV("ASRT: cls match: '%s' vs '%s' --> %d",
                         className, pCtrl->pkgOrClass, pCtrl->enable);
                     enable = pCtrl->enable;
                 }

@@ -63,7 +63,7 @@
 #define CLZ(x) __builtin_clz(x)
 
 /*
- * If "very verbose" logging is enabled, make it equivalent to LOGV.
+ * If "very verbose" logging is enabled, make it equivalent to ALOGV.
  * Otherwise, make it disappear.
  *
  * Define this above the #include "Dalvik.h" to enable for only a
@@ -71,8 +71,8 @@
  */
 /* #define VERY_VERBOSE_LOG */
 #if defined(VERY_VERBOSE_LOG)
-# define LOGVV      LOGV
-# define IF_LOGVV() IF_LOGV()
+# define LOGVV      ALOGV
+# define IF_LOGVV() IF_ALOGV()
 #else
 # define LOGVV(...) ((void)0)
 # define IF_LOGVV() if (false)

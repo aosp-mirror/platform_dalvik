@@ -532,7 +532,7 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
         }
         if (resClass == NULL) {
             /* not found, exception should be raised */
-            LOGV("DexOpt: class %d (%s) not found",
+            ALOGV("DexOpt: class %d (%s) not found",
                 classIdx,
                 dexStringByTypeIdx(pDvmDex->pDexFile, classIdx));
             if (pFailure != NULL) {
@@ -770,16 +770,16 @@ static void rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
 
     if (volatileOpc != OP_NOP && dvmIsVolatileField(instField)) {
         updateOpcode(method, insns, volatileOpc);
-        LOGV("DexOpt: rewrote ifield access %s.%s --> volatile",
+        ALOGV("DexOpt: rewrote ifield access %s.%s --> volatile",
             instField->clazz->descriptor, instField->name);
     } else if (quickOpc != OP_NOP && instField->byteOffset < 65536) {
         updateOpcode(method, insns, quickOpc);
         dvmUpdateCodeUnit(method, insns+1, (u2) instField->byteOffset);
-        LOGV("DexOpt: rewrote ifield access %s.%s --> %d",
+        ALOGV("DexOpt: rewrote ifield access %s.%s --> %d",
             instField->clazz->descriptor, instField->name,
             instField->byteOffset);
     } else {
-        LOGV("DexOpt: no rewrite of ifield access %s.%s",
+        ALOGV("DexOpt: no rewrite of ifield access %s.%s",
             instField->clazz->descriptor, instField->name);
     }
 
@@ -811,10 +811,10 @@ static void rewriteJumboInstField(Method* method, u2* insns, Opcode volatileOpc)
 
     if (dvmIsVolatileField(instField)) {
         updateOpcode(method, insns, volatileOpc);
-        LOGV("DexOpt: rewrote jumbo ifield access %s.%s --> volatile",
+        ALOGV("DexOpt: rewrote jumbo ifield access %s.%s --> volatile",
             instField->clazz->descriptor, instField->name);
     } else {
-        LOGV("DexOpt: no rewrite of jumbo ifield access %s.%s",
+        ALOGV("DexOpt: no rewrite of jumbo ifield access %s.%s",
             instField->clazz->descriptor, instField->name);
     }
 }
@@ -844,7 +844,7 @@ static void rewriteStaticField0(Method* method, u2* insns, Opcode volatileOpc,
 
     if (dvmIsVolatileField(staticField)) {
         updateOpcode(method, insns, volatileOpc);
-        LOGV("DexOpt: rewrote sfield access %s.%s --> volatile",
+        ALOGV("DexOpt: rewrote sfield access %s.%s --> volatile",
             staticField->clazz->descriptor, staticField->name);
     }
 }
@@ -895,7 +895,7 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
              * Can't find the class that the method is a part of, or don't
              * have permission to access the class.
              */
-            LOGV("DexOpt: can't find called method's class (?.%s)",
+            ALOGV("DexOpt: can't find called method's class (?.%s)",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
             if (pFailure != NULL) { assert(!VERIFY_OK(*pFailure)); }
             return NULL;
@@ -926,7 +926,7 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
         }
 
         if (resMethod == NULL) {
-            LOGV("DexOpt: couldn't find method '%s'",
+            ALOGV("DexOpt: couldn't find method '%s'",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_NO_METHOD;
@@ -1207,7 +1207,7 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
 
     calledMethod = dvmOptResolveMethod(clazz, methodIdx, methodType, NULL);
     if (calledMethod == NULL) {
-        LOGV("+++ DexOpt inline: can't find %d", methodIdx);
+        ALOGV("+++ DexOpt inline: can't find %d", methodIdx);
         return false;
     }
 
@@ -1256,7 +1256,7 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
 
     calledMethod = dvmOptResolveMethod(clazz, methodIdx, methodType, NULL);
     if (calledMethod == NULL) {
-        LOGV("+++ DexOpt inline/range: can't find %d", methodIdx);
+        ALOGV("+++ DexOpt inline/range: can't find %d", methodIdx);
         return false;
     }
 

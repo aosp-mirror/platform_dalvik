@@ -235,7 +235,7 @@ static int processZipFile(int zipFd, int cacheFd, const char* zipName,
         int matchOffset = match - bcp;
         if (matchOffset > 0 && bcp[matchOffset-1] == ':')
             matchOffset--;
-        LOGV("DexOptZ: found '%s' in bootclasspath, cutting off at %d",
+        ALOGV("DexOptZ: found '%s' in bootclasspath, cutting off at %d",
             zipName, matchOffset);
         bcpCopy = strdup(bcp);
         bcpCopy[matchOffset] = '\0';
@@ -455,7 +455,7 @@ static int fromDex(int argc, char* const argv[])
     GET_ARG(crc, strtoul, "bad crc");
     GET_ARG(flags, strtol, "bad flags");
 
-    LOGV("Args: fd=%d off=%ld len=%ld name='%s' mod=%#x crc=%#x flg=%d (argc=%d)",
+    ALOGV("Args: fd=%d off=%ld len=%ld name='%s' mod=%#x crc=%#x flg=%d (argc=%d)",
         fd, offset, length, debugFileName, modWhen, crc, flags, argc);
     assert(argc > 0);
 
@@ -469,7 +469,7 @@ static int fromDex(int argc, char* const argv[])
         bcpLen = 0;
         for (i = 0, argp = argv; i < argc; i++) {
             ++argp;
-            LOGV("DEP: '%s'", *argp);
+            ALOGV("DEP: '%s'", *argp);
             bcpLen += strlen(*argp) + 1;
         }
 
@@ -488,7 +488,7 @@ static int fromDex(int argc, char* const argv[])
 
         assert((int) strlen(bootClassPath) == bcpLen-1);
     }
-    LOGV("  bootclasspath is '%s'", bootClassPath);
+    ALOGV("  bootclasspath is '%s'", bootClassPath);
 
     /* start the VM partway */
 
@@ -547,7 +547,7 @@ bail:
 #endif
 
     free(bootClassPath);
-    LOGV("DexOpt command complete (result=%d)", result);
+    ALOGV("DexOpt command complete (result=%d)", result);
     return result;
 }
 
