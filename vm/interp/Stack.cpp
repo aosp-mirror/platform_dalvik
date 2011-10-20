@@ -25,6 +25,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#ifdef HAVE_ANDROID_OS
+#include <corkscrew/backtrace.h>
+#endif
+
 /*
  * Initialize the interpreter stack in a new thread.
  *
@@ -1377,4 +1381,37 @@ void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
      */
     dumpFrames(target, stackCopy + fpOffset, thread);
     free(stackCopy);
+}
+
+/*
+ * Dump the native stack for the specified thread.
+ */
+void dvmDumpNativeStack(const DebugOutputTarget* target, Thread* thread)
+{
+#ifdef HAVE_ANDROID_OS
+    const size_t MAX_DEPTH = 32;
+    backtrace_frame_t backtrace[MAX_DEPTH];
+    ssize_t frames = unwind_backtrace_thread(thread->systemTid, backtrace, 0, MAX_DEPTH);
+    if (frames > 0) {
+        backtrace_symbol_t backtrace_symbols[MAX_DEPTH];
+        get_backtrace_symbols(backtrace, frames, backtrace_symbols);
+
+        dvmPrintDebugMessage(target, "Native Stack:\n");
+        for (size_t i = 0; i < size_t(frames); i++) {
+            const backtrace_symbol_t& symbol = backtrace_symbols[i];
+            const char* mapName = symbol.map_info ? symbol.map_info->name : "<unknown>";
+            const char* symbolName = symbol.demangled_name ? symbol.demangled_name : symbol.name;
+            if (symbolName) {
+                dvmPrintDebugMessage(target, "  #%02d  pc %08x  %s (%s)\n",
+                        i, uint32_t(symbol.relative_pc), mapName, symbolName);
+            } else {
+                dvmPrintDebugMessage(target, "  #%02d  pc %08x  %s\n",
+                        i, uint32_t(symbol.relative_pc), mapName);
+            }
+        }
+        dvmPrintDebugMessage(target, "\n");
+
+        free_backtrace_symbols(backtrace_symbols, frames);
+    }
+#endif
 }

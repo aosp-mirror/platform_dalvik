@@ -3327,6 +3327,11 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     else
         dvmDumpThreadStack(target, thread);
 
+    /* grab the native stack, if possible */
+    if (thread->status == THREAD_NATIVE) {
+        dvmDumpNativeStack(target, thread);
+    }
+
     dvmReleaseTrackedAlloc(threadObj, NULL);
     free(threadName);
     free(groupName);
