@@ -320,7 +320,7 @@ static inline bool checkForNull(Object* obj)
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
-    if (!dvmIsHeapAddressObject(obj)) {
+    if (!dvmIsHeapAddress(obj)) {
         LOGE("Invalid object %p", obj);
         dvmAbort();
     }
