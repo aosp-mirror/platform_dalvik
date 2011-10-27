@@ -34,18 +34,13 @@ bool IndirectRefTable::init(size_t initialCount,
     assert(initialCount <= maxCount);
     assert(desiredKind != kIndirectKindInvalid);
 
-    table_ = (Object**) malloc(initialCount * sizeof(Object*));
+    table_ = (IndirectRefSlot*) malloc(initialCount * sizeof(IndirectRefSlot));
     if (table_ == NULL) {
         return false;
     }
 #ifndef NDEBUG
-    memset(table_, 0xd1, initialCount * sizeof(Object*));
+    memset(table_, 0xd1, initialCount * sizeof(IndirectRefSlot));
 #endif
-
-    slot_data_ = (IndirectRefSlot*) calloc(initialCount, sizeof(IndirectRefSlot));
-    if (slot_data_ == NULL) {
-        return false;
-    }
 
     segmentState.all = IRT_FIRST_SEGMENT;
     alloc_entries_ = initialCount;
@@ -61,26 +56,8 @@ bool IndirectRefTable::init(size_t initialCount,
 void IndirectRefTable::destroy()
 {
     free(table_);
-    free(slot_data_);
     table_ = NULL;
-    slot_data_ = NULL;
     alloc_entries_ = max_entries_ = -1;
-}
-
-/*
- * Make sure that the entry at "idx" is correctly paired with "iref".
- */
-bool IndirectRefTable::checkEntry(const char* what, IndirectRef iref, int idx) const
-{
-    Object* obj = table_[idx];
-    IndirectRef checkRef = toIndirectRef(obj, idx);
-    if (checkRef != iref) {
-        LOGE("JNI ERROR (app bug): attempt to %s stale %s reference %p (should be %p)",
-                what, indirectRefKindToString(kind_), iref, checkRef);
-        abortMaybe();
-        return false;
-    }
-    return true;
 }
 
 IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
@@ -95,121 +72,128 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
     assert(alloc_entries_ <= max_entries_);
     assert(segmentState.parts.numHoles >= prevState.parts.numHoles);
 
-    if (topIndex == alloc_entries_) {
-        /* reached end of allocated space; did we hit buffer max? */
-        if (topIndex == max_entries_) {
-            LOGE("JNI ERROR (app bug): %s reference table overflow (max=%d)",
-                    indirectRefKindToString(kind_), max_entries_);
-            dump(indirectRefKindToString(kind_));
-            dvmAbort();
-        }
-
-        size_t newSize = alloc_entries_ * 2;
-        if (newSize > max_entries_) {
-            newSize = max_entries_;
-        }
-        assert(newSize > alloc_entries_);
-
-        table_ = (Object**) realloc(table_, newSize * sizeof(Object*));
-        slot_data_ = (IndirectRefSlot*) realloc(slot_data_, newSize * sizeof(IndirectRefSlot));
-        if (table_ == NULL || slot_data_ == NULL) {
-            LOGE("JNI ERROR (app bug): unable to expand %s reference table (from %d to %d, max=%d)",
-                    indirectRefKindToString(kind_),
-                    alloc_entries_, newSize, max_entries_);
-            dump(indirectRefKindToString(kind_));
-            dvmAbort();
-        }
-
-        // Clear the newly-allocated slot_data_ elements.
-        memset(slot_data_ + alloc_entries_, 0, (newSize - alloc_entries_) * sizeof(IndirectRefSlot));
-
-        alloc_entries_ = newSize;
-    }
-
     /*
      * We know there's enough room in the table.  Now we just need to find
      * the right spot.  If there's a hole, find it and fill it; otherwise,
      * add to the end of the list.
      */
     IndirectRef result;
+    IndirectRefSlot* slot;
     int numHoles = segmentState.parts.numHoles - prevState.parts.numHoles;
     if (numHoles > 0) {
         assert(topIndex > 1);
-        /* find the first hole; likely to be near the end of the list */
-        Object** pScan = &table_[topIndex - 1];
-        assert(*pScan != NULL);
-        while (*--pScan != NULL) {
-            assert(pScan >= table_ + prevState.parts.topIndex);
+        /* find the first hole; likely to be near the end of the list,
+         * we know the item at the topIndex is not a hole */
+        slot = &table_[topIndex - 1];
+        assert(slot->obj != NULL);
+        while ((--slot)->obj != NULL) {
+            assert(slot >= table_ + prevState.parts.topIndex);
         }
-        updateSlotAdd(obj, pScan - table_);
-        result = toIndirectRef(obj, pScan - table_);
-        *pScan = obj;
         segmentState.parts.numHoles--;
     } else {
-        /* add to the end */
-        updateSlotAdd(obj, topIndex);
-        result = toIndirectRef(obj, topIndex);
-        table_[topIndex++] = obj;
+        /* add to the end, grow if needed */
+        if (topIndex == alloc_entries_) {
+            /* reached end of allocated space; did we hit buffer max? */
+            if (topIndex == max_entries_) {
+                LOGE("JNI ERROR (app bug): %s reference table overflow (max=%d)",
+                        indirectRefKindToString(kind_), max_entries_);
+                return NULL;
+            }
+
+            size_t newSize = alloc_entries_ * 2;
+            if (newSize > max_entries_) {
+                newSize = max_entries_;
+            }
+            assert(newSize > alloc_entries_);
+
+            IndirectRefSlot* newTable =
+                    (IndirectRefSlot*) realloc(table_, newSize * sizeof(IndirectRefSlot));
+            if (table_ == NULL) {
+                LOGE("JNI ERROR (app bug): unable to expand %s reference table "
+                        "(from %d to %d, max=%d)",
+                        indirectRefKindToString(kind_),
+                        alloc_entries_, newSize, max_entries_);
+                return NULL;
+            }
+
+            alloc_entries_ = newSize;
+            table_ = newTable;
+        }
+        slot = &table_[topIndex++];
         segmentState.parts.topIndex = topIndex;
     }
+
+    slot->obj = obj;
+    slot->serial = nextSerial(slot->serial);
+    result = toIndirectRef(slot - table_, slot->serial, kind_);
 
     assert(result != NULL);
     return result;
 }
 
 /*
- * Verify that the indirect table lookup is valid.
+ * Get the referent of an indirect ref from the table.
  *
- * Returns "false" if something looks bad.
+ * Returns kInvalidIndirectRefObject if iref is invalid.
  */
-bool IndirectRefTable::getChecked(IndirectRef iref) const
-{
-    if (iref == NULL) {
-        LOGW("Attempt to look up NULL %s reference", indirectRefKindToString(kind_));
-        return false;
-    }
-    if (indirectRefKind(iref) == kIndirectKindInvalid) {
-        LOGE("JNI ERROR (app bug): invalid %s reference %p",
-                indirectRefKindToString(kind_), iref);
-        abortMaybe();
-        return false;
+Object* IndirectRefTable::get(IndirectRef iref) const {
+    IndirectRefKind kind = indirectRefKind(iref);
+    if (kind != kind_) {
+        if (iref == NULL) {
+            LOGW("Attempt to look up NULL %s reference", indirectRefKindToString(kind_));
+            return kInvalidIndirectRefObject;
+        }
+        if (kind == kIndirectKindInvalid) {
+            LOGE("JNI ERROR (app bug): invalid %s reference %p",
+                    indirectRefKindToString(kind_), iref);
+            abortMaybe();
+            return kInvalidIndirectRefObject;
+        }
+        // References of the requested kind cannot appear within this table.
+        return kInvalidIndirectRefObject;
     }
 
-    int topIndex = segmentState.parts.topIndex;
-    int idx = extractIndex(iref);
-    if (idx >= topIndex) {
+    u4 topIndex = segmentState.parts.topIndex;
+    u4 index = extractIndex(iref);
+    if (index >= topIndex) {
         /* bad -- stale reference? */
         LOGE("JNI ERROR (app bug): accessed stale %s reference %p (index %d in a table of size %d)",
-                indirectRefKindToString(kind_), iref, idx, topIndex);
+                indirectRefKindToString(kind_), iref, index, topIndex);
         abortMaybe();
-        return false;
+        return kInvalidIndirectRefObject;
     }
 
-    if (table_[idx] == NULL) {
+    Object* obj = table_[index].obj;
+    if (obj == NULL) {
         LOGI("JNI ERROR (app bug): accessed deleted %s reference %p",
                 indirectRefKindToString(kind_), iref);
         abortMaybe();
-        return false;
+        return kInvalidIndirectRefObject;
     }
 
-    if (!checkEntry("use", iref, idx)) {
-        return false;
+    u4 serial = extractSerial(iref);
+    if (serial != table_[index].serial) {
+        LOGE("JNI ERROR (app bug): attempt to use stale %s reference %p",
+                indirectRefKindToString(kind_), iref);
+        abortMaybe();
+        return kInvalidIndirectRefObject;
     }
 
-    return true;
+    return obj;
 }
 
-static int linearScan(IndirectRef iref, int bottomIndex, int topIndex, Object** table) {
+static int findObject(const Object* obj, int bottomIndex, int topIndex,
+        const IndirectRefSlot* table) {
     for (int i = bottomIndex; i < topIndex; ++i) {
-        if (table[i] == reinterpret_cast<Object*>(iref)) {
+        if (table[i].obj == obj) {
             return i;
         }
     }
     return -1;
 }
 
-bool IndirectRefTable::contains(IndirectRef iref) const {
-    return linearScan(iref, 0, segmentState.parts.topIndex, table_) != -1;
+bool IndirectRefTable::contains(const Object* obj) const {
+    return findObject(obj, 0, segmentState.parts.topIndex, table_) >= 0;
 }
 
 /*
@@ -229,52 +213,61 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
 {
     IRTSegmentState prevState;
     prevState.all = cookie;
-    int topIndex = segmentState.parts.topIndex;
-    int bottomIndex = prevState.parts.topIndex;
+    u4 topIndex = segmentState.parts.topIndex;
+    u4 bottomIndex = prevState.parts.topIndex;
 
     assert(table_ != NULL);
     assert(alloc_entries_ <= max_entries_);
     assert(segmentState.parts.numHoles >= prevState.parts.numHoles);
 
-    int idx = extractIndex(iref);
-    bool workAroundAppJniBugs = false;
-
-    if (indirectRefKind(iref) == kIndirectKindInvalid && gDvmJni.workAroundAppJniBugs) {
-        idx = linearScan(iref, bottomIndex, topIndex, table_);
-        workAroundAppJniBugs = true;
-        if (idx == -1) {
+    IndirectRefKind kind = indirectRefKind(iref);
+    u4 index;
+    if (kind == kind_) {
+        index = extractIndex(iref);
+        if (index < bottomIndex) {
+            /* wrong segment */
+            ALOGV("Attempt to remove index outside index area (%ud vs %ud-%ud)",
+                    index, bottomIndex, topIndex);
+            return false;
+        }
+        if (index >= topIndex) {
+            /* bad -- stale reference? */
+            LOGD("Attempt to remove invalid index %ud (bottom=%ud top=%ud)",
+                    index, bottomIndex, topIndex);
+            return false;
+        }
+        if (table_[index].obj == NULL) {
+            LOGD("Attempt to remove cleared %s reference %p",
+                    indirectRefKindToString(kind_), iref);
+            return false;
+        }
+        u4 serial = extractSerial(iref);
+        if (table_[index].serial != serial) {
+            LOGD("Attempt to remove stale %s reference %p",
+                    indirectRefKindToString(kind_), iref);
+            return false;
+        }
+    } else if (kind == kIndirectKindInvalid && gDvmJni.workAroundAppJniBugs) {
+        // reference looks like a pointer, scan the table to find the index
+        int i = findObject(reinterpret_cast<Object*>(iref), bottomIndex, topIndex, table_);
+        if (i < 0) {
             LOGW("trying to work around app JNI bugs, but didn't find %p in table!", iref);
             return false;
         }
-    }
-
-    if (idx < bottomIndex) {
-        /* wrong segment */
-        ALOGV("Attempt to remove index outside index area (%d vs %d-%d)",
-            idx, bottomIndex, topIndex);
-        return false;
-    }
-    if (idx >= topIndex) {
-        /* bad -- stale reference? */
-        LOGD("Attempt to remove invalid index %d (bottom=%d top=%d)",
-            idx, bottomIndex, topIndex);
+        index = i;
+    } else {
+        // References of the requested kind cannot appear within this table.
         return false;
     }
 
-    if (idx == topIndex-1) {
+    if (index == topIndex - 1) {
         // Top-most entry.  Scan up and consume holes.
-
-        if (workAroundAppJniBugs == false && !checkEntry("remove", iref, idx)) {
-            return false;
-        }
-
-        table_[idx] = NULL;
         int numHoles = segmentState.parts.numHoles - prevState.parts.numHoles;
         if (numHoles != 0) {
             while (--topIndex > bottomIndex && numHoles != 0) {
                 ALOGV("+++ checking for hole at %d (cookie=0x%08x) val=%p",
-                    topIndex-1, cookie, table_[topIndex-1]);
-                if (table_[topIndex-1] != NULL) {
+                    topIndex-1, cookie, table_[topIndex-1].obj);
+                if (table_[topIndex-1].obj != NULL) {
                     break;
                 }
                 ALOGV("+++ ate hole at %d", topIndex-1);
@@ -292,17 +285,9 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
          * entry to prevent somebody from deleting it twice and screwing up
          * the hole count.
          */
-        if (table_[idx] == NULL) {
-            ALOGV("--- WEIRD: removing null entry %d", idx);
-            return false;
-        }
-        if (workAroundAppJniBugs == false && !checkEntry("remove", iref, idx)) {
-            return false;
-        }
-
-        table_[idx] = NULL;
+        table_[index].obj = NULL;
         segmentState.parts.numHoles++;
-        ALOGV("+++ left hole at %d, holes=%d", idx, segmentState.parts.numHoles);
+        ALOGV("+++ left hole at %d, holes=%d", index, segmentState.parts.numHoles);
     }
 
     return true;
@@ -321,5 +306,11 @@ const char* indirectRefKindToString(IndirectRefKind kind)
 
 void IndirectRefTable::dump(const char* descr) const
 {
-    dvmDumpReferenceTableContents(table_, capacity(), descr);
+    size_t count = capacity();
+    Object** copy = new Object*[count];
+    for (size_t i = 0; i < count; i++) {
+        copy[i] = table_[i].obj;
+    }
+    dvmDumpReferenceTableContents(copy, count, descr);
+    delete[] copy;
 }
