@@ -20,10 +20,41 @@
 #include "Dalvik.h"
 
 #include <stdlib.h>
+#include <sys/time.h>
 
 #ifndef NDEBUG
 
 #define DBUG_MSG    LOGI
+
+class Stopwatch {
+public:
+    Stopwatch() {
+        reset();
+    }
+
+    void reset() {
+        start_ = now();
+    }
+
+    float elapsedSeconds() {
+        return (now() - start_) * 0.000001f;
+    }
+
+private:
+    u8 start_;
+
+    static u8 now() {
+#ifdef HAVE_POSIX_CLOCKS
+        struct timespec tm;
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tm);
+        return tm.tv_sec * 1000000LL + tm.tv_nsec / 1000;
+#else
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        return tv.tv_sec * 1000000LL + tv.tv_usec;
+#endif
+    }
+};
 
 /*
  * Basic add/get/delete tests in an unsegmented table.
@@ -310,6 +341,66 @@ bail:
     return result;
 }
 
+static bool performanceTest()
+{
+    static const int kTableMax = 100;
+    IndirectRefTable irt;
+    IndirectRef manyRefs[kTableMax];
+    ClassObject* clazz = dvmFindClass("Ljava/lang/Object;", NULL);
+    Object* obj0 = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+    const u4 cookie = IRT_FIRST_SEGMENT;
+    const int kLoops = 100000;
+    Stopwatch stopwatch;
+
+    DBUG_MSG("+++ START performance\n");
+
+    if (!irt.init(kTableMax, kTableMax, kIndirectKindGlobal)) {
+        return false;
+    }
+
+    stopwatch.reset();
+    for (int loop = 0; loop < kLoops; loop++) {
+        for (int i = 0; i < kTableMax; i++) {
+            manyRefs[i] = irt.add(cookie, obj0);
+        }
+        for (int i = 0; i < kTableMax; i++) {
+            irt.remove(cookie, manyRefs[i]);
+        }
+    }
+    DBUG_MSG("Add/remove %d objects FIFO order, %d iterations, %0.3fms / iteration",
+            kTableMax, kLoops, stopwatch.elapsedSeconds() * 1000 / kLoops);
+
+    stopwatch.reset();
+    for (int loop = 0; loop < kLoops; loop++) {
+        for (int i = 0; i < kTableMax; i++) {
+            manyRefs[i] = irt.add(cookie, obj0);
+        }
+        for (int i = kTableMax; i-- > 0; ) {
+            irt.remove(cookie, manyRefs[i]);
+        }
+    }
+    DBUG_MSG("Add/remove %d objects LIFO order, %d iterations, %0.3fms / iteration",
+            kTableMax, kLoops, stopwatch.elapsedSeconds() * 1000  / kLoops);
+
+    for (int i = 0; i < kTableMax; i++) {
+        manyRefs[i] = irt.add(cookie, obj0);
+    }
+    stopwatch.reset();
+    for (int loop = 0; loop < kLoops; loop++) {
+        for (int i = 0; i < kTableMax; i++) {
+            irt.get(manyRefs[i]);
+        }
+    }
+    DBUG_MSG("Get %d objects, %d iterations, %0.3fms / iteration",
+            kTableMax, kLoops, stopwatch.elapsedSeconds() * 1000  / kLoops);
+    for (int i = kTableMax; i-- > 0; ) {
+        irt.remove(cookie, manyRefs[i]);
+    }
+
+    irt.destroy();
+    return true;
+}
+
 /*
  * Some quick tests.
  */
@@ -317,6 +408,11 @@ bool dvmTestIndirectRefTable()
 {
     if (!basicTest()) {
         LOGE("IRT basic test failed");
+        return false;
+    }
+
+    if (!performanceTest()) {
+        LOGE("IRT performance test failed");
         return false;
     }
 
