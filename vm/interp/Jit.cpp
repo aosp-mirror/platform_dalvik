@@ -976,9 +976,12 @@ void dvmCheckJit(const u2* pc, Thread* self)
      if (allDone) {
          dvmDisableSubMode(self, kSubModeJitTraceBuild);
          if (stayOneMoreInst) {
+             // Clear jitResumeNPC explicitly since we know we don't need it
+             // here.
+             self->jitResumeNPC = NULL;
              // Keep going in single-step mode for at least one more inst
-             assert(self->jitResumeNPC == NULL);
-             self->singleStepCount = MIN(1, self->singleStepCount);
+             if (self->singleStepCount == 0)
+                 self->singleStepCount = 1;
              dvmEnableSubMode(self, kSubModeCountedStep);
          }
      }
