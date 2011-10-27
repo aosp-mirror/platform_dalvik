@@ -1292,7 +1292,6 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
             break;
         }
     }
-    dvmPrintDebugMessage(target, "\n");
 
     if (needThreadUnlock) {
         dvmUnlockThreadList();
@@ -1386,17 +1385,16 @@ void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
 /*
  * Dump the native stack for the specified thread.
  */
-void dvmDumpNativeStack(const DebugOutputTarget* target, Thread* thread)
+void dvmDumpNativeStack(const DebugOutputTarget* target, pid_t tid)
 {
 #ifdef HAVE_ANDROID_OS
     const size_t MAX_DEPTH = 32;
     backtrace_frame_t backtrace[MAX_DEPTH];
-    ssize_t frames = unwind_backtrace_thread(thread->systemTid, backtrace, 0, MAX_DEPTH);
+    ssize_t frames = unwind_backtrace_thread(tid, backtrace, 0, MAX_DEPTH);
     if (frames > 0) {
         backtrace_symbol_t backtrace_symbols[MAX_DEPTH];
         get_backtrace_symbols(backtrace, frames, backtrace_symbols);
 
-        dvmPrintDebugMessage(target, "Native Stack:\n");
         for (size_t i = 0; i < size_t(frames); i++) {
             const backtrace_symbol_t& symbol = backtrace_symbols[i];
             const char* mapName = symbol.map_info ? symbol.map_info->name : "<unknown>";
@@ -1409,7 +1407,6 @@ void dvmDumpNativeStack(const DebugOutputTarget* target, Thread* thread)
                         i, uint32_t(symbol.relative_pc), mapName);
             }
         }
-        dvmPrintDebugMessage(target, "\n");
 
         free_backtrace_symbols(backtrace_symbols, frames);
     }

@@ -30,6 +30,10 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#ifdef HAVE_ANDROID_OS
+#include <dirent.h>
+#endif
+
 #if defined(HAVE_PRCTL)
 #include <sys/prctl.h>
 #endif
@@ -3207,6 +3211,61 @@ const char* dvmGetThreadStatusStr(ThreadStatus status)
     }
 }
 
+static void dumpSchedStat(const DebugOutputTarget* target, pid_t tid) {
+#ifdef HAVE_ANDROID_OS
+    /* get some bits from /proc/self/stat */
+    ProcStatData procStatData;
+    if (!dvmGetThreadStats(&procStatData, tid)) {
+        /* failed, use zeroed values */
+        memset(&procStatData, 0, sizeof(procStatData));
+    }
+
+    /* grab the scheduler stats for this thread */
+    char schedstatBuf[64];
+    snprintf(schedstatBuf, sizeof(schedstatBuf), "/proc/self/task/%d/schedstat", tid);
+    int schedstatFd = open(schedstatBuf, O_RDONLY);
+    strcpy(schedstatBuf, "0 0 0");          /* show this if open/read fails */
+    if (schedstatFd >= 0) {
+        ssize_t bytes;
+        bytes = read(schedstatFd, schedstatBuf, sizeof(schedstatBuf) - 1);
+        close(schedstatFd);
+        if (bytes >= 1) {
+            schedstatBuf[bytes - 1] = '\0';   /* remove trailing newline */
+        }
+    }
+
+    /* show what we got */
+    dvmPrintDebugMessage(target,
+        "  | schedstat=( %s ) utm=%lu stm=%lu core=%d\n",
+        schedstatBuf, procStatData.utime, procStatData.stime,
+        procStatData.processor);
+#endif
+}
+
+struct SchedulerStats {
+    int policy;
+    int priority;
+    char group[32];
+};
+
+/*
+ * Get scheduler statistics.
+ */
+static void getSchedulerStats(SchedulerStats* stats, pid_t tid) {
+    struct sched_param sp;
+    if (pthread_getschedparam(pthread_self(), &stats->policy, &sp) != 0) {
+        LOGW("Warning: pthread_getschedparam failed");
+        stats->policy = -1;
+        stats->priority = -1;
+    } else {
+        stats->priority = sp.sched_priority;
+    }
+    if (getSchedulerGroup(tid, stats->group, sizeof(stats->group)) == 0 &&
+            stats->group[0] == '\0') {
+        strcpy(stats->group, "default");
+    }
+}
+
 /*
  * Print information about the specified thread.
  *
@@ -3222,12 +3281,8 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     StringObject* nameStr;
     char* threadName = NULL;
     char* groupName = NULL;
-    char schedulerGroupBuf[32];
     bool isDaemon;
     int priority;               // java.lang.Thread priority
-    int policy;                 // pthread policy
-    struct sched_param sp;      // pthread scheduling parameters
-    char schedstatBuf[64];      // contents of /proc/[pid]/task/[tid]/schedstat
 
     /*
      * Get the java.lang.Thread object.  This function gets called from
@@ -3254,17 +3309,6 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     priority = dvmGetFieldInt(threadObj, gDvm.offJavaLangThread_priority);
     isDaemon = dvmGetFieldBoolean(threadObj, gDvm.offJavaLangThread_daemon);
 
-    if (pthread_getschedparam(pthread_self(), &policy, &sp) != 0) {
-        LOGW("Warning: pthread_getschedparam failed");
-        policy = -1;
-        sp.sched_priority = -1;
-    }
-    if (getSchedulerGroup(thread->systemTid, schedulerGroupBuf,
-                sizeof(schedulerGroupBuf)) == 0 &&
-            schedulerGroupBuf[0] == '\0') {
-        strcpy(schedulerGroupBuf, "default");
-    }
-
     /* a null value for group is not expected, but deal with it anyway */
     groupObj = (Object*) dvmGetFieldObject(threadObj,
                 gDvm.offJavaLangThread_group);
@@ -3275,6 +3319,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     }
     if (groupName == NULL)
         groupName = strdup("(null; initializing?)");
+
+    SchedulerStats schedStats;
+    getSchedulerStats(&schedStats, thread->systemTid);
 
     dvmPrintDebugMessage(target,
         "\"%s\"%s prio=%d tid=%d %s%s\n",
@@ -3293,44 +3340,21 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     dvmPrintDebugMessage(target,
         "  | sysTid=%d nice=%d sched=%d/%d cgrp=%s handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),
-        policy, sp.sched_priority, schedulerGroupBuf, (int)thread->handle);
+        schedStats.policy, schedStats.priority, schedStats.group, (int)thread->handle);
 
-    /* get some bits from /proc/self/stat */
-    ProcStatData procStatData;
-    if (!dvmGetThreadStats(&procStatData, thread->systemTid)) {
-        /* failed, use zeroed values */
-        memset(&procStatData, 0, sizeof(procStatData));
+    dumpSchedStat(target, thread->systemTid);
+
+    /* grab the native stack, if possible */
+    if (thread->status == THREAD_NATIVE) {
+        dvmDumpNativeStack(target, thread->systemTid);
     }
-
-    /* grab the scheduler stats for this thread */
-    snprintf(schedstatBuf, sizeof(schedstatBuf), "/proc/self/task/%d/schedstat",
-             thread->systemTid);
-    int schedstatFd = open(schedstatBuf, O_RDONLY);
-    strcpy(schedstatBuf, "0 0 0");          /* show this if open/read fails */
-    if (schedstatFd >= 0) {
-        ssize_t bytes;
-        bytes = read(schedstatFd, schedstatBuf, sizeof(schedstatBuf) - 1);
-        close(schedstatFd);
-        if (bytes >= 1) {
-            schedstatBuf[bytes-1] = '\0';   /* remove trailing newline */
-        }
-    }
-
-    /* show what we got */
-    dvmPrintDebugMessage(target,
-        "  | schedstat=( %s ) utm=%lu stm=%lu core=%d\n",
-        schedstatBuf, procStatData.utime, procStatData.stime,
-        procStatData.processor);
 
     if (isRunning)
         dvmDumpRunningThreadStack(target, thread);
     else
         dvmDumpThreadStack(target, thread);
 
-    /* grab the native stack, if possible */
-    if (thread->status == THREAD_NATIVE) {
-        dvmDumpNativeStack(target, thread);
-    }
+    dvmPrintDebugMessage(target, "\n");
 
     dvmReleaseTrackedAlloc(threadObj, NULL);
     free(threadName);
@@ -3347,6 +3371,57 @@ std::string dvmGetThreadName(Thread* thread) {
         dvmGetFieldObject(thread->threadObj, gDvm.offJavaLangThread_name);
     return dvmCreateCstrFromString(nameObj);
 }
+
+#ifdef HAVE_ANDROID_OS
+/*
+ * Dumps information about a non-Dalvik thread.
+ */
+static void dumpNativeThread(const DebugOutputTarget* target, pid_t tid) {
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/%d/comm", tid);
+
+    int fd = open(path, O_RDONLY);
+    char name[64];
+    ssize_t n = 0;
+    if (fd >= 0) {
+        n = read(fd, name, sizeof(name) - 1);
+        close(fd);
+    }
+    if (n > 0 && name[n - 1] == '\n') {
+        n -= 1;
+    }
+    if (n <= 0) {
+        strcpy(name, "<no name>");
+    } else {
+        name[n] = '\0';
+    }
+
+    SchedulerStats schedStats;
+    getSchedulerStats(&schedStats, tid);
+
+    dvmPrintDebugMessage(target,
+        "\"%s\" sysTid=%d nice=%d sched=%d/%d cgrp=%s\n",
+        name, tid, getpriority(PRIO_PROCESS, tid),
+        schedStats.policy, schedStats.priority, schedStats.group);
+    dumpSchedStat(target, tid);
+    dvmDumpNativeStack(target, tid);
+
+    dvmPrintDebugMessage(target, "\n");
+}
+
+/*
+ * Returns true if the specified tid is a Dalvik thread.
+ * Assumes the thread list lock is held.
+ */
+static bool isDalvikThread(pid_t tid) {
+    for (Thread* thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        if (thread->systemTid == tid) {
+            return true;
+        }
+    }
+    return false;
+}
+#endif
 
 /*
  * Dump all threads to the log file -- just calls dvmDumpAllThreadsEx() with
@@ -3375,7 +3450,7 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
 
 #ifdef HAVE_ANDROID_OS
     dvmPrintDebugMessage(target,
-        "(mutexes: tll=%x tsl=%x tscl=%x ghl=%x)\n",
+        "(mutexes: tll=%x tsl=%x tscl=%x ghl=%x)\n\n",
         gDvm.threadListLock.value,
         gDvm._threadSuspendLock.value,
         gDvm.threadSuspendCountLock.value,
@@ -3394,6 +3469,30 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
 
         thread = thread->next;
     }
+
+#ifdef HAVE_ANDROID_OS
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/%d/task", getpid());
+
+    DIR* d = opendir(path);
+    if (d) {
+        dirent de;
+        dirent* result;
+        bool first = true;
+        while (!readdir_r(d, &de, &result) && result) {
+            char* end;
+            pid_t tid = strtol(de.d_name, &end, 10);
+            if (!*end && !isDalvikThread(tid)) {
+                if (first) {
+                    dvmPrintDebugMessage(target, "NATIVE THREADS:\n");
+                    first = false;
+                }
+                dumpNativeThread(target, tid);
+            }
+        }
+        closedir(d);
+    }
+#endif
 
     if (grabLock)
         dvmUnlockThreadList();

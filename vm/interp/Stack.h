@@ -275,6 +275,6 @@ extern "C" void dvmCleanupStackOverflow(Thread* self, const Object* exception);
 /* debugging; dvmDumpThread() is probably a better starting point */
 void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread);
 void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread);
-void dvmDumpNativeStack(const DebugOutputTarget* target, Thread* thread);
+void dvmDumpNativeStack(const DebugOutputTarget* target, pid_t tid);
 
 #endif  // DALVIK_INTERP_STACK_H_
