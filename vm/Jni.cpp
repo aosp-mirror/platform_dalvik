@@ -558,7 +558,9 @@ static jobject addWeakGlobalReference(Object* obj) {
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
     jobject jobj = (jobject) table->add(IRT_FIRST_SEGMENT, obj);
     if (jobj == NULL) {
+        gDvm.jniWeakGlobalRefTable.dump("JNI weak global");
         LOGE("Failed adding to JNI weak global ref table (%zd entries)", table->capacity());
+        dvmAbort();
     }
     return jobj;
 }
@@ -706,7 +708,7 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj) {
     if (obj == reinterpret_cast<Object*>(jobj) && gDvmJni.workAroundAppJniBugs) {
         // If we're handing out direct pointers, check whether 'jobj' is a direct reference
         // to a local reference.
-        return getLocalRefTable(env)->contains(jobj) ? JNILocalRefType : JNIInvalidRefType;
+        return getLocalRefTable(env)->contains(obj) ? JNILocalRefType : JNIInvalidRefType;
     } else if (obj == kInvalidIndirectRefObject) {
         return JNIInvalidRefType;
     } else {

@@ -82,6 +82,8 @@
  * memory accesses on add/get.  It will catch additional problems, e.g.:
  * create iref1 for obj, delete iref1, create iref2 for same obj, lookup
  * iref1.  A pattern based on object bits will miss this.
+ *
+ * For now, we use a serial number.
  */
 typedef void* IndirectRef;
 
@@ -112,13 +114,11 @@ INLINE IndirectRefKind indirectRefKind(IndirectRef iref)
 }
 
 /*
- * Extended debugging structure.  We keep a parallel array of these, one
- * per slot in the table.
+ * Information we store for each slot in the reference table.
  */
-#define kIRTPrevCount   4
 struct IndirectRefSlot {
-    u4          serial;         /* slot serial */
-    Object*     previous[kIRTPrevCount];
+    Object* obj;        /* object pointer itself, NULL if the slot is unused */
+    u4      serial;     /* slot serial number */
 };
 
 /* use as initial value for "cookie", and when table has only one segment */
@@ -201,9 +201,8 @@ union IRTSegmentState {
 
 class iref_iterator {
 public:
-    explicit iref_iterator(Object** table, size_t i, size_t capacity)
-    : table_(table), i_(i), capacity_(capacity)
-    {
+    explicit iref_iterator(IndirectRefSlot* table, size_t i, size_t capacity) :
+            table_(table), i_(i), capacity_(capacity) {
         skipNullsAndTombstones();
     }
 
@@ -214,24 +213,23 @@ public:
     }
 
     Object** operator*() {
-        return &table_[i_];
+        return &table_[i_].obj;
     }
 
     bool equals(const iref_iterator& rhs) const {
         return (i_ == rhs.i_ && table_ == rhs.table_);
     }
 
-    size_t to_i() const { return i_; }
-
 private:
     void skipNullsAndTombstones() {
         // We skip NULLs and tombstones. Clients don't want to see implementation details.
-        while (i_ < capacity_ && (table_[i_] == NULL || table_[i_] == kClearedJniWeakGlobal)) {
+        while (i_ < capacity_ && (table_[i_].obj == NULL
+                || table_[i_].obj == kClearedJniWeakGlobal)) {
             ++i_;
         }
     }
 
-    Object** table_;
+    IndirectRefSlot* table_;
     size_t i_;
     size_t capacity_;
 };
@@ -254,11 +252,9 @@ public:
      * uses offsetof, since private member data makes us non-POD.
      */
     /* bottom of the stack */
-    Object** table_;
+    IndirectRefSlot* table_;
     /* bit mask, ORed into all irefs */
     IndirectRefKind kind_;
-    /* extended debugging info */
-    IndirectRefSlot* slot_data_;
     /* #of entries we have space for */
     size_t          alloc_entries_;
     /* max #of entries allowed */
@@ -282,15 +278,12 @@ public:
      *
      * Returns kInvalidIndirectRefObject if iref is invalid.
      */
-    Object* get(IndirectRef iref) const {
-        if (!getChecked(iref)) {
-            return kInvalidIndirectRefObject;
-        }
-        return table_[extractIndex(iref)];
-    }
+    Object* get(IndirectRef iref) const;
 
-    // TODO: only used for workAroundAppJniBugs support.
-    bool contains(IndirectRef iref) const;
+    /*
+     * Returns true if the table contains a reference to this object.
+     */
+    bool contains(const Object* obj) const;
 
     /*
      * Remove an existing entry.
@@ -351,42 +344,24 @@ public:
     }
 
 private:
-    /*
-     * Extract the table index from an indirect reference.
-     */
-    static u4 extractIndex(IndirectRef iref) {
+    static inline u4 extractIndex(IndirectRef iref) {
         u4 uref = (u4) iref;
         return (uref >> 2) & 0xffff;
     }
 
-    /*
-     * The object pointer itself is subject to relocation in some GC
-     * implementations, so we shouldn't really be using it here.
-     */
-    IndirectRef toIndirectRef(Object* obj, u4 tableIndex) const {
-        assert(tableIndex < 65536);
-        u4 serialChunk = slot_data_[tableIndex].serial;
-        u4 uref = serialChunk << 20 | (tableIndex << 2) | kind_;
-        return (IndirectRef) uref;
+    static inline u4 extractSerial(IndirectRef iref) {
+        u4 uref = (u4) iref;
+        return uref >> 20;
     }
 
-    /*
-     * Update extended debug info when an entry is added.
-     *
-     * We advance the serial number, invalidating any outstanding references to
-     * this slot.
-     */
-    void updateSlotAdd(Object* obj, int slot) {
-        if (slot_data_ != NULL) {
-            IndirectRefSlot* pSlot = &slot_data_[slot];
-            pSlot->serial++;
-            pSlot->previous[pSlot->serial % kIRTPrevCount] = obj;
-        }
+    static inline u4 nextSerial(u4 serial) {
+        return (serial + 1) & 0xfff;
     }
 
-    /* extra debugging checks */
-    bool getChecked(IndirectRef) const;
-    bool checkEntry(const char*, IndirectRef, int) const;
+    static inline IndirectRef toIndirectRef(u4 index, u4 serial, IndirectRefKind kind) {
+        assert(index < 65536);
+        return reinterpret_cast<IndirectRef>((serial << 20) | (index << 2) | kind);
+    }
 };
 
 #endif  // DALVIK_INDIRECTREFTABLE_H_
