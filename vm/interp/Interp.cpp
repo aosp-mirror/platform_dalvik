@@ -1839,6 +1839,9 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
                 // Doesn't return
                 dvmAbort();
             }
+            // In case resume is blocked by non-zero breakFlags, clear
+            // jitResumeNPC here.
+            self->jitResumeNPC = NULL;
             self->jitResumeDPC = NULL;
             self->inJitCodeCache = NULL;
 #endif
