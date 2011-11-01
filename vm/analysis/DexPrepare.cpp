@@ -90,13 +90,13 @@ static bool directoryIsValid(const std::string& fileName)
         return false;
     }
 
-    if (access(dirName.c_str(), R_OK) < 0) {
-        LOGE("Dex cache directory isn't readable: %s", dirName.c_str());
+    if (access(dirName.c_str(), W_OK) < 0) {
+        LOGE("Dex cache directory isn't writable: %s", dirName.c_str());
         return false;
     }
 
-    if (access(dirName.c_str(), W_OK) < 0) {
-        LOGE("Dex cache directory isn't writable: %s", dirName.c_str());
+    if (access(dirName.c_str(), R_OK) < 0) {
+        LOGE("Dex cache directory isn't readable: %s", dirName.c_str());
         return false;
     }
 
@@ -881,6 +881,12 @@ bail:
     /*
      * On success, return the pieces that the caller asked for.
      */
+
+    if (pDvmDex != NULL) {
+        /* break link between the two */
+        pDvmDex->pDexFile->pClassLookup = NULL;
+    }
+
     if (ppDvmDex == NULL || !result) {
         dvmDexFileFree(pDvmDex);
     } else {
@@ -892,9 +898,6 @@ bail:
     } else {
         *ppClassLookup = pClassLookup;
     }
-
-    /* break link between the two */
-    pDvmDex->pDexFile->pClassLookup = NULL;
 
     return result;
 }
