@@ -1829,6 +1829,10 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
                 }
             }
 #endif
+#if 0
+            // TODO - fix JIT single-stepping resume mode (b/5551114)
+            // self->jitResumeNPC needs to be cleared in callPrep
+
             // If we've got a native return and no other reasons to
             // remain in singlestep/break mode, do a long jump
             if (self->jitResumeNPC != NULL &&
@@ -1844,6 +1848,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
             self->jitResumeNPC = NULL;
             self->jitResumeDPC = NULL;
             self->inJitCodeCache = NULL;
+#endif
 #endif
         } else {
             self->singleStepCount--;
