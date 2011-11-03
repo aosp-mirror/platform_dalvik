@@ -3404,7 +3404,9 @@ static void dumpNativeThread(const DebugOutputTarget* target, pid_t tid) {
         name, tid, getpriority(PRIO_PROCESS, tid),
         schedStats.policy, schedStats.priority, schedStats.group);
     dumpSchedStat(target, tid);
-    dvmDumpNativeStack(target, tid);
+    // Temporarily disabled collecting native stacks from non-Dalvik
+    // threads because sometimes they misbehave.
+    //dvmDumpNativeStack(target, tid);
 
     dvmPrintDebugMessage(target, "\n");
 }
