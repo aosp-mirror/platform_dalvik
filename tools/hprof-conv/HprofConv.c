@@ -572,6 +572,7 @@ bail:
  */
 static int filterData(FILE* in, FILE* out)
 {
+    const char *magicString;
     ExpandBuf* pBuf;
     int result = -1;
 
@@ -585,8 +586,13 @@ static int filterData(FILE* in, FILE* out)
     if (ebReadString(pBuf, in) != 0)
         goto bail;
 
-    if (strcmp((const char*)ebGetBuffer(pBuf), "JAVA PROFILE 1.0.3") != 0) {
-        fprintf(stderr, "ERROR: expecting 1.0.3\n");
+    magicString = (const char*)ebGetBuffer(pBuf);
+    if (strcmp(magicString, "JAVA PROFILE 1.0.3") != 0) {
+        if (strcmp(magicString, "JAVA PROFILE 1.0.2") == 0) {
+            fprintf(stderr, "ERROR: HPROF file already in 1.0.2 format.\n");
+        } else {
+            fprintf(stderr, "ERROR: expecting HPROF file format 1.0.3\n");
+        }
         goto bail;
     }
 
