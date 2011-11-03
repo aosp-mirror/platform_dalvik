@@ -396,7 +396,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
             LOGW("ANDROID_ROOT not set, defaulting to /system");
             androidRoot = "/system";
         }
-        execFile = (char*)malloc(strlen(androidRoot) + strlen(kDexOptBin) + 1);
+        execFile = (char*)alloca(strlen(androidRoot) + strlen(kDexOptBin) + 1);
         strcpy(execFile, androidRoot);
         strcat(execFile, kDexOptBin);
 
