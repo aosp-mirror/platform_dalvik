@@ -281,12 +281,14 @@ static bool basicTest()
         LOGE("Expected %d entries, found %d", kTableMax, irt.capacity());
         goto bail;
     }
+    irt.dump("table with 20 entries, all filled");
     for (i = 0; i < kTableMax-1; i++) {
         if (!irt.remove(cookie, manyRefs[i])) {
             LOGE("multi-remove failed at %d", i);
             goto bail;
         }
     }
+    irt.dump("table with 20 entries, 19 of them holes");
     /* because of removal order, should have 20 entries, 19 of them holes */
     if (irt.capacity() != (size_t)kTableMax) {
         LOGE("Expected %d entries (with holes), found %d",
@@ -302,6 +304,7 @@ static bool basicTest()
         goto bail;
     }
 
+    /* Done */
     DBUG_MSG("+++ basic test complete\n");
     result = true;
 
