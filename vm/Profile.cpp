@@ -373,12 +373,6 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
         dvmMethodTraceStop();
         dvmLockMutex(&state->startStopLock);
     }
-    /*
-     * ENHANCEMENT: To trace just a single thread, modify the
-     * following to take a Thread* argument, and set the appropriate
-     * interpBreak flags only on the target thread.
-     */
-    updateActiveProfilers(kSubModeMethodTrace, true);
     LOGI("TRACE STARTED: '%s' %dKB", traceFileName, bufferSize / 1024);
 
     /*
@@ -453,6 +447,14 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
      * signaled before exiting, so we have to make sure we wake them up.
      */
     android_atomic_release_store(true, &state->traceEnabled);
+
+    /*
+     * ENHANCEMENT: To trace just a single thread, modify the
+     * following to take a Thread* argument, and set the appropriate
+     * interpBreak flags only on the target thread.
+     */
+    updateActiveProfilers(kSubModeMethodTrace, true);
+
     dvmUnlockMutex(&state->startStopLock);
     return;
 
