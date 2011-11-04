@@ -1397,7 +1397,7 @@ void dvmDumpNativeStack(const DebugOutputTarget* target, pid_t tid)
 
         for (size_t i = 0; i < size_t(frames); i++) {
             const backtrace_symbol_t& symbol = backtrace_symbols[i];
-            const char* mapName = symbol.map_info ? symbol.map_info->name : "<unknown>";
+            const char* mapName = symbol.map_name ? symbol.map_name : "<unknown>";
             const char* symbolName = symbol.demangled_name ? symbol.demangled_name : symbol.name;
             if (symbolName) {
                 dvmPrintDebugMessage(target, "  #%02d  pc %08x  %s (%s)\n",
