@@ -48,7 +48,7 @@
  * Initializes the card table; must be called before any other
  * dvmCardTable*() functions.
  */
-bool dvmCardTableStartup(size_t heapMaximumSize)
+bool dvmCardTableStartup(size_t heapMaximumSize, size_t growthLimit)
 {
     size_t length;
     void *allocBase;
@@ -67,7 +67,8 @@ bool dvmCardTableStartup(size_t heapMaximumSize)
         return false;
     }
     gcHeap->cardTableBase = (u1*)allocBase;
-    gcHeap->cardTableLength = length;
+    gcHeap->cardTableLength = growthLimit / GC_CARD_SIZE;
+    gcHeap->cardTableMaxLength = length;
     gcHeap->cardTableOffset = 0;
     /* All zeros is the correct initial value; all clean. */
     assert(GC_CARD_CLEAN == 0);
@@ -96,8 +97,26 @@ void dvmCardTableShutdown()
 
 void dvmClearCardTable()
 {
+    /*
+     * The goal is to zero out some mmap-allocated pages.  We can accomplish
+     * this with memset() or madvise(MADV_DONTNEED).  The latter has some
+     * useful properties, notably that the pages are returned to the system,
+     * so cards for parts of the heap we haven't expanded into won't be
+     * allocated physical pages.  On the other hand, if we un-map the card
+     * area, we'll have to fault it back in as we resume dirtying objects,
+     * which reduces performance.  (Also, "the kernel is free to ignore the
+     * advice" makes this sound like something we can't necessarily rely on
+     * to synchronously clear memory; may need to memset *and* madvise.)
+     *
+     * TODO: use memset() to clear out to the current "soft" limit, and
+     * madvise() to clear out the rest.
+     *
+     * Note that cardTableLength is initially set to the growth limit, and
+     * on request will be expanded to the heap maximum.
+     */
     assert(gDvm.gcHeap->cardTableBase != NULL);
     memset(gDvm.gcHeap->cardTableBase, GC_CARD_CLEAN, gDvm.gcHeap->cardTableLength);
+    //madvise(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength, MADV_DONTNEED);
 }
 
 /*
