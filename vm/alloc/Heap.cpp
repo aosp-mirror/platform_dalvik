@@ -97,7 +97,7 @@ bool dvmHeapStartup()
      */
     gcHeap->clearedReferences = NULL;
 
-    if (!dvmCardTableStartup(gDvm.heapMaximumSize)) {
+    if (!dvmCardTableStartup(gDvm.heapMaximumSize, gDvm.heapGrowthLimit)) {
         LOGE_HEAP("card table startup failed.");
         return false;
     }
