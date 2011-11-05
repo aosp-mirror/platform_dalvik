@@ -1069,6 +1069,7 @@ void dvmClearGrowthLimit()
     HS_BOILERPLATE();
     dvmLockHeap();
     dvmWaitForConcurrentGcToComplete();
+    gDvm.gcHeap->cardTableLength = gDvm.gcHeap->cardTableMaxLength;
     gHs->growthLimit = gHs->maximumSize;
     size_t overhead = oldHeapOverhead(gHs, false);
     gHs->heaps[0].maximumSize = gHs->maximumSize - overhead;

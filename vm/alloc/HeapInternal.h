@@ -48,6 +48,7 @@ struct GcHeap {
     /* GC's card table */
     u1* cardTableBase;
     size_t cardTableLength;
+    size_t cardTableMaxLength;
     size_t cardTableOffset;
 
     /* Is the GC running?  Used to avoid recursive calls to GC.
