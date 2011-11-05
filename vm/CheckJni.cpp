@@ -162,20 +162,20 @@ static inline const JNIInvokeInterface* baseVm(JavaVM* vm) {
     return ((JavaVMExt*) vm)->baseFuncTable;
 }
 
-class ScopedJniThreadState {
+class ScopedCheckJniThreadState {
 public:
-    explicit ScopedJniThreadState(JNIEnv* env) {
+    explicit ScopedCheckJniThreadState(JNIEnv* env) {
         dvmChangeStatus(NULL, THREAD_RUNNING);
     }
 
-    ~ScopedJniThreadState() {
+    ~ScopedCheckJniThreadState() {
         dvmChangeStatus(NULL, THREAD_NATIVE);
     }
 
 private:
     // Disallow copy and assignment.
-    ScopedJniThreadState(const ScopedJniThreadState&);
-    void operator=(const ScopedJniThreadState&);
+    ScopedCheckJniThreadState(const ScopedCheckJniThreadState&);
+    void operator=(const ScopedCheckJniThreadState&);
 };
 
 /*
@@ -290,8 +290,8 @@ public:
         bool printWarn = false;
         Field* field = (Field*) fieldID;
         if ((field->signature[0] == 'L' || field->signature[0] == '[') && jobj != NULL) {
-            ScopedJniThreadState ts(mEnv);
-            Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
+            ScopedCheckJniThreadState ts(mEnv);
+            Object* obj = dvmDecodeIndirectRef(self(), jobj);
             /*
              * If jobj is a weak global ref whose referent has been cleared,
              * obj will be NULL.  Otherwise, obj should always be non-NULL
@@ -339,9 +339,9 @@ public:
      * Assumes "jobj" has already been validated.
      */
     void checkInstanceFieldID(jobject jobj, jfieldID fieldID) {
-        ScopedJniThreadState ts(mEnv);
+        ScopedCheckJniThreadState ts(mEnv);
 
-        Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
+        Object* obj = dvmDecodeIndirectRef(self(), jobj);
         if (!dvmIsHeapAddress(obj)) {
             LOGW("JNI ERROR: field operation on invalid reference (%p)", jobj);
             dvmAbort();
@@ -412,8 +412,8 @@ public:
      * Assumes "jclazz" has already been validated.
      */
     void checkStaticFieldID(jclass jclazz, jfieldID fieldID) {
-        ScopedJniThreadState ts(mEnv);
-        ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(mEnv, jclazz);
+        ScopedCheckJniThreadState ts(mEnv);
+        ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(self(), jclazz);
         StaticField* base = &clazz->sfields[0];
         int fieldCount = clazz->sfieldCount;
         if ((StaticField*) fieldID < base || (StaticField*) fieldID >= base + fieldCount) {
@@ -435,9 +435,9 @@ public:
      * Instances of "jclazz" must be instances of the method's declaring class.
      */
     void checkStaticMethod(jclass jclazz, jmethodID methodID) {
-        ScopedJniThreadState ts(mEnv);
+        ScopedCheckJniThreadState ts(mEnv);
 
-        ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(mEnv, jclazz);
+        ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(self(), jclazz);
         const Method* method = (const Method*) methodID;
 
         if (!dvmInstanceof(clazz, method->clazz)) {
@@ -456,9 +456,9 @@ public:
      * will be handled automatically by the instanceof check.)
      */
     void checkVirtualMethod(jobject jobj, jmethodID methodID) {
-        ScopedJniThreadState ts(mEnv);
+        ScopedCheckJniThreadState ts(mEnv);
 
-        Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
+        Object* obj = dvmDecodeIndirectRef(self(), jobj);
         const Method* method = (const Method*) methodID;
 
         if (!dvmInstanceof(obj->clazz, method->clazz)) {
@@ -579,7 +579,7 @@ public:
                     msg += (b ? "JNI_TRUE" : "JNI_FALSE");
                 } else if (ch == 'c') { // jclass
                     jclass jc = va_arg(ap, jclass);
-                    Object* c = dvmDecodeIndirectRef(mEnv, jc);
+                    Object* c = dvmDecodeIndirectRef(self(), jc);
                     if (c == NULL) {
                         msg += "NULL";
                     } else if (c == kInvalidIndirectRefObject || !dvmIsHeapAddress(c)) {
@@ -702,6 +702,11 @@ public:
         }
     }
 
+    // Only safe after checkThread returns.
+    Thread* self() {
+        return ((JNIEnvExt*) mEnv)->self;
+    }
+
 private:
     JNIEnv* mEnv;
     const char* mFunctionName;
@@ -735,10 +740,10 @@ private:
             return;
         }
 
-        ScopedJniThreadState ts(mEnv);
+        ScopedCheckJniThreadState ts(mEnv);
         bool printWarn = false;
 
-        Object* obj = dvmDecodeIndirectRef(mEnv, jarr);
+        Object* obj = dvmDecodeIndirectRef(self(), jarr);
         if (!dvmIsHeapAddress(obj)) {
             LOGW("JNI WARNING: jarray is an invalid %s reference (%p)",
             indirectRefKindName(jarr), jarr);
@@ -777,14 +782,14 @@ private:
             return;
         }
 
-        ScopedJniThreadState ts(mEnv);
+        ScopedCheckJniThreadState ts(mEnv);
 
         bool printWarn = false;
-        if (dvmGetJNIRefType(mEnv, jobj) == JNIInvalidRefType) {
+        if (dvmGetJNIRefType(self(), jobj) == JNIInvalidRefType) {
             LOGW("JNI WARNING: %p is not a valid JNI reference", jobj);
             printWarn = true;
         } else {
-            Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
+            Object* obj = dvmDecodeIndirectRef(self(), jobj);
             if (obj == kInvalidIndirectRefObject) {
                 LOGW("JNI WARNING: native code passing in invalid reference %p", jobj);
                 printWarn = true;
@@ -945,10 +950,10 @@ private:
             return;
         }
 
-        ScopedJniThreadState ts(mEnv);
+        ScopedCheckJniThreadState ts(mEnv);
         bool printWarn = false;
 
-        Object* obj = dvmDecodeIndirectRef(mEnv, jobj);
+        Object* obj = dvmDecodeIndirectRef(self(), jobj);
         if (!dvmIsHeapAddress(obj)) {
             LOGW("JNI WARNING: %s is an invalid %s reference (%p)",
                     argName, indirectRefKindName(jobj), jobj);
@@ -1253,9 +1258,9 @@ static int dvmPrimitiveTypeWidth(PrimitiveType primType) {
  * data are allowed.  Returns a pointer to the copied data.
  */
 static void* createGuardedPACopy(JNIEnv* env, const jarray jarr, jboolean* isCopy) {
-    ScopedJniThreadState ts(env);
+    ScopedCheckJniThreadState ts(env);
 
-    ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
+    ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(dvmThreadSelf(), jarr);
     PrimitiveType primType = arrObj->clazz->elementClass->primitiveType;
     int len = arrObj->length * dvmPrimitiveTypeWidth(primType);
     void* result = GuardedCopy::create(arrObj->contents, len, true);
@@ -1270,8 +1275,8 @@ static void* createGuardedPACopy(JNIEnv* env, const jarray jarr, jboolean* isCop
  * back into the VM, and may or may not release the underlying storage.
  */
 static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf, int mode) {
-    ScopedJniThreadState ts(env);
-    ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
+    ScopedCheckJniThreadState ts(env);
+    ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(dvmThreadSelf(), jarr);
 
     if (!GuardedCopy::check(dataBuf, true)) {
         LOGE("JNI: failed guarded copy check in releaseGuardedPACopy");
@@ -1420,9 +1425,9 @@ static jobject Check_NewGlobalRef(JNIEnv* env, jobject obj) {
 
 static void Check_DeleteGlobalRef(JNIEnv* env, jobject globalRef) {
     CHECK_JNI_ENTRY(kFlag_Default | kFlag_ExcepOkay, "EL", env, globalRef);
-    if (globalRef != NULL && dvmGetJNIRefType(env, globalRef) != JNIGlobalRefType) {
+    if (globalRef != NULL && dvmGetJNIRefType(sc.self(), globalRef) != JNIGlobalRefType) {
         LOGW("JNI WARNING: DeleteGlobalRef on non-global %p (type=%d)",
-                globalRef, dvmGetJNIRefType(env, globalRef));
+             globalRef, dvmGetJNIRefType(sc.self(), globalRef));
         abortMaybe();
     } else {
         baseEnv(env)->DeleteGlobalRef(env, globalRef);
@@ -1437,9 +1442,9 @@ static jobject Check_NewLocalRef(JNIEnv* env, jobject ref) {
 
 static void Check_DeleteLocalRef(JNIEnv* env, jobject localRef) {
     CHECK_JNI_ENTRY(kFlag_Default | kFlag_ExcepOkay, "EL", env, localRef);
-    if (localRef != NULL && dvmGetJNIRefType(env, localRef) != JNILocalRefType) {
+    if (localRef != NULL && dvmGetJNIRefType(sc.self(), localRef) != JNILocalRefType) {
         LOGW("JNI WARNING: DeleteLocalRef on non-local %p (type=%d)",
-                localRef, dvmGetJNIRefType(env, localRef));
+             localRef, dvmGetJNIRefType(sc.self(), localRef));
         abortMaybe();
     } else {
         baseEnv(env)->DeleteLocalRef(env, localRef);
@@ -1687,8 +1692,8 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string, jboolean* 
     CHECK_JNI_ENTRY(kFlag_CritOkay, "Esp", env, string, isCopy);
     const jchar* result = baseEnv(env)->GetStringChars(env, string, isCopy);
     if (gDvmJni.forceCopy && result != NULL) {
-        ScopedJniThreadState ts(env);
-        StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
+        ScopedCheckJniThreadState ts(env);
+        StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(dvmThreadSelf(), string);
         int byteCount = strObj->length() * 2;
         result = (const jchar*) GuardedCopy::create(result, byteCount, false);
         if (isCopy != NULL) {
@@ -1930,8 +1935,8 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string, jboolea
     CHECK_JNI_ENTRY(kFlag_CritGet, "Esp", env, string, isCopy);
     const jchar* result = baseEnv(env)->GetStringCritical(env, string, isCopy);
     if (gDvmJni.forceCopy && result != NULL) {
-        ScopedJniThreadState ts(env);
-        StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
+        ScopedCheckJniThreadState ts(env);
+        StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(dvmThreadSelf(), string);
         int byteCount = strObj->length() * 2;
         result = (const jchar*) GuardedCopy::create(result, byteCount, false);
         if (isCopy != NULL) {

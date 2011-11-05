@@ -466,7 +466,6 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
         verifyCount++;
     }
 
-    JNIEnv* env = self->jniEnv;
     while (*desc != '\0') {
         switch (*(desc++)) {
             case 'D': case 'J': {
@@ -488,7 +487,7 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
                 assert(obj == NULL || dvmIsHeapAddress(obj));
                 jobject argObj = reinterpret_cast<jobject>(arg);
                 if (fromJni)
-                    *ins++ = (u4) dvmDecodeIndirectRef(env, argObj);
+                    *ins++ = (u4) dvmDecodeIndirectRef(self, argObj);
                 else
                     *ins++ = (u4) argObj;
                 verifyCount++;
@@ -569,7 +568,6 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
         verifyCount++;
     }
 
-    JNIEnv* env = self->jniEnv;
     while (*desc != '\0') {
         switch (*desc++) {
         case 'D':                       /* 64-bit quantity; have to use */
@@ -580,7 +578,7 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
             break;
         case 'L':                       /* includes array refs */
             if (fromJni)
-                *ins++ = (u4) dvmDecodeIndirectRef(env, args->l);
+                *ins++ = (u4) dvmDecodeIndirectRef(self, args->l);
             else
                 *ins++ = (u4) args->l;
             break;
