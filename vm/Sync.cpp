@@ -82,10 +82,10 @@ struct Monitor {
 
     /*
      * Who last acquired this monitor, when lock sampling is enabled.
-     * Even when enabled, ownerFileName may be NULL.
+     * Even when enabled, ownerMethod may be NULL.
      */
-    const char* ownerFileName;
-    u4          ownerLineNumber;
+    const Method* ownerMethod;
+    u4 ownerPc;
 };
 
 
@@ -355,8 +355,9 @@ static void lockMonitor(Thread* self, Monitor* mon)
         if (waitThreshold) {
             waitStart = dvmGetRelativeTimeUsec();
         }
-        const char* currentOwnerFileName = mon->ownerFileName;
-        u4 currentOwnerLineNumber = mon->ownerLineNumber;
+
+        const Method* currentOwnerMethod = mon->ownerMethod;
+        u4 currentOwnerPc = mon->ownerPc;
 
         dvmLockMutex(&mon->lock);
         if (waitThreshold) {
@@ -371,6 +372,15 @@ static void lockMonitor(Thread* self, Monitor* mon)
                 samplePercent = 100 * waitMs / waitThreshold;
             }
             if (samplePercent != 0 && ((u4)rand() % 100 < samplePercent)) {
+                const char* currentOwnerFileName = "no_method";
+                u4 currentOwnerLineNumber = 0;
+                if (currentOwnerMethod != NULL) {
+                    currentOwnerFileName = dvmGetMethodSourceFile(currentOwnerMethod);
+                    if (currentOwnerFileName == NULL) {
+                        currentOwnerFileName = "no_method_file";
+                    }
+                    currentOwnerLineNumber = dvmLineNumFromPC(currentOwnerMethod, currentOwnerPc);
+                }
                 logContentionEvent(self, waitMs, samplePercent,
                                    currentOwnerFileName, currentOwnerLineNumber);
             }
@@ -382,25 +392,17 @@ static void lockMonitor(Thread* self, Monitor* mon)
     // When debugging, save the current monitor holder for future
     // acquisition failures to use in sampled logging.
     if (gDvm.lockProfThreshold > 0) {
-        const StackSaveArea *saveArea;
-        const Method *meth;
-        mon->ownerLineNumber = 0;
+        mon->ownerMethod = NULL;
+        mon->ownerPc = 0;
         if (self->interpSave.curFrame == NULL) {
-            mon->ownerFileName = "no_frame";
-        } else if ((saveArea =
-                   SAVEAREA_FROM_FP(self->interpSave.curFrame)) == NULL) {
-            mon->ownerFileName = "no_save_area";
-        } else if ((meth = saveArea->method) == NULL) {
-            mon->ownerFileName = "no_method";
-        } else {
-            u4 relativePc = saveArea->xtra.currentPc - saveArea->method->insns;
-            mon->ownerFileName = (char*) dvmGetMethodSourceFile(meth);
-            if (mon->ownerFileName == NULL) {
-                mon->ownerFileName = "no_method_file";
-            } else {
-                mon->ownerLineNumber = dvmLineNumFromPC(meth, relativePc);
-            }
+            return;
         }
+        const StackSaveArea* saveArea = SAVEAREA_FROM_FP(self->interpSave.curFrame);
+        if (saveArea == NULL) {
+            return;
+        }
+        mon->ownerMethod = saveArea->method;
+        mon->ownerPc = (saveArea->xtra.currentPc - saveArea->method->insns);
     }
 }
 
@@ -443,8 +445,8 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
          */
         if (mon->lockCount == 0) {
             mon->owner = NULL;
-            mon->ownerFileName = "unlocked";
-            mon->ownerLineNumber = 0;
+            mon->ownerMethod = NULL;
+            mon->ownerPc = 0;
             dvmUnlockMutex(&mon->lock);
         } else {
             mon->lockCount--;
@@ -617,8 +619,6 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     bool wasInterrupted = false;
     bool timed;
     int ret;
-    const char *savedFileName;
-    u4 savedLineNumber;
 
     assert(self != NULL);
     assert(mon != NULL);
@@ -662,10 +662,11 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     int prevLockCount = mon->lockCount;
     mon->lockCount = 0;
     mon->owner = NULL;
-    savedFileName = mon->ownerFileName;
-    mon->ownerFileName = NULL;
-    savedLineNumber = mon->ownerLineNumber;
-    mon->ownerLineNumber = 0;
+
+    const Method* savedMethod = mon->ownerMethod;
+    u4 savedPc = mon->ownerPc;
+    mon->ownerMethod = NULL;
+    mon->ownerPc = 0;
 
     /*
      * Update thread status.  If the GC wakes up, it'll ignore us, knowing
@@ -736,8 +737,8 @@ done:
      */
     mon->owner = self;
     mon->lockCount = prevLockCount;
-    mon->ownerFileName = savedFileName;
-    mon->ownerLineNumber = savedLineNumber;
+    mon->ownerMethod = savedMethod;
+    mon->ownerPc = savedPc;
     waitSetRemove(mon, self);
 
     /* set self->status back to THREAD_RUNNING, and self-suspend if needed */
