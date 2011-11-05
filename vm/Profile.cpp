@@ -459,7 +459,6 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
     return;
 
 fail:
-    updateActiveProfilers(kSubModeMethodTrace, false);
     if (state->traceFile != NULL) {
         fclose(state->traceFile);
         state->traceFile = NULL;
