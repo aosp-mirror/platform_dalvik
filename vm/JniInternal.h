@@ -124,13 +124,13 @@ void dvmLateEnableCheckedJni(void);
 /*
  * Decode a local, global, or weak-global reference.
  */
-Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj);
+Object* dvmDecodeIndirectRef(Thread* self, jobject jobj);
 
 /*
  * Verify that a reference passed in from native code is valid.  Returns
  * an indication of local/global/invalid.
  */
-jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj);
+jobjectRefType dvmGetJNIRefType(Thread* self, jobject jobj);
 
 /*
  * Get the last method called on the interp stack.  This is the method
@@ -148,11 +148,6 @@ void dvmDestroyJNIEnv(JNIEnv* env);
  * Find the JNIEnv associated with the current thread.
  */
 JNIEnvExt* dvmGetJNIEnvForThread(void);
-
-/*
- * Extract the return type enum from the "jniArgInfo" value.
- */
-DalvikJniReturnType dvmGetArgInfoReturnType(int jniArgInfo);
 
 /*
  * Release all MonitorEnter-acquired locks that are still held.  Called at
