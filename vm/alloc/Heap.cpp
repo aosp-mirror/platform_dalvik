@@ -516,8 +516,8 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
          * Resume threads while tracing from the roots.  We unlock the
          * heap to allow mutator threads to allocate from free space.
          */
-        rootEnd = dvmGetRelativeTimeMsec();
         dvmClearCardTable();
+        rootEnd = dvmGetRelativeTimeMsec();
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
     }
