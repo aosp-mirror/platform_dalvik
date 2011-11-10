@@ -104,19 +104,53 @@ void dvmClearCardTable()
      * so cards for parts of the heap we haven't expanded into won't be
      * allocated physical pages.  On the other hand, if we un-map the card
      * area, we'll have to fault it back in as we resume dirtying objects,
-     * which reduces performance.  (Also, "the kernel is free to ignore the
-     * advice" makes this sound like something we can't necessarily rely on
-     * to synchronously clear memory; may need to memset *and* madvise.)
+     * which reduces performance.
      *
-     * TODO: use memset() to clear out to the current "soft" limit, and
-     * madvise() to clear out the rest.
+     * We don't cause any correctness issues by failing to clear cards; we
+     * just take a performance hit during the second pause of the concurrent
+     * collection.  The "advisory" nature of madvise() isn't a big problem.
+     *
+     * What we really want to do is:
+     * (1) zero out all cards that were touched
+     * (2) use madvise() to release any pages that won't be used in the near
+     *     future
+     *
+     * For #1, we don't really know which cards were touched, but we can
+     * approximate it with the "live bits max" value, which tells us the
+     * highest start address at which an object was allocated.  This may
+     * leave vestigial nonzero entries at the end if temporary objects are
+     * created during a concurrent GC, but that should be harmless.  (We
+     * can round up to the end of the card table page to reduce this.)
+     *
+     * For #2, we don't know which pages will be used in the future.  Some
+     * simple experiments suggested that a "typical" app will touch about
+     * 60KB of pages while initializing, but drops down to 20-24KB while
+     * idle.  We can save a few hundred KB system-wide with aggressive
+     * use of madvise().  The cost of mapping those pages back in is paid
+     * outside of the GC pause, which reduces the impact.  (We might be
+     * able to get the benefits by only doing this occasionally, e.g. if
+     * the heap shrinks a lot or we somehow notice that we've been idle.)
      *
      * Note that cardTableLength is initially set to the growth limit, and
      * on request will be expanded to the heap maximum.
      */
     assert(gDvm.gcHeap->cardTableBase != NULL);
-    memset(gDvm.gcHeap->cardTableBase, GC_CARD_CLEAN, gDvm.gcHeap->cardTableLength);
-    //madvise(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength, MADV_DONTNEED);
+
+#if 1
+    // zero out cards with memset(), using liveBits as an estimate
+    const HeapBitmap* liveBits = dvmHeapSourceGetLiveBits();
+    size_t maxLiveCard = (liveBits->max - liveBits->base) / GC_CARD_SIZE;
+    maxLiveCard = ALIGN_UP_TO_PAGE_SIZE(maxLiveCard);
+    if (maxLiveCard > gDvm.gcHeap->cardTableLength) {
+        maxLiveCard = gDvm.gcHeap->cardTableLength;
+    }
+
+    memset(gDvm.gcHeap->cardTableBase, GC_CARD_CLEAN, maxLiveCard);
+#else
+    // zero out cards with madvise(), discarding all pages in the card table
+    madvise(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength,
+        MADV_DONTNEED);
+#endif
 }
 
 /*
