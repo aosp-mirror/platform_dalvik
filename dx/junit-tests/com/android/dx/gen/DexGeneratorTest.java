@@ -97,6 +97,23 @@ public final class DexGeneratorTest extends TestCase {
         }
     }
 
+    public void testVoidNoArgMemberMethod() throws Exception {
+        /*
+         * public void call() {
+         * }
+         */
+        MethodId<?, Void> methodId = GENERATED.getMethod(Type.VOID, "call");
+        Code code = generator.declare(methodId, ACC_PUBLIC);
+        code.returnVoid();
+
+        addDefaultConstructor();
+
+        Class<?> generatedClass = loadAndGenerate();
+        Object instance = generatedClass.newInstance();
+        Method method = generatedClass.getMethod("call");
+        method.invoke(instance);
+    }
+
     public void testInvokeStatic() throws Exception {
         /*
          * public static int call(int a) {
