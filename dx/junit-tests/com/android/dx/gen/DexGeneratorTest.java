@@ -133,6 +133,27 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(10, getMethod().invoke(null, 4));
     }
 
+    public void testCreateLocalMethodAsNull() throws Exception {
+        /*
+         * public void call(int value) {
+         *   Method method = null;
+         * }
+         */
+        MethodId<?, Void> methodId = GENERATED.getMethod(Type.VOID, "call", Type.INT);
+        Type<Method> methodType = Type.get(Method.class);
+        Code code = generator.declare(methodId, ACC_PUBLIC);
+        Local<Method> localMethod = code.newLocal(methodType);
+        code.loadConstant(localMethod, null);
+        code.returnVoid();
+
+        addDefaultConstructor();
+
+        Class<?> generatedClass = loadAndGenerate();
+        Object instance = generatedClass.newInstance();
+        Method method = generatedClass.getMethod("call", int.class);
+        method.invoke(instance, 0);
+    }
+
     @SuppressWarnings("unused") // called by generated code
     public static int staticMethod(int a) {
         return a + 6;
