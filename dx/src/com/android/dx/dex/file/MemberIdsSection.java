@@ -16,10 +16,15 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dx.util.DexException;
+
 /**
  * Member (field or method) refs list section of a {@code .dex} file.
  */
 public abstract class MemberIdsSection extends UniformItemSection {
+    /** The largest addressable member is 0xffff, in the dex spec as field@CCCC or meth@CCCC. */
+    private static final int MAX_MEMBERS = 0x10000;
+
     /**
      * Constructs an instance. The file offset is initially unknown.
      *
@@ -35,6 +40,12 @@ public abstract class MemberIdsSection extends UniformItemSection {
     @Override
     protected void orderItems() {
         int idx = 0;
+
+        if (items().size() > MAX_MEMBERS) {
+            String memberType = this instanceof MethodIdsSection ? "methods" : "fields";
+            throw new DexException("Too many " + memberType + ": " + items().size()
+                    + "; max is " + MAX_MEMBERS);
+        }
 
         for (Object i : items()) {
             ((MemberIdItem) i).setIndex(idx);
