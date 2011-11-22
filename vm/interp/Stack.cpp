@@ -1394,16 +1394,10 @@ void dvmDumpNativeStack(const DebugOutputTarget* target, pid_t tid)
         get_backtrace_symbols(backtrace, frames, backtrace_symbols);
 
         for (size_t i = 0; i < size_t(frames); i++) {
-            const backtrace_symbol_t& symbol = backtrace_symbols[i];
-            const char* mapName = symbol.map_name ? symbol.map_name : "<unknown>";
-            const char* symbolName = symbol.demangled_name ? symbol.demangled_name : symbol.name;
-            if (symbolName) {
-                dvmPrintDebugMessage(target, "  #%02d  pc %08x  %s (%s)\n",
-                        i, uint32_t(symbol.relative_pc), mapName, symbolName);
-            } else {
-                dvmPrintDebugMessage(target, "  #%02d  pc %08x  %s\n",
-                        i, uint32_t(symbol.relative_pc), mapName);
-            }
+            char line[MAX_BACKTRACE_LINE_LENGTH];
+            format_backtrace_line(i, &backtrace[i], &backtrace_symbols[i],
+                    line, MAX_BACKTRACE_LINE_LENGTH);
+            dvmPrintDebugMessage(target, "  %s\n", line);
         }
 
         free_backtrace_symbols(backtrace_symbols, frames);
