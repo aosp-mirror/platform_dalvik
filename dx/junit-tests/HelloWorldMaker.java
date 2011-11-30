@@ -22,6 +22,8 @@ import com.android.dx.gen.Local;
 import com.android.dx.gen.MethodId;
 import com.android.dx.gen.Type;
 import com.android.dx.rop.code.AccessFlags;
+
+import java.io.File;
 import java.io.PrintStream;
 
 public class HelloWorldMaker {
@@ -79,7 +81,9 @@ public class HelloWorldMaker {
         generator.declare(helloWorld, "Generated.java", AccessFlags.ACC_PUBLIC, Type.OBJECT);
 
         // load the dex
-        ClassLoader loader = generator.load(HelloWorldMaker.class.getClassLoader());
+        File outputDir = new File(".");
+        ClassLoader loader = generator.load(HelloWorldMaker.class.getClassLoader(),
+                outputDir, outputDir);
         Class<?> helloWorldClass = loader.loadClass("HelloWorld");
         helloWorldClass.getMethod("hello").invoke(null);
     }

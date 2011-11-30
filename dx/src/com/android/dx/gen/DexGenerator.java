@@ -16,6 +16,10 @@
 
 package com.android.dx.gen;
 
+import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
+import static com.android.dx.rop.code.AccessFlags.ACC_PRIVATE;
+import static com.android.dx.rop.code.AccessFlags.ACC_STATIC;
+
 import com.android.dx.dex.DexFormat;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.code.DalvCode;
@@ -26,12 +30,12 @@ import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedField;
 import com.android.dx.dex.file.EncodedMethod;
 import com.android.dx.rop.code.AccessFlags;
-import static com.android.dx.rop.code.AccessFlags.*;
 import com.android.dx.rop.code.LocalVariableInfo;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.StdTypeList;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -102,7 +106,9 @@ public final class DexGenerator {
      * Returns a .dex formatted file.
      */
     public byte[] generate() {
-        DexFile outputDex = new DexFile(new DexOptions());
+        DexOptions options = new DexOptions();
+        options.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
+        DexFile outputDex = new DexFile(options);
 
         for (TypeDeclaration typeDeclaration : types.values()) {
             outputDex.add(typeDeclaration.toClassDefItem());
@@ -116,9 +122,25 @@ public final class DexGenerator {
     }
 
     /**
-     * Loads the generated types into the current dalvikvm process.
+     * Loads the generated types into the current process.
+     *
+     * <p>All parameters are optional, you may pass {@code null} and suitable
+     * defaults will be used.
+     *
+     * <p>If you opt to provide your own output directories, take care to
+     * ensure that they are not world-readable, otherwise a malicious app will
+     * be able to inject code to run.  A suitable parameter for these output
+     * directories would be something like this:
+     * {@code getApplicationContext().getDir("dx", Context.MODE_PRIVATE); }
+     *
+     * @param parent the parent ClassLoader to be used when loading
+     *     our generated types
+     * @param dexOutputDir the destination directory wherein we will write
+     *     emitted .dex files before they end up in the cache directory
+     * @param dexOptCacheDir where optimized .dex files are to be written
      */
-    public ClassLoader load(ClassLoader parent) throws IOException {
+    public ClassLoader load(ClassLoader parent, File dexOutputDir, File dexOptCacheDir)
+            throws IOException {
         byte[] dex = generate();
 
         /*
@@ -128,7 +150,7 @@ public final class DexGenerator {
          *
          * TODO: load the dex from memory where supported.
          */
-        File result = File.createTempFile("Generated", ".jar");
+        File result = File.createTempFile("Generated", ".jar", dexOutputDir);
         result.deleteOnExit();
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(result));
         jarOut.putNextEntry(new JarEntry(DexFormat.DEX_IN_JAR_NAME));
@@ -136,9 +158,9 @@ public final class DexGenerator {
         jarOut.closeEntry();
         jarOut.close();
         try {
-            Class<?> pathClassLoader = Class.forName("dalvik.system.PathClassLoader");
-            return (ClassLoader) pathClassLoader.getConstructor(String.class, ClassLoader.class)
-                    .newInstance(result.getPath(), parent);
+            return (ClassLoader) Class.forName("dalvik.system.DexClassLoader")
+                    .getConstructor(String.class, String.class, String.class, ClassLoader.class)
+                    .newInstance(result.getPath(), dexOptCacheDir.getAbsolutePath(), null, parent);
         } catch (ClassNotFoundException e) {
             throw new UnsupportedOperationException("load() requires a Dalvik VM", e);
         } catch (InvocationTargetException e) {
