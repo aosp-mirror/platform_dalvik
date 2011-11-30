@@ -38,9 +38,7 @@ bool IndirectRefTable::init(size_t initialCount,
     if (table_ == NULL) {
         return false;
     }
-#ifndef NDEBUG
     memset(table_, 0xd1, initialCount * sizeof(IndirectRefSlot));
-#endif
 
     segmentState.all = IRT_FIRST_SEGMENT;
     alloc_entries_ = initialCount;
@@ -115,6 +113,9 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
                         alloc_entries_, newSize, max_entries_);
                 return NULL;
             }
+
+            memset(newTable + alloc_entries_, 0xd1,
+                   (newSize - alloc_entries_) * sizeof(IndirectRefSlot));
 
             alloc_entries_ = newSize;
             table_ = newTable;
