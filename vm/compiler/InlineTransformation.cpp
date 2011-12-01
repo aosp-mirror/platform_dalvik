@@ -46,6 +46,13 @@ static bool inlineGetter(CompilationUnit *cUnit,
     MIR *newGetterMIR = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction getterInsn;
 
+    /*
+     * Not all getter instructions have vC but vC will be read by
+     * dvmCompilerGetDalvikDisassembly unconditionally.
+     * Initialize it here to get Valgrind happy.
+     */
+    getterInsn.vC = 0;
+
     dexDecodeInstruction(calleeMethod->insns, &getterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &getterInsn))
@@ -136,6 +143,13 @@ static bool inlineSetter(CompilationUnit *cUnit,
 {
     MIR *newSetterMIR = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction setterInsn;
+
+    /*
+     * Not all setter instructions have vC but vC will be read by
+     * dvmCompilerGetDalvikDisassembly unconditionally.
+     * Initialize it here to get Valgrind happy.
+     */
+    setterInsn.vC = 0;
 
     dexDecodeInstruction(calleeMethod->insns, &setterInsn);
 
