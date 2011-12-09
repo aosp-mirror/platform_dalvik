@@ -14,19 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.dx.util._tests;
-
-import com.android.dx.util.IntList;
+package com.android.dx.util;
 
 import junit.framework.TestCase;
 
-/**
- * Test the class {@code com.android.dx.util.IntList}.
- */
-public class _IntList
-    extends TestCase {
-    // TODO: Add tests for the rest of the methods.
-
+public final class IntListTest extends TestCase {
     public void test_contains() {
         for (int sz = 0; sz < 100; sz++) {
             IntList list = new IntList(sz);

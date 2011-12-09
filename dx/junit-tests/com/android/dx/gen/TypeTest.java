@@ -19,9 +19,6 @@ package com.android.dx.gen;
 import junit.framework.TestCase;
 
 public final class TypeTest extends TestCase {
-
-    private final DexGenerator generator = new DexGenerator();
-
     public void testGetType() {
         assertEquals("Ljava/lang/String;", Type.get(String.class).getName());
         assertEquals("[Ljava/lang/String;", Type.get(String[].class).getName());

@@ -18,8 +18,6 @@ package com.android.dx.command;
 
 import com.android.dx.Version;
 
-import junit.textui.TestRunner;
-
 /**
  * Main class for dx. It recognizes enough options to be able to dispatch
  * to the right "actual" main.
@@ -50,8 +48,6 @@ public class Main {
         "  [--width=<n>] [<file>.class | <file>.txt] ...\n" +
         "    Dump classfiles, or transformations thereof, in a " +
         "human-oriented format.\n" +
-        "  dx --junit [-wait] <TestClass>\n" +
-        "    Run the indicated unit test.\n" +
         "  dx --find-usages <file.dex> <declaring type> <member>\n" +
         "    Find references and declarations to a field or method.\n" +
         "    declaring type: a class name in internal form, like " +
@@ -100,9 +96,6 @@ public class Main {
                 } else if (arg.equals("--annotool")) {
                     com.android.dx.command.annotool.Main.main(
                             without(args, i));
-                    break;
-                } else if (arg.equals("--junit")) {
-                    TestRunner.main(without(args, i));
                     break;
                 } else if (arg.equals("--find-usages")) {
                     com.android.dx.command.findusages.Main.main(without(args, i));
