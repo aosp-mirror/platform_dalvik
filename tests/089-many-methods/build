@@ -17,10 +17,9 @@
 # Stop if something fails.
 set -e
 
-# Write out files with 65500 total static fields, instance fields, and methods,
-# so that references to the Jumbo fields in Main will be guaranteed to be jumbo
-# instructions.
-
+# Write out files with 65500 total static fields, instance fields, and methods
+# to exceed the dex format's limits.
+mkdir src
 awk '
 BEGIN {
     writeFileField("FillerStatic", "static public int staticInt");
@@ -46,8 +45,5 @@ function writeFileMethod(name) {
 
 mkdir classes
 ${JAVAC} -d classes `find src -name '*.java'`
-${JAVAC} -d classes `find src2 -name '*.java'`
+dx -JXmx1024m --dex --no-optimize classes
 
-dx -JXmx1024m --debug --dex --no-optimize \
-    --dump-to=classes.lst --output=classes.dex classes
-zip test.jar classes.dex
