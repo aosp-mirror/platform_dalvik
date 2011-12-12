@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.dx.util._tests;
-
-import com.android.dx.util.Bits;
+package com.android.dx.util;
 
 import junit.framework.TestCase;
 
-/**
- * Test the class {@code com.android.dx.util.Bits}.
- */
-public class _Bits
-        extends TestCase {
+public final class BitsTest extends TestCase {
     public void test_makeBitSet() {
         assertEquals(label(0), 0, Bits.makeBitSet(0).length);
 

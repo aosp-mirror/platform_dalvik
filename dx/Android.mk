@@ -67,6 +67,7 @@ INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
 # the other stuff
 # ============================================================
 subdirs := $(addprefix $(LOCAL_PATH)/,$(addsuffix /Android.mk, \
+		junit-tests \
 		src \
 	))
 

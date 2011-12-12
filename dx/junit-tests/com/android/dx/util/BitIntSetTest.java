@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.dx.util._tests;
-
-import com.android.dx.util.BitIntSet;
-import com.android.dx.util.IntIterator;
-import com.android.dx.util.ListIntSet;
-
-import junit.framework.TestCase;
+package com.android.dx.util;
 
 import java.util.NoSuchElementException;
+import junit.framework.TestCase;
 
-public class _BitIntSet extends TestCase {
+public final class BitIntSetTest extends TestCase {
     public void test_basic() {
         BitIntSet set = new BitIntSet(32);
 
