@@ -21,7 +21,6 @@ import com.android.dx.io.OpcodeInfo;
 import com.android.dx.io.Opcodes;
 import com.android.dx.util.DexException;
 import com.android.dx.util.Hex;
-
 import java.io.EOFException;
 
 /**
@@ -90,7 +89,7 @@ public abstract class DecodedInstruction {
                 decoded[in.cursor()] = DecodedInstruction.decode(in);
             }
         } catch (EOFException ex) {
-            throw new AssertionError("shouldn't happen");
+            throw new DexException(ex);
         }
 
         return decoded;
