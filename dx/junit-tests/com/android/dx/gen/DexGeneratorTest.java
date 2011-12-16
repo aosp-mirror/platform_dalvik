@@ -22,6 +22,10 @@ import static com.android.dx.rop.code.AccessFlags.ACC_PRIVATE;
 import static com.android.dx.rop.code.AccessFlags.ACC_PROTECTED;
 import static com.android.dx.rop.code.AccessFlags.ACC_PUBLIC;
 import static com.android.dx.rop.code.AccessFlags.ACC_STATIC;
+
+import junit.framework.TestCase;
+
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -29,7 +33,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-import junit.framework.TestCase;
 
 /**
  * This generates a class named 'Generated' with one or more generated methods
@@ -1660,7 +1663,15 @@ public final class DexGeneratorTest extends TestCase {
         throw new IllegalStateException("no call() method");
     }
 
-    private Class<?> loadAndGenerate() throws IOException, ClassNotFoundException {
-        return generator.load(DexGeneratorTest.class.getClassLoader()).loadClass("Generated");
+    public static File getDataDirectory() throws Exception {
+        Class<?> environmentClass = Class.forName("android.os.Environment");
+        Method method = environmentClass.getMethod("getDataDirectory");
+        Object dataDirectory = method.invoke(null);
+        return (File) dataDirectory;
+    }
+
+    private Class<?> loadAndGenerate() throws Exception {
+        return generator.load(getClass().getClassLoader(),
+                getDataDirectory(), getDataDirectory()).loadClass("Generated");
     }
 }
