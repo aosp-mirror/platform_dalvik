@@ -288,7 +288,9 @@ public final class Code {
     // instructions: constants
 
     public <T> void loadConstant(Local<T> target, T value) {
-        Rop rop = Rops.opConst(target.type.ropType);
+        Rop rop = value == null
+                ? Rops.CONST_OBJECT_NOTHROW
+                : Rops.opConst(target.type.ropType);
         if (rop.getBranchingness() == BRANCH_NONE) {
             addInstruction(new PlainCstInsn(rop, sourcePosition, target.spec(),
                     RegisterSpecList.EMPTY, Constants.getConstant(value)));
