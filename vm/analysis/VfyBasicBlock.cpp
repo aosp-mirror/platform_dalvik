@@ -382,7 +382,7 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
                 if (numHandlers <= kHandlerStackAllocSize) {
                     handlerList = handlerAddrs;
                 } else {
-                    LOGD("overflow, numHandlers=%d", numHandlers);
+                    ALOGD("overflow, numHandlers=%d", numHandlers);
                     handlerListAlloc = (u4*) malloc(sizeof(u4) * numHandlers);
                     if (handlerListAlloc == NULL)
                         return false;

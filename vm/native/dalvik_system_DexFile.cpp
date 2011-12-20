@@ -428,7 +428,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
         dvmAllocArrayByClass(arrayClass, count, ALLOC_DEFAULT);
     if (stringArray == NULL) {
         /* probably OOM */
-        LOGD("Failed allocating array of %d strings", count);
+        ALOGD("Failed allocating array of %d strings", count);
         assert(dvmCheckException(self));
         RETURN_VOID();
     }

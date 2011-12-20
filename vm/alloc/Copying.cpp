@@ -1685,7 +1685,7 @@ static void scavengeThreadStack(Thread *thread)
 #if WITH_EXTRA_GC_CHECKS > 1
                         if (dvmIsValidObject((Object*) rval)) {
                             /* this is normal, but we feel chatty */
-                            LOGD("PGC: ignoring valid ref in reg %d: 0x%08x",
+                            ALOGD("PGC: ignoring valid ref in reg %d: 0x%08x",
                                  method->registersSize-1 - i, rval);
                         }
 #endif

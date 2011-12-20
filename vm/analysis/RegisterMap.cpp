@@ -316,7 +316,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
         }
 
         if (REGISTER_MAP_VERBOSE) {
-            LOGD("Good compress on %s.%s",
+            ALOGD("Good compress on %s.%s",
                 vdata->method->clazz->descriptor,
                 vdata->method->name);
         }
@@ -324,7 +324,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
         pMap = pCompMap;
     } else {
         if (REGISTER_MAP_VERBOSE) {
-            LOGD("Unable to compress %s.%s (ent=%d rw=%d)",
+            ALOGD("Unable to compress %s.%s (ent=%d rw=%d)",
                 vdata->method->clazz->descriptor,
                 vdata->method->name,
                 dvmRegisterMapGetNumEntries(pMap),
@@ -453,7 +453,7 @@ static void dumpRegisterMap(const RegisterMap* pMap, int registersSize)
         }
         hexBuf[i * 3] = '\0';
 
-        LOGD("  %04x %s %s", addr, outBuf, hexBuf);
+        ALOGD("  %04x %s %s", addr, outBuf, hexBuf);
     }
 }
 
@@ -1023,10 +1023,10 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
     case kRegMapFormatCompact16:
         if (REGISTER_MAP_VERBOSE) {
             if (dvmRegisterMapGetOnHeap(curMap)) {
-                LOGD("RegMap: already expanded: %s.%s",
+                ALOGD("RegMap: already expanded: %s.%s",
                     method->clazz->descriptor, method->name);
             } else {
-                LOGD("RegMap: stored w/o compression: %s.%s",
+                ALOGD("RegMap: stored w/o compression: %s.%s",
                     method->clazz->descriptor, method->name);
             }
         }
@@ -1054,7 +1054,7 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
         MapStats* pStats = (MapStats*) gDvm.registerMapStats;
         pStats->numExpandedMaps++;
         pStats->totalExpandedMapSize += computeRegisterMapSize(newMap);
-        LOGD("RMAP: count=%d size=%d",
+        ALOGD("RMAP: count=%d size=%d",
             pStats->numExpandedMaps, pStats->totalExpandedMapSize);
     }
 #endif
@@ -1628,7 +1628,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
          */
         if (tmpPtr - tmpBuf.get() >= origSize) {
             if (debug) {
-                LOGD("Compressed size >= original (%d vs %d): %s.%s",
+                ALOGD("Compressed size >= original (%d vs %d): %s.%s",
                     tmpPtr - tmpBuf.get(), origSize,
                     meth->clazz->descriptor, meth->name);
             }
@@ -1649,7 +1649,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
     newMapSize = kHeaderSize + unsignedLeb128Size(newDataSize) + newDataSize;
     if (newMapSize >= origSize) {
         if (debug) {
-            LOGD("Final comp size >= original (%d vs %d): %s.%s",
+            ALOGD("Final comp size >= original (%d vs %d): %s.%s",
                 newMapSize, origSize, meth->clazz->descriptor, meth->name);
         }
         return NULL;
@@ -1668,7 +1668,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
     memcpy(tmpPtr, tmpBuf.get(), newDataSize);
 
     if (REGISTER_MAP_VERBOSE) {
-        LOGD("Compression successful (%d -> %d) from aw=%d rw=%d ne=%d",
+        ALOGD("Compression successful (%d -> %d) from aw=%d rw=%d ne=%d",
             computeRegisterMapSize(pMap), computeRegisterMapSize(pNewMap),
             addrWidth, regWidth, numEntries);
     }
@@ -1825,7 +1825,7 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
     }
 
     if (REGISTER_MAP_VERBOSE) {
-        LOGD("Expansion successful (%d -> %d)",
+        ALOGD("Expansion successful (%d -> %d)",
             computeRegisterMapSize(pMap), computeRegisterMapSize(pNewMap));
     }
 

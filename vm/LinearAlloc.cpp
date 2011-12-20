@@ -238,7 +238,7 @@ void dvmLinearAllocDestroy(Object* classLoader)
 
     if (gDvm.verboseShutdown) {
         ALOGV("Unmapping linear allocator base=%p", pHdr->mapAddr);
-        LOGD("LinearAlloc %p used %d of %d (%d%%)",
+        ALOGD("LinearAlloc %p used %d of %d (%d%%)",
             classLoader, pHdr->curOffset, pHdr->mapLength,
             (pHdr->curOffset * 100) / pHdr->mapLength);
     }
@@ -644,7 +644,7 @@ void dvmLinearAllocDump(Object* classLoader)
             printf(" %d-%d: zero\n", zstart, i-1);
     }
 
-    LOGD("LinearAlloc %p using %d of %d (%d%%)",
+    ALOGD("LinearAlloc %p using %d of %d (%d%%)",
         classLoader, pHdr->curOffset, pHdr->mapLength,
         (pHdr->curOffset * 100) / pHdr->mapLength);
 

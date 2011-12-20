@@ -141,7 +141,7 @@ DalvikNativeFunc dvmLookupInternalNativeMethod(const Method* method)
  */
 void dvmAbstractMethodStub(const u4* args, JValue* pResult)
 {
-    LOGD("--- called into dvmAbstractMethodStub");
+    ALOGD("--- called into dvmAbstractMethodStub");
     dvmThrowAbstractMethodError("abstract method not implemented");
 }
 

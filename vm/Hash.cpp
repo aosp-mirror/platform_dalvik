@@ -192,7 +192,7 @@ void* dvmHashTableLookup(HashTable* pHashTable, u4 itemHash, void* item,
             (*cmpFunc)(pEntry->data, item) == 0)
         {
             /* match */
-            //LOGD("+++ match on entry %d", pEntry - pHashTable->pEntries);
+            //ALOGD("+++ match on entry %d", pEntry - pHashTable->pEntries);
             break;
         }
 

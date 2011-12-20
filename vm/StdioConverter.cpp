@@ -117,7 +117,7 @@ void dvmStdioConverterShutdown()
     printf("Shutting down\n");
     fflush(stdout);
 
-    LOGD("Joining stdio converter...");
+    ALOGD("Joining stdio converter...");
     pthread_join(gDvm.stdioConverterHandle, NULL);
 }
 
@@ -166,9 +166,9 @@ static void* stdioConverterThreadStart(void* arg)
                 LOGE("select on stdout/stderr failed");
                 break;
             }
-            LOGD("Got EINTR, ignoring");
+            ALOGD("Got EINTR, ignoring");
         } else if (fdCount == 0) {
-            LOGD("WEIRD: select returned zero");
+            ALOGD("WEIRD: select returned zero");
         } else {
             bool err = false;
             if (FD_ISSET(gDvm.stdoutPipe[0], &readfds)) {

@@ -681,7 +681,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
                 }
             }
 
-            //LOGD("ADDR MATCH, check %s instanceof %s",
+            //ALOGD("ADDR MATCH, check %s instanceof %s",
             //    excepClass->descriptor, pEntry->excepClass->descriptor);
 
             if (dvmInstanceof(excepClass, throwable)) {
@@ -853,7 +853,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCoun
             break;
         if (!dvmInstanceof(method->clazz, gDvm.exThrowable))
             break;
-        //LOGD("EXCEP: ignoring %s.%s",
+        //ALOGD("EXCEP: ignoring %s.%s",
         //         method->clazz->descriptor, method->name);
         fp = saveArea->prevFrame;
     }
@@ -872,7 +872,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCoun
         assert(fp != saveArea->prevFrame);
         fp = saveArea->prevFrame;
     }
-    //LOGD("EXCEP: stack depth is %d", stackDepth);
+    //ALOGD("EXCEP: stack depth is %d", stackDepth);
 
     if (!stackDepth)
         goto bail;
@@ -908,7 +908,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCoun
         const Method* method = saveArea->method;
 
         if (!dvmIsBreakFrame((u4*)fp)) {
-            //LOGD("EXCEP keeping %s.%s", method->clazz->descriptor,
+            //ALOGD("EXCEP keeping %s.%s", method->clazz->descriptor,
             //         method->name);
 
             *intPtr++ = (int) method;

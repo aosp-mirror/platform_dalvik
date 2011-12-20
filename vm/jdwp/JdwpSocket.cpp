@@ -111,7 +111,7 @@ static bool prepareSocket(JdwpState* state, const JdwpStartupParams* pParams)
     if (pParams->suspend)
         LOGI("JDWP will wait for debugger on port %d", port);
     else
-        LOGD("JDWP will %s on port %d",
+        ALOGD("JDWP will %s on port %d",
             pParams->server ? "listen" : "connect", port);
 
     return true;
@@ -724,7 +724,7 @@ static bool processIncoming(JdwpState* state)
                 if (netState->listenSock >= 0)
                     LOGE("Exit wake set, but not exiting?");
                 else
-                    LOGD("Got wake-up signal, bailing out of select");
+                    ALOGD("Got wake-up signal, bailing out of select");
                 goto fail;
             }
             if (netState->listenSock >= 0 &&
@@ -754,11 +754,11 @@ static bool processIncoming(JdwpState* state)
                     /* read failed */
                     if (errno != EINTR)
                         goto fail;
-                    LOGD("+++ EINTR hit");
+                    ALOGD("+++ EINTR hit");
                     return true;
                 } else if (readCount == 0) {
                     /* EOF hit -- far end went away */
-                    LOGD("+++ peer disconnected");
+                    ALOGD("+++ peer disconnected");
                     goto fail;
                 } else
                     break;

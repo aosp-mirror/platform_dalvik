@@ -748,12 +748,12 @@ void dvmDumpObject(const Object* obj)
     }
 
     clazz = obj->clazz;
-    LOGD("----- Object dump: %p (%s, %d bytes) -----",
+    ALOGD("----- Object dump: %p (%s, %d bytes) -----",
         obj, clazz->descriptor, (int) clazz->objectSize);
     //printHexDump(obj, clazz->objectSize);
-    LOGD("  Fields:");
+    ALOGD("  Fields:");
     while (clazz != NULL) {
-        LOGD("    -- %s", clazz->descriptor);
+        ALOGD("    -- %s", clazz->descriptor);
         for (i = 0; i < clazz->ifieldCount; i++) {
             const InstField* pField = &clazz->ifields[i];
             char type = pField->signature[0];
@@ -766,7 +766,7 @@ void dvmDumpObject(const Object* obj)
                 else
                     dval = dvmGetFieldDouble(obj, pField->byteOffset);
 
-                LOGD("    %2d: '%s' '%s' af=%04x off=%d %.3f", i,
+                ALOGD("    %2d: '%s' '%s' af=%04x off=%d %.3f", i,
                     pField->name, pField->signature,
                     pField->accessFlags, pField->byteOffset, dval);
             } else {
@@ -779,7 +779,7 @@ void dvmDumpObject(const Object* obj)
                 else
                     lval = dvmGetFieldInt(obj, pField->byteOffset);
 
-                LOGD("    %2d: '%s' '%s' af=%04x off=%d 0x%08llx", i,
+                ALOGD("    %2d: '%s' '%s' af=%04x off=%d 0x%08llx", i,
                     pField->name, pField->signature,
                     pField->accessFlags, pField->byteOffset, lval);
             }
@@ -788,7 +788,7 @@ void dvmDumpObject(const Object* obj)
         clazz = clazz->super;
     }
     if (dvmIsClassObject(obj)) {
-        LOGD("  Static fields:");
+        ALOGD("  Static fields:");
         const StaticField* sfields = &((ClassObject *)obj)->sfields[0];
         for (i = 0; i < ((ClassObject *)obj)->sfieldCount; ++i) {
             const StaticField* pField = &sfields[i];
@@ -803,7 +803,7 @@ void dvmDumpObject(const Object* obj)
                 else
                     dval = pField->value.d;
 
-                LOGD("    %2d: '%s' '%s' af=%04x off=%zd %.3f", i,
+                ALOGD("    %2d: '%s' '%s' af=%04x off=%zd %.3f", i,
                      pField->name, pField->signature,
                      pField->accessFlags, byteOffset, dval);
             } else {
@@ -816,7 +816,7 @@ void dvmDumpObject(const Object* obj)
                 else
                     lval = pField->value.i;
 
-                LOGD("    %2d: '%s' '%s' af=%04x off=%zd 0x%08llx", i,
+                ALOGD("    %2d: '%s' '%s' af=%04x off=%zd 0x%08llx", i,
                      pField->name, pField->signature,
                      pField->accessFlags, byteOffset, lval);
             }

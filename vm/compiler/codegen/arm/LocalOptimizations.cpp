@@ -45,7 +45,7 @@ static inline bool isDalvikRegisterClobbered(ArmLIR *lir1, ArmLIR *lir2)
 static void dumpDependentInsnPair(ArmLIR *thisLIR, ArmLIR *checkLIR,
                                   const char *optimization)
 {
-    LOGD("************ %s ************", optimization);
+    ALOGD("************ %s ************", optimization);
     dvmDumpLIRInsn((LIR *) thisLIR, 0);
     dvmDumpLIRInsn((LIR *) checkLIR, 0);
 }

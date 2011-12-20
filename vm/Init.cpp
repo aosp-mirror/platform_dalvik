@@ -517,13 +517,13 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
 void dvmLateEnableAssertions()
 {
     if (gDvm.assertionCtrl == NULL) {
-        LOGD("Not late-enabling assertions: no assertionCtrl array");
+        ALOGD("Not late-enabling assertions: no assertionCtrl array");
         return;
     } else if (gDvm.assertionCtrlCount != 0) {
-        LOGD("Not late-enabling assertions: some asserts already configured");
+        ALOGD("Not late-enabling assertions: some asserts already configured");
         return;
     }
-    LOGD("Late-enabling assertions");
+    ALOGD("Late-enabling assertions");
 
     /* global enable for all but system */
     AssertionControl* pCtrl = gDvm.assertionCtrl;
@@ -1475,7 +1475,7 @@ bool dvmInitAfterZygote()
      * come last.
      */
     if (!initJdwp()) {
-        LOGD("JDWP init failed; continuing anyway");
+        ALOGD("JDWP init failed; continuing anyway");
     }
 
     endJdwp = dvmGetRelativeTimeUsec();
@@ -1693,7 +1693,7 @@ void dvmShutdown()
     dvmSlayDaemons();
 
     if (gDvm.verboseShutdown)
-        LOGD("VM cleaning up");
+        ALOGD("VM cleaning up");
 
     dvmDebuggerShutdown();
     dvmProfilingShutdown();

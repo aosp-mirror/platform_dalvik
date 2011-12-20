@@ -58,7 +58,7 @@ pid_t gettid() { return syscall(__NR_gettid);}
 // Change this to enable logging on cgroup errors
 #define ENABLE_CGROUP_ERR_LOGGING 0
 
-// change this to ALOGV/LOGD to debug thread activity
+// change this to ALOGV/ALOGD to debug thread activity
 #define LOG_THREAD  LOGVV
 
 /*
@@ -608,7 +608,7 @@ void dvmSlayDaemons()
 
                 if (target->status == THREAD_RUNNING) {
                     if (!complained)
-                        LOGD("threadid=%d not ready yet", target->threadId);
+                        ALOGD("threadid=%d not ready yet", target->threadId);
                     allSuspended = false;
                     /* keep going so we log each running daemon once */
                 }
@@ -622,7 +622,7 @@ void dvmSlayDaemons()
             } else {
                 if (!complained) {
                     complained = true;
-                    LOGD("threadid=%d: waiting briefly for daemon suspension",
+                    ALOGD("threadid=%d: waiting briefly for daemon suspension",
                         threadId);
                 }
             }
@@ -1070,7 +1070,7 @@ static void threadExitCheck(void* arg)
         /*
          * Spin a couple of times to let other destructors fire.
          */
-        LOGD("threadid=%d: thread exiting, not yet detached (count=%d)",
+        ALOGD("threadid=%d: thread exiting, not yet detached (count=%d)",
             self->threadId, self->threadExitCheckCount);
         self->threadExitCheckCount++;
         int cc = pthread_setspecific(gDvm.pthreadKeySelf, self);
@@ -1207,7 +1207,7 @@ static void setThreadName(const char *threadName)
 #elif defined(HAVE_PRCTL)
     prctl(PR_SET_NAME, (unsigned long) s, 0, 0, 0);
 #else
-    LOGD("No way to set current thread's name (%s)", s);
+    ALOGD("No way to set current thread's name (%s)", s);
 #endif
 }
 
@@ -2280,7 +2280,7 @@ void dvmSuspendSelf(bool jdwpActivity)
              * dump event is pending (assuming SignalCatcher was resumed for
              * just long enough to try to grab the thread-suspend lock).
              */
-            LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d)",
+            ALOGD("threadid=%d: still suspended after undo (sc=%d dc=%d)",
                 self->threadId, self->suspendCount, self->dbgSuspendCount);
         }
     }
@@ -2342,7 +2342,7 @@ int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
             LOGW("Couldn't set fg policy on tid %d", thread->systemTid);
         } else {
             changeFlags |= kChangedPolicy;
-            LOGD("Temporarily moving tid %d to fg (was %d)",
+            ALOGD("Temporarily moving tid %d to fg (was %d)",
                 thread->systemTid, *pSavedThreadPolicy);
         }
     }
@@ -2358,7 +2358,7 @@ int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
                 thread->systemTid, kHigher);
         } else {
             changeFlags |= kChangedPriority;
-            LOGD("Temporarily raised priority on tid %d (%d -> %d)",
+            ALOGD("Temporarily raised priority on tid %d (%d -> %d)",
                 thread->systemTid, *pSavedThreadPrio, kHigher);
         }
     }
@@ -2377,7 +2377,7 @@ void dvmResetThreadPriority(Thread* thread, int changeFlags,
             LOGW("NOTE: couldn't reset tid %d to (%d)",
                 thread->systemTid, savedThreadPolicy);
         } else {
-            LOGD("Restored policy of %d to %d",
+            ALOGD("Restored policy of %d to %d",
                 thread->systemTid, savedThreadPolicy);
         }
     }
@@ -2388,7 +2388,7 @@ void dvmResetThreadPriority(Thread* thread, int changeFlags,
             LOGW("NOTE: couldn't reset priority on thread %d to %d",
                 thread->systemTid, savedThreadPrio);
         } else {
-            LOGD("Restored priority on %d to %d",
+            ALOGD("Restored priority on %d to %d",
                 thread->systemTid, savedThreadPrio);
         }
     }
@@ -2461,7 +2461,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
          */
         if (gDvmJit.pJitEntryTable && retryCount > 0 &&
             gDvmJit.hasNewChain && thread->inJitCodeCache) {
-            LOGD("JIT unchain all for threadid=%d", thread->threadId);
+            ALOGD("JIT unchain all for threadid=%d", thread->threadId);
             dvmJitUnchainAll();
         }
 #endif
@@ -3537,22 +3537,22 @@ void dvmNukeThread(Thread* thread)
      * The target thread can continue to execute between the two signals.
      * (The first just causes debuggerd to attach to it.)
      */
-    LOGD("threadid=%d: sending two SIGSTKFLTs to threadid=%d (tid=%d) to"
+    ALOGD("threadid=%d: sending two SIGSTKFLTs to threadid=%d (tid=%d) to"
          " cause debuggerd dump",
         dvmThreadSelf()->threadId, thread->threadId, thread->systemTid);
     killResult = pthread_kill(thread->handle, SIGSTKFLT);
     if (killResult != 0) {
-        LOGD("NOTE: pthread_kill #1 failed: %s", strerror(killResult));
+        ALOGD("NOTE: pthread_kill #1 failed: %s", strerror(killResult));
     }
     usleep(2 * 1000 * 1000);    // TODO: timed-wait until debuggerd attaches
     killResult = pthread_kill(thread->handle, SIGSTKFLT);
     if (killResult != 0) {
-        LOGD("NOTE: pthread_kill #2 failed: %s", strerror(killResult));
+        ALOGD("NOTE: pthread_kill #2 failed: %s", strerror(killResult));
     }
-    LOGD("Sent, pausing to let debuggerd run");
+    ALOGD("Sent, pausing to let debuggerd run");
     usleep(8 * 1000 * 1000);    // TODO: timed-wait until debuggerd finishes
 
     /* ignore SIGSEGV so the eventual dmvAbort() doesn't notify debuggerd */
     signal(SIGSEGV, SIG_IGN);
-    LOGD("Continuing");
+    ALOGD("Continuing");
 }

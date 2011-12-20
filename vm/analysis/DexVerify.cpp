@@ -42,7 +42,7 @@ bool dvmVerifyClass(ClassObject* clazz)
     int i;
 
     if (dvmIsClassVerified(clazz)) {
-        LOGD("Ignoring duplicate verify attempt on %s", clazz->descriptor);
+        ALOGD("Ignoring duplicate verify attempt on %s", clazz->descriptor);
         return true;
     }
 
@@ -324,7 +324,7 @@ static bool verifyMethod(Method* meth)
      * that's so rare that there's little point in checking.
      */
     if (!dvmVerifyCodeFlow(&vdata)) {
-        //LOGD("+++ %s failed code flow", meth->name);
+        //ALOGD("+++ %s failed code flow", meth->name);
         goto bail;
     }
 

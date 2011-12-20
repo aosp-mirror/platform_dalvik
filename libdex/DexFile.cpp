@@ -516,7 +516,7 @@ size_t dexGetDexCodeSize(const DexCode* pCode)
 
     const u1* handlerData = dexGetCatchHandlerData(pCode);
 
-    //LOGD("+++ pCode=%p handlerData=%p last offset=%d",
+    //ALOGD("+++ pCode=%p handlerData=%p last offset=%d",
     //    pCode, handlerData, offset);
 
     /* return the size of the catch handler + everything before it */

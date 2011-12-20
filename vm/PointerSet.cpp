@@ -148,14 +148,14 @@ bool dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
          * terminated "above" or "below" the value.
          */
         if (nearby != 0 && ptr < pSet->list[nearby-1]) {
-            //LOGD("nearby-1=%d %p, inserting %p at -1",
+            //ALOGD("nearby-1=%d %p, inserting %p at -1",
             //    nearby-1, pSet->list[nearby-1], ptr);
             nearby--;
         } else if (ptr < pSet->list[nearby]) {
-            //LOGD("nearby=%d %p, inserting %p at +0",
+            //ALOGD("nearby=%d %p, inserting %p at +0",
             //    nearby, pSet->list[nearby], ptr);
         } else {
-            //LOGD("nearby+1=%d %p, inserting %p at +1",
+            //ALOGD("nearby+1=%d %p, inserting %p at +1",
             //    nearby+1, pSet->list[nearby+1], ptr);
             nearby++;
         }

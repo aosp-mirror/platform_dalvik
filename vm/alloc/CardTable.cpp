@@ -277,7 +277,7 @@ static void dumpReferencesCallback(Object *obj, void *arg)
     }
     dvmVisitObject(dumpReferencesVisitor, obj, &arg);
     if (arg == NULL) {
-        LOGD("Found %p in the heap @ %p", arg, obj);
+        ALOGD("Found %p in the heap @ %p", arg, obj);
         dvmDumpObject(obj);
     }
 }
@@ -291,7 +291,7 @@ static void dumpReferencesRootVisitor(void *ptr, u4 threadId,
     Object *obj = *(Object **)ptr;
     Object *lookingFor = *(Object **)arg;
     if (obj == lookingFor) {
-        LOGD("Found %p in a root @ %p", arg, ptr);
+        ALOGD("Found %p in a root @ %p", arg, ptr);
     }
 }
 

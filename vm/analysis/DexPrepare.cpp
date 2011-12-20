@@ -168,7 +168,7 @@ retry:
     ThreadStatus oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
     cc = flock(fd, LOCK_EX | LOCK_NB);
     if (cc != 0) {
-        LOGD("DexOpt: sleeping on flock(%s)", cacheFileName);
+        ALOGD("DexOpt: sleeping on flock(%s)", cacheFileName);
         cc = flock(fd, LOCK_EX);
     }
     dvmChangeStatus(NULL, oldStatus);
@@ -196,7 +196,7 @@ retry:
     if (cc != 0 ||
         fdStat.st_dev != fileStat.st_dev || fdStat.st_ino != fileStat.st_ino)
     {
-        LOGD("DexOpt: our open cache file is stale; sleeping and retrying");
+        ALOGD("DexOpt: our open cache file is stale; sleeping and retrying");
         LOGVV("DexOpt: unlocking cache file %s", cacheFileName);
         flock(fd, LOCK_UN);
         close(fd);
@@ -282,7 +282,7 @@ retry:
              * changes doing anything" purposes its best if we just make
              * everything crash when a DEX they're using gets updated.
              */
-            LOGD("ODEX file is stale or bad; removing and retrying (%s)",
+            ALOGD("ODEX file is stale or bad; removing and retrying (%s)",
                 cacheFileName);
             if (ftruncate(fd, 0) != 0) {
                 LOGW("Warning: unable to truncate cache file '%s': %s",
@@ -357,7 +357,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
     else
         lastPart = fileName;
 
-    LOGD("DexOpt: --- BEGIN '%s' (bootstrap=%d) ---", lastPart, isBootstrap);
+    ALOGD("DexOpt: --- BEGIN '%s' (bootstrap=%d) ---", lastPart, isBootstrap);
 
     pid_t pid;
 
@@ -488,7 +488,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         while (true) {
             gotPid = waitpid(pid, &status, 0);
             if (gotPid == -1 && errno == EINTR) {
-                LOGD("waitpid interrupted, retrying");
+                ALOGD("waitpid interrupted, retrying");
             } else {
                 break;
             }
@@ -501,7 +501,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         }
 
         if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-            LOGD("DexOpt: --- END '%s' (success) ---", lastPart);
+            ALOGD("DexOpt: --- END '%s' (success) ---", lastPart);
             return true;
         } else {
             LOGW("DexOpt: --- END '%s' --- status=0x%04x, process failed",
@@ -870,7 +870,7 @@ static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
         msgStr = "verify";
     else if (doOpt)
         msgStr = "opt";
-    LOGD("DexOpt: load %dms, %s %dms",
+    ALOGD("DexOpt: load %dms, %s %dms",
         (int) (loadWhen - prepWhen) / 1000,
         msgStr,
         (int) (verifyOptWhen - loadWhen) / 1000);
@@ -979,7 +979,7 @@ static bool loadAllClasses(DvmDex* pDvmDex)
              * with the "multiple def" flag so the resolver doesn't try
              * to make it available.
              */
-            LOGD("DexOpt: '%s' has an earlier definition; blocking out",
+            ALOGD("DexOpt: '%s' has an earlier definition; blocking out",
                 classDescriptor);
             SET_CLASS_FLAG(newClass, CLASS_MULTIPLE_DEFS);
         } else {
@@ -1053,7 +1053,7 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
          * (a) not the one we want to examine, and (b) mapped read-only,
          * so we will seg fault if we try to rewrite instructions inside it.
          */
-        LOGD("DexOpt: not verifying/optimizing '%s': multiple definitions",
+        ALOGD("DexOpt: not verifying/optimizing '%s': multiple definitions",
             clazz->descriptor);
         return;
     }
@@ -1202,11 +1202,11 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
     magic = optHdr.magic;
     if (memcmp(magic, DEX_MAGIC, 4) == 0) {
         /* somebody probably pointed us at the wrong file */
-        LOGD("DexOpt: expected optimized DEX, found unoptimized");
+        ALOGD("DexOpt: expected optimized DEX, found unoptimized");
         goto bail;
     } else if (memcmp(magic, DEX_OPT_MAGIC, 4) != 0) {
         /* not a DEX file, or previous attempt was interrupted */
-        LOGD("DexOpt: incorrect opt magic number (0x%02x %02x %02x %02x)",
+        ALOGD("DexOpt: incorrect opt magic number (0x%02x %02x %02x %02x)",
             magic[0], magic[1], magic[2], magic[3]);
         goto bail;
     }
@@ -1283,7 +1283,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
     }
     val = read4LE(&ptr);
     if (val != DALVIK_VM_BUILD) {
-        LOGD("DexOpt: VM build version mismatch (%d vs %d)",
+        ALOGD("DexOpt: VM build version mismatch (%d vs %d)",
             val, DALVIK_VM_BUILD);
         goto bail;
     }

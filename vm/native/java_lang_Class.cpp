@@ -500,7 +500,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
     if (dvmIsPrimitiveClass(clazz) || dvmIsInterfaceClass(clazz)
         || dvmIsArrayClass(clazz) || dvmIsAbstractClass(clazz))
     {
-        LOGD("newInstance failed: p%d i%d [%d a%d",
+        ALOGD("newInstance failed: p%d i%d [%d a%d",
             dvmIsPrimitiveClass(clazz), dvmIsInterfaceClass(clazz),
             dvmIsArrayClass(clazz), dvmIsAbstractClass(clazz));
         dvmThrowInstantiationException(clazz, NULL);
@@ -521,7 +521,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
     init = dvmFindDirectMethodByDescriptor(clazz, "<init>", "()V");
     if (init == NULL) {
         /* common cause: secret "this" arg on non-static inner class ctor */
-        LOGD("newInstance failed: no <init>()");
+        ALOGD("newInstance failed: no <init>()");
         dvmThrowInstantiationException(clazz, "no empty constructor");
         RETURN_VOID();
     }
@@ -539,13 +539,13 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
     ClassObject* callerClass = dvmGetCaller2Class(self->interpSave.curFrame);
 
     if (!dvmCheckClassAccess(callerClass, clazz)) {
-        LOGD("newInstance failed: %s not accessible to %s",
+        ALOGD("newInstance failed: %s not accessible to %s",
             clazz->descriptor, callerClass->descriptor);
         dvmThrowIllegalAccessException("access to class not allowed");
         RETURN_VOID();
     }
     if (!dvmCheckMethodAccess(callerClass, init)) {
-        LOGD("newInstance failed: %s.<init>() not accessible to %s",
+        ALOGD("newInstance failed: %s.<init>() not accessible to %s",
             clazz->descriptor, callerClass->descriptor);
         dvmThrowIllegalAccessException("access to constructor not allowed");
         RETURN_VOID();

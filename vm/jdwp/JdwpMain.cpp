@@ -96,11 +96,11 @@ JdwpState* dvmJdwpStartup(const JdwpStartupParams* pParams)
 
     switch (pParams->transport) {
     case kJdwpTransportSocket:
-        // LOGD("prepping for JDWP over TCP");
+        // ALOGD("prepping for JDWP over TCP");
         state->transport = dvmJdwpSocketTransport();
         break;
     case kJdwpTransportAndroidAdb:
-        // LOGD("prepping for JDWP over ADB");
+        // ALOGD("prepping for JDWP over ADB");
         state->transport = dvmJdwpAndroidAdbTransport();
         /* TODO */
         break;
@@ -220,7 +220,7 @@ void dvmJdwpShutdown(JdwpState* state)
          * Close down the network to inspire the thread to halt.
          */
         if (gDvm.verboseShutdown)
-            LOGD("JDWP shutting down net...");
+            ALOGD("JDWP shutting down net...");
         dvmJdwpNetShutdown(state);
 
         if (state->debugThreadStarted) {
@@ -231,7 +231,7 @@ void dvmJdwpShutdown(JdwpState* state)
         }
 
         if (gDvm.verboseShutdown)
-            LOGD("JDWP freeing netstate...");
+            ALOGD("JDWP freeing netstate...");
         dvmJdwpNetFree(state);
         state->netState = NULL;
     }
@@ -428,7 +428,7 @@ s8 dvmJdwpGetNowMsec()
 s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
 {
     if (!gDvm.debuggerActive) {
-        LOGD("dvmJdwpLastDebuggerActivity: no active debugger");
+        ALOGD("dvmJdwpLastDebuggerActivity: no active debugger");
         return -1;
     }
 

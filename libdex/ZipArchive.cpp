@@ -170,7 +170,7 @@ static int mapCentralDirectory0(int fd, const char* debugFileName,
         }
     }
     if (i < 0) {
-        LOGD("Zip: EOCD not found, %s is not zip", debugFileName);
+        ALOGD("Zip: EOCD not found, %s is not zip", debugFileName);
         return -1;
     }
 

@@ -250,7 +250,7 @@ static Object* createFieldObject(Field* field, const ClassObject* clazz)
     dvmCallMethod(dvmThreadSelf(), gDvm.methJavaLangReflectField_init,
         fieldObj, &unused, clazz, type, nameObj, slot);
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGD("Field class init threw exception");
+        ALOGD("Field class init threw exception");
         goto bail;
     }
 
@@ -430,7 +430,7 @@ static Object* createConstructorObject(Method* meth)
     dvmCallMethod(dvmThreadSelf(), gDvm.methJavaLangReflectConstructor_init,
         consObj, &unused, meth->clazz, params, exceptions, slot);
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGD("Constructor class init threw exception");
+        ALOGD("Constructor class init threw exception");
         goto bail;
     }
 
@@ -583,7 +583,7 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
         methObj, &unused, meth->clazz, params, exceptions, returnType,
         nameObj, slot);
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGD("Method class init threw exception");
+        ALOGD("Method class init threw exception");
         goto bail;
     }
 
@@ -1109,7 +1109,7 @@ bool dvmUnboxPrimitive(Object* value, ClassObject* returnType,
 
     if (typeIndex == PRIM_NOT) {
         if (value != NULL && !dvmInstanceof(value->clazz, returnType)) {
-            LOGD("wrong object type: %s %s",
+            ALOGD("wrong object type: %s %s",
                 value->clazz->descriptor, returnType->descriptor);
             return false;
         }

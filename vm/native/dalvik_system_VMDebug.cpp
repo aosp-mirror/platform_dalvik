@@ -614,14 +614,14 @@ static void Dalvik_dalvik_system_VMDebug_cacheRegisterMap(const u4* args,
     }
     *methodDescr++ = '\0';
 
-    //LOGD("GOT: %s %s %s", classAndMethodDesc, methodName, methodDescr);
+    //ALOGD("GOT: %s %s %s", classAndMethodDesc, methodName, methodDescr);
 
     /*
      * Find the class, but only if it's already loaded.
      */
     clazz = dvmLookupClass(classAndMethodDesc, NULL, false);
     if (clazz == NULL) {
-        LOGD("Class %s not found in bootstrap loader", classAndMethodDesc);
+        ALOGD("Class %s not found in bootstrap loader", classAndMethodDesc);
         goto bail;
     }
 
@@ -722,7 +722,7 @@ static void Dalvik_dalvik_system_VMDebug_infopoint(const u4* args,
 {
     gDvm.nativeDebuggerActive = true;
 
-    LOGD("VMDebug infopoint %d hit", args[0]);
+    ALOGD("VMDebug infopoint %d hit", args[0]);
 
     gDvm.nativeDebuggerActive = false;
     RETURN_VOID();

@@ -244,14 +244,14 @@ bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
 
     ALOGV("+++ change byte at %p from 0x%02x to 0x%02x", addr, *addr, newVal);
     if (sysChangeMapAccess(addr, 1, true, &pDvmDex->memMap) != 0) {
-        LOGD("NOTE: DEX page access change (->RW) failed");
+        ALOGD("NOTE: DEX page access change (->RW) failed");
         /* expected on files mounted from FAT; keep going (may crash) */
     }
 
     *addr = newVal;
 
     if (sysChangeMapAccess(addr, 1, false, &pDvmDex->memMap) != 0) {
-        LOGD("NOTE: DEX page access change (->RO) failed");
+        ALOGD("NOTE: DEX page access change (->RO) failed");
         /* expected on files mounted from FAT; keep going */
     }
 
@@ -281,14 +281,14 @@ bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
 
     ALOGV("+++ change 2byte at %p from 0x%04x to 0x%04x", addr, *addr, newVal);
     if (sysChangeMapAccess(addr, 2, true, &pDvmDex->memMap) != 0) {
-        LOGD("NOTE: DEX page access change (->RW) failed");
+        ALOGD("NOTE: DEX page access change (->RW) failed");
         /* expected on files mounted from FAT; keep going (may crash) */
     }
 
     *addr = newVal;
 
     if (sysChangeMapAccess(addr, 2, false, &pDvmDex->memMap) != 0) {
-        LOGD("NOTE: DEX page access change (->RO) failed");
+        ALOGD("NOTE: DEX page access change (->RO) failed");
         /* expected on files mounted from FAT; keep going */
     }
 

@@ -1564,26 +1564,26 @@ void dvmCheckInterpStateConsistency()
     handlerTable = self->interpBreak.ctl.curHandlerTable;
     for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
         if (subMode != thread->interpBreak.ctl.subMode) {
-            LOGD("Warning: subMode mismatch - %#x:%#x, tid[%d]",
+            ALOGD("Warning: subMode mismatch - %#x:%#x, tid[%d]",
                 subMode,thread->interpBreak.ctl.subMode,thread->threadId);
          }
         if (breakFlags != thread->interpBreak.ctl.breakFlags) {
-            LOGD("Warning: breakFlags mismatch - %#x:%#x, tid[%d]",
+            ALOGD("Warning: breakFlags mismatch - %#x:%#x, tid[%d]",
                 breakFlags,thread->interpBreak.ctl.breakFlags,thread->threadId);
          }
         if (handlerTable != thread->interpBreak.ctl.curHandlerTable) {
-            LOGD("Warning: curHandlerTable mismatch - %#x:%#x, tid[%d]",
+            ALOGD("Warning: curHandlerTable mismatch - %#x:%#x, tid[%d]",
                 (int)handlerTable,(int)thread->interpBreak.ctl.curHandlerTable,
                 thread->threadId);
          }
 #if defined(WITH_JIT)
          if (thread->pJitProfTable != gDvmJit.pProfTable) {
-             LOGD("Warning: pJitProfTable mismatch - %#x:%#x, tid[%d]",
+             ALOGD("Warning: pJitProfTable mismatch - %#x:%#x, tid[%d]",
                   (int)thread->pJitProfTable,(int)gDvmJit.pProfTable,
                   thread->threadId);
          }
          if (thread->jitThreshold != gDvmJit.threshold) {
-             LOGD("Warning: jitThreshold mismatch - %#x:%#x, tid[%d]",
+             ALOGD("Warning: jitThreshold mismatch - %#x:%#x, tid[%d]",
                   (int)thread->jitThreshold,(int)gDvmJit.threshold,
                   thread->threadId);
          }
@@ -1818,13 +1818,13 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
             if (self->jitResumeDPC != NULL) {
                 if (self->jitResumeDPC == pc) {
                     if (self->jitResumeNPC != NULL) {
-                        LOGD("SS return to trace - pc:%#x to 0x:%x",
+                        ALOGD("SS return to trace - pc:%#x to 0x:%x",
                              (int)pc, (int)self->jitResumeNPC);
                     } else {
-                        LOGD("SS return to interp - pc:%#x",(int)pc);
+                        ALOGD("SS return to interp - pc:%#x",(int)pc);
                     }
                 } else {
-                    LOGD("SS failed to return.  Expected %#x, now at %#x",
+                    ALOGD("SS failed to return.  Expected %#x, now at %#x",
                          (int)self->jitResumeDPC, (int)pc);
                 }
             }

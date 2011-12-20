@@ -425,7 +425,7 @@ void dvmDbgDisconnected()
     dvmHashTableLock(gDvm.dbgRegistry);
     gDvm.debuggerConnected = false;
 
-    LOGD("Debugger has detached; object registry had %d entries",
+    ALOGD("Debugger has detached; object registry had %d entries",
         dvmHashTableNumEntries(gDvm.dbgRegistry));
     //int i;
     //for (i = 0; i < gDvm.dbgRegistryNext; i++)
@@ -2808,7 +2808,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
     pReq->resultTag = getReturnTypeBasicTag(meth);
     if (pReq->exceptObj != 0) {
         Object* exc = dvmGetException(self);
-        LOGD("  JDWP invocation returning with exceptObj=%p (%s)",
+        ALOGD("  JDWP invocation returning with exceptObj=%p (%s)",
             exc, exc->clazz->descriptor);
         //dvmLogExceptionStackTrace();
         dvmClearException(self);

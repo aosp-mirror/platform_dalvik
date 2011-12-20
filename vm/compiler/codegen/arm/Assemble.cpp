@@ -963,14 +963,14 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             }
             if ((lir->opcode == kThumb2LdrPcRel12) && (delta > 4091)) {
                 if (cUnit->printMe) {
-                    LOGD("kThumb2LdrPcRel12@%x: delta=%d", lir->generic.offset,
+                    ALOGD("kThumb2LdrPcRel12@%x: delta=%d", lir->generic.offset,
                          delta);
                     dvmCompilerCodegenDump(cUnit);
                 }
                 return kRetryHalve;
             } else if (delta > 1020) {
                 if (cUnit->printMe) {
-                    LOGD("kThumbLdrPcRel@%x: delta=%d", lir->generic.offset,
+                    ALOGD("kThumbLdrPcRel@%x: delta=%d", lir->generic.offset,
                          delta);
                     dvmCompilerCodegenDump(cUnit);
                 }
@@ -1006,7 +1006,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
                 lir->generic.target = 0;
                 dvmCompilerSetupResourceMasks(lir);
                 if (cUnit->printMe) {
-                    LOGD("kThumb2Cbnz/kThumb2Cbz@%x: delta=%d",
+                    ALOGD("kThumb2Cbnz/kThumb2Cbz@%x: delta=%d",
                          lir->generic.offset, delta);
                     dvmCompilerCodegenDump(cUnit);
                 }
@@ -1022,7 +1022,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             int delta = target - pc;
             if ((lir->opcode == kThumbBCond) && (delta > 254 || delta < -256)) {
                 if (cUnit->printMe) {
-                    LOGD("kThumbBCond@%x: delta=%d", lir->generic.offset,
+                    ALOGD("kThumbBCond@%x: delta=%d", lir->generic.offset,
                          delta);
                     dvmCompilerCodegenDump(cUnit);
                 }
@@ -1335,7 +1335,7 @@ static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
                 }
             }
             if (j == gDvmJit.signatureBreakpointSize) {
-                LOGD("Signature match starting from offset %#x (%d words)",
+                ALOGD("Signature match starting from offset %#x (%d words)",
                      i*4, gDvmJit.signatureBreakpointSize);
                 int descSize = getTraceDescriptionSize(cUnit->traceDesc);
                 JitTraceDescription *newCopy =
@@ -1604,7 +1604,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
         gDvmJit.translationChains++;
 
         COMPILER_TRACE_CHAINING(
-            LOGD("Jit Runtime: chaining %#x to %#x",
+            ALOGD("Jit Runtime: chaining %#x to %#x",
                  (int) branchAddr, (int) tgtAddr & -2));
 
         /*
@@ -1783,7 +1783,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
     if ((tgtAddr == 0) ||
         ((void*)tgtAddr == dvmCompilerGetInterpretTemplate())) {
         COMPILER_TRACE_CHAINING(
-            LOGD("Jit Runtime: predicted chain %p to method %s%s delayed",
+            ALOGD("Jit Runtime: predicted chain %p to method %s%s delayed",
                  cell, method->clazz->descriptor, method->name));
         goto done;
     }
@@ -1835,7 +1835,7 @@ void dvmCompilerPatchInlineCache(void)
 
     UNPROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
 
-    //LOGD("Number of IC patch work orders: %d", gDvmJit.compilerICPatchIndex);
+    //ALOGD("Number of IC patch work orders: %d", gDvmJit.compilerICPatchIndex);
 
     /* Initialize the min/max address range */
     minAddr = (PredictedChainingCell *)
@@ -1855,7 +1855,7 @@ void dvmCompilerPatchInlineCache(void)
         cellContent->clazz = clazz;
 
         COMPILER_TRACE_CHAINING(
-            LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) "
+            ALOGD("Jit Runtime: predicted chain %p from %s to %s (%s) "
                  "patched",
                  cellAddr,
                  cellAddr->clazz->descriptor,
@@ -1943,7 +1943,7 @@ static u4* unchainSingle(JitEntry *trace)
                     dvmAbort();  // dvmAbort OK here - can't safely recover
             }
             COMPILER_TRACE_CHAINING(
-                LOGD("Jit Runtime: unchaining %#x", (int)pChainCells));
+                ALOGD("Jit Runtime: unchaining %#x", (int)pChainCells));
             pChainCells += elemSize;  /* Advance by a fixed number of words */
         }
     }
@@ -2015,12 +2015,12 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
 
     if (p->codeAddress == NULL) {
         if (!silent)
-            LOGD("TRACEPROFILE NULL");
+            ALOGD("TRACEPROFILE NULL");
         return 0;
     }
     if (p->codeAddress == dvmCompilerGetInterpretTemplate()) {
         if (!silent)
-            LOGD("TRACEPROFILE INTERPRET_ONLY");
+            ALOGD("TRACEPROFILE INTERPRET_ONLY");
         return 0;
     }
     JitTraceCounter_t count = getProfileCount(p);
@@ -2049,7 +2049,7 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
                        method->accessFlags,
                        addrToLineCb, NULL, &addrToLine);
 
-    LOGD("TRACEPROFILE 0x%08x % 10d %5.2f%% [%#x(+%d), %d] %s%s;%s",
+    ALOGD("TRACEPROFILE 0x%08x % 10d %5.2f%% [%#x(+%d), %d] %s%s;%s",
          (int) getTraceBase(p),
          count,
          ((float ) count) / sum * 100.0,
@@ -2074,7 +2074,7 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
             desc->trace[idx+JIT_TRACE_CUR_METHOD-1].info.meta;
         char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
         /* Print the callee info in the trace */
-        LOGD("    -> %s%s;%s", method->clazz->descriptor, method->name,
+        ALOGD("    -> %s%s;%s", method->clazz->descriptor, method->name,
              methodDesc);
     }
 
@@ -2147,7 +2147,7 @@ void dvmCompilerSortAndPrintTraceProfiles()
         sum = 1;
     }
 
-    LOGD("JIT: Average execution count -> %d",(int)(sum / numTraces));
+    ALOGD("JIT: Average execution count -> %d",(int)(sum / numTraces));
 
     /* Dump the sorted entries. The count of each trace will be reset to 0. */
     for (i=0; i < gDvmJit.jitTableSize; i++) {
@@ -2423,7 +2423,7 @@ static int selfVerificationLoad(int addr, int size)
             dvmAbort();
     }
 
-    //LOGD("*** HEAP LOAD: Addr: %#x Data: %#x Size: %d", addr, data, size);
+    //ALOGD("*** HEAP LOAD: Addr: %#x Data: %#x Size: %d", addr, data, size);
     return data;
 }
 
@@ -2447,7 +2447,7 @@ static s8 selfVerificationLoadDoubleword(int addr)
         }
     }
 
-    //LOGD("*** HEAP LOAD DOUBLEWORD: Addr: %#x Data: %#x Data2: %#x",
+    //ALOGD("*** HEAP LOAD DOUBLEWORD: Addr: %#x Data: %#x Data2: %#x",
     //    addr, data, data2);
     return (((s8) data2) << 32) | data;
 }
@@ -2467,7 +2467,7 @@ static void selfVerificationStore(int addr, int data, int size)
     int maskedAddr = addr & 0xFFFFFFFC;
     int alignment = addr & 0x3;
 
-    //LOGD("*** HEAP STORE: Addr: %#x Data: %#x Size: %d", addr, data, size);
+    //ALOGD("*** HEAP STORE: Addr: %#x Data: %#x Size: %d", addr, data, size);
 
     for (heapSpacePtr = shadowSpace->heapSpace;
          heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
@@ -2515,7 +2515,7 @@ static void selfVerificationStoreDoubleword(int addr, s8 double_data)
     int data2 = double_data >> 32;
     bool store1 = false, store2 = false;
 
-    //LOGD("*** HEAP STORE DOUBLEWORD: Addr: %#x Data: %#x, Data2: %#x",
+    //ALOGD("*** HEAP STORE DOUBLEWORD: Addr: %#x Data: %#x, Data2: %#x",
     //    addr, data, data2);
 
     for (heapSpacePtr = shadowSpace->heapSpace;
@@ -2628,7 +2628,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
 
     if ((insn & kMemOp2) == kMemOp2) {
         insn = (insn << 16) | (insn >> 16);
-        //LOGD("*** THUMB2 - Addr: %#x Insn: %#x", lr, insn);
+        //ALOGD("*** THUMB2 - Addr: %#x Insn: %#x", lr, insn);
 
         int opcode12 = (insn >> 20) & 0xFFF;
         int opcode4 = (insn >> 8) & 0xF;
@@ -2753,7 +2753,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
         // Handle the decoded mem op accordingly
         if (store) {
             if (size == kSVVariable) {
-                LOGD("*** THUMB2 STMIA CURRENTLY UNUSED (AND UNTESTED)");
+                ALOGD("*** THUMB2 STMIA CURRENTLY UNUSED (AND UNTESTED)");
                 int i;
                 int regList = insn & 0xFFFF;
                 for (i = 0; i < 16; i++) {
@@ -2774,7 +2774,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
             }
         } else {
             if (size == kSVVariable) {
-                LOGD("*** THUMB2 LDMIA CURRENTLY UNUSED (AND UNTESTED)");
+                ALOGD("*** THUMB2 LDMIA CURRENTLY UNUSED (AND UNTESTED)");
                 int i;
                 int regList = insn & 0xFFFF;
                 for (i = 0; i < 16; i++) {
@@ -2795,7 +2795,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
             }
         }
     } else {
-        //LOGD("*** THUMB - Addr: %#x Insn: %#x", lr, insn);
+        //ALOGD("*** THUMB - Addr: %#x Insn: %#x", lr, insn);
 
         // Update the link register
         selfVerificationMemRegStore(sp, old_lr+2, 13);

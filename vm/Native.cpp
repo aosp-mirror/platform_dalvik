@@ -184,7 +184,7 @@ static int hashcmpSharedLib(const void* ventry, const void* vnewEntry)
     const SharedLib* pLib = (const SharedLib*) ventry;
     const SharedLib* pNewLib = (const SharedLib*) vnewEntry;
 
-    LOGD("--- comparing %p '%s' %p '%s'",
+    ALOGD("--- comparing %p '%s' %p '%s'",
         pLib, pLib->pathName, pNewLib, pNewLib->pathName);
     return strcmp(pLib->pathName, pNewLib->pathName);
 }
@@ -279,7 +279,7 @@ static bool checkOnLoadResult(SharedLib* pEntry)
 
     dvmLockMutex(&pEntry->onLoadLock);
     while (pEntry->onLoadResult == kOnLoadPending) {
-        LOGD("threadid=%d: waiting for %s OnLoad status",
+        ALOGD("threadid=%d: waiting for %s OnLoad status",
             self->threadId, pEntry->pathName);
         ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         pthread_cond_wait(&pEntry->onLoadCond, &pEntry->onLoadLock);
@@ -327,7 +327,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
     verbose = verbose && !!strncmp(pathName, "/vendor", sizeof("/vendor")-1);
 
     if (verbose)
-        LOGD("Trying to load lib %s %p", pathName, classLoader);
+        ALOGD("Trying to load lib %s %p", pathName, classLoader);
 
     *detail = NULL;
 
@@ -343,7 +343,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
             return false;
         }
         if (verbose) {
-            LOGD("Shared lib '%s' already loaded in same CL %p",
+            ALOGD("Shared lib '%s' already loaded in same CL %p",
                 pathName, classLoader);
         }
         if (!checkOnLoadResult(pEntry))
@@ -408,7 +408,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
         return checkOnLoadResult(pActualEntry);
     } else {
         if (verbose)
-            LOGD("Added shared lib %s %p", pathName, classLoader);
+            ALOGD("Added shared lib %s %p", pathName, classLoader);
 
         bool result = true;
         void* vonLoad;
@@ -416,7 +416,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
 
         vonLoad = dlsym(handle, "JNI_OnLoad");
         if (vonLoad == NULL) {
-            LOGD("No JNI_OnLoad found in %s %p, skipping init",
+            ALOGD("No JNI_OnLoad found in %s %p, skipping init",
                 pathName, classLoader);
         } else {
             /*
@@ -526,7 +526,7 @@ static void unregisterJNINativeMethods(Method* methods, size_t count)
          * anything.
          */
 
-        LOGD("Unregistering JNI method %s.%s:%s",
+        ALOGD("Unregistering JNI method %s.%s:%s",
             meth->clazz->descriptor, meth->name, meth->shorty);
         dvmSetNativeFunc(meth, dvmResolveNativeMethod, NULL);
     }

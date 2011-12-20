@@ -101,6 +101,6 @@ void dvmMterpStd(Thread* self)
     dvmMterpStdRun(self);
 
 #ifdef LOG_INSTR
-    LOGD("|-- Leaving interpreter loop");
+    ALOGD("|-- Leaving interpreter loop");
 #endif
 }

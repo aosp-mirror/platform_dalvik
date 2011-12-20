@@ -246,7 +246,7 @@ int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap)
         int err = errno;
         ALOGV("mprotect(%p, %d, PROT_READ) failed: %s",
             memPtr, length, strerror(err));
-        LOGD("mprotect(RO) failed (%d), file will remain read-write", err);
+        ALOGD("mprotect(RO) failed (%d), file will remain read-write", err);
     }
 
     pMap->baseAddr = pMap->addr = memPtr;
@@ -397,7 +397,7 @@ int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg)
             LOGE("%s: write failed: %s", logMsg, strerror(err));
             return err;
         } else if (actual != (ssize_t) count) {
-            LOGD("%s: partial write (will retry): (%d of %zd)",
+            ALOGD("%s: partial write (will retry): (%d of %zd)",
                 logMsg, (int) actual, count);
             buf = (const void*) (((const u1*) buf) + actual);
         }

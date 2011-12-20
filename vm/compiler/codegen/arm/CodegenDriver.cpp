@@ -2548,7 +2548,7 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
              */
             if (classPtr == NULL) {
                 BAIL_LOOP_COMPILATION();
-                LOGD("null clazz in OP_INSTANCE_OF, single-stepping");
+                ALOGD("null clazz in OP_INSTANCE_OF, single-stepping");
                 genInterpSingleStep(cUnit, mir);
                 break;
             }
@@ -4758,7 +4758,7 @@ void dvmCompilerArchDump(void)
         }
     }
     if (strlen(buf)) {
-        LOGD("dalvik.vm.jit.op = %s", buf);
+        ALOGD("dalvik.vm.jit.op = %s", buf);
     }
 }
 

@@ -619,7 +619,7 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
             dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx),
             dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
         if (resField == NULL) {
-            LOGD("DexOpt: couldn't find field %s.%s",
+            ALOGD("DexOpt: couldn't find field %s.%s",
                 resClass->descriptor,
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
             if (pFailure != NULL)
@@ -627,7 +627,7 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
             return NULL;
         }
         if (dvmIsStaticField(resField)) {
-            LOGD("DexOpt: wanted instance, got static for field %s.%s",
+            ALOGD("DexOpt: wanted instance, got static for field %s.%s",
                 resClass->descriptor,
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
             if (pFailure != NULL)
@@ -694,14 +694,14 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
         resField = (StaticField*)dvmFindFieldHier(resClass, fieldName,
                     dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
         if (resField == NULL) {
-            LOGD("DexOpt: couldn't find static field %s.%s",
+            ALOGD("DexOpt: couldn't find static field %s.%s",
                 resClass->descriptor, fieldName);
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_NO_FIELD;
             return NULL;
         }
         if (!dvmIsStaticField(resField)) {
-            LOGD("DexOpt: wanted static, got instance for field %s.%s",
+            ALOGD("DexOpt: wanted static, got instance for field %s.%s",
                 resClass->descriptor, fieldName);
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_CLASS_CHANGE;
@@ -934,7 +934,7 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
         }
         if (methodType == METHOD_STATIC) {
             if (!dvmIsStaticMethod(resMethod)) {
-                LOGD("DexOpt: wanted static, got instance for method %s.%s",
+                ALOGD("DexOpt: wanted static, got instance for method %s.%s",
                     resClass->descriptor, resMethod->name);
                 if (pFailure != NULL)
                     *pFailure = VERIFY_ERROR_CLASS_CHANGE;
@@ -942,7 +942,7 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
             }
         } else if (methodType == METHOD_VIRTUAL) {
             if (dvmIsStaticMethod(resMethod)) {
-                LOGD("DexOpt: wanted instance, got static for method %s.%s",
+                ALOGD("DexOpt: wanted instance, got static for method %s.%s",
                     resClass->descriptor, resMethod->name);
                 if (pFailure != NULL)
                     *pFailure = VERIFY_ERROR_CLASS_CHANGE;
@@ -1011,7 +1011,7 @@ static void rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
 
     baseMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_VIRTUAL, NULL);
     if (baseMethod == NULL) {
-        LOGD("DexOpt: unable to optimize virt call 0x%04x at 0x%02x in %s.%s",
+        ALOGD("DexOpt: unable to optimize virt call 0x%04x at 0x%02x in %s.%s",
             methodIdx,
             (int) (insns - method->insns), clazz->descriptor,
             method->name);
@@ -1056,7 +1056,7 @@ static bool rewriteInvokeObjectInit(Method* method, u2* insns)
 
     calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT, NULL);
     if (calledMethod == NULL) {
-        LOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s",
+        ALOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s",
             methodIdx, (int) (insns - method->insns),
             clazz->descriptor, method->name);
         return false;
@@ -1101,7 +1101,7 @@ static bool rewriteJumboInvokeObjectInit(Method* method, u2* insns)
 
     calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT, NULL);
     if (calledMethod == NULL) {
-        LOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s",
+        ALOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s",
             methodIdx, (int) (insns - method->insns),
             clazz->descriptor, method->name);
         return false;

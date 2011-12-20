@@ -263,7 +263,7 @@ static void updateActiveProfilers(ExecutionSubModes newMode, bool enable)
     dvmCompilerUpdateGlobalState();
 #endif
 
-    LOGD("+++ active profiler count now %d", newValue);
+    ALOGD("+++ active profiler count now %d", newValue);
 }
 
 
@@ -562,7 +562,7 @@ void dvmMethodTraceStop()
 
     if (!state->traceEnabled) {
         /* somebody already stopped it, or it was never started */
-        LOGD("TRACE stop requested, but not running");
+        ALOGD("TRACE stop requested, but not running");
         dvmUnlockMutex(&state->startStopLock);
         return;
     } else {
@@ -943,7 +943,7 @@ void dvmEmulatorTraceStart()
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.emulatorTraceEnableCount++;
     if (gDvm.emulatorTraceEnableCount == 1)
-        LOGD("--- emulator method traces enabled");
+        ALOGD("--- emulator method traces enabled");
     updateActiveProfilers(kSubModeEmulatorTrace, true);
 }
 
@@ -959,7 +959,7 @@ void dvmEmulatorTraceStop()
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.emulatorTraceEnableCount--;
     if (gDvm.emulatorTraceEnableCount == 0)
-        LOGD("--- emulator method traces disabled");
+        ALOGD("--- emulator method traces disabled");
     updateActiveProfilers(kSubModeEmulatorTrace,
                           (gDvm.emulatorTraceEnableCount != 0));
 }

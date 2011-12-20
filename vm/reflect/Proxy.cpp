@@ -190,7 +190,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
      */
     newClass->status = CLASS_LOADED;
     if (!dvmLinkClass(newClass)) {
-        LOGD("Proxy class link failed");
+        ALOGD("Proxy class link failed");
         goto bail;
     }
 

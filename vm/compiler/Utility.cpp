@@ -172,10 +172,10 @@ void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
         "Exception Handling",
     };
 
-    LOGD("Compiling %s %s", cUnit->method->clazz->descriptor,
+    ALOGD("Compiling %s %s", cUnit->method->clazz->descriptor,
          cUnit->method->name);
-    LOGD("%d insns", dvmGetMethodInsnsSize(cUnit->method));
-    LOGD("%d blocks in total", cUnit->numBlocks);
+    ALOGD("%d insns", dvmGetMethodInsnsSize(cUnit->method));
+    ALOGD("%d blocks in total", cUnit->numBlocks);
     GrowableListIterator iterator;
 
     dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
@@ -183,18 +183,18 @@ void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
     while (true) {
         bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
         if (bb == NULL) break;
-        LOGD("Block %d (%s) (insn %04x - %04x%s)",
+        ALOGD("Block %d (%s) (insn %04x - %04x%s)",
              bb->id,
              blockTypeNames[bb->blockType],
              bb->startOffset,
              bb->lastMIRInsn ? bb->lastMIRInsn->offset : bb->startOffset,
              bb->lastMIRInsn ? "" : " empty");
         if (bb->taken) {
-            LOGD("  Taken branch: block %d (%04x)",
+            ALOGD("  Taken branch: block %d (%04x)",
                  bb->taken->id, bb->taken->startOffset);
         }
         if (bb->fallThrough) {
-            LOGD("  Fallthrough : block %d (%04x)",
+            ALOGD("  Fallthrough : block %d (%04x)",
                  bb->fallThrough->id, bb->fallThrough->startOffset);
         }
     }
@@ -220,7 +220,7 @@ static int dumpMethodStats(void *compilerMethodStats, void *totalMethodStats)
 
     /* If over 3/4 of the Dalvik code is compiled, print something */
     if (methodStats->compiledDalvikSize >= limit) {
-        LOGD("Method stats: %s%s, %d/%d (compiled/total Dalvik), %d (native)",
+        ALOGD("Method stats: %s%s, %d/%d (compiled/total Dalvik), %d (native)",
              methodStats->method->clazz->descriptor,
              methodStats->method->name,
              methodStats->compiledDalvikSize,
@@ -240,20 +240,20 @@ void dvmCompilerDumpStats(void)
     CompilerMethodStats totalMethodStats;
 
     memset(&totalMethodStats, 0, sizeof(CompilerMethodStats));
-    LOGD("%d compilations using %d + %d bytes",
+    ALOGD("%d compilations using %d + %d bytes",
          gDvmJit.numCompilations,
          gDvmJit.templateSize,
          gDvmJit.codeCacheByteUsed - gDvmJit.templateSize);
-    LOGD("Compiler arena uses %d blocks (%d bytes each)",
+    ALOGD("Compiler arena uses %d blocks (%d bytes each)",
          numArenaBlocks, ARENA_DEFAULT_SIZE);
-    LOGD("Compiler work queue length is %d/%d", gDvmJit.compilerQueueLength,
+    ALOGD("Compiler work queue length is %d/%d", gDvmJit.compilerQueueLength,
          gDvmJit.compilerMaxQueued);
     dvmJitStats();
     dvmCompilerArchDump();
     if (gDvmJit.methodStatsTable) {
         dvmHashForeach(gDvmJit.methodStatsTable, dumpMethodStats,
                        &totalMethodStats);
-        LOGD("Code size stats: %d/%d (compiled/total Dalvik), %d (native)",
+        ALOGD("Code size stats: %d/%d (compiled/total Dalvik), %d (native)",
              totalMethodStats.compiledDalvikSize,
              totalMethodStats.dalvikSize,
              totalMethodStats.nativeSize);

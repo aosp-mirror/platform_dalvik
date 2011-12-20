@@ -605,7 +605,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
     struct stat sb;
 
     if (stat(cpe->fileName, &sb) < 0) {
-        LOGD("Unable to stat classpath element '%s'", cpe->fileName);
+        ALOGD("Unable to stat classpath element '%s'", cpe->fileName);
         return false;
     }
     if (S_ISDIR(sb.st_mode)) {
@@ -635,7 +635,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
         LOGE("Unknown type suffix '%s'", suffix);
     }
 
-    LOGD("Unable to process classpath element '%s'", cpe->fileName);
+    ALOGD("Unable to process classpath element '%s'", cpe->fileName);
     return false;
 }
 
@@ -1376,7 +1376,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         Object* excep = dvmGetException(self);
         if (excep != NULL) {
 #if DVM_SHOW_EXCEPTION >= 2
-            LOGD("NOTE: loadClass '%s' %p threw exception %s",
+            ALOGD("NOTE: loadClass '%s' %p threw exception %s",
                  dotName, loader, excep->clazz->descriptor);
 #endif
             dvmAddTrackedAlloc(excep, self);
@@ -2236,7 +2236,7 @@ void dvmMakeCodeReadWrite(Method* meth)
     assert(!dvmIsNativeMethod(meth) && !dvmIsAbstractMethod(meth));
 
     size_t dexCodeSize = dexGetDexCodeSize(methodDexCode);
-    LOGD("Making a copy of %s.%s code (%d bytes)",
+    ALOGD("Making a copy of %s.%s code (%d bytes)",
         meth->clazz->descriptor, meth->name, dexCodeSize);
 
     DexCode* newCode =
@@ -2882,7 +2882,7 @@ static bool createVtable(ClassObject* clazz)
          */
         assert(strcmp(clazz->descriptor, "Ljava/lang/Object;") == 0);
     }
-    //LOGD("+++ max vmethods for '%s' is %d", clazz->descriptor, maxCount);
+    //ALOGD("+++ max vmethods for '%s' is %d", clazz->descriptor, maxCount);
 
     /*
      * Over-allocate the table, then realloc it down if necessary.  So
@@ -3322,7 +3322,7 @@ static bool createIftable(ClassObject* clazz)
              * massive collection of Miranda methods and a lot of wasted
              * space, sometimes enough to blow out the LinearAlloc cap.
              */
-            LOGD("Note: class %s has %d unimplemented (abstract) methods",
+            ALOGD("Note: class %s has %d unimplemented (abstract) methods",
                 clazz->descriptor, mirandaCount);
         }
 

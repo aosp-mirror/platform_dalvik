@@ -455,7 +455,7 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
     ins = ((u4*)self->interpSave.curFrame) +
            (method->registersSize - method->insSize);
 
-    //LOGD("  FP is %p, INs live at >= %p", self->interpSave.curFrame, ins);
+    //ALOGD("  FP is %p, INs live at >= %p", self->interpSave.curFrame, ins);
 
     /* put "this" pointer into in0 if appropriate */
     if (!dvmIsStaticMethod(method)) {
@@ -687,7 +687,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
         (method->registersSize - method->insSize);
     verifyCount = 0;
 
-    //LOGD("  FP is %p, INs live at >= %p", self->interpSave.curFrame, ins);
+    //ALOGD("  FP is %p, INs live at >= %p", self->interpSave.curFrame, ins);
 
     /* put "this" pointer into in0 if appropriate */
     if (!dvmIsStaticMethod(method)) {
@@ -1100,7 +1100,7 @@ static bool extractMonitorEnterObject(Thread* thread, Object** pLockObj,
 
     /* check Method* */
     if (!dvmLinearAllocContains(method, sizeof(Method))) {
-        LOGD("ExtrMon: method %p not valid", method);
+        ALOGD("ExtrMon: method %p not valid", method);
         return false;
     }
 
@@ -1109,14 +1109,14 @@ static bool extractMonitorEnterObject(Thread* thread, Object** pLockObj,
     if (currentPc < method->insns ||
         currentPc >= method->insns + insnsSize)
     {
-        LOGD("ExtrMon: insns %p not valid (%p - %p)",
+        ALOGD("ExtrMon: insns %p not valid (%p - %p)",
             currentPc, method->insns, method->insns + insnsSize);
         return false;
     }
 
     /* check the instruction */
     if ((*currentPc & 0xff) != OP_MONITOR_ENTER) {
-        LOGD("ExtrMon: insn at %p is not monitor-enter (0x%02x)",
+        ALOGD("ExtrMon: insn at %p is not monitor-enter (0x%02x)",
             currentPc, *currentPc & 0xff);
         return false;
     }
@@ -1124,7 +1124,7 @@ static bool extractMonitorEnterObject(Thread* thread, Object** pLockObj,
     /* get and check the register index */
     unsigned int reg = *currentPc >> 8;
     if (reg >= method->registersSize) {
-        LOGD("ExtrMon: invalid register %d (max %d)",
+        ALOGD("ExtrMon: invalid register %d (max %d)",
             reg, method->registersSize);
         return false;
     }
@@ -1133,7 +1133,7 @@ static bool extractMonitorEnterObject(Thread* thread, Object** pLockObj,
     u4* fp = (u4*) framePtr;
     Object* obj = (Object*) fp[reg];
     if (obj != NULL && !dvmIsHeapAddress(obj)) {
-        LOGD("ExtrMon: invalid object %p at %p[%d]", obj, fp, reg);
+        ALOGD("ExtrMon: invalid object %p at %p[%d]", obj, fp, reg);
         return false;
     }
     *pLockObj = obj;

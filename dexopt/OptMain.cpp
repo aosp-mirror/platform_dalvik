@@ -241,7 +241,7 @@ static int processZipFile(int zipFd, int cacheFd, const char* zipName,
         bcpCopy[matchOffset] = '\0';
 
         bcp = bcpCopy;
-        LOGD("DexOptZ: truncated BOOTCLASSPATH to '%s'", bcp);
+        ALOGD("DexOptZ: truncated BOOTCLASSPATH to '%s'", bcp);
         isBootstrap = true;
     }
 

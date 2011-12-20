@@ -49,7 +49,7 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
     dexDecodeInstruction(codePtr, decInsn);
     if (printMe) {
         char *decodedString = dvmCompilerGetDalvikDisassembly(decInsn, NULL);
-        LOGD("%p: %#06x %s", codePtr, opcode, decodedString);
+        ALOGD("%p: %#06x %s", codePtr, opcode, decodedString);
     }
     return dexGetWidthFromOpcode(opcode);
 }
@@ -403,7 +403,7 @@ static bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
                                (HashCompareFunc) strcmp, false) !=
                 NULL;
             if (found) {
-                LOGD("Method %s (--> %s) found on the JIT %s list",
+                ALOGD("Method %s (--> %s) found on the JIT %s list",
                      method->name, curMethodName,
                      gDvmJit.includeSelectedMethod ? "white" : "black");
                 return true;
@@ -1321,7 +1321,7 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
             dvmCompilerAssembleLIR(&cUnit, info);
             cUnit.assemblerRetries++;
             if (cUnit.printMe && cUnit.assemblerStatus != kSuccess)
-                LOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
+                ALOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
                       cUnit.assemblerStatus);
         } while (cUnit.assemblerStatus == kRetryAll);
 
@@ -1534,7 +1534,7 @@ static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
     /* Loop contains never executed blocks / heavy instructions */
     if (cUnit->quitLoopMode) {
         if (cUnit->printMe || gDvmJit.receivedSIGUSR2) {
-            LOGD("Loop trace @ offset %04x aborted due to unresolved code info",
+            ALOGD("Loop trace @ offset %04x aborted due to unresolved code info",
                  cUnit->entryBlock->startOffset);
         }
         goto bail;
@@ -1545,7 +1545,7 @@ static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
         dvmCompilerAssembleLIR(cUnit, info);
         cUnit->assemblerRetries++;
         if (cUnit->printMe && cUnit->assemblerStatus != kSuccess)
-            LOGD("Assembler abort #%d on %d", cUnit->assemblerRetries,
+            ALOGD("Assembler abort #%d on %d", cUnit->assemblerRetries,
                   cUnit->assemblerStatus);
     } while (cUnit->assemblerStatus == kRetryAll);
 
@@ -1555,7 +1555,7 @@ static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
     }
 
     if (cUnit->printMe || gDvmJit.receivedSIGUSR2) {
-        LOGD("Loop trace @ offset %04x", cUnit->entryBlock->startOffset);
+        ALOGD("Loop trace @ offset %04x", cUnit->entryBlock->startOffset);
         dvmCompilerCodegenDump(cUnit);
     }
 
@@ -1745,7 +1745,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     curBB = entryCodeBB;
 
     if (cUnit.printMe) {
-        LOGD("--------\nCompiler: Building trace for %s, offset %#x",
+        ALOGD("--------\nCompiler: Building trace for %s, offset %#x",
              desc->method->name, curOffset);
     }
 
@@ -2013,7 +2013,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     if (cUnit.printMe) {
         char* signature =
             dexProtoCopyMethodDescriptor(&desc->method->prototype);
-        LOGD("TRACEINFO (%d): 0x%08x %s%s.%s %#x %d of %d, %d blocks",
+        ALOGD("TRACEINFO (%d): 0x%08x %s%s.%s %#x %d of %d, %d blocks",
             compilationId,
             (intptr_t) desc->method->insns,
             desc->method->clazz->descriptor,
@@ -2060,14 +2060,14 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         dvmCompilerAssembleLIR(&cUnit, info);
         cUnit.assemblerRetries++;
         if (cUnit.printMe && cUnit.assemblerStatus != kSuccess)
-            LOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
+            ALOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
                   cUnit.assemblerStatus);
     } while (cUnit.assemblerStatus == kRetryAll);
 
     if (cUnit.printMe) {
-        LOGD("Trace Dalvik PC: %p", startCodePtr);
+        ALOGD("Trace Dalvik PC: %p", startCodePtr);
         dvmCompilerCodegenDump(&cUnit);
-        LOGD("End %s%s, %d Dalvik instructions",
+        ALOGD("End %s%s, %d Dalvik instructions",
              desc->method->clazz->descriptor, desc->method->name,
              cUnit.numInsts);
     }

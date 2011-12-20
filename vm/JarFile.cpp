@@ -310,7 +310,7 @@ tryArchive:
                 }
 
                 endWhen = dvmGetRelativeTimeUsec();
-                LOGD("DEX prep '%s': unzip in %dms, rewrite %dms",
+                ALOGD("DEX prep '%s': unzip in %dms, rewrite %dms",
                     fileName,
                     (int) (extractWhen - startWhen) / 1000,
                     (int) (endWhen - extractWhen) / 1000);

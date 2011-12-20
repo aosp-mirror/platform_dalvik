@@ -565,7 +565,7 @@ static bool processIncoming(JdwpState* state)
             if (netState->wakeFds[0] >= 0 &&
                 FD_ISSET(netState->wakeFds[0], &readfds))
             {
-                LOGD("Got wake-up signal, bailing out of select");
+                ALOGD("Got wake-up signal, bailing out of select");
                 goto fail;
             }
             if (netState->controlSock >= 0 &&
@@ -594,7 +594,7 @@ static bool processIncoming(JdwpState* state)
                     /* read failed */
                     if (errno != EINTR)
                         goto fail;
-                    LOGD("+++ EINTR hit");
+                    ALOGD("+++ EINTR hit");
                     return true;
                 } else if (readCount == 0) {
                     /* EOF hit -- far end went away */

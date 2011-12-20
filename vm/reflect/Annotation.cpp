@@ -245,12 +245,12 @@ static Method* resolveAmbiguousMethod(const ClassObject* referrer, u4 methodIdx)
     resClass = dvmResolveClass(referrer, pMethodId->classIdx, true);
     if (resClass == NULL) {
         /* note exception will be pending */
-        LOGD("resolveAmbiguousMethod: unable to find class %d", methodIdx);
+        ALOGD("resolveAmbiguousMethod: unable to find class %d", methodIdx);
         return NULL;
     }
     if (dvmIsInterfaceClass(resClass)) {
         /* method is part of an interface -- not expecting that */
-        LOGD("resolveAmbiguousMethod: method in interface?");
+        ALOGD("resolveAmbiguousMethod: method in interface?");
         return NULL;
     }
 
@@ -700,7 +700,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
     dvmCallMethod(self, gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init,
         newMember, &unused, nameObj, valueObj, methodReturn, methodObj);
     if (dvmCheckException(self)) {
-        LOGD("Failed constructing annotation element");
+        ALOGD("Failed constructing annotation element");
         goto bail;
     }
 
@@ -801,7 +801,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
         gDvm.methOrgApacheHarmonyLangAnnotationAnnotationFactory_createAnnotation,
         NULL, &result, annoClass, elementArray);
     if (dvmCheckException(self)) {
-        LOGD("Failed creating an annotation");
+        ALOGD("Failed creating an annotation");
         //dvmLogExceptionStackTrace();
         goto bail;
     }
@@ -1476,7 +1476,7 @@ bool dvmGetInnerClass(const ClassObject* clazz, StringObject** pName,
     /* parse it into an Object */
     AnnotationValue avalue;
     if (!processAnnotationValue(clazz, &ptr, &avalue, kAllObjects)) {
-        LOGD("processAnnotationValue failed on InnerClass member 'name'");
+        ALOGD("processAnnotationValue failed on InnerClass member 'name'");
         return false;
     }
 
@@ -1855,7 +1855,7 @@ Object* dvmGetAnnotationDefaultValue(const Method* method)
     /* got it, pull it out */
     AnnotationValue avalue;
     if (!processAnnotationValue(clazz, &ptr, &avalue, kAllObjects)) {
-        LOGD("processAnnotationValue failed on default for '%s'",
+        ALOGD("processAnnotationValue failed on default for '%s'",
             method->name);
         return NULL;
     }

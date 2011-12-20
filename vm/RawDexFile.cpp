@@ -199,7 +199,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
         }
 
         endWhen = dvmGetRelativeTimeUsec();
-        LOGD("DEX prep '%s': copy in %dms, rewrite %dms",
+        ALOGD("DEX prep '%s': copy in %dms, rewrite %dms",
             fileName,
             (int) (copyWhen - startWhen) / 1000,
             (int) (endWhen - copyWhen) / 1000);
@@ -251,7 +251,7 @@ int dvmRawDexFileOpenArray(u1* pBytes, u4 length, RawDexFile** ppRawDexFile)
     DvmDex* pDvmDex = NULL;
 
     if (!dvmPrepareDexInMemory(pBytes, length, &pDvmDex)) {
-        LOGD("Unable to open raw DEX from array");
+        ALOGD("Unable to open raw DEX from array");
         return -1;
     }
     assert(pDvmDex != NULL);

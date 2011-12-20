@@ -239,7 +239,7 @@ static void handleSigUsr2()
         dvmCompilerDumpStats();
         /* Stress-test unchain all */
         dvmJitUnchainAll();
-        LOGD("Send %d more signals to reset the code cache",
+        ALOGD("Send %d more signals to reset the code cache",
              codeCacheResetCount & 7);
     }
     dvmCheckInterpStateConsistency();

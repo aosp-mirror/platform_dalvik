@@ -293,7 +293,7 @@ void dvmJdwpUnregisterEventById(JdwpState* state, u4 requestId)
         pEvent = pEvent->next;
     }
 
-    //LOGD("Odd: no match when removing event reqId=0x%04x", requestId);
+    //ALOGD("Odd: no match when removing event reqId=0x%04x", requestId);
 
 done:
     unlockEventMutex(state);

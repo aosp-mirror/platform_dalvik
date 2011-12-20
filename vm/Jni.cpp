@@ -171,10 +171,10 @@ static void checkStackSum(Thread* self) {
     if (crc != stackCrc) {
         const Method* meth = dvmGetCurrentJNIMethod();
         if (dvmComputeExactFrameDepth(self->interpSave.curFrame) == 1) {
-            LOGD("JNI: bad stack CRC (0x%08x) -- okay during init", stackCrc);
+            ALOGD("JNI: bad stack CRC (0x%08x) -- okay during init", stackCrc);
         } else if (strcmp(meth->name, "nativeLoad") == 0 &&
                 (strcmp(meth->clazz->descriptor, "Ljava/lang/Runtime;") == 0)) {
-            LOGD("JNI: bad stack CRC (0x%08x) -- okay during JNI_OnLoad", stackCrc);
+            ALOGD("JNI: bad stack CRC (0x%08x) -- okay during JNI_OnLoad", stackCrc);
         } else {
             LOGW("JNI: bad stack CRC (%08x vs %08x)", crc, stackCrc);
             dvmAbort();
@@ -498,7 +498,7 @@ static jobject addGlobalReference(Object* obj) {
         int count = gDvm.jniGlobalRefTable.capacity();
         // TODO: adjust for "holes"
         if (count > gDvm.jniGlobalRefHiMark) {
-            LOGD("GREF has increased to %d", count);
+            ALOGD("GREF has increased to %d", count);
             gDvm.jniGlobalRefHiMark += kGrefWaterInterval;
             gDvm.jniGlobalRefLoMark += kGrefWaterInterval;
 
@@ -567,7 +567,7 @@ static void deleteGlobalReference(jobject jobj) {
         int count = gDvm.jniGlobalRefTable.capacity();
         // TODO: not quite right, need to subtract holes
         if (count < gDvm.jniGlobalRefLoMark) {
-            LOGD("GREF has decreased to %d", count);
+            ALOGD("GREF has decreased to %d", count);
             gDvm.jniGlobalRefHiMark -= kGrefWaterInterval;
             gDvm.jniGlobalRefLoMark -= kGrefWaterInterval;
         }
@@ -1641,9 +1641,9 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name, const
         meth = dvmFindDirectMethodByDescriptor(clazz, name, sig);
     }
     if (meth != NULL && dvmIsStaticMethod(meth)) {
-        IF_LOGD() {
+        IF_ALOGD() {
             char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-            LOGD("GetMethodID: not returning static method %s.%s %s",
+            ALOGD("GetMethodID: not returning static method %s.%s %s",
                     clazz->descriptor, meth->name, desc);
             free(desc);
         }
@@ -1702,9 +1702,9 @@ static jmethodID GetStaticMethodID(JNIEnv* env, jclass jclazz, const char* name,
 
     /* make sure it's static, not virtual+private */
     if (meth != NULL && !dvmIsStaticMethod(meth)) {
-        IF_LOGD() {
+        IF_ALOGD() {
             char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-            LOGD("GetStaticMethodID: not returning nonstatic method %s.%s %s",
+            ALOGD("GetStaticMethodID: not returning nonstatic method %s.%s %s",
                     clazz->descriptor, meth->name, desc);
             free(desc);
         }
@@ -2916,7 +2916,7 @@ static jint DestroyJavaVM(JavaVM* vm) {
     }
 
     if (gDvm.verboseShutdown) {
-        LOGD("DestroyJavaVM waiting for non-daemon threads to exit");
+        ALOGD("DestroyJavaVM waiting for non-daemon threads to exit");
     }
 
     /*
@@ -2950,7 +2950,7 @@ shutdown:
     // (this may not return -- figure out how this should work)
 
     if (gDvm.verboseShutdown) {
-        LOGD("DestroyJavaVM shutting VM down");
+        ALOGD("DestroyJavaVM shutting VM down");
     }
     dvmShutdown();
 
@@ -3356,11 +3356,11 @@ void dvmLateEnableCheckedJni() {
     assert(extVm != NULL);
 
     if (!gDvmJni.useCheckJni) {
-        LOGD("Late-enabling CheckJNI");
+        ALOGD("Late-enabling CheckJNI");
         dvmUseCheckedJniVm(extVm);
         dvmUseCheckedJniEnv(extEnv);
     } else {
-        LOGD("Not late-enabling CheckJNI (already on)");
+        ALOGD("Not late-enabling CheckJNI (already on)");
     }
 }
 

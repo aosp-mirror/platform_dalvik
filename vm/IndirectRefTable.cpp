@@ -233,18 +233,18 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
         }
         if (index >= topIndex) {
             /* bad -- stale reference? */
-            LOGD("Attempt to remove invalid index %ud (bottom=%ud top=%ud)",
+            ALOGD("Attempt to remove invalid index %ud (bottom=%ud top=%ud)",
                     index, bottomIndex, topIndex);
             return false;
         }
         if (table_[index].obj == NULL) {
-            LOGD("Attempt to remove cleared %s reference %p",
+            ALOGD("Attempt to remove cleared %s reference %p",
                     indirectRefKindToString(kind_), iref);
             return false;
         }
         u4 serial = extractSerial(iref);
         if (table_[index].serial != serial) {
-            LOGD("Attempt to remove stale %s reference %p",
+            ALOGD("Attempt to remove stale %s reference %p",
                     indirectRefKindToString(kind_), iref);
             return false;
         }
