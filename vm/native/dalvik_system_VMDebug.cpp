@@ -683,11 +683,11 @@ static void Dalvik_dalvik_system_VMDebug_dumpReferenceTables(const u4* args,
     UNUSED_PARAMETER(args);
     UNUSED_PARAMETER(pResult);
 
-    LOGI("--- reference table dump ---");
+    ALOGI("--- reference table dump ---");
     dvmDumpJniReferenceTables();
     // could dump thread's internalLocalRefTable, probably not useful
     // ditto for thread's jniMonitorRefTable
-    LOGI("---");
+    ALOGI("---");
     RETURN_VOID();
 }
 

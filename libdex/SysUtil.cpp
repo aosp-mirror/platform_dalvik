@@ -334,7 +334,7 @@ int sysChangeMapAccess(void* addr, size_t length, int wantReadWrite,
     u1* alignAddr = (u1*) ((int) addr & ~(SYSTEM_PAGE_SIZE-1));
     size_t alignLength = length + ((u1*) addr - alignAddr);
 
-    //LOGI("%p/%zd --> %p/%zd", addr, length, alignAddr, alignLength);
+    //ALOGI("%p/%zd --> %p/%zd", addr, length, alignAddr, alignLength);
     int prot = wantReadWrite ? (PROT_READ|PROT_WRITE) : (PROT_READ);
     if (mprotect(alignAddr, alignLength, prot) != 0) {
         int err = errno;

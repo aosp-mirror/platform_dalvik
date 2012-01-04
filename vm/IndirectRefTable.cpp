@@ -166,7 +166,7 @@ Object* IndirectRefTable::get(IndirectRef iref) const {
 
     Object* obj = table_[index].obj;
     if (obj == NULL) {
-        LOGI("JNI ERROR (app bug): accessed deleted %s reference %p",
+        ALOGI("JNI ERROR (app bug): accessed deleted %s reference %p",
                 indirectRefKindToString(kind_), iref);
         abortMaybe();
         return kInvalidIndirectRefObject;

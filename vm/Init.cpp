@@ -373,9 +373,9 @@ static bool handleJdwpOption(const char* name, const char* value)
                strcmp(name, "timeout") == 0)
     {
         /* valid but unsupported */
-        LOGI("Ignoring JDWP option '%s'='%s'", name, value);
+        ALOGI("Ignoring JDWP option '%s'='%s'", name, value);
     } else {
-        LOGI("Ignoring unrecognized JDWP option '%s'='%s'", name, value);
+        ALOGI("Ignoring unrecognized JDWP option '%s'='%s'", name, value);
     }
 
     return true;
@@ -1201,7 +1201,7 @@ std::string dvmStartup(int argc, const char* const argv[],
 #if WITH_EXTRA_GC_CHECKS > 1
     /* only "portable" interp has the extra goodies */
     if (gDvm.executionMode != kExecutionModeInterpPortable) {
-        LOGI("Switching to 'portable' interpreter for GC checks");
+        ALOGI("Switching to 'portable' interpreter for GC checks");
         gDvm.executionMode = kExecutionModeInterpPortable;
     }
 #endif

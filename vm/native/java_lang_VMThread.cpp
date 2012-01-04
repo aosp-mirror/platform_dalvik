@@ -179,7 +179,7 @@ static void Dalvik_java_lang_VMThread_nameChanged(const u4* args,
 
     dvmDdmSendThreadNameChange(threadId, nameStr);
     //char* str = dvmCreateCstrFromString(nameStr);
-    //LOGI("UPDATE: threadid=%d now '%s'", threadId, str);
+    //ALOGI("UPDATE: threadid=%d now '%s'", threadId, str);
     //free(str);
 
     RETURN_VOID();

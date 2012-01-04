@@ -937,7 +937,7 @@ void dvmInterpCheckTrackedRefs(Thread* self, const Method* method,
 
         dvmAbort();
     }
-    //LOGI("TRACK OK");
+    //ALOGI("TRACK OK");
 }
 #endif
 

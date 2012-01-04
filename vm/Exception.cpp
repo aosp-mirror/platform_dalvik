@@ -1051,9 +1051,9 @@ void dvmLogRawStackTrace(const int* intVals, int stackDepth) {
 
         std::string dotName(dvmHumanReadableDescriptor(meth->clazz->descriptor));
         if (dvmIsNativeMethod(meth)) {
-            LOGI("\tat %s.%s(Native Method)", dotName.c_str(), meth->name);
+            ALOGI("\tat %s.%s(Native Method)", dotName.c_str(), meth->name);
         } else {
-            LOGI("\tat %s.%s(%s:%d)",
+            ALOGI("\tat %s.%s(%s:%d)",
                 dotName.c_str(), meth->name, dvmGetMethodSourceFile(meth),
                 dvmLineNumFromPC(meth, pc));
         }
@@ -1128,10 +1128,10 @@ static void logStackTraceOf(Object* exception) {
         dvmReleaseTrackedAlloc((Object*) messageStr, dvmThreadSelf());
         messageStr = NULL;
 
-        LOGI("%s: %s", className.c_str(), cp);
+        ALOGI("%s: %s", className.c_str(), cp);
         free(cp);
     } else {
-        LOGI("%s:", className.c_str());
+        ALOGI("%s:", className.c_str());
     }
 
     /*
@@ -1143,7 +1143,7 @@ static void logStackTraceOf(Object* exception) {
     const ArrayObject* stackData = (const ArrayObject*) dvmGetFieldObject(exception,
                     gDvm.offJavaLangThrowable_stackState);
     if (stackData == NULL) {
-        LOGI("  (raw stack trace not found)");
+        ALOGI("  (raw stack trace not found)");
         return;
     }
 
@@ -1175,7 +1175,7 @@ void dvmLogExceptionStackTrace()
         if (cause == NULL) {
             break;
         }
-        LOGI("Caused by:");
+        ALOGI("Caused by:");
         exception = cause;
     }
 }

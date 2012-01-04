@@ -541,7 +541,7 @@ bail:
      */
 #if 0
     if (vmStarted) {
-        LOGI("DexOpt shutting down, result=%d", result);
+        ALOGI("DexOpt shutting down, result=%d", result);
         dvmShutdown();
     }
 #endif

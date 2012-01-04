@@ -1023,7 +1023,7 @@ static JdwpError handleTR_Suspend(JdwpState* state,
     ObjectId threadId = dvmReadObjectId(&buf);
 
     if (threadId == dvmDbgGetThreadSelfId()) {
-        LOGI("  Warning: ignoring request to suspend self");
+        ALOGI("  Warning: ignoring request to suspend self");
         return ERR_THREAD_NOT_SUSPENDED;
     }
     ALOGV("  Req to suspend thread 0x%llx", threadId);
@@ -1042,7 +1042,7 @@ static JdwpError handleTR_Resume(JdwpState* state,
     ObjectId threadId = dvmReadObjectId(&buf);
 
     if (threadId == dvmDbgGetThreadSelfId()) {
-        LOGI("  Warning: ignoring request to resume self");
+        ALOGI("  Warning: ignoring request to resume self");
         return ERR_NONE;
     }
     ALOGV("  Req to resume thread 0x%llx", threadId);

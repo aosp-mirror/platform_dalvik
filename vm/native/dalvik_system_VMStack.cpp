@@ -150,7 +150,7 @@ static int* getTraceBuf(Object* targetThreadObj, size_t* pStackDepth)
             break;
     }
     if (thread == NULL) {
-        LOGI("VMStack.getTraceBuf: threadObj %p not active",
+        ALOGI("VMStack.getTraceBuf: threadObj %p not active",
             targetThreadObj);
         dvmUnlockThreadList();
         return NULL;

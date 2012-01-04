@@ -86,9 +86,9 @@ void dvmMterpStd(Thread* self)
             desc);
         free(desc);
     }
-    //LOGI("self is %p, pc=%p, fp=%p", self, self->interpSave.pc,
+    //ALOGI("self is %p, pc=%p, fp=%p", self, self->interpSave.pc,
     //      self->interpSave.curFrame);
-    //LOGI("first instruction is 0x%04x", self->interpSave.pc[0]);
+    //ALOGI("first instruction is 0x%04x", self->interpSave.pc[0]);
 
     /*
      * Handle any ongoing profiling and prep for debugging

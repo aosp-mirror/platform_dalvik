@@ -228,7 +228,7 @@ static bool setPredecessors(VerifierData* vdata, VfyBasicBlock* curBlock,
 
     if (false) {
         if (dvmPointerSetGetCount(curBlock->predecessors) > 256) {
-            LOGI("Lots of preds at 0x%04x in %s.%s:%s", curIdx,
+            ALOGI("Lots of preds at 0x%04x in %s.%s:%s", curIdx,
                 meth->clazz->descriptor, meth->name, meth->shorty);
         }
     }
@@ -245,7 +245,7 @@ static void dumpBasicBlocks(const VerifierData* vdata)
     unsigned int idx;
     int count;
 
-    LOGI("Basic blocks for %s.%s:%s", vdata->method->clazz->descriptor,
+    ALOGI("Basic blocks for %s.%s:%s", vdata->method->clazz->descriptor,
         vdata->method->name, vdata->method->shorty);
     for (idx = 0; idx < vdata->insnsSize; idx++) {
         VfyBasicBlock* block = vdata->basicBlocks[idx];
@@ -280,7 +280,7 @@ static void dumpBasicBlocks(const VerifierData* vdata)
         printBuf[sizeof(printBuf)-2] = '!';
         printBuf[sizeof(printBuf)-1] = '\0';
 
-        LOGI("%s", printBuf);
+        ALOGI("%s", printBuf);
     }
 
     usleep(100 * 1000);      /* ugh...let logcat catch up */
@@ -309,7 +309,7 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
 
     bool verbose = false; //dvmWantVerboseVerification(meth);
     if (verbose) {
-        LOGI("Basic blocks for %s.%s:%s",
+        ALOGI("Basic blocks for %s.%s:%s",
             meth->clazz->descriptor, meth->name, meth->shorty);
     }
 
@@ -473,11 +473,11 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
             else
                 startEnd = "-";
 
-            LOGI("%04x: %c%c%s #%d", idx, tryc, btc, startEnd, debugBBIndex);
+            ALOGI("%04x: %c%c%s #%d", idx, tryc, btc, startEnd, debugBBIndex);
 
             if (pTries != NULL && idx == tryStart) {
                 assert(numHandlers > 0);
-                LOGI("  EXC block: [%04x, %04x) %d:(%04x...)",
+                ALOGI("  EXC block: [%04x, %04x) %d:(%04x...)",
                     tryStart, tryEnd, numHandlers, handlerList[0]);
             }
         }

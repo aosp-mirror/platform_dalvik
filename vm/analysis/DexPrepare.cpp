@@ -1023,16 +1023,16 @@ static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
     }
 
 #ifdef VERIFIER_STATS
-    LOGI("Verifier stats:");
-    LOGI(" methods examined        : %u", gDvm.verifierStats.methodsExamined);
-    LOGI(" monitor-enter methods   : %u", gDvm.verifierStats.monEnterMethods);
-    LOGI(" instructions examined   : %u", gDvm.verifierStats.instrsExamined);
-    LOGI(" instructions re-examined: %u", gDvm.verifierStats.instrsReexamined);
-    LOGI(" copying of register sets: %u", gDvm.verifierStats.copyRegCount);
-    LOGI(" merging of register sets: %u", gDvm.verifierStats.mergeRegCount);
-    LOGI(" ...that caused changes  : %u", gDvm.verifierStats.mergeRegChanged);
-    LOGI(" uninit searches         : %u", gDvm.verifierStats.uninitSearches);
-    LOGI(" max memory required     : %u", gDvm.verifierStats.biggestAlloc);
+    ALOGI("Verifier stats:");
+    ALOGI(" methods examined        : %u", gDvm.verifierStats.methodsExamined);
+    ALOGI(" monitor-enter methods   : %u", gDvm.verifierStats.monEnterMethods);
+    ALOGI(" instructions examined   : %u", gDvm.verifierStats.instrsExamined);
+    ALOGI(" instructions re-examined: %u", gDvm.verifierStats.instrsReexamined);
+    ALOGI(" copying of register sets: %u", gDvm.verifierStats.copyRegCount);
+    ALOGI(" merging of register sets: %u", gDvm.verifierStats.mergeRegCount);
+    ALOGI(" ...that caused changes  : %u", gDvm.verifierStats.mergeRegChanged);
+    ALOGI(" uninit searches         : %u", gDvm.verifierStats.uninitSearches);
+    ALOGI(" max memory required     : %u", gDvm.verifierStats.biggestAlloc);
 #endif
 }
 
@@ -1232,7 +1232,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
         expectedFlags |= DEX_OPT_FLAG_BIG;
 #endif
         if ((expectedFlags & matchMask) != (optHdr.flags & matchMask)) {
-            LOGI("DexOpt: header flag mismatch (0x%02x vs 0x%02x, mask=0x%02x)",
+            ALOGI("DexOpt: header flag mismatch (0x%02x vs 0x%02x, mask=0x%02x)",
                 expectedFlags, optHdr.flags, matchMask);
             goto bail;
         }
@@ -1272,13 +1272,13 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
     ptr = depData;
     val = read4LE(&ptr);
     if (sourceAvail && val != modWhen) {
-        LOGI("DexOpt: source file mod time mismatch (%08x vs %08x)",
+        ALOGI("DexOpt: source file mod time mismatch (%08x vs %08x)",
             val, modWhen);
         goto bail;
     }
     val = read4LE(&ptr);
     if (sourceAvail && val != crc) {
-        LOGI("DexOpt: source file CRC mismatch (%08x vs %08x)", val, crc);
+        ALOGI("DexOpt: source file CRC mismatch (%08x vs %08x)", val, crc);
         goto bail;
     }
     val = read4LE(&ptr);
@@ -1308,7 +1308,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
 
         if (numDeps == 0) {
             /* more entries in bootclasspath than in deps list */
-            LOGI("DexOpt: not all deps represented");
+            ALOGI("DexOpt: not all deps represented");
             goto bail;
         }
 
@@ -1316,7 +1316,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
         if (len != storedStrLen ||
             strcmp(cacheFileName, (const char*) ptr) != 0)
         {
-            LOGI("DexOpt: mismatch dep name: '%s' vs. '%s'",
+            ALOGI("DexOpt: mismatch dep name: '%s' vs. '%s'",
                 cacheFileName, ptr);
             goto bail;
         }
@@ -1324,7 +1324,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
         ptr += storedStrLen;
 
         if (memcmp(signature, ptr, kSHA1DigestLen) != 0) {
-            LOGI("DexOpt: mismatch dep signature for '%s'", cacheFileName);
+            ALOGI("DexOpt: mismatch dep signature for '%s'", cacheFileName);
             goto bail;
         }
         ptr += kSHA1DigestLen;
@@ -1336,7 +1336,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
 
     if (numDeps != 0) {
         /* more entries in deps list than in classpath */
-        LOGI("DexOpt: Some deps went away");
+        ALOGI("DexOpt: Some deps went away");
         goto bail;
     }
 

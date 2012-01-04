@@ -113,7 +113,7 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
             pDexFile->pRegisterMapPool = pOptData;
             break;
         default:
-            LOGI("Unknown chunk 0x%08x (%c%c%c%c), size=%d in opt data area",
+            ALOGI("Unknown chunk 0x%08x (%c%c%c%c), size=%d in opt data area",
                 *pOpt,
                 (char) ((*pOpt) >> 24), (char) ((*pOpt) >> 16),
                 (char) ((*pOpt) >> 8),  (char)  (*pOpt),

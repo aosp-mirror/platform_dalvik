@@ -1309,7 +1309,7 @@ bool dvmJitResizeJitTable( unsigned int size )
     assert(gDvmJit.pJitEntryTable != NULL);
     assert(size && !(size & (size - 1)));   /* Is power of 2? */
 
-    LOGI("Jit: resizing JitTable from %d to %d", gDvmJit.jitTableSize, size);
+    ALOGI("Jit: resizing JitTable from %d to %d", gDvmJit.jitTableSize, size);
 
     if (size <= gDvmJit.jitTableSize) {
         return true;

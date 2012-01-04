@@ -651,14 +651,14 @@ public:
             if (entry) {
                 if (mHasMethod) {
                     std::string methodName(dvmHumanReadableMethod(method, false));
-                    LOGI("JNI: %s -> %s(%s)", methodName.c_str(), mFunctionName, msg.c_str());
+                    ALOGI("JNI: %s -> %s(%s)", methodName.c_str(), mFunctionName, msg.c_str());
                     mIndent = methodName.size() + 1;
                 } else {
-                    LOGI("JNI: -> %s(%s)", mFunctionName, msg.c_str());
+                    ALOGI("JNI: -> %s(%s)", mFunctionName, msg.c_str());
                     mIndent = 0;
                 }
             } else {
-                LOGI("JNI: %*s<- %s returned %s", mIndent, "", mFunctionName, msg.c_str());
+                ALOGI("JNI: %*s<- %s returned %s", mIndent, "", mFunctionName, msg.c_str());
             }
         }
 

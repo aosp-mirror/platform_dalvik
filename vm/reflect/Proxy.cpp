@@ -329,9 +329,9 @@ static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
     if (actualCount < 0)
         goto bail;
 
-    //LOGI("gathered methods:");
+    //ALOGI("gathered methods:");
     //for (i = 0; i < actualCount; i++) {
-    //    LOGI(" %d: %s.%s",
+    //    ALOGI(" %d: %s.%s",
     //        i, methods[i]->clazz->descriptor, methods[i]->name);
     //}
 

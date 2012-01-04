@@ -161,9 +161,9 @@ static void unlockEventMutex(JdwpState* state)
  */
 static void dumpEvent(const JdwpEvent* pEvent)
 {
-    LOGI("Event id=0x%4x %p (prev=%p next=%p):",
+    ALOGI("Event id=0x%4x %p (prev=%p next=%p):",
         pEvent->requestId, pEvent, pEvent->prev, pEvent->next);
-    LOGI("  kind=%s susp=%s modCount=%d",
+    ALOGI("  kind=%s susp=%s modCount=%d",
         dvmJdwpEventKindStr(pEvent->eventKind),
         dvmJdwpSuspendPolicyStr(pEvent->suspendPolicy),
         pEvent->modCount);
@@ -171,7 +171,7 @@ static void dumpEvent(const JdwpEvent* pEvent)
     for (int i = 0; i < pEvent->modCount; i++) {
         const JdwpEventMod* pMod = &pEvent->mods[i];
         JdwpModKind kind = static_cast<JdwpModKind>(pMod->modKind);
-        LOGI("  %s", dvmJdwpModKindStr(kind));
+        ALOGI("  %s", dvmJdwpModKindStr(kind));
         /* TODO - show details */
     }
 }
@@ -591,7 +591,7 @@ static void suspendByPolicy(JdwpState* state, JdwpSuspendPolicy suspendPolicy)
 
     /* this is rare but possible -- see CLASS_PREPARE handling */
     if (dvmDbgGetThreadSelfId() == state->debugThreadId) {
-        LOGI("NOTE: suspendByPolicy not suspending JDWP thread");
+        ALOGI("NOTE: suspendByPolicy not suspending JDWP thread");
         return;
     }
 

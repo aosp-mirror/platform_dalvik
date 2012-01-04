@@ -599,10 +599,10 @@ void dvmLinearAllocDump(Object* classLoader)
 
     dvmLockMutex(&pHdr->lock);
 
-    LOGI("LinearAlloc classLoader=%p", classLoader);
-    LOGI("  mapAddr=%p mapLength=%d firstOffset=%d",
+    ALOGI("LinearAlloc classLoader=%p", classLoader);
+    ALOGI("  mapAddr=%p mapLength=%d firstOffset=%d",
         pHdr->mapAddr, pHdr->mapLength, pHdr->firstOffset);
-    LOGI("  curOffset=%d", pHdr->curOffset);
+    ALOGI("  curOffset=%d", pHdr->curOffset);
 
     int off = pHdr->firstOffset;
     u4 rawLen, fullLen;
@@ -612,7 +612,7 @@ void dvmLinearAllocDump(Object* classLoader)
         fullLen = ((HEADER_EXTRA*2 + (rawLen & LENGTHFLAG_MASK))
                     & ~(BLOCK_ALIGN-1));
 
-        LOGI("  %p (%3d): %clen=%d%s", pHdr->mapAddr + off + HEADER_EXTRA,
+        ALOGI("  %p (%3d): %clen=%d%s", pHdr->mapAddr + off + HEADER_EXTRA,
             (int) ((off + HEADER_EXTRA) / SYSTEM_PAGE_SIZE),
             (rawLen & LENGTHFLAG_FREE) != 0 ? '*' : ' ',
             rawLen & LENGTHFLAG_MASK,
@@ -622,7 +622,7 @@ void dvmLinearAllocDump(Object* classLoader)
     }
 
     if (ENFORCE_READ_ONLY) {
-        LOGI("writeRefCount map:");
+        ALOGI("writeRefCount map:");
 
         int numPages = (pHdr->mapLength+SYSTEM_PAGE_SIZE-1) / SYSTEM_PAGE_SIZE;
         int zstart = 0;

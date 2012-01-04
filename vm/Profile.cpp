@@ -368,12 +368,12 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
 
     dvmLockMutex(&state->startStopLock);
     while (state->traceEnabled != 0) {
-        LOGI("TRACE start requested, but already in progress; stopping");
+        ALOGI("TRACE start requested, but already in progress; stopping");
         dvmUnlockMutex(&state->startStopLock);
         dvmMethodTraceStop();
         dvmLockMutex(&state->startStopLock);
     }
-    LOGI("TRACE STARTED: '%s' %dKB", traceFileName, bufferSize / 1024);
+    ALOGI("TRACE STARTED: '%s' %dKB", traceFileName, bufferSize / 1024);
 
     /*
      * Allocate storage and open files.
@@ -630,7 +630,7 @@ void dvmMethodTraceStop()
         }
     }
 
-    LOGI("TRACE STOPPED%s: writing %d records",
+    ALOGI("TRACE STOPPED%s: writing %d records",
         state->overflow ? " (NOTE: overflowed buffer)" : "",
         (finalCurOffset - TRACE_HEADER_LEN) / recordSize);
     if (gDvm.debuggerActive) {
@@ -750,7 +750,7 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
     if (!self->cpuClockBaseSet) {
         self->cpuClockBase = getThreadCpuTimeInUsec();
         self->cpuClockBaseSet = true;
-        //LOGI("thread base id=%d 0x%llx",
+        //ALOGI("thread base id=%d 0x%llx",
         //    self->threadId, self->cpuClockBase);
     }
 #endif

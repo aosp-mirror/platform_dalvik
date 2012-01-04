@@ -502,7 +502,7 @@ static void Dalvik_dalvik_system_Zygote_forkSystemServer(
     if (pid > 0) {
         int status;
 
-        LOGI("System server process %d has been created", pid);
+        ALOGI("System server process %d has been created", pid);
         gDvm.systemServerPid = pid;
         /* There is a slight window that the system server process has crashed
          * but it went unnoticed because we haven't published its pid yet. So
@@ -526,7 +526,7 @@ static void Dalvik_dalvik_system_Zygote_execShell(
     const char *argp[] = {_PATH_BSHELL, "-c", NULL, NULL};
     argp[2] = dvmCreateCstrFromString(command);
 
-    LOGI("Exec: %s %s %s", argp[0], argp[1], argp[2]);
+    ALOGI("Exec: %s %s %s", argp[0], argp[1], argp[2]);
 
     execv(_PATH_BSHELL, (char**)argp);
     exit(127);

@@ -217,7 +217,7 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag)
             tag, fd, want, (int)actual, strerror(errno));
         return false;
     } else {
-        //LOGI("read %s: %d at %d", tag, actual, data->count);
+        //ALOGI("read %s: %d at %d", tag, actual, data->count);
     }
     data->count += actual;
 

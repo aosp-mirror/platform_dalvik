@@ -269,7 +269,7 @@ static bool checkOnLoadResult(SharedLib* pEntry)
          * Check this so we don't end up waiting for ourselves.  We need
          * to return "true" so the caller can continue.
          */
-        LOGI("threadid=%d: recursive native library load attempt (%s)",
+        ALOGI("threadid=%d: recursive native library load attempt (%s)",
             self->threadId, pEntry->pathName);
         return true;
     }
@@ -402,7 +402,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
     SharedLib* pActualEntry = addSharedLibEntry(pNewEntry);
 
     if (pNewEntry != pActualEntry) {
-        LOGI("WOW: we lost a race to add a shared lib (%s CL=%p)",
+        ALOGI("WOW: we lost a race to add a shared lib (%s CL=%p)",
             pathName, classLoader);
         freeSharedLibEntry(pNewEntry);
         return checkOnLoadResult(pActualEntry);
@@ -431,7 +431,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
             self->classLoaderOverride = classLoader;
             oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
             if (gDvm.verboseJni) {
-                LOGI("[Calling JNI_OnLoad for \"%s\"]", pathName);
+                ALOGI("[Calling JNI_OnLoad for \"%s\"]", pathName);
             }
             version = (*func)(gDvmJni.jniVm, NULL);
             dvmChangeStatus(self, oldStatus);
@@ -454,7 +454,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
                 result = false;
             } else {
                 if (gDvm.verboseJni) {
-                    LOGI("[Returned from JNI_OnLoad for \"%s\"]", pathName);
+                    ALOGI("[Returned from JNI_OnLoad for \"%s\"]", pathName);
                 }
             }
         }
@@ -583,7 +583,7 @@ static char* createJniNameString(const char* classDescriptor,
  */
 static char* mangleString(const char* str, int len)
 {
-    //LOGI("mangling '%s' %d", str, len);
+    //ALOGI("mangling '%s' %d", str, len);
 
     assert(str[len] == '\0');
 

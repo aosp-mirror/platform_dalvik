@@ -68,7 +68,7 @@ bool dvmComputeLiveness(VerifierData* vdata)
     bool verbose = false; //= dvmWantVerboseVerification(vdata->method);
     if (verbose) {
         const Method* meth = vdata->method;
-        LOGI("Computing liveness for %s.%s:%s",
+        ALOGI("Computing liveness for %s.%s:%s",
             meth->clazz->descriptor, meth->name, meth->shorty);
     }
 
@@ -147,7 +147,7 @@ bool dvmComputeLiveness(VerifierData* vdata)
         assert(workBlock->liveRegs != NULL);
         dvmCopyBitVector(workBits, workBlock->liveRegs);
         if (verbose) {
-            LOGI("Loaded work bits from last=0x%04x", workBlock->lastAddr);
+            ALOGI("Loaded work bits from last=0x%04x", workBlock->lastAddr);
             dumpLiveState(vdata, 0xfffd, workBlock->liveRegs);
             dumpLiveState(vdata, 0xffff, workBits);
         }
@@ -215,7 +215,7 @@ bool dvmComputeLiveness(VerifierData* vdata)
 
             pred->changed = dvmCheckMergeBitVectors(pred->liveRegs, workBits);
             if (verbose) {
-                LOGI("merging cur=%04x into pred last=%04x (ch=%d)",
+                ALOGI("merging cur=%04x into pred last=%04x (ch=%d)",
                     curIdx, pred->lastAddr, pred->changed);
                 dumpLiveState(vdata, 0xfffa, pred->liveRegs);
                 dumpLiveState(vdata, 0xfffb, workBits);
@@ -741,7 +741,7 @@ static void markLocalsCb(void* ctxt, u2 reg, u4 startAddress, u4 endAddress,
     bool verbose = dvmWantVerboseVerification(vdata->method);
 
     if (verbose) {
-        LOGI("%04x-%04x %2d (%s %s)",
+        ALOGI("%04x-%04x %2d (%s %s)",
             startAddress, endAddress, reg, name, descriptor);
     }
 
@@ -819,5 +819,5 @@ static void dumpLiveState(const VerifierData* vdata, u4 curIdx,
         regChars[1 + idx + (idx/4)] = ch;
     }
 
-    LOGI("0x%04x %s", curIdx, regChars);
+    ALOGI("0x%04x %s", curIdx, regChars);
 }

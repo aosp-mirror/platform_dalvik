@@ -629,7 +629,7 @@ static ClassObject* lookupClassByDescriptor(const Method* meth,
      * allows the verifier to process the class successfully.
      */
 
-    //LOGI("Looking up '%s'", typeStr);
+    //ALOGI("Looking up '%s'", typeStr);
     ClassObject* clazz;
     clazz = dvmFindClassNoInit(pDescriptor, meth->clazz->classLoader);
     if (clazz == NULL) {
@@ -1136,7 +1136,7 @@ static Method* verifyInvocationArgs(const Method* meth,
             std::string dotMethClass =
                 dvmHumanReadableDescriptor(meth->clazz->descriptor);
 
-            LOGI("Could not find method %s.%s, referenced from method %s.%s",
+            ALOGI("Could not find method %s.%s, referenced from method %s.%s",
                     dotMissingClass.c_str(), methodName,
                     dotMethClass.c_str(), meth->name);
         }
@@ -2645,7 +2645,7 @@ static bool updateRegisters(const Method* meth, InsnFlags* insnFlags,
         }
 
         if (gDebugVerbose) {
-            //LOGI(" RESULT (changed=%d)", changed);
+            //ALOGI(" RESULT (changed=%d)", changed);
             //dumpRegTypes(vdata, targetRegs, 0, "rslt", NULL, 0);
         }
 #ifdef VERIFIER_STATS
@@ -3194,7 +3194,7 @@ static void verifyFilledNewArrayRegs(const Method* meth,
     } else {
         expectedType = primitiveTypeToRegType(elemType);
     }
-    //LOGI("filled-new-array: %s -> %d", resClass->descriptor, expectedType);
+    //ALOGI("filled-new-array: %s -> %d", resClass->descriptor, expectedType);
 
     /*
      * Verify each register.  If "argCount" is bad, verifyRegisterType()
@@ -3619,12 +3619,12 @@ static bool doCodeVerification(VerifierData* vdata, RegisterTable* regTable)
     dvmInsnSetChanged(insnFlags, 0, true);
 
     if (dvmWantVerboseVerification(meth)) {
-        IF_LOGI() {
+        IF_ALOGI() {
             char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-            LOGI("Now verifying: %s.%s %s (ins=%d regs=%d)",
+            ALOGI("Now verifying: %s.%s %s (ins=%d regs=%d)",
                 meth->clazz->descriptor, meth->name, desc,
                 meth->insSize, meth->registersSize);
-            LOGI(" ------ [0    4    8    12   16   20   24   28   32   36");
+            ALOGI(" ------ [0    4    8    12   16   20   24   28   32   36");
             free(desc);
         }
         debugVerbose = true;
@@ -3700,7 +3700,7 @@ static bool doCodeVerification(VerifierData* vdata, RegisterTable* regTable)
                 NULL, uninitMap, SHOW_REG_DETAILS);
         }
 
-        //LOGI("process %s.%s %s %d",
+        //ALOGI("process %s.%s %s %d",
         //    meth->clazz->descriptor, meth->name, meth->descriptor, insnIdx);
         if (!verifyInstruction(meth, insnFlags, regTable, insnIdx,
                 uninitMap, &startGuess))
@@ -6064,7 +6064,7 @@ static void logLocalsCb(void *cnxt, u2 reg, u4 startAddress, u4 endAddress,
 
     if (addr >= (int) startAddress && addr < (int) endAddress)
     {
-        LOGI("        %2d: '%s' %s", reg, name, descriptor);
+        ALOGI("        %2d: '%s' %s", reg, name, descriptor);
     }
 }
 
@@ -6143,10 +6143,10 @@ static void dumpRegTypes(const VerifierData* vdata,
     }
 
     if (addr == 0 && addrName != NULL) {
-        LOGI("%c%s %s mst=%d", branchTarget ? '>' : ' ',
+        ALOGI("%c%s %s mst=%d", branchTarget ? '>' : ' ',
             addrName, regChars, registerLine->monitorStackTop);
     } else {
-        LOGI("%c0x%04x %s mst=%d", branchTarget ? '>' : ' ',
+        ALOGI("%c0x%04x %s mst=%d", branchTarget ? '>' : ' ',
             addr, regChars, registerLine->monitorStackTop);
     }
     if (displayFlags & DRT_SHOW_LIVENESS) {
@@ -6164,9 +6164,9 @@ static void dumpRegTypes(const VerifierData* vdata,
                 bool isLive = dvmIsBitSet(liveRegs, i);
                 liveChars[i + 1 + (i / 4)] = isLive ? '+' : '-';
             }
-            LOGI("        %s", liveChars);
+            ALOGI("        %s", liveChars);
         } else {
-            LOGI("        %c", '#');
+            ALOGI("        %c", '#');
         }
     }
 
@@ -6177,12 +6177,12 @@ static void dumpRegTypes(const VerifierData* vdata,
                 ClassObject* clazz = regTypeReferenceToClass(addrRegs[i], uninitMap);
                 assert(dvmIsHeapAddress((Object*)clazz));
                 if (i < regCount) {
-                    LOGI("        %2d: 0x%08x %s%s",
+                    ALOGI("        %2d: 0x%08x %s%s",
                         i, addrRegs[i],
                         regTypeIsUninitReference(addrRegs[i]) ? "[U]" : "",
                         clazz->descriptor);
                 } else {
-                    LOGI("        RS: 0x%08x %s%s",
+                    ALOGI("        RS: 0x%08x %s%s",
                         addrRegs[i],
                         regTypeIsUninitReference(addrRegs[i]) ? "[U]" : "",
                         clazz->descriptor);

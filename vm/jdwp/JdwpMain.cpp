@@ -162,7 +162,7 @@ JdwpState* dvmJdwpStartup(const JdwpStartupParams* pParams)
             goto fail;
         }
 
-        LOGI("JDWP connected");
+        ALOGI("JDWP connected");
 
         /*
          * Ordinarily we would pause briefly to allow the debugger to set

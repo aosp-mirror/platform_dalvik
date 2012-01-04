@@ -142,11 +142,11 @@ void dvmRegisterMapDumpStats()
             break;
     }
 
-    LOGI("Register Map gcPointGap stats (diff count=%d, total=%d):",
+    ALOGI("Register Map gcPointGap stats (diff count=%d, total=%d):",
         pStats->gcGapCount, pStats->totalGcPointCount);
     assert(pStats->gcPointGap[0] == 0);
     for (i = 1; i <= end; i++) {
-        LOGI(" %2d %d", i, pStats->gcPointGap[i]);
+        ALOGI(" %2d %d", i, pStats->gcPointGap[i]);
     }
 
 
@@ -155,16 +155,16 @@ void dvmRegisterMapDumpStats()
             break;
     }
 
-    LOGI("Register Map bit difference stats:");
+    ALOGI("Register Map bit difference stats:");
     for (i = 0; i <= end; i++) {
-        LOGI(" %2d %d", i, pStats->numDiffBits[i]);
+        ALOGI(" %2d %d", i, pStats->numDiffBits[i]);
     }
 
 
-    LOGI("Register Map update position stats (lt16=%d ge16=%d):",
+    ALOGI("Register Map update position stats (lt16=%d ge16=%d):",
         pStats->updateLT16, pStats->updateGE16);
     for (i = 0; i < kNumUpdatePosns; i++) {
-        LOGI(" %2d %d", i, pStats->updatePosn[i]);
+        ALOGI(" %2d %d", i, pStats->updatePosn[i]);
     }
 #endif
 }
@@ -479,7 +479,7 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
         {
             char* desc;
             desc = dexProtoCopyMethodDescriptor(&vdata->method->prototype);
-            LOGI("Map for %s.%s %s", vdata->method->clazz->descriptor,
+            ALOGI("Map for %s.%s %s", vdata->method->clazz->descriptor,
                 vdata->method->name, desc);
             free(desc);
 
@@ -977,12 +977,12 @@ static int compareMaps(const RegisterMap* pMap1, const RegisterMap* pMap2)
     size1 = computeRegisterMapSize(pMap1);
     size2 = computeRegisterMapSize(pMap2);
     if (size1 != size2) {
-        LOGI("compareMaps: size mismatch (%zd vs %zd)", size1, size2);
+        ALOGI("compareMaps: size mismatch (%zd vs %zd)", size1, size2);
         return -1;
     }
 
     if (memcmp(pMap1, pMap2, size1) != 0) {
-        LOGI("compareMaps: content mismatch");
+        ALOGI("compareMaps: content mismatch");
         return -1;
     }
 
@@ -1286,7 +1286,7 @@ static void computeMapStats(RegisterMap* pMap, const Method* method)
                     prevAddr, addr, method->clazz->descriptor, method->name);
             } else if (addrDiff > kMaxGcPointGap) {
                 if (REGISTER_MAP_VERBOSE) {
-                    LOGI("HEY: addrDiff is %d, max %d (0x%04x->0x%04x %s.%s)",
+                    ALOGI("HEY: addrDiff is %d, max %d (0x%04x->0x%04x %s.%s)",
                         addrDiff, kMaxGcPointGap, prevAddr, addr,
                         method->clazz->descriptor, method->name);
                 }
@@ -1349,7 +1349,7 @@ static void computeMapStats(RegisterMap* pMap, const Method* method)
 
             if (numDiff > kMaxDiffBits) {
                 if (REGISTER_MAP_VERBOSE) {
-                    LOGI("WOW: numDiff is %d, max %d", numDiff, kMaxDiffBits);
+                    ALOGI("WOW: numDiff is %d, max %d", numDiff, kMaxDiffBits);
                 }
             } else {
                 pStats->numDiffBits[numDiff]++;
@@ -1472,7 +1472,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
     numEntries = dvmRegisterMapGetNumEntries(pMap);
 
     if (debug) {
-        LOGI("COMPRESS: %s.%s aw=%d rw=%d ne=%d",
+        ALOGI("COMPRESS: %s.%s aw=%d rw=%d ne=%d",
             meth->clazz->descriptor, meth->name,
             addrWidth, regWidth, numEntries);
         dumpRegisterMap(pMap, -1);
@@ -1549,7 +1549,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
             addr |= (*mapData++) << 8;
 
         if (debug)
-            LOGI(" addr=0x%04x ent=%d (aw=%d)", addr, entry, addrWidth);
+            ALOGI(" addr=0x%04x ent=%d (aw=%d)", addr, entry, addrWidth);
 
         addrDiff = addr - prevAddr;
         assert(addrDiff > 0);
@@ -1557,12 +1557,12 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
             /* small difference, encode in 3 bits */
             key = addrDiff -1;          /* set 00000AAA */
             if (debug)
-                LOGI(" : small %d, key=0x%02x", addrDiff, key);
+                ALOGI(" : small %d, key=0x%02x", addrDiff, key);
         } else {
             /* large difference, output escape code */
             key = 0x07;                 /* escape code for AAA */
             if (debug)
-                LOGI(" : large %d, key=0x%02x", addrDiff, key);
+                ALOGI(" : large %d, key=0x%02x", addrDiff, key);
         }
 
         int numBitsChanged, firstBitChanged, lebSize;
@@ -1571,26 +1571,26 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
             &firstBitChanged, &numBitsChanged, NULL);
 
         if (debug) {
-            LOGI(" : diff fbc=%d nbc=%d ls=%d (rw=%d)",
+            ALOGI(" : diff fbc=%d nbc=%d ls=%d (rw=%d)",
                 firstBitChanged, numBitsChanged, lebSize, regWidth);
         }
 
         if (numBitsChanged == 0) {
             /* set B to 1 and CCCC to zero to indicate no bits were changed */
             key |= 0x08;
-            if (debug) LOGI(" : no bits changed");
+            if (debug) ALOGI(" : no bits changed");
         } else if (numBitsChanged == 1 && firstBitChanged < 16) {
             /* set B to 0 and CCCC to the index of the changed bit */
             key |= firstBitChanged << 4;
-            if (debug) LOGI(" : 1 low bit changed");
+            if (debug) ALOGI(" : 1 low bit changed");
         } else if (numBitsChanged < 15 && lebSize < regWidth) {
             /* set B to 1 and CCCC to the number of bits */
             key |= 0x08 | (numBitsChanged << 4);
-            if (debug) LOGI(" : some bits changed");
+            if (debug) ALOGI(" : some bits changed");
         } else {
             /* set B to 1 and CCCC to 0x0f so we store the entire vector */
             key |= 0x08 | 0xf0;
-            if (debug) LOGI(" : encode original");
+            if (debug) ALOGI(" : encode original");
         }
 
         /*
@@ -1725,7 +1725,7 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
 
     /* now we know enough to allocate the new map */
     if (REGISTER_MAP_VERBOSE) {
-        LOGI("Expanding to map aw=%d rw=%d ne=%d",
+        ALOGI("Expanding to map aw=%d rw=%d ne=%d",
             newAddrWidth, regWidth, numEntries);
     }
     newMapSize = kHeaderSize + (newAddrWidth + regWidth) * numEntries;

@@ -24,7 +24,7 @@
 
 #ifndef NDEBUG
 
-#define DBUG_MSG    LOGI
+#define DBUG_MSG    ALOGI
 
 class Stopwatch {
 public:

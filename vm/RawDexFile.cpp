@@ -162,7 +162,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
         adler32, isBootstrap, &newFile, /*createIfMissing=*/true);
 
     if (optFd < 0) {
-        LOGI("Unable to open or create cache for %s (%s)",
+        ALOGI("Unable to open or create cache for %s (%s)",
                 fileName, cachedName);
         goto bail;
     }
@@ -210,7 +210,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
      * doesn't have to be seeked anywhere in particular.
      */
     if (dvmDexFileOpenFromFd(optFd, &pDvmDex) != 0) {
-        LOGI("Unable to map cached %s", fileName);
+        ALOGI("Unable to map cached %s", fileName);
         goto bail;
     }
 

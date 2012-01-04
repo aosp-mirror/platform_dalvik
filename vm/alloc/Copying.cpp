@@ -123,13 +123,13 @@
 #define ARRAYSIZE(x) (sizeof(x) / sizeof(x[0]))
 
 #if 0
-#define LOG_ALLOC LOGI
-#define LOG_PIN LOGI
-#define LOG_PROM LOGI
-#define LOG_REF LOGI
-#define LOG_SCAV LOGI
-#define LOG_TRAN LOGI
-#define LOG_VER LOGI
+#define LOG_ALLOC ALOGI
+#define LOG_PIN ALOGI
+#define LOG_PROM ALOGI
+#define LOG_REF ALOGI
+#define LOG_SCAV ALOGI
+#define LOG_TRAN ALOGI
+#define LOG_VER ALOGI
 #else
 #define LOG_ALLOC(...) ((void)0)
 #define LOG_PIN(...) ((void)0)
@@ -1813,7 +1813,7 @@ static void pinThreadStack(const Thread *thread)
             const RegisterMap* pMap = dvmGetExpandedRegisterMap(method);
             const u1* regVector = NULL;
 
-            LOGI("conservative : %s.%s", method->clazz->descriptor, method->name);
+            ALOGI("conservative : %s.%s", method->clazz->descriptor, method->name);
 
             if (pMap != NULL) {
                 int addr = saveArea->xtra.currentPc - method->insns;

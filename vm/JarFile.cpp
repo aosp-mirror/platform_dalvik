@@ -150,7 +150,7 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
          */
         fd = openAlternateSuffix(fileName, "odex", O_RDONLY, &cachedName);
         if (fd < 0) {
-            LOGI("Zip is good, but no %s inside, and no .odex "
+            ALOGI("Zip is good, but no %s inside, and no .odex "
                     "file in the same directory", kDexInJarName);
             result = DEX_CACHE_BAD_ARCHIVE;
             goto bail;
@@ -269,7 +269,7 @@ tryArchive:
                     dexGetZipEntryCrc32(&archive, entry),
                     isBootstrap, &newFile, /*createIfMissing=*/true);
             if (fd < 0) {
-                LOGI("Unable to open or create cache for %s (%s)",
+                ALOGI("Unable to open or create cache for %s (%s)",
                     fileName, cachedName);
                 goto bail;
             }
@@ -316,7 +316,7 @@ tryArchive:
                     (int) (endWhen - extractWhen) / 1000);
             }
         } else {
-            LOGI("Zip is good, but no %s inside, and no valid .odex "
+            ALOGI("Zip is good, but no %s inside, and no valid .odex "
                     "file in the same directory", kDexInJarName);
             goto bail;
         }
@@ -327,7 +327,7 @@ tryArchive:
      * doesn't have to be seeked anywhere in particular.
      */
     if (dvmDexFileOpenFromFd(fd, &pDvmDex) != 0) {
-        LOGI("Unable to map %s in %s", kDexInJarName, fileName);
+        ALOGI("Unable to map %s in %s", kDexInJarName, fileName);
         goto bail;
     }
 

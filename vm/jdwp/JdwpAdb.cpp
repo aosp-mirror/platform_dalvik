@@ -534,7 +534,7 @@ static bool processIncoming(JdwpState* state)
                 if (maxfd < fd)
                     maxfd = fd;
             } else {
-                LOGI("NOTE: entering select w/o wakepipe");
+                ALOGI("NOTE: entering select w/o wakepipe");
             }
 
             if (maxfd < 0) {
@@ -573,7 +573,7 @@ static bool processIncoming(JdwpState* state)
             {
                 int  sock = receiveClientFd(netState);
                 if (sock >= 0) {
-                    LOGI("Ignoring second debugger -- accepting and dropping");
+                    ALOGI("Ignoring second debugger -- accepting and dropping");
                     close(sock);
                 } else {
                     assert(netState->controlSock < 0);

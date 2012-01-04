@@ -109,7 +109,7 @@ static bool prepareSocket(JdwpState* state, const JdwpStartupParams* pParams)
     }
 
     if (pParams->suspend)
-        LOGI("JDWP will wait for debugger on port %d", port);
+        ALOGI("JDWP will wait for debugger on port %d", port);
     else
         ALOGD("JDWP will %s on port %d",
             pParams->server ? "listen" : "connect", port);
@@ -435,7 +435,7 @@ static bool establishConnection(JdwpState* state)
 
     addr.addrInet.sin_port = htons(state->params.port);
 
-    LOGI("Connecting out to '%s' %d",
+    ALOGI("Connecting out to '%s' %d",
         inet_ntoa(addr.addrInet.sin_addr), ntohs(addr.addrInet.sin_port));
 
     /*
@@ -461,7 +461,7 @@ static bool establishConnection(JdwpState* state)
         return false;
     }
 
-    LOGI("Connection established to %s (%s:%d)",
+    ALOGI("Connection established to %s (%s:%d)",
         state->params.host, inet_ntoa(addr.addrInet.sin_addr),
         ntohs(addr.addrInet.sin_port));
     netState->awaitingHandshake = true;
@@ -695,7 +695,7 @@ static bool processIncoming(JdwpState* state)
             if (fd >= 0) {
                 FD_SET(fd, &readfds);
             } else {
-                LOGI("NOTE: entering select w/o wakepipe");
+                ALOGI("NOTE: entering select w/o wakepipe");
             }
 
             /*
@@ -730,7 +730,7 @@ static bool processIncoming(JdwpState* state)
             if (netState->listenSock >= 0 &&
                 FD_ISSET(netState->listenSock, &readfds))
             {
-                LOGI("Ignoring second debugger -- accepting and dropping");
+                ALOGI("Ignoring second debugger -- accepting and dropping");
                 union {
                     struct sockaddr_in   addrInet;
                     struct sockaddr      addrPlain;
@@ -740,7 +740,7 @@ static bool processIncoming(JdwpState* state)
                 tmpSock = accept(netState->listenSock, &addr.addrPlain,
                                 &addrlen);
                 if (tmpSock < 0)
-                    LOGI("Weird -- accept failed");
+                    ALOGI("Weird -- accept failed");
                 else
                     close(tmpSock);
             }

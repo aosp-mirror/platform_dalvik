@@ -678,7 +678,7 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
     int cc = read(fd, lineBuf, sizeof(lineBuf)-1);
     if (cc <= 0) {
         const char* msg = (cc == 0) ? "unexpected EOF" : strerror(errno);
-        LOGI("Unable to read '%s': %s", nameBuf, msg);
+        ALOGI("Unable to read '%s': %s", nameBuf, msg);
         close(fd);
         return false;
     }
@@ -707,7 +707,7 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
     char* endp;
     pData->utime = strtoul(cp+1, &endp, 10);
     if (endp == cp+1)
-        LOGI("Warning: strtoul failed on utime ('%.30s...')", cp);
+        ALOGI("Warning: strtoul failed on utime ('%.30s...')", cp);
 
     cp = strchr(cp+1, ' ');
     if (cp == NULL)
@@ -715,7 +715,7 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
 
     pData->stime = strtoul(cp+1, &endp, 10);
     if (endp == cp+1)
-        LOGI("Warning: strtoul failed on stime ('%.30s...')", cp);
+        ALOGI("Warning: strtoul failed on stime ('%.30s...')", cp);
 
     /*
      * Skip more stuff we don't care about.
@@ -731,12 +731,12 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
      */
     pData->processor = strtol(cp+1, &endp, 10);
     if (endp == cp+1)
-        LOGI("Warning: strtoul failed on processor ('%.30s...')", cp);
+        ALOGI("Warning: strtoul failed on processor ('%.30s...')", cp);
 
     return true;
 
 parse_fail:
-    LOGI("stat parse failed (%s)", lineBuf);
+    ALOGI("stat parse failed (%s)", lineBuf);
     return false;
 }
 

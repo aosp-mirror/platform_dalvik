@@ -1014,15 +1014,15 @@ void dvmHandleStackOverflow(Thread* self, const Method* method)
     }
 
     /* open it up to the full range */
-    LOGI("threadid=%d: stack overflow on call to %s.%s:%s",
+    ALOGI("threadid=%d: stack overflow on call to %s.%s:%s",
         self->threadId,
         method->clazz->descriptor, method->name, method->shorty);
     StackSaveArea* saveArea = SAVEAREA_FROM_FP(self->interpSave.curFrame);
-    LOGI("  method requires %d+%d+%d=%d bytes, fp is %p (%d left)",
+    ALOGI("  method requires %d+%d+%d=%d bytes, fp is %p (%d left)",
         method->registersSize * 4, sizeof(StackSaveArea), method->outsSize * 4,
         (method->registersSize + method->outsSize) * 4 + sizeof(StackSaveArea),
         saveArea, (u1*) saveArea - self->interpStackEnd);
-    LOGI("  expanding stack end (%p to %p)", self->interpStackEnd,
+    ALOGI("  expanding stack end (%p to %p)", self->interpStackEnd,
         self->interpStackStart - self->interpStackSize);
     //dvmDumpThread(self, false);
     self->interpStackEnd = self->interpStackStart - self->interpStackSize;
@@ -1069,7 +1069,7 @@ void dvmCleanupStackOverflow(Thread* self, const Object* exception)
     self->interpStackEnd = newStackEnd;
     self->stackOverflowed = false;
 
-    LOGI("Shrank stack (to %p, curFrame is %p)", self->interpStackEnd,
+    ALOGI("Shrank stack (to %p, curFrame is %p)", self->interpStackEnd,
         self->interpSave.curFrame);
 }
 
@@ -1345,7 +1345,7 @@ void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
     /*
      * Run through the stack and rewrite the "prev" pointers.
      */
-    //LOGI("DR: fpOff=%d (from %p %p)",fpOffset, origStack,
+    //ALOGI("DR: fpOff=%d (from %p %p)",fpOffset, origStack,
     //     thread->interpSave.curFrame);
     fp = stackCopy + fpOffset;
     while (true) {

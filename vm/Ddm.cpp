@@ -86,7 +86,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     dvmCallMethod(self, gDvm.methDalvikDdmcServer_dispatch, NULL, &callRes,
         type, dataArray, offset, length);
     if (dvmCheckException(self)) {
-        LOGI("Exception thrown by dispatcher for 0x%08x", type);
+        ALOGI("Exception thrown by dispatcher for 0x%08x", type);
         dvmLogExceptionStackTrace();
         dvmClearException(self);
         goto bail;
@@ -180,7 +180,7 @@ static void broadcast(int event)
     dvmCallMethod(self, gDvm.methDalvikDdmcServer_broadcast, NULL, &unused,
         event);
     if (dvmCheckException(self)) {
-        LOGI("Exception thrown by broadcast(%d)", event);
+        ALOGI("Exception thrown by broadcast(%d)", event);
         dvmLogExceptionStackTrace();
         dvmClearException(self);
         return;
@@ -436,7 +436,7 @@ ArrayObject* dvmDdmGetStackTraceById(u4 threadId)
             break;
     }
     if (thread == NULL) {
-        LOGI("dvmDdmGetStackTraceById: threadid=%d not found", threadId);
+        ALOGI("dvmDdmGetStackTraceById: threadid=%d not found", threadId);
         dvmUnlockThreadList();
         return NULL;
     }

@@ -439,21 +439,21 @@ static jobject addGlobalReference(Object* obj) {
         return NULL;
     }
 
-    //LOGI("adding obj=%p", obj);
+    //ALOGI("adding obj=%p", obj);
     //dvmDumpThread(dvmThreadSelf(), false);
 
     if (false && dvmIsClassObject((Object*)obj)) {
         ClassObject* clazz = (ClassObject*) obj;
-        LOGI("-------");
-        LOGI("Adding global ref on class %s", clazz->descriptor);
+        ALOGI("-------");
+        ALOGI("Adding global ref on class %s", clazz->descriptor);
         dvmDumpThread(dvmThreadSelf(), false);
     }
     if (false && ((Object*)obj)->clazz == gDvm.classJavaLangString) {
         StringObject* strObj = (StringObject*) obj;
         char* str = dvmCreateCstrFromString(strObj);
         if (strcmp(str, "sync-response") == 0) {
-            LOGI("-------");
-            LOGI("Adding global ref on string '%s'", str);
+            ALOGI("-------");
+            ALOGI("Adding global ref on string '%s'", str);
             dvmDumpThread(dvmThreadSelf(), false);
             //dvmAbort();
         }
@@ -464,7 +464,7 @@ static jobject addGlobalReference(Object* obj) {
         if (arrayObj->length == 8192 /*&&
             dvmReferenceTableEntries(&gDvm.jniGlobalRefTable) > 400*/)
         {
-            LOGI("Adding global ref on byte array %p (len=%d)",
+            ALOGI("Adding global ref on byte array %p (len=%d)",
                 arrayObj, arrayObj->length);
             dvmDumpThread(dvmThreadSelf(), false);
         }
@@ -901,7 +901,7 @@ static void logNativeMethodEntry(const Method* method, const u4* args)
 
     std::string className(dvmHumanReadableDescriptor(method->clazz->descriptor));
     char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
-    LOGI("-> %s %s%s %s(%s)", className.c_str(), method->name, signature, thisString, argsString);
+    ALOGI("-> %s %s%s %s(%s)", className.c_str(), method->name, signature, thisString, argsString);
     free(signature);
 }
 
@@ -912,13 +912,13 @@ static void logNativeMethodExit(const Method* method, Thread* self, const JValue
     if (dvmCheckException(self)) {
         Object* exception = dvmGetException(self);
         std::string exceptionClassName(dvmHumanReadableDescriptor(exception->clazz->descriptor));
-        LOGI("<- %s %s%s threw %s", className.c_str(),
+        ALOGI("<- %s %s%s threw %s", className.c_str(),
                 method->name, signature, exceptionClassName.c_str());
     } else {
         char returnValueString[128] = { 0 };
         char returnType = method->shorty[0];
         appendValue(returnType, returnValue, returnValueString, sizeof(returnValueString), false);
-        LOGI("<- %s %s%s returned %s", className.c_str(),
+        ALOGI("<- %s %s%s returned %s", className.c_str(),
                 method->name, signature, returnValueString);
     }
     free(signature);
@@ -1094,7 +1094,7 @@ void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method, Thr
     u4 accessFlags = method->accessFlags;
     bool isSynchronized = (accessFlags & ACC_SYNCHRONIZED) != 0;
 
-    //LOGI("JNI calling %p (%s.%s:%s):", method->insns,
+    //ALOGI("JNI calling %p (%s.%s:%s):", method->insns,
     //    method->clazz->descriptor, method->name, method->shorty);
 
     /*
@@ -1118,7 +1118,7 @@ void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method, Thr
         while (*shorty != '\0') {
             switch (*shorty++) {
             case 'L':
-                //LOGI("  local %d: 0x%08x", idx, modArgs[idx]);
+                //ALOGI("  local %d: 0x%08x", idx, modArgs[idx]);
                 if (modArgs[idx] != 0) {
                     modArgs[idx] = (u4) addLocalReference(self, (Object*) modArgs[idx]);
                 }
@@ -1382,7 +1382,7 @@ static void ExceptionDescribe(JNIEnv* env) {
     if (exception != NULL) {
         dvmPrintExceptionStackTrace();
     } else {
-        LOGI("Odd: ExceptionDescribe called, but no exception pending");
+        ALOGI("Odd: ExceptionDescribe called, but no exception pending");
     }
 }
 
@@ -2451,7 +2451,7 @@ static jint RegisterNatives(JNIEnv* env, jclass jclazz,
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(ts.self(), jclazz);
 
     if (gDvm.verboseJni) {
-        LOGI("[Registering JNI native methods for class %s]",
+        ALOGI("[Registering JNI native methods for class %s]",
             clazz->descriptor);
     }
 
@@ -2496,7 +2496,7 @@ static jint UnregisterNatives(JNIEnv* env, jclass jclazz) {
 
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(ts.self(), jclazz);
     if (gDvm.verboseJni) {
-        LOGI("[Unregistering JNI native methods for class %s]",
+        ALOGI("[Unregistering JNI native methods for class %s]",
             clazz->descriptor);
     }
     dvmUnregisterJNINativeMethods(clazz);
@@ -3272,7 +3272,7 @@ JNIEnv* dvmCreateJNIEnv(Thread* self) {
     JavaVMExt* vm = (JavaVMExt*) gDvmJni.jniVm;
 
     //if (self != NULL)
-    //    LOGI("Ent CreateJNIEnv: threadid=%d %p", self->threadId, self);
+    //    ALOGI("Ent CreateJNIEnv: threadid=%d %p", self->threadId, self);
 
     assert(vm != NULL);
 
@@ -3304,7 +3304,7 @@ JNIEnv* dvmCreateJNIEnv(Thread* self) {
     vm->envList = newEnv;
 
     //if (self != NULL)
-    //    LOGI("Xit CreateJNIEnv: threadid=%d %p", self->threadId, self);
+    //    ALOGI("Xit CreateJNIEnv: threadid=%d %p", self->threadId, self);
     return (JNIEnv*) newEnv;
 }
 
@@ -3316,7 +3316,7 @@ void dvmDestroyJNIEnv(JNIEnv* env) {
         return;
     }
 
-    //LOGI("Ent DestroyJNIEnv: threadid=%d %p", self->threadId, self);
+    //ALOGI("Ent DestroyJNIEnv: threadid=%d %p", self->threadId, self);
 
     JNIEnvExt* extEnv = (JNIEnvExt*) env;
     JavaVMExt* vm = (JavaVMExt*) gDvmJni.jniVm;
@@ -3335,7 +3335,7 @@ void dvmDestroyJNIEnv(JNIEnv* env) {
     }
 
     free(env);
-    //LOGI("Xit DestroyJNIEnv: threadid=%d %p", self->threadId, self);
+    //ALOGI("Xit DestroyJNIEnv: threadid=%d %p", self->threadId, self);
 }
 
 /*

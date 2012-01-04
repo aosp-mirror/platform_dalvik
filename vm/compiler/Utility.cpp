@@ -79,7 +79,7 @@ retry:
         currentArena = newArena;
         numArenaBlocks++;
         if (numArenaBlocks > 10)
-            LOGI("Total arena pages for JIT: %d", numArenaBlocks);
+            ALOGI("Total arena pages for JIT: %d", numArenaBlocks);
         goto retry;
     }
     /* Should not reach here */

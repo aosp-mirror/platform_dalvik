@@ -194,7 +194,7 @@ static void Dalvik_dalvik_system_VMRuntime_setTargetSdkVersion(const u4* args,
     int targetSdkVersion = args[1];
     if (targetSdkVersion > 0 && targetSdkVersion <= 13 /* honeycomb-mr2 */) {
         // TODO: running with CheckJNI should override this and force you to obey the strictest rules.
-        LOGI("Turning on JNI app bug workarounds for target SDK version %i...", targetSdkVersion);
+        ALOGI("Turning on JNI app bug workarounds for target SDK version %i...", targetSdkVersion);
         gDvmJni.workAroundAppJniBugs = true;
     }
     RETURN_VOID();

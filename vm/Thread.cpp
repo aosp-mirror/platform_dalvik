@@ -476,7 +476,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
                  * Could be two app threads both want to patch predicted
                  * chaining cells around the same time.
                  */
-                LOGI("threadid=%d ODD: want thread-suspend lock (%s:%s),"
+                ALOGI("threadid=%d ODD: want thread-suspend lock (%s:%s),"
                      " it's held, no suspend pending",
                     self->threadId, who, getSuspendCauseStr(why));
             } else {
@@ -903,7 +903,7 @@ static bool prepareThread(Thread* thread)
     thread->handle = pthread_self();
     thread->systemTid = dvmGetSysThreadId();
 
-    //LOGI("SYSTEM TID IS %d (pid is %d)", (int) thread->systemTid,
+    //ALOGI("SYSTEM TID IS %d (pid is %d)", (int) thread->systemTid,
     //    (int) getpid());
     /*
      * If we were called by dvmAttachCurrentThread, the self value is
@@ -1598,7 +1598,7 @@ static void threadExitUncaughtException(Thread* self, Object* group)
             "uncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
 
     if (uncaughtHandler != NULL) {
-        //LOGI("+++ calling %s.uncaughtException",
+        //ALOGI("+++ calling %s.uncaughtException",
         //     handlerObj->clazz->descriptor);
         JValue unused;
         dvmCallMethod(self, uncaughtHandler, handlerObj, &unused,
@@ -2114,7 +2114,7 @@ void dvmDetachCurrentThread()
 
     dvmLockMutex(&traceState->startStopLock);
     if (traceState->traceEnabled) {
-        LOGI("threadid=%d: waiting for method trace to finish",
+        ALOGI("threadid=%d: waiting for method trace to finish",
             self->threadId);
         while (traceState->traceEnabled) {
             dvmWaitCond(&traceState->threadExitCond,
@@ -2265,7 +2265,7 @@ void dvmSuspendSelf(bool jdwpActivity)
      * If we got here via waitForDebugger(), don't do this part.
      */
     if (jdwpActivity) {
-        //LOGI("threadid=%d: clearing wait-for-event (my handle=%08x)",
+        //ALOGI("threadid=%d: clearing wait-for-event (my handle=%08x)",
         //    self->threadId, (int) self->handle);
         dvmJdwpClearWaitForEventThread(gDvm.jdwpState);
     }
@@ -3297,7 +3297,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
      */
     threadObj = thread->threadObj;
     if (threadObj == NULL) {
-        LOGI("Can't dump thread %d: threadObj not set", thread->threadId);
+        ALOGI("Can't dump thread %d: threadObj not set", thread->threadId);
         return;
     }
     dvmAddTrackedAlloc(threadObj, NULL);

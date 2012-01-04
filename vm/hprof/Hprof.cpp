@@ -76,7 +76,7 @@ bool hprofShutdown(hprof_context_t *tailCtx)
     hprofContextInit(headCtx, strdup(tailCtx->fileName), tailCtx->fd, true,
         tailCtx->directToDdms);
 
-    LOGI("hprof: dumping heap strings to \"%s\".", tailCtx->fileName);
+    ALOGI("hprof: dumping heap strings to \"%s\".", tailCtx->fileName);
     hprofDumpStrings(headCtx);
     hprofDumpClasses(headCtx);
 
@@ -145,7 +145,7 @@ bool hprofShutdown(hprof_context_t *tailCtx)
     }
 
     /* throw out a log message for the benefit of "runhat" */
-    LOGI("hprof: heap dump completed (%dKB)",
+    ALOGI("hprof: heap dump completed (%dKB)",
         (headCtx->fileDataSize + tailCtx->fileDataSize + 1023) / 1024);
 
     hprofFreeContext(headCtx);

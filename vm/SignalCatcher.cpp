@@ -195,7 +195,7 @@ static void handleSigQuit()
                     gDvm.stackTraceFile, (int) actual, traceLen,
                     strerror(errno));
             } else {
-                LOGI("Wrote stack traces to '%s'", gDvm.stackTraceFile);
+                ALOGI("Wrote stack traces to '%s'", gDvm.stackTraceFile);
             }
             close(fd);
         }
@@ -210,7 +210,7 @@ static void handleSigQuit()
  */
 static void handleSigUsr1()
 {
-    LOGI("SIGUSR1 forcing GC (no HPROF)");
+    ALOGI("SIGUSR1 forcing GC (no HPROF)");
     dvmCollectGarbage();
 }
 
@@ -292,7 +292,7 @@ loop:
         }
 
         if (!gDvm.haltSignalCatcher) {
-            LOGI("threadid=%d: reacting to signal %d",
+            ALOGI("threadid=%d: reacting to signal %d",
                 dvmThreadSelf()->threadId, rcvd);
         }
 

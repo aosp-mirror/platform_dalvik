@@ -223,7 +223,7 @@ static ObjectId registerObject(const Object* obj, RegistryType type, bool reg)
     dvmHashTableLock(gDvm.dbgRegistry);
     if (!gDvm.debuggerConnected) {
         /* debugger has detached while we were doing stuff? */
-        LOGI("ignoring registerObject request in thread=%d",
+        ALOGI("ignoring registerObject request in thread=%d",
             dvmThreadSelf()->threadId);
         //dvmAbort();
         goto bail;
@@ -395,7 +395,7 @@ void dvmDbgActive()
     if (gDvm.debuggerActive)
         return;
 
-    LOGI("Debugger is active");
+    ALOGI("Debugger is active");
     dvmInitBreakpoints();
     gDvm.debuggerActive = true;
     dvmEnableAllSubMode(kSubModeDebuggerActive);
@@ -489,7 +489,7 @@ void dvmDbgExit(int status)
 {
     // TODO? invoke System.exit() to perform exit processing; ends up
     // in System.exitInternal(), which can call JNI exit hook
-    LOGI("GC lifetime allocation: %d bytes", gDvm.allocProf.allocCount);
+    ALOGI("GC lifetime allocation: %d bytes", gDvm.allocProf.allocCount);
     if (CALC_CACHE_STATS) {
         dvmDumpAtomicCacheStats(gDvm.instanceofCache);
         dvmDumpBootClassPath();

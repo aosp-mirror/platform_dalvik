@@ -486,7 +486,7 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
 
     /* multiple definitions? */
     if (IS_CLASS_FLAG_SET(resClass, CLASS_MULTIPLE_DEFS)) {
-        LOGI("DexOpt: not resolving ambiguous class '%s'",
+        ALOGI("DexOpt: not resolving ambiguous class '%s'",
             resClass->descriptor);
         if (pFailure != NULL)
             *pFailure = VERIFY_ERROR_NO_CLASS;
@@ -568,7 +568,7 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
     bool allowed = dvmCheckFieldAccess(referrer, (Field*)resField);
     untweakLoader(referrer, resField->clazz);
     if (!allowed) {
-        LOGI("DexOpt: access denied from %s to field %s.%s",
+        ALOGI("DexOpt: access denied from %s to field %s.%s",
             referrer->descriptor, resField->clazz->descriptor,
             resField->name);
         if (pFailure != NULL)
@@ -646,7 +646,7 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
     bool allowed = dvmCheckFieldAccess(referrer, (Field*)resField);
     untweakLoader(referrer, resField->clazz);
     if (!allowed) {
-        LOGI("DexOpt: access denied from %s to field %s.%s",
+        ALOGI("DexOpt: access denied from %s to field %s.%s",
             referrer->descriptor, resField->clazz->descriptor,
             resField->name);
         if (pFailure != NULL)
@@ -683,7 +683,7 @@ static void rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
 
     instField = dvmOptResolveInstField(clazz, fieldIdx, NULL);
     if (instField == NULL) {
-        LOGI("DexOpt: unable to optimize instance field ref "
+        ALOGI("DexOpt: unable to optimize instance field ref "
              "0x%04x at 0x%02x in %s.%s",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
             method->name);
@@ -724,7 +724,7 @@ static void rewriteStaticField0(Method* method, u2* insns, Opcode volatileOpc,
 
     staticField = dvmOptResolveStaticField(clazz, fieldIdx, NULL);
     if (staticField == NULL) {
-        LOGI("DexOpt: unable to optimize static field ref "
+        ALOGI("DexOpt: unable to optimize static field ref "
              "0x%04x at 0x%02x in %s.%s",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
             method->name);
@@ -862,9 +862,9 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
     bool allowed = dvmCheckMethodAccess(referrer, resMethod);
     untweakLoader(referrer, resMethod->clazz);
     if (!allowed) {
-        IF_LOGI() {
+        IF_ALOGI() {
             char* desc = dexProtoCopyMethodDescriptor(&resMethod->prototype);
-            LOGI("DexOpt: illegal method access (call %s.%s %s from %s)",
+            ALOGI("DexOpt: illegal method access (call %s.%s %s from %s)",
                 resMethod->clazz->descriptor, resMethod->name, desc,
                 referrer->descriptor);
             free(desc);
@@ -912,7 +912,7 @@ static void rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
     updateOpcode(method, insns, newOpc);
     dvmUpdateCodeUnit(method, insns+1, baseMethod->methodIndex);
 
-    //LOGI("DexOpt: rewrote call to %s.%s --> %s.%s",
+    //ALOGI("DexOpt: rewrote call to %s.%s --> %s.%s",
     //    method->clazz->descriptor, method->name,
     //    baseMethod->clazz->descriptor, baseMethod->name);
 
@@ -1002,7 +1002,7 @@ Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
         }
         if (!dvmIsInterfaceClass(resClass)) {
             /* whoops */
-            LOGI("Interface method not part of interface class");
+            ALOGI("Interface method not part of interface class");
             return NULL;
         }
 
@@ -1066,7 +1066,7 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
     while (inlineSubs->method != NULL) {
         /*
         if (extra) {
-            LOGI("comparing %p vs %p %s.%s %s",
+            ALOGI("comparing %p vs %p %s.%s %s",
                 inlineSubs->method, calledMethod,
                 inlineSubs->method->clazz->descriptor,
                 inlineSubs->method->name,
@@ -1080,7 +1080,7 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
             updateOpcode(method, insns, OP_EXECUTE_INLINE);
             dvmUpdateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
-            //LOGI("DexOpt: execute-inline %s.%s --> %s.%s",
+            //ALOGI("DexOpt: execute-inline %s.%s --> %s.%s",
             //    method->clazz->descriptor, method->name,
             //    calledMethod->clazz->descriptor, calledMethod->name);
             return true;
@@ -1120,7 +1120,7 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
             updateOpcode(method, insns, OP_EXECUTE_INLINE_RANGE);
             dvmUpdateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
-            //LOGI("DexOpt: execute-inline/range %s.%s --> %s.%s",
+            //ALOGI("DexOpt: execute-inline/range %s.%s --> %s.%s",
             //    method->clazz->descriptor, method->name,
             //    calledMethod->clazz->descriptor, calledMethod->name);
             return true;

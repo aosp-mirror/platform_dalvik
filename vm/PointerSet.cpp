@@ -267,8 +267,8 @@ void dvmPointerSetIntersect(PointerSet* pSet, const void** ptrArray, int count)
  */
 void dvmPointerSetDump(const PointerSet* pSet)
 {
-    LOGI("PointerSet %p", pSet);
+    ALOGI("PointerSet %p", pSet);
     int i;
     for (i = 0; i < pSet->count; i++)
-        LOGI(" %2d: %p", i, pSet->list[i]);
+        ALOGI(" %2d: %p", i, pSet->list[i]);
 }
