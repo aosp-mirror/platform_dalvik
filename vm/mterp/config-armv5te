@@ -44,7 +44,6 @@ import armv5te/entry.S
 # opcode list; argument to op-start is default directory
 op-start armv5te
     #op OP_FILL_ARRAY_DATA c
-    alt OP_DISPATCH_FF armv5te
 op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates

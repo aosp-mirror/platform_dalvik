@@ -23,6 +23,7 @@
 BEGIN {
     MAX_OPCODE = 65535;
     MAX_PACKED_OPCODE = 511;
+    MAX_PACKED_OPCODE = 255; # TODO: Not for long!
     initIndexTypes();
     initFlags();
     if (readBytecodes()) exit 1;
@@ -401,16 +402,7 @@ function createPackedTables(i, op) {
     # locals: i, op
     for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
         op = unpackOpcode(i);
-        if (i == 255) {
-            # Special case: This is the low-opcode slot for a would-be
-            # extended opcode dispatch implementation.
-            packedName[i]      = "dispatch-ff";
-            packedConstName[i] = "DISPATCH_FF";
-            packedFormat[i]    = "00x";
-            packedFlags[i]     = 0;
-            packedWidth[i]     = 0;
-            packedIndexType[i] = "unknown";
-        } else if (isUnused(op)) {
+        if (isUnused(op)) {
             packedName[i]      = unusedName(op);
             packedConstName[i] = unusedConstName(op);
             packedFormat[i]    = "00x";

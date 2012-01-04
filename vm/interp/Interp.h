@@ -31,8 +31,7 @@ INLINE void dvmExportPC(const u2* pc, const u4* fp)
 /*
  * Extract the Dalvik opcode
  */
-#define GET_OPCODE(_inst) (((_inst & 0xff) == OP_DISPATCH_FF) ? \
-                           (0x100 + ((_inst >> 8) & 0xff)) : (_inst & 0xff))
+#define GET_OPCODE(_inst) (_inst & 0xff)
 
 /*
  * Interpreter entry point.  Call here after setting up the interpreted

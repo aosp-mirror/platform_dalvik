@@ -28,8 +28,7 @@ represents four bits, read from high bits to low, with vertical bars
 in sequence from "<code>A</code>" are used to indicate fields within
 the format (which then get defined further by the syntax column). The term
 "<code>op</code>" is used to indicate the position of an eight-bit
-opcode within the format, and similarly "<code>exop</code>" is used
-to indicate an extended sixteen-bit opcode. A slashed zero
+opcode within the format. A slashed zero
 ("<code>&Oslash;</code>") is used to indicate that all bits must be
 zero in the indicated position.</p>
 
@@ -454,59 +453,6 @@ the correspondence.</p>
   <td>51l</td>
   <td><i><code>op</code></i> vAA, #+BBBBBBBBBBBBBBBB</td>
   <td>const-wide</td>
-</tr>
-<tr>
-  <td rowspan="2"><i>exop</i> BB|AA CCCC</td>
-  <td>33x</td>
-  <td><i><code>exop</code></i> vAA, vBB, vCCCC</td>
-  <td>&nbsp;</td>
-</tr>
-<tr>
-  <td>32s</td>
-  <td><i><code>exop</code></i> vAA, vBB, #+CCCC</td>
-  <td>&nbsp;</td>
-</tr>
-<tr>
-  <td><i>exop</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub> AAAA</td></td>
-  <td>40sc</td>
-  <td><i><code>exop</code></i> AAAA, kind@BBBBBBBB</td>
-  <td><i>suggested format for statically determined verification errors;
-    see <code>20bc</code>, above</i></td>
-</tr>
-<tr>
-  <td><i>exop</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub> AAAA
-  <td>41c</td>
-  <td><i><code>exop</code></i> vAAAA, field@BBBBBBBB<br/>
-    <i><code>exop</code></i> vAAAA, type@BBBBBBBB
-    <p><i>The unusual choice in lettering here reflects a desire to make
-    the letters match their use in related formats 21c and 31c.</i></p>
-  </td>
-  <td>&nbsp;</td>
-</tr>
-<tr>
-  <td><i>exop</i> CCCC<sub>lo</sub> CCCC<sub>hi</sub>
-    AAAA BBBB</td>
-  <td>52c</td>
-  <td><i><code>exop</code></i> vAAAA, vBBBB, field@CCCCCCCC<br/>
-    <i><code>exop</code></i> vAAAA, vBBBB, type@CCCCCCCC
-    <p><i>The unusual choice in lettering here reflects a desire to make
-    the letters match their use in related formats 22c and 22cs.</i></p>
-  </td>
-  <td>&nbsp;</td>
-</tr>
-<tr>
-  <td><i>exop</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub>
-    AAAA CCCC</td>
-  <td>5rc</td>
-  <td><i><code>exop</code></i> {vCCCC .. vNNNN}, meth@BBBBBBBB<br/>
-    <i><code>exop</code></i> {vCCCC .. vNNNN}, type@BBBBBBBB<br/>
-    <p><i>where <code>NNNN = CCCC+AAAA-1</code>, that is <code>A</code>
-    determines the count <code>0..65535</code>, and <code>C</code>
-    determines the first register</i></p>
-    <p><i>The unusual choice in lettering here reflects a desire to make
-    the letters match their use in related formats 3rc, 3rms, and 3rmi.</i></p>
-  </td>
-  <td>&nbsp;</td>
 </tr>
 </tbody>
 </table>

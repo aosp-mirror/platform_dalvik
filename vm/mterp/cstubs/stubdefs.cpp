@@ -101,9 +101,9 @@
         return;                                                             \
     } while(false)
 
-#define GOTO_invoke(_target, _methodCallRange, _jumboFormat)                \
+#define GOTO_invoke(_target, _methodCallRange)                              \
     do {                                                                    \
-        dvmMterp_##_target(self, _methodCallRange, _jumboFormat);           \
+        dvmMterp_##_target(self, _methodCallRange);                         \
         return;                                                             \
     } while(false)
 

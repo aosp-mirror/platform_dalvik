@@ -726,9 +726,6 @@ static char* indexString(DexFile* pDexFile,
         width = 4;
         break;
     case kFmt31c:
-    case kFmt40sc:
-    case kFmt41c:
-    case kFmt5rc:
         index = pDecInsn->vB;
         width = 8;
         break;
@@ -736,10 +733,6 @@ static char* indexString(DexFile* pDexFile,
     case kFmt22cs:
         index = pDecInsn->vC;
         width = 4;
-        break;
-    case kFmt52c:
-        index = pDecInsn->vC;
-        width = 8;
         break;
     default:
         index = 0;
@@ -939,11 +932,9 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
         break;
     case kFmt21c:        // op vAA, thing@BBBB
     case kFmt31c:        // op vAA, thing@BBBBBBBB
-    case kFmt41c:        // exop vAAAA, thing@BBBBBBBB
         printf(" v%d, %s", pDecInsn->vA, indexBuf);
         break;
     case kFmt23x:        // op vAA, vBB, vCC
-    case kFmt33x:        // exop vAA, vBB, vCCCC
         printf(" v%d, v%d, v%d", pDecInsn->vA, pDecInsn->vB, pDecInsn->vC);
         break;
     case kFmt22b:        // op vAA, vBB, #+CC
@@ -960,13 +951,11 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
         }
         break;
     case kFmt22s:        // op vA, vB, #+CCCC
-    case kFmt32s:        // exop vAA, vBB, #+CCCC
         printf(" v%d, v%d, #int %d // #%04x",
             pDecInsn->vA, pDecInsn->vB, (s4)pDecInsn->vC, (u2)pDecInsn->vC);
         break;
     case kFmt22c:        // op vA, vB, thing@CCCC
     case kFmt22cs:       // [opt] op vA, vB, field offset CCCC
-    case kFmt52c:        // exop vAAAA, vBBBB, thing@CCCCCCCC
         printf(" v%d, v%d, %s", pDecInsn->vA, pDecInsn->vB, indexBuf);
         break;
     case kFmt30t:
@@ -1008,7 +997,6 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
     case kFmt3rc:        // op {vCCCC .. v(CCCC+AA-1)}, thing@BBBB
     case kFmt3rms:       // [opt] invoke-virtual+super/range
     case kFmt3rmi:       // [opt] execute-inline/range
-    case kFmt5rc:        // exop {vCCCC .. v(CCCC+AAAA-1)}, meth@BBBBBBBB
         {
             /*
              * This doesn't match the "dx" output when some of the args are

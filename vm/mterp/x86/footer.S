@@ -210,30 +210,6 @@ common_selectTrace:
 
 
 /*
- * Common code for jumbo method invocation.
- *
- * On entry:
- *   eax = Method* methodToCall
- *   rINSTw trashed, must reload
- *   rIBASE trashed, must reload before resuming interpreter
- */
-
-common_invokeMethodJumbo:
-.LinvokeNewJumbo:
-
-   /*
-    * prepare to copy args to "outs" area of current frame
-    */
-    movzwl      6(rPC),rINST            # rINST<- BBBB
-    movzwl      8(rPC), %ecx            # %ecx<- CCCC
-    ADVANCE_PC 2                        # adjust pc to make return similar
-    SAVEAREA_FROM_FP %edx               # %edx<- &StackSaveArea
-    test        rINST, rINST
-    movl        rINST, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- BBBB
-    jz          .LinvokeArgsDone        # no args; jump to args done
-    jmp         .LinvokeRangeArgs       # handle args like invoke range
-
-/*
  * Common code for method invocation with range.
  *
  * On entry:

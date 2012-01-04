@@ -76,17 +76,14 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
           break;
         case OP_INVOKE_VIRTUAL:
         case OP_INVOKE_VIRTUAL_RANGE:
-        case OP_INVOKE_VIRTUAL_JUMBO:
         case OP_INVOKE_INTERFACE:
         case OP_INVOKE_INTERFACE_RANGE:
-        case OP_INVOKE_INTERFACE_JUMBO:
         case OP_INVOKE_VIRTUAL_QUICK:
         case OP_INVOKE_VIRTUAL_QUICK_RANGE:
             *isInvoke = true;
             break;
         case OP_INVOKE_SUPER:
-        case OP_INVOKE_SUPER_RANGE:
-        case OP_INVOKE_SUPER_JUMBO: {
+        case OP_INVOKE_SUPER_RANGE: {
             int mIndex = caller->clazz->pDvmDex->
                 pResMethods[insn->dalvikInsn.vB]->methodIndex;
             const Method *calleeMethod =
@@ -100,8 +97,7 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
             break;
         }
         case OP_INVOKE_STATIC:
-        case OP_INVOKE_STATIC_RANGE:
-        case OP_INVOKE_STATIC_JUMBO: {
+        case OP_INVOKE_STATIC_RANGE: {
             const Method *calleeMethod =
                 caller->clazz->pDvmDex->pResMethods[insn->dalvikInsn.vB];
 
@@ -125,8 +121,7 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
             break;
         }
         case OP_INVOKE_DIRECT:
-        case OP_INVOKE_DIRECT_RANGE:
-        case OP_INVOKE_DIRECT_JUMBO: {
+        case OP_INVOKE_DIRECT_RANGE: {
             const Method *calleeMethod =
                 caller->clazz->pDvmDex->pResMethods[insn->dalvikInsn.vB];
             if (calleeMethod && !dvmIsNativeMethod(calleeMethod)) {
@@ -428,9 +423,7 @@ bool dvmCompilerCanIncludeThisInstruction(const Method *method,
 {
     switch (insn->opcode) {
         case OP_NEW_INSTANCE:
-        case OP_NEW_INSTANCE_JUMBO:
-        case OP_CHECK_CAST:
-        case OP_CHECK_CAST_JUMBO: {
+        case OP_CHECK_CAST: {
             ClassObject *classPtr = (ClassObject *)(void*)
               (method->clazz->pDvmDex->pResClasses[insn->vB]);
 
@@ -441,33 +434,19 @@ bool dvmCompilerCanIncludeThisInstruction(const Method *method,
             return true;
         }
         case OP_SGET:
-        case OP_SGET_JUMBO:
         case OP_SGET_WIDE:
-        case OP_SGET_WIDE_JUMBO:
         case OP_SGET_OBJECT:
-        case OP_SGET_OBJECT_JUMBO:
         case OP_SGET_BOOLEAN:
-        case OP_SGET_BOOLEAN_JUMBO:
         case OP_SGET_BYTE:
-        case OP_SGET_BYTE_JUMBO:
         case OP_SGET_CHAR:
-        case OP_SGET_CHAR_JUMBO:
         case OP_SGET_SHORT:
-        case OP_SGET_SHORT_JUMBO:
         case OP_SPUT:
-        case OP_SPUT_JUMBO:
         case OP_SPUT_WIDE:
-        case OP_SPUT_WIDE_JUMBO:
         case OP_SPUT_OBJECT:
-        case OP_SPUT_OBJECT_JUMBO:
         case OP_SPUT_BOOLEAN:
-        case OP_SPUT_BOOLEAN_JUMBO:
         case OP_SPUT_BYTE:
-        case OP_SPUT_BYTE_JUMBO:
         case OP_SPUT_CHAR:
-        case OP_SPUT_CHAR_JUMBO:
-        case OP_SPUT_SHORT:
-        case OP_SPUT_SHORT_JUMBO: {
+        case OP_SPUT_SHORT: {
             void *fieldPtr = (void*)
               (method->clazz->pDvmDex->pResFields[insn->vB]);
 
@@ -477,8 +456,7 @@ bool dvmCompilerCanIncludeThisInstruction(const Method *method,
             return true;
         }
         case OP_INVOKE_SUPER:
-        case OP_INVOKE_SUPER_RANGE:
-        case OP_INVOKE_SUPER_JUMBO: {
+        case OP_INVOKE_SUPER_RANGE: {
             int mIndex = method->clazz->pDvmDex->
                 pResMethods[insn->vB]->methodIndex;
             const Method *calleeMethod = method->clazz->super->vtable[mIndex];
@@ -497,10 +475,8 @@ bool dvmCompilerCanIncludeThisInstruction(const Method *method,
         }
         case OP_INVOKE_STATIC:
         case OP_INVOKE_STATIC_RANGE:
-        case OP_INVOKE_STATIC_JUMBO:
         case OP_INVOKE_DIRECT:
-        case OP_INVOKE_DIRECT_RANGE:
-        case OP_INVOKE_DIRECT_JUMBO: {
+        case OP_INVOKE_DIRECT_RANGE: {
             const Method *calleeMethod =
                 method->clazz->pDvmDex->pResMethods[insn->vB];
             if (calleeMethod == NULL) {
@@ -508,8 +484,7 @@ bool dvmCompilerCanIncludeThisInstruction(const Method *method,
             }
             return true;
         }
-        case OP_CONST_CLASS:
-        case OP_CONST_CLASS_JUMBO: {
+        case OP_CONST_CLASS: {
             void *classPtr = (void*)
                 (method->clazz->pDvmDex->pResClasses[insn->vB]);
 

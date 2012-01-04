@@ -381,4 +381,4 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_IPUT_OBJECT_VOLATILE
 .long .L_OP_SGET_OBJECT_VOLATILE
 .long .L_OP_SPUT_OBJECT_VOLATILE
-.long .L_OP_DISPATCH_FF
+.long .L_OP_UNUSED_FF

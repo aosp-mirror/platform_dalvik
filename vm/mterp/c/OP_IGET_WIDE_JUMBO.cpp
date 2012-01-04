@@ -1,2 +1,0 @@
-HANDLE_IGET_X_JUMBO(OP_IGET_WIDE_JUMBO,     "-wide", Long, _WIDE)
-OP_END

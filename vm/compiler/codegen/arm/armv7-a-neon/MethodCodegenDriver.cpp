@@ -152,14 +152,14 @@ static bool handleMethodFmt12x(CompilationUnit *cUnit, MIR *mir)
     return handleFmt12x(cUnit, mir);
 }
 
-static bool handleMethodFmt20bc_Fmt40sc(CompilationUnit *cUnit, MIR *mir)
+static bool handleMethodFmt20bc(CompilationUnit *cUnit, MIR *mir)
 {
-    return handleFmt20bc_Fmt40sc(cUnit, mir);
+    return handleFmt20bc(cUnit, mir);
 }
 
-static bool handleMethodFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
+static bool handleMethodFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
 {
-    return handleFmt21c_Fmt31c_Fmt41c(cUnit, mir);
+    return handleFmt21c_Fmt31c(cUnit, mir);
 }
 
 static bool handleMethodFmt21h(CompilationUnit *cUnit, MIR *mir)
@@ -183,9 +183,9 @@ static bool handleMethodFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
     return handleFmt22b_Fmt22s(cUnit, mir);
 }
 
-static bool handleMethodFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
+static bool handleMethodFmt22c(CompilationUnit *cUnit, MIR *mir)
 {
-    return handleFmt22c_Fmt52c(cUnit, mir);
+    return handleFmt22c(cUnit, mir);
 }
 
 static bool handleMethodFmt22cs(CompilationUnit *cUnit, MIR *mir)
@@ -214,10 +214,10 @@ static bool handleMethodFmt31t(CompilationUnit *cUnit, MIR *mir)
     return handleFmt31t(cUnit, mir);
 }
 
-static bool handleMethodFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
+static bool handleMethodFmt35c_3rc(CompilationUnit *cUnit, MIR *mir,
                                        BasicBlock *bb, ArmLIR *labelList)
 {
-    return handleFmt35c_3rc_5rc(cUnit, mir, bb, labelList);
+    return handleFmt35c_3rc(cUnit, mir, bb, labelList);
 }
 
 static bool handleMethodFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
@@ -330,13 +330,11 @@ static bool methodBlockCodeGen(CompilationUnit *cUnit, BasicBlock *bb)
                 notHandled = handleMethodFmt12x(cUnit, mir);
                 break;
             case kFmt20bc:
-            case kFmt40sc:
-                notHandled = handleMethodFmt20bc_Fmt40sc(cUnit, mir);
+                notHandled = handleMethodFmt20bc(cUnit, mir);
                 break;
             case kFmt21c:
             case kFmt31c:
-            case kFmt41c:
-                notHandled = handleMethodFmt21c_Fmt31c_Fmt41c(cUnit, mir);
+                notHandled = handleMethodFmt21c_Fmt31c(cUnit, mir);
                 break;
             case kFmt21h:
                 notHandled = handleMethodFmt21h(cUnit, mir);
@@ -352,8 +350,7 @@ static bool methodBlockCodeGen(CompilationUnit *cUnit, BasicBlock *bb)
                 notHandled = handleMethodFmt22b_Fmt22s(cUnit, mir);
                 break;
             case kFmt22c:
-            case kFmt52c:
-                notHandled = handleMethodFmt22c_Fmt52c(cUnit, mir);
+                notHandled = handleMethodFmt22c(cUnit, mir);
                 break;
             case kFmt22cs:
                 notHandled = handleMethodFmt22cs(cUnit, mir);
@@ -373,9 +370,7 @@ static bool methodBlockCodeGen(CompilationUnit *cUnit, BasicBlock *bb)
                 break;
             case kFmt3rc:
             case kFmt35c:
-            case kFmt5rc:
-                notHandled = handleMethodFmt35c_3rc_5rc(cUnit, mir, bb,
-                                                        labelList);
+                notHandled = handleMethodFmt35c_3rc(cUnit, mir, bb, labelList);
                 break;
             case kFmt3rms:
             case kFmt35ms:

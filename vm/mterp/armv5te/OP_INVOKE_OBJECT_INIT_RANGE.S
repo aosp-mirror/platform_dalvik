@@ -40,9 +40,5 @@
      */
 .L${opcode}_debugger:
     ldr     r1, [rSELF, #offThread_mainHandlerTable]
-    .if $jumbo
-    mov     ip, #OP_INVOKE_DIRECT_JUMBO
-    .else
     mov     ip, #OP_INVOKE_DIRECT_RANGE
-    .endif
     GOTO_OPCODE_BASE(r1,ip)             @ execute it

@@ -40,14 +40,9 @@ struct InlineSub {
 static void optimizeMethod(Method* method, bool essentialOnly);
 static void rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
     Opcode volatileOpc);
-static void rewriteJumboInstField(Method* method, u2* insns,
-    Opcode volatileOpc);
 static void rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc);
-static void rewriteJumboStaticField(Method* method, u2* insns,
-    Opcode volatileOpc);
 static void rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc);
 static bool rewriteInvokeObjectInit(Method* method, u2* insns);
-static bool rewriteJumboInvokeObjectInit(Method* method, u2* insns);
 static bool rewriteExecuteInline(Method* method, u2* insns,
     MethodType methodType);
 static bool rewriteExecuteInlineRange(Method* method, u2* insns,
@@ -190,11 +185,11 @@ static void optimizeMethod(Method* method, bool essentialOnly)
 
         /*
          * essential substitutions:
-         *  {iget,iput,sget,sput}-wide[/jumbo] --> {op}-wide-volatile
-         *  invoke-direct[/jumbo][/range] --> invoke-object-init/range
+         *  {iget,iput,sget,sput}-wide --> {op}-wide-volatile
+         *  invoke-direct[/range] --> invoke-object-init/range
          *
          * essential-on-SMP substitutions:
-         *  {iget,iput,sget,sput}-*[/jumbo] --> {op}-volatile
+         *  {iget,iput,sget,sput}-* --> {op}-volatile
          *  return-void --> return-void-barrier
          *
          * non-essential substitutions:
@@ -246,41 +241,6 @@ rewrite_inst_field:
                 rewriteInstField(method, insns, quickOpc, volatileOpc);
             break;
 
-        case OP_IGET_JUMBO:
-        case OP_IGET_BOOLEAN_JUMBO:
-        case OP_IGET_BYTE_JUMBO:
-        case OP_IGET_CHAR_JUMBO:
-        case OP_IGET_SHORT_JUMBO:
-            if (forSmp)
-                volatileOpc = OP_IGET_VOLATILE_JUMBO;
-            goto rewrite_jumbo_inst_field;
-        case OP_IGET_WIDE_JUMBO:
-            volatileOpc = OP_IGET_WIDE_VOLATILE_JUMBO;
-            goto rewrite_jumbo_inst_field;
-        case OP_IGET_OBJECT_JUMBO:
-            if (forSmp)
-                volatileOpc = OP_IGET_OBJECT_VOLATILE_JUMBO;
-            goto rewrite_jumbo_inst_field;
-        case OP_IPUT_JUMBO:
-        case OP_IPUT_BOOLEAN_JUMBO:
-        case OP_IPUT_BYTE_JUMBO:
-        case OP_IPUT_CHAR_JUMBO:
-        case OP_IPUT_SHORT_JUMBO:
-            if (forSmp)
-                volatileOpc = OP_IPUT_VOLATILE_JUMBO;
-            goto rewrite_jumbo_inst_field;
-        case OP_IPUT_WIDE_JUMBO:
-            volatileOpc = OP_IPUT_WIDE_VOLATILE_JUMBO;
-            goto rewrite_jumbo_inst_field;
-        case OP_IPUT_OBJECT_JUMBO:
-            if (forSmp)
-                volatileOpc = OP_IPUT_OBJECT_VOLATILE_JUMBO;
-            /* fall through */
-rewrite_jumbo_inst_field:
-            if (volatileOpc != OP_NOP)
-                rewriteJumboInstField(method, insns, volatileOpc);
-            break;
-
         case OP_SGET:
         case OP_SGET_BOOLEAN:
         case OP_SGET_BYTE:
@@ -316,50 +276,12 @@ rewrite_static_field:
                 rewriteStaticField(method, insns, volatileOpc);
             break;
 
-        case OP_SGET_JUMBO:
-        case OP_SGET_BOOLEAN_JUMBO:
-        case OP_SGET_BYTE_JUMBO:
-        case OP_SGET_CHAR_JUMBO:
-        case OP_SGET_SHORT_JUMBO:
-            if (forSmp)
-                volatileOpc = OP_SGET_VOLATILE_JUMBO;
-            goto rewrite_jumbo_static_field;
-        case OP_SGET_WIDE_JUMBO:
-            volatileOpc = OP_SGET_WIDE_VOLATILE_JUMBO;
-            goto rewrite_jumbo_static_field;
-        case OP_SGET_OBJECT_JUMBO:
-            if (forSmp)
-                volatileOpc = OP_SGET_OBJECT_VOLATILE_JUMBO;
-            goto rewrite_jumbo_static_field;
-        case OP_SPUT_JUMBO:
-        case OP_SPUT_BOOLEAN_JUMBO:
-        case OP_SPUT_BYTE_JUMBO:
-        case OP_SPUT_CHAR_JUMBO:
-        case OP_SPUT_SHORT_JUMBO:
-            if (forSmp)
-                volatileOpc = OP_SPUT_VOLATILE_JUMBO;
-            goto rewrite_jumbo_static_field;
-        case OP_SPUT_WIDE_JUMBO:
-            volatileOpc = OP_SPUT_WIDE_VOLATILE_JUMBO;
-            goto rewrite_jumbo_static_field;
-        case OP_SPUT_OBJECT_JUMBO:
-            if (forSmp)
-                volatileOpc = OP_SPUT_OBJECT_VOLATILE_JUMBO;
-            /* fall through */
-rewrite_jumbo_static_field:
-            if (volatileOpc != OP_NOP)
-                rewriteJumboStaticField(method, insns, volatileOpc);
-            break;
-
         case OP_INVOKE_DIRECT:
         case OP_INVOKE_DIRECT_RANGE:
             if (!rewriteInvokeObjectInit(method, insns)) {
                 /* may want to try execute-inline, below */
                 matched = false;
             }
-            break;
-        case OP_INVOKE_DIRECT_JUMBO:
-            rewriteJumboInvokeObjectInit(method, insns);
             break;
         case OP_RETURN_VOID:
             if (needRetBar)
@@ -787,40 +709,7 @@ static void rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
 }
 
 /*
- * Rewrite a jumbo instance field access instruction if appropriate.  If
- * the target field is volatile, we replace the opcode with "volatileOpc".
- *
- * "method" is the referring method.
- */
-static void rewriteJumboInstField(Method* method, u2* insns, Opcode volatileOpc)
-{
-    ClassObject* clazz = method->clazz;
-    u4 fieldIdx = insns[1] | (u4) insns[2] << 16;
-    InstField* instField;
-
-    assert(volatileOpc != OP_NOP);
-
-    instField = dvmOptResolveInstField(clazz, fieldIdx, NULL);
-    if (instField == NULL) {
-        LOGI("DexOpt: unable to optimize instance field ref "
-             "0x%04x at 0x%02x in %s.%s",
-            fieldIdx, (int) (insns - method->insns), clazz->descriptor,
-            method->name);
-        return;
-    }
-
-    if (dvmIsVolatileField(instField)) {
-        updateOpcode(method, insns, volatileOpc);
-        ALOGV("DexOpt: rewrote jumbo ifield access %s.%s --> volatile",
-            instField->clazz->descriptor, instField->name);
-    } else {
-        ALOGV("DexOpt: no rewrite of jumbo ifield access %s.%s",
-            instField->clazz->descriptor, instField->name);
-    }
-}
-
-/*
- * Rewrite a static [jumbo] field access instruction if appropriate.  If
+ * Rewrite a static field access instruction if appropriate.  If
  * the target field is volatile, we replace the opcode with "volatileOpc".
  *
  * "method" is the referring method.
@@ -854,13 +743,6 @@ static void rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc)
     u2 fieldIdx = insns[1];
     rewriteStaticField0(method, insns, volatileOpc, fieldIdx);
 }
-static void rewriteJumboStaticField(Method* method, u2* insns,
-    Opcode volatileOpc)
-{
-    u4 fieldIdx = insns[1] | (u4) insns[2] << 16;
-    rewriteStaticField0(method, insns, volatileOpc, fieldIdx);
-}
-
 
 /*
  * Alternate version of dvmResolveMethod().
@@ -1084,36 +966,6 @@ static bool rewriteInvokeObjectInit(Method* method, u2* insns)
         }
 
         LOGVV("DexOpt: replaced Object.<init> in %s.%s",
-            method->clazz->descriptor, method->name);
-    }
-
-    return true;
-}
-
-/*
- * Rewrite invoke-direct/jumbo if the target is Object.<init>.
- */
-static bool rewriteJumboInvokeObjectInit(Method* method, u2* insns)
-{
-    ClassObject* clazz = method->clazz;
-    Method* calledMethod;
-    u4 methodIdx = insns[1] | (u4) insns[2] << 16;
-
-    calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT, NULL);
-    if (calledMethod == NULL) {
-        ALOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s",
-            methodIdx, (int) (insns - method->insns),
-            clazz->descriptor, method->name);
-        return false;
-    }
-
-    if (calledMethod->clazz == gDvm.classJavaLangObject &&
-        dvmCompareNameDescriptorAndMethod("<init>", "()V", calledMethod) == 0)
-    {
-        assert(insns[0] == ((u2) (OP_INVOKE_DIRECT_JUMBO << 8) | 0xff));
-        updateOpcode(method, insns, OP_INVOKE_OBJECT_INIT_JUMBO);
-
-        LOGVV("DexOpt: replaced jumbo Object.<init> in %s.%s",
             method->clazz->descriptor, method->name);
     }
 

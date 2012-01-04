@@ -74,8 +74,6 @@ op-start armv5te
     op OP_SUB_FLOAT arm-vfp
     op OP_SUB_FLOAT_2ADDR arm-vfp
 
-    alt OP_DISPATCH_FF armv5te
-
     # use trivial integer operation
     #op OP_NEG_DOUBLE armv5te
     #op OP_NEG_FLOAT armv5te

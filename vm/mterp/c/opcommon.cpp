@@ -1,12 +1,12 @@
 /* forward declarations of goto targets */
-GOTO_TARGET_DECL(filledNewArray, bool methodCallRange, bool jumboFormat);
-GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange, bool jumboFormat);
-GOTO_TARGET_DECL(invokeSuper, bool methodCallRange, bool jumboFormat);
-GOTO_TARGET_DECL(invokeInterface, bool methodCallRange, bool jumboFormat);
-GOTO_TARGET_DECL(invokeDirect, bool methodCallRange, bool jumboFormat);
-GOTO_TARGET_DECL(invokeStatic, bool methodCallRange, bool jumboFormat);
-GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange, bool jumboFormat);
-GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(filledNewArray, bool methodCallRange);
+GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange);
+GOTO_TARGET_DECL(invokeSuper, bool methodCallRange);
+GOTO_TARGET_DECL(invokeInterface, bool methodCallRange);
+GOTO_TARGET_DECL(invokeDirect, bool methodCallRange);
+GOTO_TARGET_DECL(invokeStatic, bool methodCallRange);
+GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange);
+GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange);
 GOTO_TARGET_DECL(invokeMethod, bool methodCallRange, const Method* methodToCall,
     u2 count, u2 regs);
 GOTO_TARGET_DECL(returnFromMethod);
@@ -530,33 +530,6 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
-#define HANDLE_IGET_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
-    HANDLE_OPCODE(_opcode /*vBBBB, vCCCC, class@AAAAAAAA*/)                 \
-    {                                                                       \
-        InstField* ifield;                                                  \
-        Object* obj;                                                        \
-        EXPORT_PC();                                                        \
-        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
-        vdst = FETCH(3);                                                    \
-        vsrc1 = FETCH(4);                      /* object ptr */             \
-        ILOGV("|iget%s/jumbo v%d,v%d,field@0x%08x",                         \
-            (_opname), vdst, vsrc1, ref);                                   \
-        obj = (Object*) GET_REGISTER(vsrc1);                                \
-        if (!checkForNull(obj))                                             \
-            GOTO_exceptionThrown();                                         \
-        ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
-        if (ifield == NULL) {                                               \
-            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
-            if (ifield == NULL)                                             \
-                GOTO_exceptionThrown();                                     \
-        }                                                                   \
-        SET_REGISTER##_regsize(vdst,                                        \
-            dvmGetField##_ftype(obj, ifield->byteOffset));                  \
-        ILOGV("+ IGET '%s'=0x%08llx", ifield->field.name,                   \
-            (u8) GET_REGISTER##_regsize(vdst));                             \
-    }                                                                       \
-    FINISH(5);
-
 #define HANDLE_IGET_X_QUICK(_opcode, _opname, _ftype, _regsize)             \
     HANDLE_OPCODE(_opcode /*vA, vB, field@CCCC*/)                           \
     {                                                                       \
@@ -600,33 +573,6 @@ GOTO_TARGET_DECL(exceptionThrown);
             (u8) GET_REGISTER##_regsize(vdst));                             \
     }                                                                       \
     FINISH(2);
-
-#define HANDLE_IPUT_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
-    HANDLE_OPCODE(_opcode /*vBBBB, vCCCC, class@AAAAAAAA*/)                 \
-    {                                                                       \
-        InstField* ifield;                                                  \
-        Object* obj;                                                        \
-        EXPORT_PC();                                                        \
-        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
-        vdst = FETCH(3);                                                    \
-        vsrc1 = FETCH(4);                      /* object ptr */             \
-        ILOGV("|iput%s/jumbo v%d,v%d,field@0x%08x",                         \
-            (_opname), vdst, vsrc1, ref);                                   \
-        obj = (Object*) GET_REGISTER(vsrc1);                                \
-        if (!checkForNull(obj))                                             \
-            GOTO_exceptionThrown();                                         \
-        ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
-        if (ifield == NULL) {                                               \
-            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
-            if (ifield == NULL)                                             \
-                GOTO_exceptionThrown();                                     \
-        }                                                                   \
-        dvmSetField##_ftype(obj, ifield->byteOffset,                        \
-            GET_REGISTER##_regsize(vdst));                                  \
-        ILOGV("+ IPUT '%s'=0x%08llx", ifield->field.name,                   \
-            (u8) GET_REGISTER##_regsize(vdst));                             \
-    }                                                                       \
-    FINISH(5);
 
 #define HANDLE_IPUT_X_QUICK(_opcode, _opname, _ftype, _regsize)             \
     HANDLE_OPCODE(_opcode /*vA, vB, field@CCCC*/)                           \
@@ -677,29 +623,6 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
-#define HANDLE_SGET_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
-    HANDLE_OPCODE(_opcode /*vBBBB, class@AAAAAAAA*/)                        \
-    {                                                                       \
-        StaticField* sfield;                                                \
-        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
-        vdst = FETCH(3);                                                    \
-        ILOGV("|sget%s/jumbo v%d,sfield@0x%08x", (_opname), vdst, ref);     \
-        sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
-        if (sfield == NULL) {                                               \
-            EXPORT_PC();                                                    \
-            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
-            if (sfield == NULL)                                             \
-                GOTO_exceptionThrown();                                     \
-            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
-            }                                                               \
-        }                                                                   \
-        SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
-        ILOGV("+ SGET '%s'=0x%08llx",                                       \
-            sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
-    }                                                                       \
-    FINISH(4);
-
 #define HANDLE_SPUT_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -722,26 +645,3 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
     }                                                                       \
     FINISH(2);
-
-#define HANDLE_SPUT_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
-    HANDLE_OPCODE(_opcode /*vBBBB, class@AAAAAAAA*/)                        \
-    {                                                                       \
-        StaticField* sfield;                                                \
-        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
-        vdst = FETCH(3);                                                    \
-        ILOGV("|sput%s/jumbo v%d,sfield@0x%08x", (_opname), vdst, ref);     \
-        sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
-        if (sfield == NULL) {                                               \
-            EXPORT_PC();                                                    \
-            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
-            if (sfield == NULL)                                             \
-                GOTO_exceptionThrown();                                     \
-            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));               \
-            }                                                               \
-        }                                                                   \
-        dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
-        ILOGV("+ SPUT '%s'=0x%08llx",                                       \
-            sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
-    }                                                                       \
-    FINISH(4);
