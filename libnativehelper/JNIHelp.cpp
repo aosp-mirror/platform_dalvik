@@ -213,7 +213,7 @@ extern "C" int jniThrowException(C_JNIEnv* env, const char* className, const cha
 
         if (exception.get() != NULL) {
             char* text = getExceptionSummary(env, exception.get());
-            LOGW("Discarding pending exception (%s) to throw %s", text, className);
+            ALOGW("Discarding pending exception (%s) to throw %s", text, className);
             free(text);
         }
     }

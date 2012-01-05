@@ -176,7 +176,7 @@ static void checkStackSum(Thread* self) {
                 (strcmp(meth->clazz->descriptor, "Ljava/lang/Runtime;") == 0)) {
             ALOGD("JNI: bad stack CRC (0x%08x) -- okay during JNI_OnLoad", stackCrc);
         } else {
-            LOGW("JNI: bad stack CRC (%08x vs %08x)", crc, stackCrc);
+            ALOGW("JNI: bad stack CRC (%08x vs %08x)", crc, stackCrc);
             dvmAbort();
         }
     }
@@ -354,7 +354,7 @@ Object* dvmDecodeIndirectRef(Thread* self, jobject jobj) {
             // Assume an invalid local reference is actually a direct pointer.
             return reinterpret_cast<Object*>(jobj);
         }
-        LOGW("Invalid indirect reference %p in decodeIndirectRef", jobj);
+        ALOGW("Invalid indirect reference %p in decodeIndirectRef", jobj);
         dvmAbort();
         return kInvalidIndirectRefObject;
     }
@@ -424,7 +424,7 @@ static void deleteLocalReference(Thread* self, jobject jobj) {
          * complain about it so the user will notice that things aren't
          * going quite the way they expect.
          */
-        LOGW("JNI WARNING: DeleteLocalRef(%p) failed to find entry", jobj);
+        ALOGW("JNI WARNING: DeleteLocalRef(%p) failed to find entry", jobj);
     }
 }
 
@@ -505,7 +505,7 @@ static jobject addGlobalReference(Object* obj) {
             /* watch for "excessive" use; not generally appropriate */
             if (count >= gDvm.jniGrefLimit) {
                 if (gDvmJni.warnOnly) {
-                    LOGW("Excessive JNI global references (%d)", count);
+                    ALOGW("Excessive JNI global references (%d)", count);
                 } else {
                     gDvm.jniGlobalRefTable.dump("JNI global");
                     LOGE("Excessive JNI global references (%d)", count);
@@ -541,7 +541,7 @@ static void deleteWeakGlobalReference(jobject jobj) {
     ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
     if (!table->remove(IRT_FIRST_SEGMENT, jobj)) {
-        LOGW("JNI: DeleteWeakGlobalRef(%p) failed to find entry", jobj);
+        ALOGW("JNI: DeleteWeakGlobalRef(%p) failed to find entry", jobj);
     }
 }
 
@@ -559,7 +559,7 @@ static void deleteGlobalReference(jobject jobj) {
 
     ScopedPthreadMutexLock lock(&gDvm.jniGlobalRefLock);
     if (!gDvm.jniGlobalRefTable.remove(IRT_FIRST_SEGMENT, jobj)) {
-        LOGW("JNI: DeleteGlobalRef(%p) failed to find entry", jobj);
+        ALOGW("JNI: DeleteGlobalRef(%p) failed to find entry", jobj);
         return;
     }
 
@@ -612,7 +612,7 @@ static void pinPrimitiveArray(ArrayObject* arrayObj) {
         }
 
         if (count > kPinComplainThreshold) {
-            LOGW("JNI: pin count on array %p (%s) is now %d",
+            ALOGW("JNI: pin count on array %p (%s) is now %d",
                 arrayObj, arrayObj->clazz->descriptor, count);
             /* keep going */
         }
@@ -632,7 +632,7 @@ static void unpinPrimitiveArray(ArrayObject* arrayObj) {
     if (!dvmRemoveFromReferenceTable(&gDvm.jniPinRefTable,
             gDvm.jniPinRefTable.table, (Object*) arrayObj))
     {
-        LOGW("JNI: unpinPrimitiveArray(%p) failed to find entry (valid=%d)",
+        ALOGW("JNI: unpinPrimitiveArray(%p) failed to find entry (valid=%d)",
             arrayObj, dvmIsHeapAddress((Object*) arrayObj));
         return;
     }
@@ -730,7 +730,7 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     }
 
     if (!dvmIsNativeMethod(method)) {
-        LOGW("Unable to register: not native: %s.%s:%s", clazz->descriptor, methodName, signature);
+        ALOGW("Unable to register: not native: %s.%s:%s", clazz->descriptor, methodName, signature);
         return false;
     }
 
@@ -998,7 +998,7 @@ void dvmReleaseJniMonitors(Thread* self) {
     Object** ptr = pRefTable->nextEntry;
     while (--ptr >= top) {
         if (!dvmUnlockObject(self, *ptr)) {
-            LOGW("Unable to unlock monitor %p at thread detach", *ptr);
+            ALOGW("Unable to unlock monitor %p at thread detach", *ptr);
         } else {
             LOGVV("--- detach-releasing monitor %p", *ptr);
         }
@@ -1200,7 +1200,7 @@ static jclass DefineClass(JNIEnv* env, const char *name, jobject loader,
     UNUSED_PARAMETER(bufLen);
 
     ScopedJniThreadState ts(env);
-    LOGW("JNI DefineClass is not supported");
+    ALOGW("JNI DefineClass is not supported");
     return NULL;
 }
 
@@ -1368,7 +1368,7 @@ static jthrowable ExceptionOccurred(JNIEnv* env) {
          * there was no exception, even though it's pretty much raining
          * exceptions in here.
          */
-        LOGW("JNI WARNING: addLocal/exception combo");
+        ALOGW("JNI WARNING: addLocal/exception combo");
     }
     return localException;
 }
@@ -1432,7 +1432,7 @@ static jobject PopLocalFrame(JNIEnv* env, jobject jresult) {
     ScopedJniThreadState ts(env);
     Object* result = dvmDecodeIndirectRef(ts.self(), jresult);
     if (!dvmPopLocalFrame(ts.self())) {
-        LOGW("JNI WARNING: too many PopLocalFrame calls");
+        ALOGW("JNI WARNING: too many PopLocalFrame calls");
         dvmClearException(ts.self());
         dvmThrowRuntimeException("too many PopLocalFrame calls");
     }
@@ -3497,7 +3497,7 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
     if (!status.empty()) {
         free(pEnv);
         free(pVM);
-        LOGW("CreateJavaVM failed: %s", status.c_str());
+        ALOGW("CreateJavaVM failed: %s", status.c_str());
         return JNI_ERR;
     }
 

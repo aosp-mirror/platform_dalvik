@@ -414,7 +414,7 @@ static bool establishConnection(JdwpState* state)
     int cc = gethostbyname_r(state->params.host, &he, auxBuf, sizeof(auxBuf),
             &pEntry, &h_errno);
     if (cc != 0) {
-        LOGW("gethostbyname_r('%s') failed: %s",
+        ALOGW("gethostbyname_r('%s') failed: %s",
             state->params.host, strerror(errno));
         return false;
     }
@@ -423,7 +423,7 @@ static bool establishConnection(JdwpState* state)
     h_errno = 0;
     pEntry = gethostbyname(state->params.host);
     if (pEntry == NULL) {
-        LOGW("gethostbyname('%s') failed: %s",
+        ALOGW("gethostbyname('%s') failed: %s",
             state->params.host, strerror(h_errno));
         return false;
     }
@@ -626,7 +626,7 @@ static bool handlePacket(JdwpState* state)
                 return false;
             }
         } else {
-            LOGW("No reply created for set=%d cmd=%d", cmdSet, cmd);
+            ALOGW("No reply created for set=%d cmd=%d", cmdSet, cmd);
         }
         expandBufFree(pReply);
     } else {

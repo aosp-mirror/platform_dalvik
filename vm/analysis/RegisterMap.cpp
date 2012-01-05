@@ -609,7 +609,7 @@ static bool writeMapForMethod(const Method* meth, u1** pPtr)
 {
     if (meth->registerMap == NULL) {
         if (!dvmIsAbstractMethod(meth) && !dvmIsNativeMethod(meth)) {
-            LOGW("Warning: no map available for %s.%s",
+            ALOGW("Warning: no map available for %s.%s",
                 meth->clazz->descriptor, meth->name);
             /* weird, but keep going */
         }

@@ -114,7 +114,7 @@ static inline bool checkPtrRange(const CheckState* state,
     const void* fileEnd = state->fileEnd;
     if ((start < fileStart) || (start > fileEnd)
             || (end < start) || (end > fileEnd)) {
-        LOGW("Bad offset range for %s: %#x..%#x", label,
+        ALOGW("Bad offset range for %s: %#x..%#x", label,
                 fileOffset(state, start), fileOffset(state, end));
         return false;
     }
@@ -187,7 +187,7 @@ static inline bool checkPtrRange(const CheckState* state,
  */
 #define CHECK_INDEX(_field, _limit) {                                       \
         if ((_field) >= (_limit)) {                                         \
-            LOGW("Bad index: %s(%u) > %s(%u)",                              \
+            ALOGW("Bad index: %s(%u) > %s(%u)",                              \
                 #_field, (u4)(_field), #_limit, (u4)(_limit));              \
             return 0;                                                       \
         }                                                                   \
@@ -206,7 +206,7 @@ static inline bool checkPtrRange(const CheckState* state,
  */
 #define CHECK_INDEX_OR_NOINDEX(_field, _limit) {                            \
         if ((_field) != kDexNoIndex && (_field) >= (_limit)) {              \
-            LOGW("Bad index: %s(%u) > %s(%u)",                              \
+            ALOGW("Bad index: %s(%u) > %s(%u)",                              \
                 #_field, (u4)(_field), #_limit, (u4)(_limit));              \
             return 0;                                                       \
         }                                                                   \
@@ -2839,7 +2839,7 @@ int dexSwapAndVerify(u1* addr, int len)
             LOGE("ERROR: Bad length: expected %d, got %d", expectedLen, len);
             okay = false;
         } else if (len != expectedLen) {
-            LOGW("WARNING: Odd length: expected %d, got %d", expectedLen,
+            ALOGW("WARNING: Odd length: expected %d, got %d", expectedLen,
                     len);
             // keep going
         }
@@ -2893,7 +2893,7 @@ int dexSwapAndVerify(u1* addr, int len)
                     pHeader->headerSize, (int) sizeof(DexHeader));
             okay = false;
         } else if (pHeader->headerSize > sizeof(DexHeader)) {
-            LOGW("WARNING: Large header size %d, struct %d",
+            ALOGW("WARNING: Large header size %d, struct %d",
                     pHeader->headerSize, (int) sizeof(DexHeader));
             // keep going?
         }

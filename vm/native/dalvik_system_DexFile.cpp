@@ -192,7 +192,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
      * if the caller specifies their own output file.
      */
     if (dvmClassPathContains(gDvm.bootClassPath, sourceName)) {
-        LOGW("Refusing to reopen boot DEX '%s'", sourceName);
+        ALOGW("Refusing to reopen boot DEX '%s'", sourceName);
         dvmThrowIOException(
             "Re-opening BOOTCLASSPATH DEX files is not allowed");
         free(sourceName);
@@ -318,7 +318,7 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
         u4 hash = (u4) pDexOrJar;
         dvmHashTableLock(gDvm.userDexFiles);
         if (!dvmHashTableRemove(gDvm.userDexFiles, hash, pDexOrJar)) {
-            LOGW("WARNING: could not remove '%s' from DEX hash table",
+            ALOGW("WARNING: could not remove '%s' from DEX hash table",
                 pDexOrJar->fileName);
         }
         dvmHashTableUnlock(gDvm.userDexFiles);

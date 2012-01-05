@@ -503,7 +503,7 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     length = dstArray->length;
     for (count = 0; count < length; count++) {
         if (!dvmInstanceof(src[count]->clazz, dstElemClass)) {
-            LOGW("dvmCopyObjectArray: can't store %s in %s",
+            ALOGW("dvmCopyObjectArray: can't store %s in %s",
                 src[count]->clazz->descriptor, dstElemClass->descriptor);
             return false;
         }
@@ -539,7 +539,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
          * necessary for correctness.
          */
         if (!dvmUnboxPrimitive(*src, dstElemClass, &result)) {
-            LOGW("dvmCopyObjectArray: can't store %s in %s",
+            ALOGW("dvmCopyObjectArray: can't store %s in %s",
                 (*src)->clazz->descriptor, dstElemClass->descriptor);
             return false;
         }

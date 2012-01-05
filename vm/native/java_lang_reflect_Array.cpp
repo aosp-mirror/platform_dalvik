@@ -120,7 +120,7 @@ static void Dalvik_java_lang_reflect_Array_createMultiArray(const u4* args,
      */
     arrayClass = dvmFindArrayClass(acDescriptor, elementClass->classLoader);
     if (arrayClass == NULL) {
-        LOGW("Unable to find or generate array class '%s'", acDescriptor);
+        ALOGW("Unable to find or generate array class '%s'", acDescriptor);
         assert(dvmCheckException(dvmThreadSelf()));
         free(acDescriptor);
         RETURN_VOID();

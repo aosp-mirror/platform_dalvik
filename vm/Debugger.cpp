@@ -587,7 +587,7 @@ void dvmDbgGetClassList(u4* pNumClasses, RefTypeId** pClassRefBuf)
         (RefTypeId*)malloc(sizeof(RefTypeId) * *pNumClasses);
 
     if (dvmHashForeach(gDvm.loadedClasses, copyRefType, &pRefType) != 0) {
-        LOGW("Warning: problem getting class list");
+        ALOGW("Warning: problem getting class list");
         /* not really expecting this to happen */
     } else {
         assert(pRefType - *pClassRefBuf == (int) *pNumClasses);
@@ -996,7 +996,7 @@ bool dvmDbgOutputArray(ObjectId arrayId, int firstIndex, int count,
     assert(dvmIsArray(arrayObj));
 
     if (firstIndex + count > (int)arrayObj->length) {
-        LOGW("Request for index=%d + count=%d excceds length=%d",
+        ALOGW("Request for index=%d + count=%d excceds length=%d",
             firstIndex, count, arrayObj->length);
         return false;
     }
@@ -1047,7 +1047,7 @@ bool dvmDbgSetArrayElements(ObjectId arrayId, int firstIndex, int count,
     assert(dvmIsArray(arrayObj));
 
     if (firstIndex + count > (int)arrayObj->length) {
-        LOGW("Attempt to set index=%d + count=%d excceds length=%d",
+        ALOGW("Attempt to set index=%d + count=%d excceds length=%d",
             firstIndex, count, arrayObj->length);
         return false;
     }
@@ -2159,7 +2159,7 @@ void dvmDbgSuspendThread(ObjectId threadId)
     thread = threadObjToThread(threadObj);
     if (thread == NULL) {
         /* can happen if our ThreadDeath notify crosses in the mail */
-        LOGW("WARNING: threadid=%llx obj=%p no match", threadId, threadObj);
+        ALOGW("WARNING: threadid=%llx obj=%p no match", threadId, threadObj);
     } else {
         dvmSuspendThread(thread);
     }
@@ -2179,7 +2179,7 @@ void dvmDbgResumeThread(ObjectId threadId)
 
     thread = threadObjToThread(threadObj);
     if (thread == NULL) {
-        LOGW("WARNING: threadid=%llx obj=%p no match", threadId, threadObj);
+        ALOGW("WARNING: threadid=%llx obj=%p no match", threadId, threadObj);
     } else {
         dvmResumeThread(thread);
     }
@@ -2226,7 +2226,7 @@ static Object* getThisObject(const u4* framePtr)
         thisObj = (Object*) framePtr[argOffset];
 
     if (thisObj != NULL && !dvmIsHeapAddress(thisObj)) {
-        LOGW("Debugger: invalid 'this' pointer %p in %s.%s; returning NULL",
+        ALOGW("Debugger: invalid 'this' pointer %p in %s.%s; returning NULL",
             framePtr, method->clazz->descriptor, method->name);
         thisObj = NULL;
     }
@@ -2299,7 +2299,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
             /* convert to "ObjectId" */
             objVal = (Object*)framePtr[slot];
             if (objVal != NULL && !dvmIsHeapAddress(objVal)) {
-                LOGW("JDWP: slot %d expected to hold array, %p invalid",
+                ALOGW("JDWP: slot %d expected to hold array, %p invalid",
                     slot, objVal);
                 dvmAbort();         // DEBUG: make it obvious
                 objVal = NULL;
@@ -2315,7 +2315,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
             objVal = (Object*)framePtr[slot];
 
             if (objVal != NULL && !dvmIsHeapAddress(objVal)) {
-                LOGW("JDWP: slot %d expected to hold object, %p invalid",
+                ALOGW("JDWP: slot %d expected to hold object, %p invalid",
                     slot, objVal);
                 dvmAbort();         // DEBUG: make it obvious
                 objVal = NULL;
@@ -2651,7 +2651,7 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
      * be stuck waiting on a suspended thread.
      */
     if (targetThread->suspendCount > 1) {
-        LOGW("threadid=%d: suspend count on threadid=%d is %d, too deep "
+        ALOGW("threadid=%d: suspend count on threadid=%d is %d, too deep "
              "for method exec",
             dvmThreadSelf()->threadId, targetThread->threadId,
             targetThread->suspendCount);

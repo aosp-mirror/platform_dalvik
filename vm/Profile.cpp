@@ -619,7 +619,7 @@ void dvmMethodTraceStop()
                         | (scanPtr[5] << 24);
             if (METHOD_ID(methodVal) == fillVal) {
                 u1* scanBase = state->buf + TRACE_HEADER_LEN;
-                LOGW("Found unfilled record at %d (of %d)",
+                ALOGW("Found unfilled record at %d (of %d)",
                     (scanPtr - scanBase) / recordSize,
                     (finalCurOffset - TRACE_HEADER_LEN) / recordSize);
                 finalCurOffset = scanPtr - state->buf;
@@ -634,7 +634,7 @@ void dvmMethodTraceStop()
         state->overflow ? " (NOTE: overflowed buffer)" : "",
         (finalCurOffset - TRACE_HEADER_LEN) / recordSize);
     if (gDvm.debuggerActive) {
-        LOGW("WARNING: a debugger is active; method-tracing results "
+        ALOGW("WARNING: a debugger is active; method-tracing results "
              "will be skewed");
     }
 

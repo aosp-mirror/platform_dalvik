@@ -321,7 +321,7 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
                 method->clazz->descriptor, method->name, instrOffset);
             dvmAbort();
         } else {
-            LOGW("Breakpoint was already restored? (%s.%s +%#x)",
+            ALOGW("Breakpoint was already restored? (%s.%s +%#x)",
                 method->clazz->descriptor, method->name, instrOffset);
         }
     } else {
@@ -396,7 +396,7 @@ void dvmInitBreakpoints()
     BreakpointSet* pSet = gDvm.breakpointSet;
     dvmBreakpointSetLock(pSet);
     if (dvmBreakpointSetCount(pSet) != 0) {
-        LOGW("WARNING: %d leftover breakpoints", dvmBreakpointSetCount(pSet));
+        ALOGW("WARNING: %d leftover breakpoints", dvmBreakpointSetCount(pSet));
         /* generally not good, but we can keep going */
     }
     dvmBreakpointSetUnlock(pSet);
@@ -505,7 +505,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
     StepControl* pCtrl = &gDvm.stepControl;
 
     if (pCtrl->active && thread != pCtrl->thread) {
-        LOGW("WARNING: single-step active for %p; adding %p",
+        ALOGW("WARNING: single-step active for %p; adding %p",
             pCtrl->thread, thread);
 
         /*
@@ -552,7 +552,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
         prevFp = fp;
     }
     if (fp == NULL) {
-        LOGW("Unexpected: step req in native-only threadid=%d",
+        ALOGW("Unexpected: step req in native-only threadid=%d",
             thread->threadId);
         return false;
     }
@@ -1348,7 +1348,7 @@ static std::string fieldNameFromIndex(const Method* method, int ref,
     VerifyErrorRefType refType, int flags)
 {
     if (refType != VERIFY_ERROR_REF_FIELD) {
-        LOGW("Expected ref type %d, got %d", VERIFY_ERROR_REF_FIELD, refType);
+        ALOGW("Expected ref type %d, got %d", VERIFY_ERROR_REF_FIELD, refType);
         return NULL;    /* no message */
     }
 
@@ -1373,7 +1373,7 @@ static std::string methodNameFromIndex(const Method* method, int ref,
     VerifyErrorRefType refType, int flags)
 {
     if (refType != VERIFY_ERROR_REF_METHOD) {
-        LOGW("Expected ref type %d, got %d", VERIFY_ERROR_REF_METHOD,refType);
+        ALOGW("Expected ref type %d, got %d", VERIFY_ERROR_REF_METHOD,refType);
         return NULL;    /* no message */
     }
 
@@ -1715,7 +1715,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
             strcmp(method->name, mn) == 0 &&
             strcmp(method->shorty, sg) == 0)
         {
-            LOGW("Reached %s.%s, enabling verbose mode",
+            ALOGW("Reached %s.%s, enabling verbose mode",
                 method->clazz->descriptor, method->name);
             android_setMinPriority(LOG_TAG"i", ANDROID_LOG_VERBOSE);
             dumpRegs(method, fp, true);

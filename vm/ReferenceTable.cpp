@@ -64,7 +64,7 @@ bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj)
     if (pRef->nextEntry == pRef->table + pRef->allocEntries) {
         /* reached end of allocated space; did we hit buffer max? */
         if (pRef->nextEntry == pRef->table + pRef->maxEntries) {
-            LOGW("ReferenceTable overflow (max=%d)", pRef->maxEntries);
+            ALOGW("ReferenceTable overflow (max=%d)", pRef->maxEntries);
             return false;
         }
 
@@ -216,11 +216,11 @@ static int compareObject(const void* vobj1, const void* vobj2)
 static void logSummaryLine(const Object* obj, size_t elems, int identical, int equiv)
 {
     if (obj == NULL) {
-        LOGW("    NULL reference (count=%d)", equiv);
+        ALOGW("    NULL reference (count=%d)", equiv);
         return;
     }
     if (obj == kClearedJniWeakGlobal) {
-        LOGW("    cleared jweak (count=%d)", equiv);
+        ALOGW("    cleared jweak (count=%d)", equiv);
         return;
     }
 
@@ -239,7 +239,7 @@ static void logSummaryLine(const Object* obj, size_t elems, int identical, int e
     if (identical + equiv != 0) {
         StringAppendF(&msg, " (%d unique instances)", equiv + 1);
     }
-    LOGW("    %s", msg.c_str());
+    ALOGW("    %s", msg.c_str());
 }
 
 /*
@@ -251,10 +251,10 @@ static void logSummaryLine(const Object* obj, size_t elems, int identical, int e
 void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     const char* descr)
 {
-    LOGW("%s reference table (%p) dump:", descr, refs);
+    ALOGW("%s reference table (%p) dump:", descr, refs);
 
     if (count == 0) {
-        LOGW("  (empty)");
+        ALOGW("  (empty)");
         return;
     }
 
@@ -264,20 +264,20 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     if (first < 0) {
         first = 0;
     }
-    LOGW("  Last %d entries (of %d):", (count - first), count);
+    ALOGW("  Last %d entries (of %d):", (count - first), count);
     for (int idx = count - 1; idx >= first; --idx) {
         const Object* ref = refs[idx];
         if (ref == NULL) {
             continue;
         }
         if (ref == kClearedJniWeakGlobal) {
-            LOGW("    %5d: cleared jweak", idx);
+            ALOGW("    %5d: cleared jweak", idx);
             continue;
         }
         if (ref->clazz == NULL) {
             // should only be possible right after a plain dvmMalloc().
             size_t size = dvmObjectSizeInHeap(ref);
-            LOGW("    %5d: %p (raw) (%zd bytes)", idx, ref, size);
+            ALOGW("    %5d: %p (raw) (%zd bytes)", idx, ref, size);
             continue;
         }
 
@@ -304,7 +304,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
             }
             free(s);
         }
-        LOGW("    %5d: %p %s%s", idx, ref, className.c_str(), extras.c_str());
+        ALOGW("    %5d: %p %s%s", idx, ref, className.c_str(), extras.c_str());
     }
 
     // Make a copy of the table, and sort it.
@@ -329,7 +329,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     }
 
     // Dump a summary of the whole table.
-    LOGW("  Summary:");
+    ALOGW("  Summary:");
     size_t equiv, identical;
     equiv = identical = 0;
     size_t idx;

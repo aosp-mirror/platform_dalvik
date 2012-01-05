@@ -94,13 +94,13 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
      * Open the zip archive, find the DEX entry.
      */
     if (dexZipPrepArchive(zipFd, debugFileName, &zippy) != 0) {
-        LOGW("DexOptZ: unable to open zip archive '%s'", debugFileName);
+        ALOGW("DexOptZ: unable to open zip archive '%s'", debugFileName);
         goto bail;
     }
 
     zipEntry = dexZipFindEntry(&zippy, kClassesDex);
     if (zipEntry == NULL) {
-        LOGW("DexOptZ: zip archive '%s' does not include %s",
+        ALOGW("DexOptZ: zip archive '%s' does not include %s",
             debugFileName, kClassesDex);
         goto bail;
     }
@@ -111,7 +111,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
     if (dexZipGetEntryInfo(&zippy, zipEntry, NULL, &uncompLen, NULL, NULL,
             &modWhen, &crc32) != 0)
     {
-        LOGW("DexOptZ: zip archive GetEntryInfo failed on %s", debugFileName);
+        ALOGW("DexOptZ: zip archive GetEntryInfo failed on %s", debugFileName);
         goto bail;
     }
 
@@ -123,7 +123,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
      * Extract the DEX data into the cache file at the current offset.
      */
     if (dexZipExtractEntryToFile(&zippy, zipEntry, cacheFd) != 0) {
-        LOGW("DexOptZ: extraction of %s from %s failed",
+        ALOGW("DexOptZ: extraction of %s from %s failed",
             kClassesDex, debugFileName);
         goto bail;
     }

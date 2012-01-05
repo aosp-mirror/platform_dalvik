@@ -261,7 +261,7 @@ bool dvmThreadStartup()
 
     /* test our pthread lib */
     if (pthread_getspecific(gDvm.pthreadKeySelf) != NULL)
-        LOGW("WARNING: newly-created pthread TLS slot is not NULL");
+        ALOGW("WARNING: newly-created pthread TLS slot is not NULL");
 
     /* prep thread-related locks and conditions */
     dvmInitMutex(&gDvm.threadListLock);
@@ -552,7 +552,7 @@ void dvmSlayDaemons()
                 gDvm.offJavaLangThread_daemon))
         {
             /* should never happen; suspend it with the rest */
-            LOGW("threadid=%d: non-daemon id=%d still running at shutdown?!",
+            ALOGW("threadid=%d: non-daemon id=%d still running at shutdown?!",
                 threadId, target->threadId);
         }
 
@@ -782,7 +782,7 @@ bool dvmPrepMainThread()
      */
     Object* systemLoader = dvmGetSystemClassLoader();
     if (systemLoader == NULL) {
-        LOGW("WARNING: system class loader is NULL (setting main ctxt)");
+        ALOGW("WARNING: system class loader is NULL (setting main ctxt)");
         /* keep going? */
     } else {
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_contextClassLoader,
@@ -985,7 +985,7 @@ static void freeThread(Thread* thread)
         free(interpStackBottom);
 #else
         if (munmap(interpStackBottom, thread->interpStackSize) != 0)
-            LOGW("munmap(thread stack) failed");
+            ALOGW("munmap(thread stack) failed");
 #endif
     }
 
@@ -1061,7 +1061,7 @@ static void threadExitCheck(void* arg)
         self->threadId, arg, self->threadExitCheckCount);
 
     if (self->status == THREAD_ZOMBIE) {
-        LOGW("threadid=%d: Weird -- shouldn't be in threadExitCheck",
+        ALOGW("threadid=%d: Weird -- shouldn't be in threadExitCheck",
             self->threadId);
         return;
     }
@@ -1201,7 +1201,7 @@ static void setThreadName(const char *threadName)
     buf[sizeof(buf)-1] = '\0';
     int err = pthread_setname_np(pthread_self(), buf);
     if (err != 0) {
-        LOGW("Unable to set the name of current thread to '%s': %s",
+        ALOGW("Unable to set the name of current thread to '%s': %s",
             buf, strerror(err));
     }
 #elif defined(HAVE_PRCTL)
@@ -1566,7 +1566,7 @@ static void threadExitUncaughtException(Thread* self, Object* group)
     Object* handlerObj;
     Method* uncaughtHandler;
 
-    LOGW("threadid=%d: thread exiting with uncaught exception (group=%p)",
+    ALOGW("threadid=%d: thread exiting with uncaught exception (group=%p)",
         self->threadId, group);
     assert(group != NULL);
 
@@ -1605,7 +1605,7 @@ static void threadExitUncaughtException(Thread* self, Object* group)
             self->threadObj, exception);
     } else {
         /* should be impossible, but handle it anyway */
-        LOGW("WARNING: no 'uncaughtException' method in class %s",
+        ALOGW("WARNING: no 'uncaughtException' method in class %s",
             handlerObj->clazz->descriptor);
         dvmSetException(self, exception);
         dvmLogExceptionStackTrace();
@@ -1687,7 +1687,7 @@ bool dvmCreateInternalThread(pthread_t* pHandle, const char* name,
         pthread_cond_wait(&gDvm.threadStartCond, &gDvm.threadListLock);
 
     if (newThread == NULL) {
-        LOGW("internal thread create failed (createStatus=%d)", createStatus);
+        ALOGW("internal thread create failed (createStatus=%d)", createStatus);
         assert(createStatus < 0);
         /* don't free pArgs -- if pthread_create succeeded, child owns it */
         dvmUnlockThreadList();
@@ -1913,7 +1913,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      * way that ensures another thread can't call start() on it.
      */
     if (dvmGetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread) != NULL) {
-        LOGW("WOW: thread start hijack");
+        ALOGW("WOW: thread start hijack");
         dvmThrowIllegalThreadStateException(
             "thread has already been started");
         /* We don't want to free anything associated with the thread
@@ -2322,12 +2322,12 @@ int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
     errno = 0;
     *pSavedThreadPrio = getpriority(PRIO_PROCESS, thread->systemTid);
     if (errno != 0) {
-        LOGW("Unable to get priority for threadid=%d sysTid=%d",
+        ALOGW("Unable to get priority for threadid=%d sysTid=%d",
             thread->threadId, thread->systemTid);
         return 0;
     }
     if (get_sched_policy(thread->systemTid, pSavedThreadPolicy) != 0) {
-        LOGW("Unable to get policy for threadid=%d sysTid=%d",
+        ALOGW("Unable to get policy for threadid=%d sysTid=%d",
             thread->threadId, thread->systemTid);
         return 0;
     }
@@ -2339,7 +2339,7 @@ int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
      */
     if (*pSavedThreadPolicy == SP_BACKGROUND) {
         if (set_sched_policy(thread->systemTid, SP_FOREGROUND) != 0) {
-            LOGW("Couldn't set fg policy on tid %d", thread->systemTid);
+            ALOGW("Couldn't set fg policy on tid %d", thread->systemTid);
         } else {
             changeFlags |= kChangedPolicy;
             ALOGD("Temporarily moving tid %d to fg (was %d)",
@@ -2354,7 +2354,7 @@ int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
     if (*pSavedThreadPrio > 0) {
         const int kHigher = 0;
         if (setpriority(PRIO_PROCESS, thread->systemTid, kHigher) != 0) {
-            LOGW("Couldn't raise priority on tid %d to %d",
+            ALOGW("Couldn't raise priority on tid %d to %d",
                 thread->systemTid, kHigher);
         } else {
             changeFlags |= kChangedPriority;
@@ -2374,7 +2374,7 @@ void dvmResetThreadPriority(Thread* thread, int changeFlags,
 {
     if ((changeFlags & kChangedPolicy) != 0) {
         if (set_sched_policy(thread->systemTid, savedThreadPolicy) != 0) {
-            LOGW("NOTE: couldn't reset tid %d to (%d)",
+            ALOGW("NOTE: couldn't reset tid %d to (%d)",
                 thread->systemTid, savedThreadPolicy);
         } else {
             ALOGD("Restored policy of %d to %d",
@@ -2385,7 +2385,7 @@ void dvmResetThreadPriority(Thread* thread, int changeFlags,
     if ((changeFlags & kChangedPriority) != 0) {
         if (setpriority(PRIO_PROCESS, thread->systemTid, savedThreadPrio) != 0)
         {
-            LOGW("NOTE: couldn't reset priority on thread %d to %d",
+            ALOGW("NOTE: couldn't reset priority on thread %d to %d",
                 thread->systemTid, savedThreadPrio);
         } else {
             ALOGD("Restored priority on %d to %d",
@@ -2472,7 +2472,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
          */
         if (!dvmIterativeSleep(sleepIter++, spinSleepTime, startWhen)) {
             if (spinSleepTime != FIRST_SLEEP) {
-                LOGW("threadid=%d: spin on suspend #%d threadid=%d (pcf=%d)",
+                ALOGW("threadid=%d: spin on suspend #%d threadid=%d (pcf=%d)",
                     self->threadId, retryCount,
                     thread->threadId, priChangeFlags);
                 if (retryCount > 1) {
@@ -2503,7 +2503,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
     }
 
     if (complained) {
-        LOGW("threadid=%d: spin on suspend resolved in %lld msec",
+        ALOGW("threadid=%d: spin on suspend resolved in %lld msec",
             self->threadId,
             (dvmGetRelativeTimeUsec() - firstStartWhen) / 1000);
         //dvmDumpThread(thread, false);   /* suspended, so dump is safe */
@@ -3037,7 +3037,7 @@ Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj)
         }
 
         if (thread == NULL) {
-            LOGW("WARNING: vmThreadObj=%p has thread=%p, not in thread list",
+            ALOGW("WARNING: vmThreadObj=%p has thread=%p, not in thread list",
                 vmThreadObj, (Thread*)vmData);
             vmData = 0;
         }
@@ -3254,7 +3254,7 @@ struct SchedulerStats {
 static void getSchedulerStats(SchedulerStats* stats, pid_t tid) {
     struct sched_param sp;
     if (pthread_getschedparam(pthread_self(), &stats->policy, &sp) != 0) {
-        LOGW("Warning: pthread_getschedparam failed");
+        ALOGW("Warning: pthread_getschedparam failed");
         stats->policy = -1;
         stats->priority = -1;
     } else {
@@ -3363,7 +3363,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
 
 std::string dvmGetThreadName(Thread* thread) {
     if (thread->threadObj == NULL) {
-        LOGW("threadObj is NULL, name not available");
+        ALOGW("threadObj is NULL, name not available");
         return "-unknown-";
     }
 

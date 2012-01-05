@@ -165,7 +165,7 @@ static int  receiveClientFd(JdwpNetState*  netState)
 
     if (ret <= 0) {
         if (ret < 0) {
-            LOGW("receiving file descriptor from ADB failed (socket %d): %s",
+            ALOGW("receiving file descriptor from ADB failed (socket %d): %s",
                  netState->controlSock, strerror(errno));
         }
         close(netState->controlSock);
@@ -468,7 +468,7 @@ static bool handlePacket(JdwpState* state)
                 return false;
             }
         } else {
-            LOGW("No reply created for set=%d cmd=%d", cmdSet, cmd);
+            ALOGW("No reply created for set=%d cmd=%d", cmdSet, cmd);
         }
         expandBufFree(pReply);
     } else {

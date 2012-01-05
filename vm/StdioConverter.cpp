@@ -55,16 +55,16 @@ bool dvmStdioConverterStartup()
     pthread_cond_init(&gDvm.stdioConverterCond, NULL);
 
     if (pipe(gDvm.stdoutPipe) != 0) {
-        LOGW("pipe failed: %s", strerror(errno));
+        ALOGW("pipe failed: %s", strerror(errno));
         return false;
     }
     if (pipe(gDvm.stderrPipe) != 0) {
-        LOGW("pipe failed: %s", strerror(errno));
+        ALOGW("pipe failed: %s", strerror(errno));
         return false;
     }
 
     if (dup2(gDvm.stdoutPipe[1], kFilenoStdout) != kFilenoStdout) {
-        LOGW("dup2(1) failed: %s", strerror(errno));
+        ALOGW("dup2(1) failed: %s", strerror(errno));
         return false;
     }
     close(gDvm.stdoutPipe[1]);
@@ -73,7 +73,7 @@ bool dvmStdioConverterStartup()
     /* don't redirect stderr on sim -- logs get written there! */
     /* (don't need this on the sim anyway) */
     if (dup2(gDvm.stderrPipe[1], kFilenoStderr) != kFilenoStderr) {
-        LOGW("dup2(2) failed: %d %s", errno, strerror(errno));
+        ALOGW("dup2(2) failed: %d %s", errno, strerror(errno));
         return false;
     }
     close(gDvm.stderrPipe[1]);
@@ -182,7 +182,7 @@ static void* stdioConverterThreadStart(void* arg)
 
             /* probably EOF; give up */
             if (err) {
-                LOGW("stdio converter got read error; shutting it down");
+                ALOGW("stdio converter got read error; shutting it down");
                 break;
             }
         }
@@ -213,7 +213,7 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag)
     want = kMaxLine - data->count;
     actual = read(fd, data->buf + data->count, want);
     if (actual <= 0) {
-        LOGW("read %s: (%d,%d) failed (%d): %s",
+        ALOGW("read %s: (%d,%d) failed (%d): %s",
             tag, fd, want, (int)actual, strerror(errno));
         return false;
     } else {
@@ -231,7 +231,7 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag)
     for (i = data->count; i > 0; i--, cp++) {
         if (*cp == '\n' || (*cp == '\r' && i != 0 && *(cp+1) != '\n')) {
             *cp = '\0';
-            //LOGW("GOT %d at %d '%s'", cp - start, start - data->buf, start);
+            //ALOGW("GOT %d at %d '%s'", cp - start, start - data->buf, start);
             ALOG(LOG_INFO, tag, "%s", start);
             start = cp+1;
         }

@@ -48,7 +48,7 @@ static const int kNiceValues[10] = {
 void os_changeThreadPriority(Thread* thread, int newPriority)
 {
     if (newPriority < 1 || newPriority > 10) {
-        LOGW("bad priority %d", newPriority);
+        ALOGW("bad priority %d", newPriority);
         newPriority = 5;
     }
 
@@ -75,7 +75,7 @@ int os_getThreadPriorityFromSystem()
     errno = 0;
     int sysprio = getpriority(PRIO_PROCESS, 0);
     if (sysprio == -1 && errno != 0) {
-        LOGW("getpriority() failed: %s", strerror(errno));
+        ALOGW("getpriority() failed: %s", strerror(errno));
         return THREAD_NORM_PRIORITY;
     }
 
@@ -128,7 +128,7 @@ int os_raiseThreadPriority()
 void os_lowerThreadPriority(int oldThreadPriority)
 {
     if (setpriority(PRIO_PROCESS, 0, oldThreadPriority) != 0) {
-        LOGW("Unable to reset priority to %d: %s",
+        ALOGW("Unable to reset priority to %d: %s",
                 oldThreadPriority, strerror(errno));
     } else {
         ALOGV("Reset priority to %d", oldThreadPriority);

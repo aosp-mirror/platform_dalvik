@@ -779,7 +779,7 @@ void dvmCompilerShutdown(void)
         dvmUnlockMutex(&gDvmJit.compilerLock);
 
         if (pthread_join(gDvmJit.compilerHandle, &threadReturn) != 0)
-            LOGW("Compiler thread join failed");
+            ALOGW("Compiler thread join failed");
         else if (gDvm.verboseShutdown)
             ALOGD("Compiler thread has shut down");
     }

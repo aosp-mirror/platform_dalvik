@@ -480,7 +480,7 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
             pCtrl->pkgOrClass = dvmDotToSlash(pkgOrClass+1);    // skip ':'
             if (pCtrl->pkgOrClass == NULL) {
                 /* can happen if class name includes an illegal '/' */
-                LOGW("Unable to process assertion arg '%s'", pkgOrClass);
+                ALOGW("Unable to process assertion arg '%s'", pkgOrClass);
                 return false;
             }
 
@@ -571,7 +571,7 @@ static void processXjitop(const char *opt)
                 }
 
                 for (; startValue <= endValue; startValue++) {
-                    LOGW("Dalvik opcode %x is selected for debugging",
+                    ALOGW("Dalvik opcode %x is selected for debugging",
                          (unsigned int) startValue);
                     /* Mark the corresponding bit to 1 */
                     gDvmJit.opList[startValue >> 3] |= 1 << (startValue & 0x7);
@@ -1344,7 +1344,7 @@ std::string dvmStartup(int argc, const char* const argv[],
      */
     if (dvmReferenceTableEntries(&dvmThreadSelf()->internalLocalRefTable) != 0)
     {
-        LOGW("Warning: tracked references remain post-initialization");
+        ALOGW("Warning: tracked references remain post-initialization");
         dvmDumpReferenceTable(&dvmThreadSelf()->internalLocalRefTable, "MAIN");
     }
 
@@ -1541,7 +1541,7 @@ static bool initJdwp()
 
         gDvm.jdwpState = dvmJdwpStartup(&params);
         if (gDvm.jdwpState == NULL) {
-            LOGW("WARNING: debugger thread failed to initialize");
+            ALOGW("WARNING: debugger thread failed to initialize");
             /* TODO: ignore? fail? need to mimic "expected" behavior */
         }
     }
@@ -1553,7 +1553,7 @@ static bool initJdwp()
     if (dvmJdwpIsActive(gDvm.jdwpState)) {
         //dvmChangeStatus(NULL, THREAD_RUNNING);
         if (!dvmJdwpPostVMStart(gDvm.jdwpState, gDvm.jdwpSuspend)) {
-            LOGW("WARNING: failed to post 'start' message to debugger");
+            ALOGW("WARNING: failed to post 'start' message to debugger");
             /* keep going */
         }
         //dvmChangeStatus(NULL, THREAD_NATIVE);
@@ -1775,7 +1775,7 @@ void dvmPrintNativeBackTrace()
 
     size_t i;
     for (i = 0; i < frameCount; ++i) {
-        LOGW("#%-2d %s", i, strings[i]);
+        ALOGW("#%-2d %s", i, strings[i]);
     }
     free(strings);
 }

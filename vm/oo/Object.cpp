@@ -369,7 +369,7 @@ static Method* findMethodInListByDescriptor(const ClassObject* clazz,
     size_t argCount = countArgsAndFindReturnType(descriptor, &returnType);
 
     if (returnType == NULL) {
-        LOGW("Bogus method descriptor: %s", descriptor);
+        ALOGW("Bogus method descriptor: %s", descriptor);
         return NULL;
     }
 
@@ -743,7 +743,7 @@ void dvmDumpObject(const Object* obj)
     int i;
 
     if (obj == NULL || obj->clazz == NULL) {
-        LOGW("Null or malformed object not dumped");
+        ALOGW("Null or malformed object not dumped");
         return;
     }
 

@@ -119,7 +119,7 @@ static Object* createStockException(const char* descriptor, const char* msg)
     } else {
         msgStr = dvmCreateStringFromCstr(msg);
         if (msgStr == NULL) {
-            LOGW("Could not allocate message string \"%s\"", msg);
+            ALOGW("Could not allocate message string \"%s\"", msg);
             dvmReleaseTrackedAlloc(obj, self);
             return NULL;
         }
@@ -165,7 +165,7 @@ bool dvmCreateStockExceptions()
     if (gDvm.outOfMemoryObj == NULL || gDvm.internalErrorObj == NULL ||
         gDvm.noClassDefFoundErrorObj == NULL)
     {
-        LOGW("Unable to create stock exceptions");
+        ALOGW("Unable to create stock exceptions");
         return false;
     }
 

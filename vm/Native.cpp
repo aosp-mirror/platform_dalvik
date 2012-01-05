@@ -116,9 +116,9 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
         return;
     }
 
-    IF_LOGW() {
+    IF_ALOGW() {
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGW("No implementation found for native %s.%s %s",
+        ALOGW("No implementation found for native %s.%s %s",
             clazz->descriptor, method->name, desc);
         free(desc);
     }
@@ -338,7 +338,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
     pEntry = findSharedLibEntry(pathName);
     if (pEntry != NULL) {
         if (pEntry->classLoader != classLoader) {
-            LOGW("Shared lib '%s' already opened by CL %p; can't open in %p",
+            ALOGW("Shared lib '%s' already opened by CL %p; can't open in %p",
                 pathName, pEntry->classLoader, classLoader);
             return false;
         }
@@ -440,7 +440,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
             if (version != JNI_VERSION_1_2 && version != JNI_VERSION_1_4 &&
                 version != JNI_VERSION_1_6)
             {
-                LOGW("JNI_OnLoad returned bad version (%d) in %s %p",
+                ALOGW("JNI_OnLoad returned bad version (%d) in %s %p",
                     version, pathName, classLoader);
                 /*
                  * It's unwise to call dlclose() here, but we can mark it

@@ -184,7 +184,7 @@ static void *tryMalloc(size_t size)
      * throwing an OOME, though.
      */
     if (size >= gDvm.heapGrowthLimit) {
-        LOGW("%zd byte allocation exceeds the %zd byte maximum heap size",
+        ALOGW("%zd byte allocation exceeds the %zd byte maximum heap size",
              size, gDvm.heapGrowthLimit);
         ptr = NULL;
         goto collect_soft_refs;

@@ -107,7 +107,7 @@ static ClassObject* convertSignaturePartToClass(char** pSignature,
     }
 
     if (clazz == NULL) {
-        LOGW("Unable to match class for part: '%s'", *pSignature);
+        ALOGW("Unable to match class for part: '%s'", *pSignature);
     }
     *pSignature = signature;
     return clazz;
@@ -535,7 +535,7 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
     int slot;
 
     if (dvmCheckException(dvmThreadSelf())) {
-        LOGW("WARNING: dvmCreateReflectMethodObject called with "
+        ALOGW("WARNING: dvmCreateReflectMethodObject called with "
              "exception pending");
         return NULL;
     }
@@ -1070,7 +1070,7 @@ DataObject* dvmBoxPrimitive(JValue value, ClassObject* returnType)
 
     wrapperClass = dvmFindSystemClass(classDescriptor);
     if (wrapperClass == NULL) {
-        LOGW("Unable to find '%s'", classDescriptor);
+        ALOGW("Unable to find '%s'", classDescriptor);
         assert(dvmCheckException(dvmThreadSelf()));
         return NULL;
     }

@@ -498,7 +498,7 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
     bool allowed = dvmCheckClassAccess(referrer, resClass);
     untweakLoader(referrer, resClass);
     if (!allowed) {
-        LOGW("DexOpt: resolve class illegal access: %s -> %s",
+        ALOGW("DexOpt: resolve class illegal access: %s -> %s",
             referrer->descriptor, resClass->descriptor);
         if (pFailure != NULL)
             *pFailure = VERIFY_ERROR_ACCESS_CLASS;
@@ -784,7 +784,7 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
         }
         if (dvmIsInterfaceClass(resClass)) {
             /* method is part of an interface; this is wrong method for that */
-            LOGW("DexOpt: method is in an interface");
+            ALOGW("DexOpt: method is in an interface");
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_GENERIC;
             return NULL;
@@ -834,7 +834,7 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
 
         /* see if this is a pure-abstract method */
         if (dvmIsAbstractMethod(resMethod) && !dvmIsAbstractClass(resClass)) {
-            LOGW("DexOpt: pure-abstract method '%s' in %s",
+            ALOGW("DexOpt: pure-abstract method '%s' in %s",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx),
                 resClass->descriptor);
             if (pFailure != NULL)
@@ -1021,7 +1021,7 @@ Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
         /* we're expecting this to be abstract */
         if (!dvmIsAbstractMethod(resMethod)) {
             char* desc = dexProtoCopyMethodDescriptor(&resMethod->prototype);
-            LOGW("Found non-abstract interface method %s.%s %s",
+            ALOGW("Found non-abstract interface method %s.%s %s",
                 resMethod->clazz->descriptor, resMethod->name, desc);
             free(desc);
             return NULL;

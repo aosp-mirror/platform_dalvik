@@ -269,7 +269,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
     else {
         msgStr = dvmCreateStringFromCstr(msg);
         if (msgStr == NULL) {
-            LOGW("Could not allocate message string \"%s\" while "
+            ALOGW("Could not allocate message string \"%s\" while "
                     "throwing internal exception (%s)",
                     msg, excepClass->descriptor);
             goto bail;
@@ -366,7 +366,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
          * constructor, e.g. it doesn't provide one that takes a string
          * when a message has been provided.
          */
-        LOGW("WARNING: exception class '%s' missing constructor "
+        ALOGW("WARNING: exception class '%s' missing constructor "
             "(msg='%s' kind=%d)",
             excepClass->descriptor, msg, initKind);
         assert(strcmp(excepClass->descriptor,
@@ -409,7 +409,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
      * return an error and let our caller deal with it.
      */
     if (self->exception != NULL) {
-        LOGW("Exception thrown (%s) while throwing internal exception (%s)",
+        ALOGW("Exception thrown (%s) while throwing internal exception (%s)",
             self->exception->clazz->descriptor, exception->clazz->descriptor);
         goto bail;
     }
@@ -429,14 +429,14 @@ static bool initException(Object* exception, const char* msg, Object* cause,
                 /* initCause() threw an exception; return an error and
                  * let the caller deal with it.
                  */
-                LOGW("Exception thrown (%s) during initCause() "
+                ALOGW("Exception thrown (%s) during initCause() "
                         "of internal exception (%s)",
                         self->exception->clazz->descriptor,
                         exception->clazz->descriptor);
                 goto bail;
             }
         } else {
-            LOGW("WARNING: couldn't find initCause in '%s'",
+            ALOGW("WARNING: couldn't find initCause in '%s'",
                 excepClass->descriptor);
         }
     }
@@ -579,12 +579,12 @@ void dvmPrintExceptionStackTrace()
         JValue unused;
         dvmCallMethod(self, printMethod, exception, &unused);
     } else {
-        LOGW("WARNING: could not find printStackTrace in %s",
+        ALOGW("WARNING: could not find printStackTrace in %s",
             exception->clazz->descriptor);
     }
 
     if (self->exception != NULL) {
-        LOGW("NOTE: exception thrown while printing stack trace: %s",
+        ALOGW("NOTE: exception thrown while printing stack trace: %s",
             self->exception->clazz->descriptor);
     }
 
@@ -671,7 +671,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
                      * up a warning, then move on to the next entry.
                      * Keep the exception status clear.
                      */
-                    LOGW("Could not resolve class ref'ed in exception "
+                    ALOGW("Could not resolve class ref'ed in exception "
                             "catch list (class index %d, exception %s)",
                             handler->typeIdx,
                             (self->exception != NULL) ?
@@ -1100,12 +1100,12 @@ static StringObject* getExceptionMessage(Object* exception)
 
         dvmChangeStatus(self, oldStatus);
     } else {
-        LOGW("WARNING: could not find getMessage in %s",
+        ALOGW("WARNING: could not find getMessage in %s",
             exception->clazz->descriptor);
     }
 
     if (dvmGetException(self) != NULL) {
-        LOGW("NOTE: exception thrown while retrieving exception message: %s",
+        ALOGW("NOTE: exception thrown while retrieving exception message: %s",
             dvmGetException(self)->clazz->descriptor);
         /* will be overwritten below */
     }
@@ -1165,7 +1165,7 @@ void dvmLogExceptionStackTrace()
     Object* cause;
 
     if (exception == NULL) {
-        LOGW("tried to log a null exception?");
+        ALOGW("tried to log a null exception?");
         return;
     }
 

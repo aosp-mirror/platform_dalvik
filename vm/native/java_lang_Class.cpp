@@ -510,7 +510,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
     /* initialize the class if it hasn't been already */
     if (!dvmIsClassInitialized(clazz)) {
         if (!dvmInitClass(clazz)) {
-            LOGW("Class init failed in newInstance call (%s)",
+            ALOGW("Class init failed in newInstance call (%s)",
                 clazz->descriptor);
             assert(dvmCheckException(self));
             RETURN_VOID();

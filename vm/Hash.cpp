@@ -225,7 +225,7 @@ void* dvmHashTableLookup(HashTable* pHashTable, u4 itemHash, void* item,
                 }
                 /* note "pEntry" is now invalid */
             } else {
-                //LOGW("okay %d/%d/%d",
+                //ALOGW("okay %d/%d/%d",
                 //    pHashTable->numEntries, pHashTable->tableSize,
                 //    (pHashTable->tableSize * LOAD_NUMER) / LOAD_DENOM);
             }

@@ -355,7 +355,7 @@ static JdwpError handleVM_Exit(JdwpState* state,
 {
     u4 exitCode = get4BE(buf);
 
-    LOGW("Debugger is telling the VM to exit with code=%d", exitCode);
+    ALOGW("Debugger is telling the VM to exit with code=%d", exitCode);
 
     dvmDbgExit(exitCode);
     return ERR_NOT_IMPLEMENTED;     // shouldn't get here
@@ -648,7 +648,7 @@ static JdwpError handleRT_SignatureWithGeneric(JdwpState* state,
     if (signature != NULL) {
         expandBufAddUtf8String(pReply, (const u1*) signature);
     } else {
-        LOGW("No signature for refTypeId=0x%llx", refTypeId);
+        ALOGW("No signature for refTypeId=0x%llx", refTypeId);
         expandBufAddUtf8String(pReply, (const u1*) "Lunknown;");
     }
     expandBufAddUtf8String(pReply, genericSignature);
@@ -1215,7 +1215,7 @@ static JdwpError handleTGR_Name(JdwpState* state,
         expandBufAddUtf8String(pReply, (u1*) name);
     else {
         expandBufAddUtf8String(pReply, (u1*) "BAD-GROUP-ID");
-        LOGW("bad thread group ID");
+        ALOGW("bad thread group ID");
     }
 
     free(name);
@@ -1516,7 +1516,7 @@ static JdwpError handleER_Set(JdwpState* state,
             }
             break;
         default:
-            LOGW("GLITCH: unsupported modKind=%d", modKind);
+            ALOGW("GLITCH: unsupported modKind=%d", modKind);
             break;
         }
     }
@@ -1526,7 +1526,7 @@ static JdwpError handleER_Set(JdwpState* state,
      * has sent us bad stuff, but for now we blame ourselves.
      */
     if (buf != origBuf + dataLen) {
-        LOGW("GLITCH: dataLen is %d, we have consumed %d", dataLen,
+        ALOGW("GLITCH: dataLen is %d, we have consumed %d", dataLen,
             (int) (buf - origBuf));
     }
 
@@ -1545,7 +1545,7 @@ static JdwpError handleER_Set(JdwpState* state,
     if (err != ERR_NONE) {
         /* registration failed, probably because event is bogus */
         dvmJdwpEventFree(pEvent);
-        LOGW("WARNING: event request rejected");
+        ALOGW("WARNING: event request rejected");
     }
     return err;
 }

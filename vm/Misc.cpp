@@ -570,11 +570,11 @@ bool dvmSetCloseOnExec(int fd)
      */
     flags = fcntl(fd, F_GETFD);
     if (flags < 0) {
-        LOGW("Unable to get fd flags for fd %d", fd);
+        ALOGW("Unable to get fd flags for fd %d", fd);
         return false;
     }
     if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) {
-        LOGW("Unable to set close-on-exec for fd %d", fd);
+        ALOGW("Unable to set close-on-exec for fd %d", fd);
         return false;
     }
     return true;

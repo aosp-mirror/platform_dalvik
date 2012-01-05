@@ -130,7 +130,7 @@ static void setSignalHandler()
     err = sigaction (SIGCHLD, &sa, NULL);
 
     if (err < 0) {
-        LOGW("Error setting SIGCHLD handler: %s", strerror(errno));
+        ALOGW("Error setting SIGCHLD handler: %s", strerror(errno));
     }
 }
 
@@ -149,7 +149,7 @@ static void unsetSignalHandler()
     err = sigaction (SIGCHLD, &sa, NULL);
 
     if (err < 0) {
-        LOGW("Error unsetting SIGCHLD handler: %s", strerror(errno));
+        ALOGW("Error unsetting SIGCHLD handler: %s", strerror(errno));
     }
 }
 

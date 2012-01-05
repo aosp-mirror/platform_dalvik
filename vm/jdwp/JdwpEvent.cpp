@@ -927,7 +927,7 @@ bool dvmJdwpPostThreadChange(JdwpState* state, ObjectId threadId, bool start)
      * I don't think this can happen.
      */
     if (invokeInProgress(state)) {
-        LOGW("Not posting thread change during invoke");
+        ALOGW("Not posting thread change during invoke");
         return false;
     }
 

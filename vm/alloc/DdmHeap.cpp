@@ -69,7 +69,7 @@ void dvmDdmSendHeapInfo(int reason, bool shouldLock)
      */
     if (reason == gDvm.gcHeap->ddmHpifWhen) {
         if (shouldLock && ! dvmLockHeap()) {
-            LOGW("%s(): can't lock heap to clear when", __func__);
+            ALOGW("%s(): can't lock heap to clear when", __func__);
             goto skip_when;
         }
         if (reason == gDvm.gcHeap->ddmHpifWhen) {
@@ -228,7 +228,7 @@ static void heap_chunk_callback(const void *chunkptr, size_t chunklen,
 
         bytesLeft = ctx->bufLen - (size_t)(ctx->p - ctx->buf);
         if (bytesLeft < needed) {
-            LOGW("chunk is too big to transmit (chunklen=%zd, %zd bytes)",
+            ALOGW("chunk is too big to transmit (chunklen=%zd, %zd bytes)",
                 chunklen, needed);
             return;
         }
@@ -414,7 +414,7 @@ void dvmDdmSendHeapSegments(bool shouldLock, bool native)
         }
     }
     if (shouldLock && !dvmLockHeap()) {
-        LOGW("Can't lock heap for DDM HPSx dump");
+        ALOGW("Can't lock heap for DDM HPSx dump");
         return;
     }
 

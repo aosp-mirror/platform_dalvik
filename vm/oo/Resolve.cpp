@@ -125,13 +125,13 @@ ClassObject* dvmResolveClass(const ClassObject* referrer, u4 classIdx,
             if (referrer->pDvmDex != resClassCheck->pDvmDex &&
                 resClassCheck->classLoader != NULL)
             {
-                LOGW("Class resolved by unexpected DEX:"
+                ALOGW("Class resolved by unexpected DEX:"
                      " %s(%p):%p ref [%s] %s(%p):%p",
                     referrer->descriptor, referrer->classLoader,
                     referrer->pDvmDex,
                     resClass->descriptor, resClassCheck->descriptor,
                     resClassCheck->classLoader, resClassCheck->pDvmDex);
-                LOGW("(%s had used a different %s during pre-verification)",
+                ALOGW("(%s had used a different %s during pre-verification)",
                     referrer->descriptor, resClass->descriptor);
                 dvmThrowIllegalAccessError(
                     "Class ref in pre-verified class resolved to unexpected "

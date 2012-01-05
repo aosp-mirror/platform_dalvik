@@ -197,7 +197,7 @@ void dvmJdwpResetState(JdwpState* state)
      * mid-request, though, we could see this.
      */
     if (state->eventThreadId != 0) {
-        LOGW("WARNING: resetting state while event in progress");
+        ALOGW("WARNING: resetting state while event in progress");
         assert(false);
     }
 }
@@ -226,7 +226,7 @@ void dvmJdwpShutdown(JdwpState* state)
         if (state->debugThreadStarted) {
             state->run = false;
             if (pthread_join(state->debugThreadHandle, &threadReturn) != 0) {
-                LOGW("JDWP thread join failed");
+                ALOGW("JDWP thread join failed");
             }
         }
 

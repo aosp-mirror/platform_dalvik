@@ -81,7 +81,7 @@ static bool dvmPushInterpFrame(Thread* self, const Method* method)
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space */
-        LOGW("Stack overflow on call to interp "
+        ALOGW("Stack overflow on call to interp "
              "(req=%d top=%p cur=%p size=%d %s.%s)",
             stackReq, self->interpStackStart, self->interpSave.curFrame,
             self->interpStackSize, method->clazz->descriptor, method->name);
@@ -155,7 +155,7 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space */
-        LOGW("Stack overflow on call to native "
+        ALOGW("Stack overflow on call to native "
              "(req=%d top=%p cur=%p size=%d '%s')",
             stackReq, self->interpStackStart, self->interpSave.curFrame,
             self->interpStackSize, method->name);
@@ -227,7 +227,7 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space; let JNI throw the exception */
-        LOGW("Stack overflow on PushLocal "
+        ALOGW("Stack overflow on PushLocal "
              "(req=%d top=%p cur=%p size=%d '%s')",
             stackReq, self->interpStackStart, self->interpSave.curFrame,
             self->interpStackSize, method->name);
@@ -359,7 +359,7 @@ static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
 
 #ifndef NDEBUG
     if (self->status != THREAD_RUNNING) {
-        LOGW("threadid=%d: status=%d on call to %s.%s -",
+        ALOGW("threadid=%d: status=%d on call to %s.%s -",
             self->threadId, self->status,
             method->clazz->descriptor, method->name);
     }
@@ -1036,7 +1036,7 @@ void dvmHandleStackOverflow(Thread* self, const Method* method)
      */
     Object* excep = dvmGetException(self);
     if (excep != NULL) {
-        LOGW("Stack overflow while throwing exception");
+        ALOGW("Stack overflow while throwing exception");
         dvmClearException(self);
     }
     dvmThrowChainedException(gDvm.exStackOverflowError, NULL, excep);
@@ -1276,7 +1276,7 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
         first = false;
 
         if (saveArea->prevFrame != NULL && saveArea->prevFrame <= framePtr) {
-            LOGW("Warning: loop in stack trace at frame %d (%p -> %p)",
+            ALOGW("Warning: loop in stack trace at frame %d (%p -> %p)",
                 checkCount, framePtr, saveArea->prevFrame);
             break;
         }

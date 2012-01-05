@@ -706,7 +706,7 @@ static void Dalvik_dalvik_system_VMDebug_crash(const u4* args,
     UNUSED_PARAMETER(args);
     UNUSED_PARAMETER(pResult);
 
-    LOGW("Crashing VM on request");
+    ALOGW("Crashing VM on request");
     dvmDumpThread(dvmThreadSelf(), false);
     dvmAbort();
 }

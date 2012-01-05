@@ -314,7 +314,7 @@ ClassObject* dvmFindPrimitiveClass(char type)
         case PRIM_FLOAT:   return gDvm.typeFloat;
         case PRIM_DOUBLE:  return gDvm.typeDouble;
         default: {
-            LOGW("Unknown primitive type '%c'", type);
+            ALOGW("Unknown primitive type '%c'", type);
             return NULL;
         }
     }
@@ -1013,7 +1013,7 @@ void dvmAddInitiatingLoader(ClassObject* clazz, Object* loader)
          * checking before every add, so we may not want to do this.
          */
         //if (dvmLoaderInInitiatingList(clazz, loader)) {
-        //    LOGW("WOW: simultaneous add of initiating class loader");
+        //    ALOGW("WOW: simultaneous add of initiating class loader");
         //    goto bail_unlock;
         //}
 
@@ -1220,7 +1220,7 @@ static void removeClassFromHash(ClassObject* clazz)
 
     dvmHashTableLock(gDvm.loadedClasses);
     if (!dvmHashTableRemove(gDvm.loadedClasses, hash, clazz))
-        LOGW("Hash table remove failed on class '%s'", clazz->descriptor);
+        ALOGW("Hash table remove failed on class '%s'", clazz->descriptor);
     dvmHashTableUnlock(gDvm.loadedClasses);
 }
 
@@ -1386,7 +1386,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
             clazz = NULL;
             goto bail;
         } else if (clazz == NULL) {
-            LOGW("ClassLoader returned NULL w/o exception pending");
+            ALOGW("ClassLoader returned NULL w/o exception pending");
             dvmThrowNullPointerException("ClassLoader returned null");
             goto bail;
         }
@@ -1496,7 +1496,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
      */
     if (dvmCheckException(self)) {
         LOGE("Class lookup %s attempted with exception pending", descriptor);
-        LOGW("Pending exception is:");
+        ALOGW("Pending exception is:");
         dvmLogExceptionStackTrace();
         dvmDumpAllThreads(false);
         dvmAbort();
@@ -1565,7 +1565,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
              *
              * (Yes, this happens.)
              */
-            //LOGW("WOW: somebody loaded %s simultaneously", descriptor);
+            //ALOGW("WOW: somebody loaded %s simultaneously", descriptor);
             clazz->initThreadId = 0;
             dvmUnlockObject(self, (Object*) clazz);
 
@@ -1619,7 +1619,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
                 /* happens with "external" libs */
                 ALOGV("Link of class '%s' failed", descriptor);
             } else {
-                LOGW("Link of class '%s' failed", descriptor);
+                ALOGW("Link of class '%s' failed", descriptor);
             }
             goto bail;
         }
@@ -1676,7 +1676,7 @@ got_class:
             if (!dvmIsClassLinked(clazz) &&
                 clazz->initThreadId == self->threadId)
             {
-                LOGW("Recursive link on class %s", clazz->descriptor);
+                ALOGW("Recursive link on class %s", clazz->descriptor);
                 dvmUnlockObject(self, (Object*) clazz);
                 dvmThrowClassCircularityError(clazz->descriptor);
                 clazz = NULL;
@@ -1741,7 +1741,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
      * runtime state.
      */
     if ((pClassDef->accessFlags & ~EXPECTED_FILE_FLAGS) != 0) {
-        LOGW("Invalid file flags in class %s: %04x",
+        ALOGW("Invalid file flags in class %s: %04x",
             descriptor, pClassDef->accessFlags);
         return NULL;
     }
@@ -2549,7 +2549,7 @@ bool dvmLinkClass(ClassObject* clazz)
             size_t len = clazz->interfaceCount * sizeof(*interfaceIdxArray);
             interfaceIdxArray = (u4*)malloc(len);
             if (interfaceIdxArray == NULL) {
-                LOGW("Unable to allocate memory to link %s", clazz->descriptor);
+                ALOGW("Unable to allocate memory to link %s", clazz->descriptor);
                 goto bail;
             }
             memcpy(interfaceIdxArray, clazz->interfaces, len);
@@ -2576,7 +2576,7 @@ bool dvmLinkClass(ClassObject* clazz)
                     ALOGV("Unable to resolve superclass of %s (%d)",
                          clazz->descriptor, superclassIdx);
                 } else {
-                    LOGW("Unable to resolve superclass of %s (%d)",
+                    ALOGW("Unable to resolve superclass of %s (%d)",
                          clazz->descriptor, superclassIdx);
                 }
                 goto bail;
@@ -2619,7 +2619,7 @@ bool dvmLinkClass(ClassObject* clazz)
                 /* are we allowed to implement this interface? */
                 if (!dvmCheckClassAccess(clazz, clazz->interfaces[i])) {
                     dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
-                    LOGW("Interface '%s' is not accessible to '%s'",
+                    ALOGW("Interface '%s' is not accessible to '%s'",
                          clazz->interfaces[i]->descriptor, clazz->descriptor);
                     dvmThrowIllegalAccessError("interface not accessible");
                     goto bail;
@@ -2661,17 +2661,17 @@ bool dvmLinkClass(ClassObject* clazz)
         }
         /* verify */
         if (dvmIsFinalClass(clazz->super)) {
-            LOGW("Superclass of '%s' is final '%s'",
+            ALOGW("Superclass of '%s' is final '%s'",
                 clazz->descriptor, clazz->super->descriptor);
             dvmThrowIncompatibleClassChangeError("superclass is final");
             goto bail;
         } else if (dvmIsInterfaceClass(clazz->super)) {
-            LOGW("Superclass of '%s' is interface '%s'",
+            ALOGW("Superclass of '%s' is interface '%s'",
                 clazz->descriptor, clazz->super->descriptor);
             dvmThrowIncompatibleClassChangeError("superclass is an interface");
             goto bail;
         } else if (!dvmCheckClassAccess(clazz, clazz->super)) {
-            LOGW("Superclass of '%s' (%s) is not accessible",
+            ALOGW("Superclass of '%s' (%s) is not accessible",
                 clazz->descriptor, clazz->super->descriptor);
             dvmThrowIllegalAccessError("superclass not accessible");
             goto bail;
@@ -2770,7 +2770,7 @@ bool dvmLinkClass(ClassObject* clazz)
         dvmLinearReadOnly(clazz->classLoader, clazz->virtualMethods);
     } else {
         if (!createVtable(clazz)) {
-            LOGW("failed creating vtable");
+            ALOGW("failed creating vtable");
             goto bail;
         }
     }
@@ -2917,7 +2917,7 @@ static bool createVtable(ClassObject* clazz)
                 {
                     /* verify */
                     if (dvmIsFinalMethod(superMeth)) {
-                        LOGW("Method %s.%s overrides final %s.%s",
+                        ALOGW("Method %s.%s overrides final %s.%s",
                             localMeth->clazz->descriptor, localMeth->name,
                             superMeth->clazz->descriptor, superMeth->name);
                         goto bail;
@@ -3059,7 +3059,7 @@ static bool createIftable(ClassObject* clazz)
 
         /* make sure this is still an interface class */
         if (!dvmIsInterfaceClass(interf)) {
-            LOGW("Class '%s' implements non-interface '%s'",
+            ALOGW("Class '%s' implements non-interface '%s'",
                 clazz->descriptor, interf->descriptor);
             dvmThrowIncompatibleClassChangeErrorWithClassMessage(
                 clazz->descriptor);
@@ -3228,7 +3228,7 @@ static bool createIftable(ClassObject* clazz)
                 {
                     LOGVV("INTF:   matched at %d", j);
                     if (!dvmIsPublicMethod(clazz->vtable[j])) {
-                        LOGW("Implementation of %s.%s is not public",
+                        ALOGW("Implementation of %s.%s is not public",
                             clazz->descriptor, clazz->vtable[j]->name);
                         dvmThrowIllegalAccessError(
                             "interface implementation not public");
@@ -4086,7 +4086,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
             if (meth != clazz->super->vtable[i] &&
                 !checkMethodDescriptorClasses(meth, clazz->super, clazz))
             {
-                LOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)",
+                ALOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)",
                     meth->name, clazz->descriptor, clazz->classLoader,
                     clazz->super->descriptor, clazz->super->classLoader);
                 dvmThrowLinkageError(
@@ -4119,7 +4119,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
                 meth = clazz->vtable[vtableIndex];
 
                 if (!checkMethodDescriptorClasses(meth, iface, meth->clazz)) {
-                    LOGW("Method mismatch: %s in %s (cl=%p) and "
+                    ALOGW("Method mismatch: %s in %s (cl=%p) and "
                             "iface %s (cl=%p)",
                         meth->name, clazz->descriptor, clazz->classLoader,
                         iface->descriptor, iface->classLoader);
@@ -4273,10 +4273,10 @@ bool dvmInitClass(ClassObject* clazz)
          * class because the optimization process discards information.
          */
         if (IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED)) {
-            LOGW("Class '%s' was optimized without verification; "
+            ALOGW("Class '%s' was optimized without verification; "
                  "not verifying now",
                 clazz->descriptor);
-            LOGW("  ('rm /data/dalvik-cache/*' and restart to fix this)");
+            ALOGW("  ('rm /data/dalvik-cache/*' and restart to fix this)");
             goto verify_failed;
         }
 
@@ -4331,7 +4331,7 @@ noverify:
         }
 
         if (dvmCheckException(self)) {
-            LOGW("GLITCH: exception pending at start of class init");
+            ALOGW("GLITCH: exception pending at start of class init");
             dvmAbort();
         }
 
@@ -4478,10 +4478,10 @@ noverify:
          * need to throw an ExceptionInInitializerError, but we want to
          * tuck the original exception into the "cause" field.
          */
-        LOGW("Exception %s thrown while initializing %s",
+        ALOGW("Exception %s thrown while initializing %s",
             (dvmGetException(self)->clazz)->descriptor, clazz->descriptor);
         dvmThrowExceptionInInitializerError();
-        //LOGW("+++ replaced");
+        //ALOGW("+++ replaced");
 
         dvmLockObject(self, (Object*) clazz);
         clazz->status = CLASS_ERROR;

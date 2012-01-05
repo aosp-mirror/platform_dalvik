@@ -61,7 +61,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
      */
     dataArray = dvmAllocPrimitiveArray('B', dataLen, ALLOC_DEFAULT);
     if (dataArray == NULL) {
-        LOGW("array alloc failed (%d)", dataLen);
+        ALOGW("array alloc failed (%d)", dataLen);
         dvmClearException(self);
         goto bail;
     }
@@ -75,7 +75,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     length = get4BE((u1*)dataArray->contents + 4);
     offset = kChunkHdrLen;
     if (offset+length > (unsigned int) dataLen) {
-        LOGW("WARNING: bad chunk found (len=%u pktLen=%d)", length, dataLen);
+        ALOGW("WARNING: bad chunk found (len=%u pktLen=%d)", length, dataLen);
         goto bail;
     }
 
@@ -124,7 +124,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     if (length == 0 || replyData == NULL)
         goto bail;
     if (offset + length > replyData->length) {
-        LOGW("WARNING: chunk off=%d len=%d exceeds reply array len %d",
+        ALOGW("WARNING: chunk off=%d len=%d exceeds reply array len %d",
             offset, length, replyData->length);
         goto bail;
     }
@@ -132,7 +132,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     u1* reply;
     reply = (u1*) malloc(length + kChunkHdrLen);
     if (reply == NULL) {
-        LOGW("malloc %d failed", length+kChunkHdrLen);
+        ALOGW("malloc %d failed", length+kChunkHdrLen);
         goto bail;
     }
     set4BE(reply + 0, type);
@@ -230,7 +230,7 @@ void dvmDdmSetThreadNotification(bool enable)
     if (enable) {
         Thread* thread;
         for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
-            //LOGW("notify %d", thread->threadId);
+            //ALOGW("notify %d", thread->threadId);
             dvmDdmSendThreadNotification(thread, true);
         }
     }

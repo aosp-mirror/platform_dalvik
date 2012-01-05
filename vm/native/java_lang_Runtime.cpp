@@ -51,7 +51,7 @@ static void Dalvik_java_lang_Runtime_nativeExit(const u4* args,
         dvmChangeStatus(NULL, THREAD_NATIVE);
         (*gDvm.exitHook)(status);     // not expected to return
         dvmChangeStatus(NULL, THREAD_RUNNING);
-        LOGW("JNI exit hook returned");
+        ALOGW("JNI exit hook returned");
     }
     ALOGD("Calling exit(%d)", status);
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)

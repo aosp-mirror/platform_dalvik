@@ -1575,7 +1575,7 @@ static void scavengeThreadStack(Thread *thread)
                  * some value.
                  */
                 if (saveArea->xtra.currentPc != thread->currentPc2) {
-                    LOGW("PGC: savedPC(%p) != current PC(%p), %s.%s ins=%p",
+                    ALOGW("PGC: savedPC(%p) != current PC(%p), %s.%s ins=%p",
                         saveArea->xtra.currentPc, thread->currentPc2,
                         method->clazz->descriptor, method->name, method->insns);
                     if (saveArea->xtra.currentPc != NULL)

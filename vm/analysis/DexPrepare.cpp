@@ -213,7 +213,7 @@ retry:
      */
     if (fdStat.st_size == 0) {
         if (readOnly) {
-            LOGW("DexOpt: file has zero length and isn't writable");
+            ALOGW("DexOpt: file has zero length and isn't writable");
             goto close_fail;
         }
         cc = dexOptCreateEmptyHeader(fd);
@@ -255,7 +255,7 @@ retry:
                  * give up now.
                  */
                 if (createIfMissing) {
-                    LOGW("Cached DEX '%s' (%s) is stale and not writable",
+                    ALOGW("Cached DEX '%s' (%s) is stale and not writable",
                         fileName, cacheFileName);
                 }
                 goto close_fail;
@@ -285,12 +285,12 @@ retry:
             ALOGD("ODEX file is stale or bad; removing and retrying (%s)",
                 cacheFileName);
             if (ftruncate(fd, 0) != 0) {
-                LOGW("Warning: unable to truncate cache file '%s': %s",
+                ALOGW("Warning: unable to truncate cache file '%s': %s",
                     cacheFileName, strerror(errno));
                 /* keep going */
             }
             if (unlink(cacheFileName) != 0) {
-                LOGW("Warning: unable to remove cache file '%s': %d %s",
+                ALOGW("Warning: unable to remove cache file '%s': %d %s",
                     cacheFileName, errno, strerror(errno));
                 /* keep going; permission failure should probably be fatal */
             }
@@ -366,7 +366,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
      * was all optimized, got rejected.
      */
     if (gDvm.optimizing) {
-        LOGW("Rejecting recursive optimization attempt on '%s'", fileName);
+        ALOGW("Rejecting recursive optimization attempt on '%s'", fileName);
         return false;
     }
 
@@ -393,7 +393,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         /* full path to optimizer */
         androidRoot = getenv("ANDROID_ROOT");
         if (androidRoot == NULL) {
-            LOGW("ANDROID_ROOT not set, defaulting to /system");
+            ALOGW("ANDROID_ROOT not set, defaulting to /system");
             androidRoot = "/system";
         }
         execFile = (char*)alloca(strlen(androidRoot) + strlen(kDexOptBin) + 1);
@@ -504,7 +504,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
             ALOGD("DexOpt: --- END '%s' (success) ---", lastPart);
             return true;
         } else {
-            LOGW("DexOpt: --- END '%s' --- status=0x%04x, process failed",
+            ALOGW("DexOpt: --- END '%s' --- status=0x%04x, process failed",
                 lastPart, status);
             return false;
         }
@@ -632,7 +632,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 
         /* unmap the read-write version, forcing writes to disk */
         if (msync(mapAddr, dexOffset + dexLength, MS_SYNC) != 0) {
-            LOGW("msync failed: %s", strerror(errno));
+            ALOGW("msync failed: %s", strerror(errno));
             // weird, but keep going
         }
 #if 1
@@ -674,7 +674,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
      * Append the dependency list.
      */
     if (writeDependencies(fd, modWhen, crc) != 0) {
-        LOGW("Failed writing dependencies");
+        ALOGW("Failed writing dependencies");
         goto bail;
     }
 
@@ -694,7 +694,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
      * Append any optimized pre-computed data structures.
      */
     if (!writeOptData(fd, pClassLookup, pRegMapBuilder)) {
-        LOGW("Failed writing opt data");
+        ALOGW("Failed writing opt data");
         goto bail;
     }
 
@@ -1211,12 +1211,12 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
         goto bail;
     }
     if (memcmp(magic+4, DEX_OPT_MAGIC_VERS, 4) != 0) {
-        LOGW("DexOpt: stale opt version (0x%02x %02x %02x %02x)",
+        ALOGW("DexOpt: stale opt version (0x%02x %02x %02x %02x)",
             magic[4], magic[5], magic[6], magic[7]);
         goto bail;
     }
     if (optHdr.depsLength < kMinDepSize || optHdr.depsLength > kMaxDepSize) {
-        LOGW("DexOpt: weird deps length %d, bailing", optHdr.depsLength);
+        ALOGW("DexOpt: weird deps length %d, bailing", optHdr.depsLength);
         goto bail;
     }
 
@@ -1240,7 +1240,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
 
     posn = lseek(fd, optHdr.depsOffset, SEEK_SET);
     if (posn < 0) {
-        LOGW("DexOpt: seek to deps failed: %s", strerror(errno));
+        ALOGW("DexOpt: seek to deps failed: %s", strerror(errno));
         goto bail;
     }
 
@@ -1249,16 +1249,16 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
      */
     depData = (u1*) malloc(optHdr.depsLength);
     if (depData == NULL) {
-        LOGW("DexOpt: unable to allocate %d bytes for deps",
+        ALOGW("DexOpt: unable to allocate %d bytes for deps",
             optHdr.depsLength);
         goto bail;
     }
     actual = read(fd, depData, optHdr.depsLength);
     if (actual < 0) {
-        LOGW("DexOpt: failed reading deps: %s", strerror(errno));
+        ALOGW("DexOpt: failed reading deps: %s", strerror(errno));
         goto bail;
     } else if (actual != (ssize_t) optHdr.depsLength) {
-        LOGW("DexOpt: failed reading deps: got %d of %d",
+        ALOGW("DexOpt: failed reading deps: got %d of %d",
             (int) actual, optHdr.depsLength);
         goto bail;
     }
@@ -1342,7 +1342,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
 
     // consumed all data and no more?
     if (ptr != depData + optHdr.depsLength) {
-        LOGW("DexOpt: Spurious dep data? %d vs %d",
+        ALOGW("DexOpt: Spurious dep data? %d vs %d",
             (int) (ptr - depData), optHdr.depsLength);
         assert(false);
     }

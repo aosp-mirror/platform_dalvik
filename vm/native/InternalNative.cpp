@@ -193,7 +193,7 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
      * auto-generating bogus array classes.
      */
     if (!dexIsValidClassName(name, true)) {
-        LOGW("dvmFindClassByName rejecting '%s'", name);
+        ALOGW("dvmFindClassByName rejecting '%s'", name);
         dvmThrowClassNotFoundException(name);
         goto bail;
     }

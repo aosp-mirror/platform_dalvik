@@ -46,7 +46,7 @@ static void* sysCreateAnonShmem(size_t length)
     ptr = mmap(NULL, length, PROT_READ | PROT_WRITE,
             MAP_SHARED | MAP_ANON, -1, 0);
     if (ptr == MAP_FAILED) {
-        LOGW("mmap(%d, RW, SHARED|ANON) failed: %s", (int) length,
+        ALOGW("mmap(%d, RW, SHARED|ANON) failed: %s", (int) length,
             strerror(errno));
         return NULL;
     }
@@ -164,7 +164,7 @@ int sysFakeMapFile(int fd, MemMapping* pMap)
 
     memPtr = malloc(length);
     if (read(fd, memPtr, length) < 0) {
-        LOGW("read(fd=%d, start=%d, length=%d) failed: %s", (int) length,
+        ALOGW("read(fd=%d, start=%d, length=%d) failed: %s", (int) length,
             fd, (int) start, strerror(errno));
         return -1;
     }
@@ -197,7 +197,7 @@ int sysMapFileInShmemReadOnly(int fd, MemMapping* pMap)
 
     memPtr = mmap(NULL, length, PROT_READ, MAP_FILE | MAP_SHARED, fd, start);
     if (memPtr == MAP_FAILED) {
-        LOGW("mmap(%d, RO, FILE|SHARED, %d, %d) failed: %s", (int) length,
+        ALOGW("mmap(%d, RO, FILE|SHARED, %d, %d) failed: %s", (int) length,
             fd, (int) start, strerror(errno));
         return -1;
     }
@@ -237,7 +237,7 @@ int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap)
     memPtr = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE,
             fd, start);
     if (memPtr == MAP_FAILED) {
-        LOGW("mmap(%d, R/W, FILE|PRIVATE, %d, %d) failed: %s", (int) length,
+        ALOGW("mmap(%d, R/W, FILE|PRIVATE, %d, %d) failed: %s", (int) length,
             fd, (int) start, strerror(errno));
         return -1;
     }
@@ -284,7 +284,7 @@ int sysMapFileSegmentInShmem(int fd, off_t start, size_t length,
     memPtr = mmap(NULL, actualLength, PROT_READ, MAP_FILE | MAP_SHARED,
                 fd, actualStart);
     if (memPtr == MAP_FAILED) {
-        LOGW("mmap(%d, R, FILE|SHARED, %d, %d) failed: %s",
+        ALOGW("mmap(%d, R, FILE|SHARED, %d, %d) failed: %s",
             (int) actualLength, fd, (int) actualStart, strerror(errno));
         return -1;
     }
@@ -358,7 +358,7 @@ void sysReleaseShmem(MemMapping* pMap)
         return;
 
     if (munmap(pMap->baseAddr, pMap->baseLength) < 0) {
-        LOGW("munmap(%p, %d) failed: %s",
+        ALOGW("munmap(%p, %d) failed: %s",
             pMap->baseAddr, (int)pMap->baseLength, strerror(errno));
     } else {
         ALOGV("munmap(%p, %d) succeeded", pMap->baseAddr, pMap->baseLength);
@@ -418,7 +418,7 @@ int sysCopyFileToFile(int outFd, int inFd, size_t count)
 
         ssize_t actual = TEMP_FAILURE_RETRY(read(inFd, buf, getSize));
         if (actual != (ssize_t) getSize) {
-            LOGW("sysCopyFileToFile: copy read failed (%d vs %zd)",
+            ALOGW("sysCopyFileToFile: copy read failed (%d vs %zd)",
                 (int) actual, getSize);
             return -1;
         }

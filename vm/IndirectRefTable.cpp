@@ -141,7 +141,7 @@ Object* IndirectRefTable::get(IndirectRef iref) const {
     IndirectRefKind kind = indirectRefKind(iref);
     if (kind != kind_) {
         if (iref == NULL) {
-            LOGW("Attempt to look up NULL %s reference", indirectRefKindToString(kind_));
+            ALOGW("Attempt to look up NULL %s reference", indirectRefKindToString(kind_));
             return kInvalidIndirectRefObject;
         }
         if (kind == kIndirectKindInvalid) {
@@ -252,7 +252,7 @@ bool IndirectRefTable::remove(u4 cookie, IndirectRef iref)
         // reference looks like a pointer, scan the table to find the index
         int i = findObject(reinterpret_cast<Object*>(iref), bottomIndex, topIndex, table_);
         if (i < 0) {
-            LOGW("trying to work around app JNI bugs, but didn't find %p in table!", iref);
+            ALOGW("trying to work around app JNI bugs, but didn't find %p in table!", iref);
             return false;
         }
         index = i;

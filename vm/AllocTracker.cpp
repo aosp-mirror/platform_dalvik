@@ -188,7 +188,7 @@ void dvmDoTrackAllocation(ClassObject* clazz, size_t size)
 {
     Thread* self = dvmThreadSelf();
     if (self == NULL) {
-        LOGW("alloc tracker: no thread");
+        ALOGW("alloc tracker: no thread");
         return;
     }
 
