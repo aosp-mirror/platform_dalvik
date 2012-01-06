@@ -255,7 +255,7 @@ bool dvmThreadStartup()
 
     /* allocate a TLS slot */
     if (pthread_key_create(&gDvm.pthreadKeySelf, threadExitCheck) != 0) {
-        LOGE("ERROR: pthread_key_create failed");
+        ALOGE("ERROR: pthread_key_create failed");
         return false;
     }
 
@@ -488,7 +488,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
             if (sleepIter == 0)
                 startWhen = dvmGetRelativeTimeUsec();
             if (!dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
-                LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%s),"
+                ALOGE("threadid=%d: couldn't get thread-suspend lock (%s:%s),"
                      " bailing",
                     self->threadId, who, getSuspendCauseStr(why));
                 /* threads are not suspended, thread dump could crash */
@@ -699,14 +699,14 @@ bool dvmPrepMainThread()
      * we create an instance of them.
      */
     if (!dvmInitClass(gDvm.classJavaLangClass)) {
-        LOGE("'Class' class failed to initialize");
+        ALOGE("'Class' class failed to initialize");
         return false;
     }
     if (!dvmInitClass(gDvm.classJavaLangThreadGroup) ||
         !dvmInitClass(gDvm.classJavaLangThread) ||
         !dvmInitClass(gDvm.classJavaLangVMThread))
     {
-        LOGE("thread classes failed to initialize");
+        ALOGE("thread classes failed to initialize");
         return false;
     }
 
@@ -720,7 +720,7 @@ bool dvmPrepMainThread()
      */
     threadObj = dvmAllocObject(gDvm.classJavaLangThread, ALLOC_DEFAULT);
     if (threadObj == NULL) {
-        LOGE("unable to allocate main thread object");
+        ALOGE("unable to allocate main thread object");
         return false;
     }
     dvmReleaseTrackedAlloc(threadObj, NULL);
@@ -736,7 +736,7 @@ bool dvmPrepMainThread()
     dvmCallMethod(thread, init, threadObj, &unused, groupObj, threadNameStr,
         THREAD_NORM_PRIORITY, false);
     if (dvmCheckException(thread)) {
-        LOGE("exception thrown while constructing main thread object");
+        ALOGE("exception thrown while constructing main thread object");
         return false;
     }
 
@@ -745,7 +745,7 @@ bool dvmPrepMainThread()
      */
     vmThreadObj = dvmAllocObject(gDvm.classJavaLangVMThread, ALLOC_DEFAULT);
     if (vmThreadObj == NULL) {
-        LOGE("unable to allocate main vmthread object");
+        ALOGE("unable to allocate main vmthread object");
         return false;
     }
     dvmReleaseTrackedAlloc(vmThreadObj, NULL);
@@ -754,7 +754,7 @@ bool dvmPrepMainThread()
             "(Ljava/lang/Thread;)V");
     dvmCallMethod(thread, init, vmThreadObj, &unused, threadObj);
     if (dvmCheckException(thread)) {
-        LOGE("exception thrown while constructing main vmthread object");
+        ALOGE("exception thrown while constructing main vmthread object");
         return false;
     }
 
@@ -1024,7 +1024,7 @@ static void setThreadSelf(Thread* thread)
          * here to ensure we clean up after ourselves.
          */
         if (thread != NULL) {
-            LOGE("pthread_setspecific(%p) failed, err=%d", thread, cc);
+            ALOGE("pthread_setspecific(%p) failed, err=%d", thread, cc);
             dvmAbort();     /* the world is fundamentally hosed */
         }
     }
@@ -1075,12 +1075,12 @@ static void threadExitCheck(void* arg)
         self->threadExitCheckCount++;
         int cc = pthread_setspecific(gDvm.pthreadKeySelf, self);
         if (cc != 0) {
-            LOGE("threadid=%d: unable to re-add thread to TLS",
+            ALOGE("threadid=%d: unable to re-add thread to TLS",
                 self->threadId);
             dvmAbort();
         }
     } else {
-        LOGE("threadid=%d: native thread exited without detaching",
+        ALOGE("threadid=%d: native thread exited without detaching",
             self->threadId);
         dvmAbort();
     }
@@ -1104,7 +1104,7 @@ static void assignThreadId(Thread* thread)
      */
     int num = dvmAllocBit(gDvm.threadIdMap);
     if (num < 0) {
-        LOGE("Ran out of thread IDs");
+        ALOGE("Ran out of thread IDs");
         dvmAbort();     // TODO: make this a non-fatal error result
     }
 
@@ -1311,7 +1311,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
          * resource limits.  VirtualMachineError is probably too severe,
          * so use OutOfMemoryError.
          */
-        LOGE("Thread creation failed (err=%s)", strerror(errno));
+        ALOGE("Thread creation failed (err=%s)", strerror(errno));
 
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, NULL);
 
@@ -1659,7 +1659,7 @@ bool dvmCreateInternalThread(pthread_t* pHandle, const char* name,
     if (pthread_create(pHandle, &threadAttr, internalThreadStart,
             pArgs) != 0)
     {
-        LOGE("internal thread creation failed");
+        ALOGE("internal thread creation failed");
         free(pArgs->name);
         free(pArgs);
         return false;
@@ -1894,7 +1894,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
     dvmCallMethod(self, init, threadObj, &unused, (Object*)pArgs->group,
             threadNameStr, os_getThreadPriorityFromSystem(), isDaemon);
     if (dvmCheckException(self)) {
-        LOGE("exception thrown while constructing attached thread object");
+        ALOGE("exception thrown while constructing attached thread object");
         goto fail_unlink;
     }
 
@@ -2020,7 +2020,7 @@ void dvmDetachCurrentThread()
         }
 
         if (!topIsNative) {
-            LOGE("ERROR: detaching thread with interp frames (count=%d)",
+            ALOGE("ERROR: detaching thread with interp frames (count=%d)",
                 curDepth);
             dvmDumpThread(self, false);
             dvmAbort();
@@ -2487,11 +2487,11 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
             spinSleepTime = MORE_SLEEP;
 
             if (retryCount++ == kMaxRetries) {
-                LOGE("Fatal spin-on-suspend, dumping threads");
+                ALOGE("Fatal spin-on-suspend, dumping threads");
                 dvmDumpAllThreads(false);
 
                 /* log this after -- long traces will scroll off log */
-                LOGE("threadid=%d: stuck on threadid=%d, giving up",
+                ALOGE("threadid=%d: stuck on threadid=%d, giving up",
                     self->threadId, thread->threadId);
 
                 /* try to get a debuggerd dump from the spinning thread */
@@ -2992,13 +2992,13 @@ static Object* getStaticThreadGroup(const char* fieldName)
     groupField = dvmFindStaticField(gDvm.classJavaLangThreadGroup,
         fieldName, "Ljava/lang/ThreadGroup;");
     if (groupField == NULL) {
-        LOGE("java.lang.ThreadGroup does not have an '%s' field", fieldName);
+        ALOGE("java.lang.ThreadGroup does not have an '%s' field", fieldName);
         dvmThrowInternalError("bad definition for ThreadGroup");
         return NULL;
     }
     groupObj = dvmGetStaticFieldObject(groupField);
     if (groupObj == NULL) {
-        LOGE("java.lang.ThreadGroup.%s not initialized", fieldName);
+        ALOGE("java.lang.ThreadGroup.%s not initialized", fieldName);
         dvmThrowInternalError(NULL);
         return NULL;
     }
@@ -3180,7 +3180,7 @@ static int getSchedulerGroup(int tid, char* buf, size_t bufLen)
     return -1;
 
 out_bad_data:
-    LOGE("Bad cgroup data {%s}", lineBuf);
+    ALOGE("Bad cgroup data {%s}", lineBuf);
     snprintf(buf, bufLen, "[data-parse-failed]");
     fclose(fp);
     return -1;

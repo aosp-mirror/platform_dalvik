@@ -93,7 +93,7 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
         if (topIndex == alloc_entries_) {
             /* reached end of allocated space; did we hit buffer max? */
             if (topIndex == max_entries_) {
-                LOGE("JNI ERROR (app bug): %s reference table overflow (max=%d)",
+                ALOGE("JNI ERROR (app bug): %s reference table overflow (max=%d)",
                         indirectRefKindToString(kind_), max_entries_);
                 return NULL;
             }
@@ -107,7 +107,7 @@ IndirectRef IndirectRefTable::add(u4 cookie, Object* obj)
             IndirectRefSlot* newTable =
                     (IndirectRefSlot*) realloc(table_, newSize * sizeof(IndirectRefSlot));
             if (table_ == NULL) {
-                LOGE("JNI ERROR (app bug): unable to expand %s reference table "
+                ALOGE("JNI ERROR (app bug): unable to expand %s reference table "
                         "(from %d to %d, max=%d)",
                         indirectRefKindToString(kind_),
                         alloc_entries_, newSize, max_entries_);
@@ -145,7 +145,7 @@ Object* IndirectRefTable::get(IndirectRef iref) const {
             return kInvalidIndirectRefObject;
         }
         if (kind == kIndirectKindInvalid) {
-            LOGE("JNI ERROR (app bug): invalid %s reference %p",
+            ALOGE("JNI ERROR (app bug): invalid %s reference %p",
                     indirectRefKindToString(kind_), iref);
             abortMaybe();
             return kInvalidIndirectRefObject;
@@ -158,7 +158,7 @@ Object* IndirectRefTable::get(IndirectRef iref) const {
     u4 index = extractIndex(iref);
     if (index >= topIndex) {
         /* bad -- stale reference? */
-        LOGE("JNI ERROR (app bug): accessed stale %s reference %p (index %d in a table of size %d)",
+        ALOGE("JNI ERROR (app bug): accessed stale %s reference %p (index %d in a table of size %d)",
                 indirectRefKindToString(kind_), iref, index, topIndex);
         abortMaybe();
         return kInvalidIndirectRefObject;
@@ -174,7 +174,7 @@ Object* IndirectRefTable::get(IndirectRef iref) const {
 
     u4 serial = extractSerial(iref);
     if (serial != table_[index].serial) {
-        LOGE("JNI ERROR (app bug): attempt to use stale %s reference %p",
+        ALOGE("JNI ERROR (app bug): attempt to use stale %s reference %p",
                 indirectRefKindToString(kind_), iref);
         abortMaybe();
         return kInvalidIndirectRefObject;

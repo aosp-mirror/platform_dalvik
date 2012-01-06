@@ -122,7 +122,7 @@ static void addToDexFileTable(DexOrJar* pDexOrJar) {
     dvmHashTableUnlock(gDvm.userDexFiles);
 
     if (result != pDexOrJar) {
-        LOGE("Pointer has already been added?");
+        ALOGE("Pointer has already been added?");
         dvmAbort();
     }
 

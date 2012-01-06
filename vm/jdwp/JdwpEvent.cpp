@@ -423,7 +423,7 @@ static bool patternMatch(const char* pattern, const char* target)
         int targetLen = strlen(target);
         patLen--;
         // TODO: remove printf when we find a test case to verify this
-        LOGE(">>> comparing '%s' to '%s'",
+        ALOGE(">>> comparing '%s' to '%s'",
             pattern+1, target + (targetLen-patLen));
 
         if (targetLen < patLen)
@@ -517,7 +517,7 @@ static bool modsMatch(JdwpState* state, JdwpEvent* pEvent, ModBasket* basket)
                 return false;
             break;
         default:
-            LOGE("unhandled mod kind %d", pMod->modKind);
+            ALOGE("unhandled mod kind %d", pMod->modKind);
             assert(false);
             break;
         }

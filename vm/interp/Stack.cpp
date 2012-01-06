@@ -335,7 +335,7 @@ static bool dvmPopFrame(Thread* self)
         saveBlock = SAVEAREA_FROM_FP(saveBlock->prevFrame);
     }
     if (saveBlock->method != NULL) {
-        LOGE("PopFrame missed the break");
+        ALOGE("PopFrame missed the break");
         assert(false);
         dvmAbort();     // stack trashed -- nowhere to go in this thread
     }
@@ -504,7 +504,7 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
 
 #ifndef NDEBUG
     if (verifyCount != method->insSize) {
-        LOGE("Got vfycount=%d insSize=%d for %s.%s", verifyCount,
+        ALOGE("Got vfycount=%d insSize=%d for %s.%s", verifyCount,
             method->insSize, clazz->descriptor, method->name);
         assert(false);
         goto bail;
@@ -599,7 +599,7 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
             *ins++ = args->z;           /* 8 bits, zero or non-zero */
             break;
         default:
-            LOGE("Invalid char %c in short signature of %s.%s",
+            ALOGE("Invalid char %c in short signature of %s.%s",
                 *(desc-1), clazz->descriptor, method->name);
             assert(false);
             goto bail;
@@ -611,7 +611,7 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
 
 #ifndef NDEBUG
     if (verifyCount != method->insSize) {
-        LOGE("Got vfycount=%d insSize=%d for %s.%s", verifyCount,
+        ALOGE("Got vfycount=%d insSize=%d for %s.%s", verifyCount,
             method->insSize, clazz->descriptor, method->name);
         assert(false);
         goto bail;
@@ -717,7 +717,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
 
 #ifndef NDEBUG
     if (verifyCount != method->insSize) {
-        LOGE("Got vfycount=%d insSize=%d for %s.%s", verifyCount,
+        ALOGE("Got vfycount=%d insSize=%d for %s.%s", verifyCount,
             method->insSize, clazz->descriptor, method->name);
         assert(false);
         goto bail;
@@ -1007,7 +1007,7 @@ void dvmHandleStackOverflow(Thread* self, const Method* method)
         /*
          * Already did, nothing to do but bail.
          */
-        LOGE("DalvikVM: double-overflow of stack in threadid=%d; aborting",
+        ALOGE("DalvikVM: double-overflow of stack in threadid=%d; aborting",
             self->threadId);
         dvmDumpThread(self, false);
         dvmAbort();
@@ -1060,7 +1060,7 @@ void dvmCleanupStackOverflow(Thread* self, const Object* exception)
     newStackEnd = (self->interpStackStart - self->interpStackSize)
         + STACK_OVERFLOW_RESERVE;
     if ((u1*)self->interpSave.curFrame <= newStackEnd) {
-        LOGE("Can't shrink stack: curFrame is in reserved area (%p %p)",
+        ALOGE("Can't shrink stack: curFrame is in reserved area (%p %p)",
             self->interpStackEnd, self->interpSave.curFrame);
         dvmDumpThread(self, false);
         dvmAbort();

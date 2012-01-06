@@ -201,13 +201,13 @@ retry:
 
         netState->controlSock = socket(PF_UNIX, SOCK_STREAM, 0);
         if (netState->controlSock < 0) {
-            LOGE("Could not create ADB control socket:%s",
+            ALOGE("Could not create ADB control socket:%s",
                  strerror(errno));
             return false;
         }
 
         if (pipe(netState->wakeFds) < 0) {
-            LOGE("pipe failed");
+            ALOGE("pipe failed");
             return false;
         }
 
@@ -234,7 +234,7 @@ retry:
             if (!ret) {
                 if (!socket_peer_is_trusted(netState->controlSock)) {
                     if (shutdown(netState->controlSock, SHUT_RDWR)) {
-                        LOGE("trouble shutting down socket: %s", strerror(errno));
+                        ALOGE("trouble shutting down socket: %s", strerror(errno));
                     }
                     return false;
                 }
@@ -249,7 +249,7 @@ retry:
                     break;
                 }
 
-                LOGE("Weird, can't send JDWP process pid to ADB: %s",
+                ALOGE("Weird, can't send JDWP process pid to ADB: %s",
                      strerror(errno));
                 return false;
             }
@@ -275,7 +275,7 @@ retry:
 
     if (netState->clientSock < 0) {
         if (++retryCount > 5) {
-            LOGE("adb connection max retries exceeded");
+            ALOGE("adb connection max retries exceeded");
             return false;
         }
         goto retry;
@@ -463,7 +463,7 @@ static bool handlePacket(JdwpState* state)
             ssize_t cc = netState->writePacket(pReply);
 
             if (cc != (ssize_t) expandBufGetLength(pReply)) {
-                LOGE("Failed sending reply to debugger: %s", strerror(errno));
+                ALOGE("Failed sending reply to debugger: %s", strerror(errno));
                 expandBufFree(pReply);
                 return false;
             }
@@ -558,7 +558,7 @@ static bool processIncoming(JdwpState* state)
             if (selCount < 0) {
                 if (errno == EINTR)
                     continue;
-                LOGE("select failed: %s", strerror(errno));
+                ALOGE("select failed: %s", strerror(errno));
                 goto fail;
             }
 
@@ -624,7 +624,7 @@ static bool processIncoming(JdwpState* state)
         if (memcmp(netState->inputBuffer,
                 kMagicHandshake, kMagicHandshakeLen) != 0)
         {
-            LOGE("ERROR: bad handshake '%.14s'", netState->inputBuffer);
+            ALOGE("ERROR: bad handshake '%.14s'", netState->inputBuffer);
             goto fail;
         }
 
@@ -632,7 +632,7 @@ static bool processIncoming(JdwpState* state)
         cc = write(netState->clientSock, netState->inputBuffer,
                 kMagicHandshakeLen);
         if (cc != kMagicHandshakeLen) {
-            LOGE("Failed writing handshake bytes: %s (%d of %d)",
+            ALOGE("Failed writing handshake bytes: %s (%d of %d)",
                 strerror(errno), cc, (int) kMagicHandshakeLen);
             goto fail;
         }
@@ -676,7 +676,7 @@ static bool sendRequest(JdwpState* state, ExpandBuf* pReq)
     ssize_t cc = netState->writePacket(pReq);
 
     if (cc != (ssize_t) expandBufGetLength(pReq)) {
-        LOGE("Failed sending req to debugger: %s (%d of %d)",
+        ALOGE("Failed sending req to debugger: %s (%d of %d)",
             strerror(errno), (int) cc, (int) expandBufGetLength(pReq));
         return false;
     }
@@ -711,7 +711,7 @@ static bool sendBufferedRequest(JdwpState* state, const struct iovec* iov,
     ssize_t actual = netState->writeBufferedPacket(iov, iovcnt);
 
     if ((size_t)actual != expected) {
-        LOGE("Failed sending b-req to debugger: %s (%d of %zu)",
+        ALOGE("Failed sending b-req to debugger: %s (%d of %zu)",
             strerror(errno), (int) actual, expected);
         return false;
     }

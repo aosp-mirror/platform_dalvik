@@ -184,7 +184,7 @@ void dvmPrintDebugMessage(const DebugOutputTarget* target, const char* format,
         vfprintf(target->data.file.fp, format, args);
         break;
     default:
-        LOGE("unexpected 'which' %d", target->which);
+        ALOGE("unexpected 'which' %d", target->which);
         break;
     }
 

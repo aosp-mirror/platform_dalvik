@@ -80,7 +80,7 @@ void dvmLogUnableToResolveClass(const char* missingClassDescr,
 
     std::string dotMissingClass = dvmHumanReadableDescriptor(missingClassDescr);
     std::string dotFromClass = dvmHumanReadableDescriptor(meth->clazz->descriptor);
-    LOGE("Could not find class '%s', referenced from method %s.%s",
+    ALOGE("Could not find class '%s', referenced from method %s.%s",
             dotMissingClass.c_str(), dotFromClass.c_str(), meth->name);
 }
 

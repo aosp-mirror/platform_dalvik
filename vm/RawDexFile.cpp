@@ -33,7 +33,7 @@
 static int copyFileToFile(int destFd, int srcFd, size_t size)
 {
     if (lseek(srcFd, 0, SEEK_SET) != 0) {
-        LOGE("lseek failure: %s", strerror(errno));
+        ALOGE("lseek failure: %s", strerror(errno));
         return -1;
     }
 
@@ -49,7 +49,7 @@ static int getModTimeAndSize(int fd, u4* modTime, size_t* size)
     int result = fstat(fd, &buf);
 
     if (result < 0) {
-        LOGE("Unable to determine mod time: %s", strerror(errno));
+        ALOGE("Unable to determine mod time: %s", strerror(errno));
         return -1;
     }
 
@@ -76,12 +76,12 @@ static int verifyMagicAndGetAdler32(int fd, u4 *adler32)
     ssize_t amt = read(fd, headerStart, sizeof(headerStart));
 
     if (amt < 0) {
-        LOGE("Unable to read header: %s", strerror(errno));
+        ALOGE("Unable to read header: %s", strerror(errno));
         return -1;
     }
 
     if (amt != sizeof(headerStart)) {
-        LOGE("Unable to read full header (only got %d bytes)", (int) amt);
+        ALOGE("Unable to read full header (only got %d bytes)", (int) amt);
         return -1;
     }
 
@@ -132,12 +132,12 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
     dvmSetCloseOnExec(dexFd);
 
     if (verifyMagicAndGetAdler32(dexFd, &adler32) < 0) {
-        LOGE("Error with header for %s", fileName);
+        ALOGE("Error with header for %s", fileName);
         goto bail;
     }
 
     if (getModTimeAndSize(dexFd, &modTime, &fileSize) < 0) {
-        LOGE("Error with stat for %s", fileName);
+        ALOGE("Error with stat for %s", fileName);
         goto bail;
     }
 
@@ -194,7 +194,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
         }
 
         if (!result) {
-            LOGE("Unable to extract+optimize DEX from '%s'", fileName);
+            ALOGE("Unable to extract+optimize DEX from '%s'", fileName);
             goto bail;
         }
 
@@ -218,7 +218,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
         /* unlock the fd */
         if (!dvmUnlockCachedDexFile(optFd)) {
             /* uh oh -- this process needs to exit or we'll wedge the system */
-            LOGE("Unable to unlock DEX file");
+            ALOGE("Unable to unlock DEX file");
             goto bail;
         }
         locked = false;

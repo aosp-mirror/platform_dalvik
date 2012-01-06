@@ -73,7 +73,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
 
     /* make sure we're still at the start of an empty file */
     if (lseek(cacheFd, 0, SEEK_END) != 0) {
-        LOGE("DexOptZ: new cache file '%s' is not empty", debugFileName);
+        ALOGE("DexOptZ: new cache file '%s' is not empty", debugFileName);
         goto bail;
     }
 
@@ -176,7 +176,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
     if (dvmPrepForDexOpt(bootClassPath, dexOptMode, verifyMode,
             dexoptFlags) != 0)
     {
-        LOGE("DexOptZ: VM init failed");
+        ALOGE("DexOptZ: VM init failed");
         goto bail;
     }
 
@@ -186,7 +186,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
     if (!dvmContinueOptimization(cacheFd, dexOffset, uncompLen, debugFileName,
             modWhen, crc32, isBootstrap))
     {
-        LOGE("Optimization failed");
+        ALOGE("Optimization failed");
         goto bail;
     }
 
@@ -214,7 +214,7 @@ static int processZipFile(int zipFd, int cacheFd, const char* zipName,
      */
     const char* bcp = getenv("BOOTCLASSPATH");
     if (bcp == NULL) {
-        LOGE("DexOptZ: BOOTCLASSPATH not set");
+        ALOGE("DexOptZ: BOOTCLASSPATH not set");
         return -1;
     }
 
@@ -258,7 +258,7 @@ static int processZipFile(int zipFd, int cacheFd, const char* zipName,
         char* endp;                                                         \
         (_var) = _func(*++argv, &endp, 0);                                  \
         if (*endp != '\0') {                                                \
-            LOGE("%s '%s'", _msg, *argv);                                   \
+            ALOGE("%s '%s'", _msg, *argv);                                   \
             goto bail;                                                      \
         }                                                                   \
         --argc;                                                             \
@@ -292,7 +292,7 @@ static int fromZip(int argc, char* const argv[])
     const char* dexoptFlags;
 
     if (argc != 6) {
-        LOGE("Wrong number of args for --zip (found %d)", argc);
+        ALOGE("Wrong number of args for --zip (found %d)", argc);
         goto bail;
     }
 
@@ -429,7 +429,7 @@ static int fromDex(int argc, char* const argv[])
 
     if (argc < 10) {
         /* don't have all mandatory args */
-        LOGE("Not enough arguments for --dex (found %d)", argc);
+        ALOGE("Not enough arguments for --dex (found %d)", argc);
         goto bail;
     }
 
@@ -442,7 +442,7 @@ static int fromDex(int argc, char* const argv[])
      */
     GET_ARG(vmBuildVersion, strtol, "bad vm build");
     if (vmBuildVersion != DALVIK_VM_BUILD) {
-        LOGE("DexOpt: build rev does not match VM: %d vs %d",
+        ALOGE("DexOpt: build rev does not match VM: %d vs %d",
             vmBuildVersion, DALVIK_VM_BUILD);
         goto bail;
     }
@@ -511,7 +511,7 @@ static int fromDex(int argc, char* const argv[])
     }
 
     if (dvmPrepForDexOpt(bootClassPath, dexOptMode, verifyMode, flags) != 0) {
-        LOGE("VM init failed");
+        ALOGE("VM init failed");
         goto bail;
     }
 
@@ -521,7 +521,7 @@ static int fromDex(int argc, char* const argv[])
     if (!dvmContinueOptimization(fd, offset, length, debugFileName,
             modWhen, crc, (flags & DEXOPT_IS_BOOTSTRAP) != 0))
     {
-        LOGE("Optimization failed");
+        ALOGE("Optimization failed");
         goto bail;
     }
 

@@ -80,7 +80,7 @@ bool dvmCreateInlineSubsTable()
              * Not expected.  We only use this for key methods in core
              * classes, so we should always be able to find them.
              */
-            LOGE("Unable to find method for inlining: %s.%s:%s",
+            ALOGE("Unable to find method for inlining: %s.%s:%s",
                 ops[i].classDescriptor, ops[i].methodName,
                 ops[i].methodSignature);
             return false;

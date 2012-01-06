@@ -366,7 +366,7 @@ static void computeSuccLiveIn(BitVector *dest,
         dest->storageSize != src2->storageSize ||
         dest->expandable != src1->expandable ||
         dest->expandable != src2->expandable) {
-        LOGE("Incompatible set properties");
+        ALOGE("Incompatible set properties");
         dvmAbort();
     }
 

@@ -45,7 +45,7 @@
 #if !defined(NDEBUG) && defined(WITH_DALVIK_ASSERT)
 # undef assert
 # define assert(x) \
-    ((x) ? ((void)0) : (LOGE("ASSERT FAILED (%s:%d): %s", \
+    ((x) ? ((void)0) : (ALOGE("ASSERT FAILED (%s:%d): %s", \
         __FILE__, __LINE__, #x), *(int*)39=39, (void)0) )
 #endif
 

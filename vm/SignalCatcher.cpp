@@ -156,7 +156,7 @@ static void handleSigQuit()
         /* write to memory buffer */
         FILE* memfp = open_memstream(&traceBuf, &traceLen);
         if (memfp == NULL) {
-            LOGE("Unable to create memstream for stack traces");
+            ALOGE("Unable to create memstream for stack traces");
             traceBuf = NULL;        /* make sure it didn't touch this */
             /* continue on */
         } else {
@@ -186,12 +186,12 @@ static void handleSigQuit()
          */
         int fd = open(gDvm.stackTraceFile, O_WRONLY | O_APPEND | O_CREAT, 0666);
         if (fd < 0) {
-            LOGE("Unable to open stack trace file '%s': %s",
+            ALOGE("Unable to open stack trace file '%s': %s",
                 gDvm.stackTraceFile, strerror(errno));
         } else {
             ssize_t actual = write(fd, traceBuf, traceLen);
             if (actual != (ssize_t) traceLen) {
-                LOGE("Failed to write stack traces to %s (%d of %zd): %s",
+                ALOGE("Failed to write stack traces to %s (%d of %zd): %s",
                     gDvm.stackTraceFile, (int) actual, traceLen,
                     strerror(errno));
             } else {
@@ -219,7 +219,7 @@ static void handleSigUsr1()
 void printAllClass(void *ptr)
 {
     ClassObject **classPP = (ClassObject **) ptr;
-    LOGE("class %s", (*classPP)->descriptor);
+    ALOGE("class %s", (*classPP)->descriptor);
 
 }
 
@@ -315,7 +315,7 @@ loop:
             break;
 #endif
         default:
-            LOGE("unexpected signal %d", rcvd);
+            ALOGE("unexpected signal %d", rcvd);
             break;
         }
     }

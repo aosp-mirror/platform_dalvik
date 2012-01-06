@@ -68,7 +68,7 @@ void dvmCompilerForceWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
         if (!success) {
             retries++;
             if (retries > ENQUEUE_MAX_RETRIES) {
-                LOGE("JIT: compiler queue wedged - forcing reset");
+                ALOGE("JIT: compiler queue wedged - forcing reset");
                 gDvmJit.codeCacheFull = true;  // Force reset
                 success = true;  // Because we'll drop the order now anyway
             } else {
@@ -169,7 +169,7 @@ bool dvmCompilerSetupCodeCache(void)
     /* Allocate the code cache */
     fd = ashmem_create_region("dalvik-jit-code-cache", gDvmJit.codeCacheSize);
     if (fd < 0) {
-        LOGE("Could not create %u-byte ashmem region for the JIT code cache",
+        ALOGE("Could not create %u-byte ashmem region for the JIT code cache",
              gDvmJit.codeCacheSize);
         return false;
     }
@@ -178,7 +178,7 @@ bool dvmCompilerSetupCodeCache(void)
                              MAP_PRIVATE , fd, 0);
     close(fd);
     if (gDvmJit.codeCache == MAP_FAILED) {
-        LOGE("Failed to mmap the JIT code cache: %s", strerror(errno));
+        ALOGE("Failed to mmap the JIT code cache: %s", strerror(errno));
         return false;
     }
 
@@ -213,7 +213,7 @@ bool dvmCompilerSetupCodeCache(void)
                           PROTECT_CODE_CACHE_ATTRS);
 
     if (result == -1) {
-        LOGE("Failed to remove the write permission for the code cache");
+        ALOGE("Failed to remove the write permission for the code cache");
         dvmAbort();
     }
 
@@ -418,7 +418,7 @@ static bool compilerThreadStartup(void)
     pJitTable = (JitEntry*)
                 calloc(gDvmJit.jitTableSize, sizeof(*pJitTable));
     if (!pJitTable) {
-        LOGE("jit table allocation failed");
+        ALOGE("jit table allocation failed");
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
     }
@@ -432,7 +432,7 @@ static bool compilerThreadStartup(void)
      */
     pJitProfTable = (unsigned char *)malloc(JIT_PROF_SIZE);
     if (!pJitProfTable) {
-        LOGE("jit prof table allocation failed");
+        ALOGE("jit prof table allocation failed");
         free(pJitProfTable);
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
@@ -448,7 +448,7 @@ static bool compilerThreadStartup(void)
     pJitTraceProfCounters = (JitTraceProfCounters*)
                              calloc(1, sizeof(*pJitTraceProfCounters));
     if (!pJitTraceProfCounters) {
-        LOGE("jit trace prof counters allocation failed");
+        ALOGE("jit trace prof counters allocation failed");
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
     }

@@ -214,7 +214,7 @@ public:
             // that we use the correct per-thread indirect reference table.
             Thread* self = gDvmJni.workAroundAppJniBugs ? dvmThreadSelf() : mSelf;
             if (self != mSelf) {
-                LOGE("JNI ERROR: env->self != thread-self (%p vs. %p); auto-correcting", mSelf, self);
+                ALOGE("JNI ERROR: env->self != thread-self (%p vs. %p); auto-correcting", mSelf, self);
                 mSelf = self;
             }
         }
@@ -317,7 +317,7 @@ Object* dvmDecodeIndirectRef(Thread* self, jobject jobj) {
         {
             Object* result = self->jniLocalRefTable.get(jobj);
             if (UNLIKELY(result == NULL)) {
-                LOGE("JNI ERROR (app bug): use of deleted local reference (%p)", jobj);
+                ALOGE("JNI ERROR (app bug): use of deleted local reference (%p)", jobj);
                 dvmAbort();
             }
             return result;
@@ -329,7 +329,7 @@ Object* dvmDecodeIndirectRef(Thread* self, jobject jobj) {
             ScopedPthreadMutexLock lock(&gDvm.jniGlobalRefLock);
             Object* result = pRefTable->get(jobj);
             if (UNLIKELY(result == NULL)) {
-                LOGE("JNI ERROR (app bug): use of deleted global reference (%p)", jobj);
+                ALOGE("JNI ERROR (app bug): use of deleted global reference (%p)", jobj);
                 dvmAbort();
             }
             return result;
@@ -343,7 +343,7 @@ Object* dvmDecodeIndirectRef(Thread* self, jobject jobj) {
             if (result == kClearedJniWeakGlobal) {
                 result = NULL;
             } else if (UNLIKELY(result == NULL)) {
-                LOGE("JNI ERROR (app bug): use of deleted weak global reference (%p)", jobj);
+                ALOGE("JNI ERROR (app bug): use of deleted weak global reference (%p)", jobj);
                 dvmAbort();
             }
             return result;
@@ -362,7 +362,7 @@ Object* dvmDecodeIndirectRef(Thread* self, jobject jobj) {
 
 static void AddLocalReferenceFailure(IndirectRefTable* pRefTable) {
     pRefTable->dump("JNI local");
-    LOGE("Failed adding to JNI local ref table (has %zd entries)", pRefTable->capacity());
+    ALOGE("Failed adding to JNI local ref table (has %zd entries)", pRefTable->capacity());
     dvmDumpThread(dvmThreadSelf(), false);
     dvmAbort();     // spec says call FatalError; this is equivalent
 }
@@ -484,7 +484,7 @@ static jobject addGlobalReference(Object* obj) {
     jobject jobj = (jobject) gDvm.jniGlobalRefTable.add(IRT_FIRST_SEGMENT, obj);
     if (jobj == NULL) {
         gDvm.jniGlobalRefTable.dump("JNI global");
-        LOGE("Failed adding to JNI global ref table (%zd entries)",
+        ALOGE("Failed adding to JNI global ref table (%zd entries)",
                 gDvm.jniGlobalRefTable.capacity());
         dvmAbort();
     }
@@ -508,7 +508,7 @@ static jobject addGlobalReference(Object* obj) {
                     ALOGW("Excessive JNI global references (%d)", count);
                 } else {
                     gDvm.jniGlobalRefTable.dump("JNI global");
-                    LOGE("Excessive JNI global references (%d)", count);
+                    ALOGE("Excessive JNI global references (%d)", count);
                     dvmAbort();
                 }
             }
@@ -527,7 +527,7 @@ static jobject addWeakGlobalReference(Object* obj) {
     jobject jobj = (jobject) table->add(IRT_FIRST_SEGMENT, obj);
     if (jobj == NULL) {
         gDvm.jniWeakGlobalRefTable.dump("JNI weak global");
-        LOGE("Failed adding to JNI weak global ref table (%zd entries)", table->capacity());
+        ALOGE("Failed adding to JNI weak global ref table (%zd entries)", table->capacity());
         dvmAbort();
     }
     return jobj;
@@ -589,7 +589,7 @@ static void pinPrimitiveArray(ArrayObject* arrayObj) {
 
     if (!dvmAddToReferenceTable(&gDvm.jniPinRefTable, (Object*)arrayObj)) {
         dvmDumpReferenceTable(&gDvm.jniPinRefTable, "JNI pinned array");
-        LOGE("Failed adding to JNI pinned array ref table (%d entries)",
+        ALOGE("Failed adding to JNI pinned array ref table (%d entries)",
            (int) dvmReferenceTableEntries(&gDvm.jniPinRefTable));
         dvmDumpThread(dvmThreadSelf(), false);
         dvmAbort();
@@ -688,15 +688,15 @@ static void dumpMethods(Method* methods, size_t methodCount, const char* name) {
         Method* method = &methods[i];
         if (strcmp(name, method->name) == 0) {
             char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-            LOGE("Candidate: %s.%s:%s", method->clazz->descriptor, name, desc);
+            ALOGE("Candidate: %s.%s:%s", method->clazz->descriptor, name, desc);
             free(desc);
         }
     }
 }
 
 static void dumpCandidateMethods(ClassObject* clazz, const char* methodName, const char* signature) {
-    LOGE("ERROR: couldn't find native method");
-    LOGE("Requested: %s.%s:%s", clazz->descriptor, methodName, signature);
+    ALOGE("ERROR: couldn't find native method");
+    ALOGE("Requested: %s.%s:%s", clazz->descriptor, methodName, signature);
     dumpMethods(clazz->virtualMethods, clazz->virtualMethodCount, methodName);
     dumpMethods(clazz->directMethods, clazz->directMethodCount, methodName);
 }
@@ -739,7 +739,7 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
         if (dvmIsSynchronizedMethod(method)) {
             // Synchronization is usually provided by the JNI bridge,
             // but we won't have one.
-            LOGE("fast JNI method %s.%s:%s cannot be synchronized",
+            ALOGE("fast JNI method %s.%s:%s cannot be synchronized",
                     clazz->descriptor, methodName, signature);
             return false;
         }
@@ -747,7 +747,7 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
             // There's no real reason for this constraint, but since we won't
             // be supplying a JNIEnv* or a jobject 'this', you're effectively
             // static anyway, so it seems clearer to say so.
-            LOGE("fast JNI method %s.%s:%s cannot be non-static",
+            ALOGE("fast JNI method %s.%s:%s cannot be non-static",
                     clazz->descriptor, methodName, signature);
             return false;
         }
@@ -957,14 +957,14 @@ static void trackMonitorEnter(Thread* self, Object* obj) {
         assert(refTable->maxEntries == 0);
 
         if (!dvmInitReferenceTable(refTable, kInitialSize, INT_MAX)) {
-            LOGE("Unable to initialize monitor tracking table");
+            ALOGE("Unable to initialize monitor tracking table");
             dvmAbort();
         }
     }
 
     if (!dvmAddToReferenceTable(refTable, obj)) {
         /* ran out of memory? could throw exception instead */
-        LOGE("Unable to add entry to monitor tracking table");
+        ALOGE("Unable to add entry to monitor tracking table");
         dvmAbort();
     } else {
         LOGVV("--- added monitor %p", obj);
@@ -978,7 +978,7 @@ static void trackMonitorExit(Thread* self, Object* obj) {
     ReferenceTable* pRefTable = &self->jniMonitorRefTable;
 
     if (!dvmRemoveFromReferenceTable(pRefTable, pRefTable->table, obj)) {
-        LOGE("JNI monitor %p not found in tracking list", obj);
+        ALOGE("JNI monitor %p not found in tracking list", obj);
         /* keep going? */
     } else {
         LOGVV("--- removed monitor %p", obj);
@@ -1401,7 +1401,7 @@ static void ExceptionClear(JNIEnv* env) {
  */
 static void FatalError(JNIEnv* env, const char* msg) {
     //dvmChangeStatus(NULL, THREAD_RUNNING);
-    LOGE("JNI posting fatal error: %s", msg);
+    ALOGE("JNI posting fatal error: %s", msg);
     dvmAbort();
 }
 
@@ -3349,7 +3349,7 @@ void dvmDestroyJNIEnv(JNIEnv* env) {
 void dvmLateEnableCheckedJni() {
     JNIEnvExt* extEnv = dvmGetJNIEnvForThread();
     if (extEnv == NULL) {
-        LOGE("dvmLateEnableCheckedJni: thread has no JNIEnv");
+        ALOGE("dvmLateEnableCheckedJni: thread has no JNIEnv");
         return;
     }
     JavaVMExt* extVm = (JavaVMExt*) gDvmJni.jniVm;

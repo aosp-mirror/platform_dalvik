@@ -124,7 +124,7 @@ static inline u8 getThreadCpuTimeInUsec()
 
     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tm);
     if (!(tm.tv_nsec >= 0 && tm.tv_nsec < 1*1000*1000*1000)) {
-        LOGE("bad nsec: %ld", tm.tv_nsec);
+        ALOGE("bad nsec: %ld", tm.tv_nsec);
         dvmAbort();
     }
     return tm.tv_sec * 1000000LL + tm.tv_nsec / 1000;
@@ -209,7 +209,7 @@ bool dvmProfilingStartup()
                                       MAP_SHARED, fd, 0);
         close(fd);
         if (gDvm.emulatorTracePage == MAP_FAILED) {
-            LOGE("Unable to mmap /dev/qemu_trace");
+            ALOGE("Unable to mmap /dev/qemu_trace");
             gDvm.emulatorTracePage = NULL;
         } else {
             *(u4*) gDvm.emulatorTracePage = 0;
@@ -246,7 +246,7 @@ static void updateActiveProfilers(ExecutionSubModes newMode, bool enable)
         oldValue = gDvm.activeProfilers;
         newValue = oldValue + (enable ? 1 : -1);
         if (newValue < 0) {
-            LOGE("Can't have %d active profilers", newValue);
+            ALOGE("Can't have %d active profilers", newValue);
             dvmAbort();
         }
     } while (android_atomic_release_cas(oldValue, newValue,
@@ -394,7 +394,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
         }
         if (state->traceFile == NULL) {
             int err = errno;
-            LOGE("Unable to open trace file '%s': %s",
+            ALOGE("Unable to open trace file '%s': %s",
                 traceFileName, strerror(err));
             dvmThrowExceptionFmt(gDvm.exRuntimeException,
                 "Unable to open trace file '%s': %s",
@@ -652,7 +652,7 @@ void dvmMethodTraceStop()
         state->traceFile = open_memstream(&memStreamPtr, &memStreamSize);
         if (state->traceFile == NULL) {
             /* not expected */
-            LOGE("Unable to open memstream");
+            ALOGE("Unable to open memstream");
             dvmAbort();
         }
     }
@@ -707,7 +707,7 @@ void dvmMethodTraceStop()
         /* append the profiling data */
         if (fwrite(state->buf, finalCurOffset, 1, state->traceFile) != 1) {
             int err = errno;
-            LOGE("trace fwrite(%d) failed: %s",
+            ALOGE("trace fwrite(%d) failed: %s",
                 finalCurOffset, strerror(err));
             dvmThrowExceptionFmt(gDvm.exRuntimeException,
                 "Trace data write failed: %s", strerror(err));
@@ -953,7 +953,7 @@ void dvmEmulatorTraceStart()
 void dvmEmulatorTraceStop()
 {
     if (gDvm.emulatorTraceEnableCount == 0) {
-        LOGE("ERROR: emulator tracing not enabled");
+        ALOGE("ERROR: emulator tracing not enabled");
         return;
     }
     /* in theory we should make this an atomic inc; in practice not important */
@@ -981,7 +981,7 @@ void dvmStartInstructionCounting()
 void dvmStopInstructionCounting()
 {
     if (gDvm.instructionCountEnableCount == 0) {
-        LOGE("ERROR: instruction counting not enabled");
+        ALOGE("ERROR: instruction counting not enabled");
         dvmAbort();
     }
     gDvm.instructionCountEnableCount--;

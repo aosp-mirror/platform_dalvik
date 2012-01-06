@@ -41,7 +41,7 @@ bool dvmCheckAsmConstants()
 #include "mterp/common/asm-constants.h"
 
     if (failed) {
-        LOGE("Please correct the values in mterp/common/asm-constants.h");
+        ALOGE("Please correct the values in mterp/common/asm-constants.h");
         dvmAbort();
     }
 
@@ -56,8 +56,8 @@ bool dvmCheckAsmConstants()
     int interpSize = (uintptr_t) dvmAsmInstructionEnd -
                      (uintptr_t) dvmAsmInstructionStart;
     if (interpSize != 0 && interpSize != kNumPackedOpcodes*width) {
-        LOGE("ERROR: unexpected asm interp size %d", interpSize);
-        LOGE("(did an instruction handler exceed %d bytes?)", width);
+        ALOGE("ERROR: unexpected asm interp size %d", interpSize);
+        ALOGE("(did an instruction handler exceed %d bytes?)", width);
         dvmAbort();
     }
 #endif

@@ -489,7 +489,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
             newArray = dvmAllocArrayByClass(gDvm.classJavaLangObjectArray,
                 size, ALLOC_DEFAULT);
             if (newArray == NULL) {
-                LOGE("annotation element array alloc failed (%d)", size);
+                ALOGE("annotation element array alloc failed (%d)", size);
                 return false;
             }
 
@@ -531,7 +531,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
         width = 0;
         break;
     default:
-        LOGE("Bad annotation element value byte 0x%02x (0x%02x)",
+        ALOGE("Bad annotation element value byte 0x%02x (0x%02x)",
             valueType, valueType & kDexAnnotationValueTypeMask);
         assert(false);
         return false;
@@ -580,7 +580,7 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
      * (valueObj->clazz->descriptor+1, valueObj->clazz->classLoader).
      */
     if (strcmp(valueObj->clazz->descriptor, "[Ljava/lang/Object;") != 0) {
-        LOGE("Unexpected src type class (%s)", valueObj->clazz->descriptor);
+        ALOGE("Unexpected src type class (%s)", valueObj->clazz->descriptor);
         return NULL;
     }
     srcElemClass = gDvm.classJavaLangObject;
@@ -605,7 +605,7 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
 
     newArray = dvmAllocArrayByClass(methodReturn, length, ALLOC_DEFAULT);
     if (newArray == NULL) {
-        LOGE("Failed creating duplicate annotation class (%s %d)",
+        ALOGE("Failed creating duplicate annotation class (%s %d)",
             methodReturn->descriptor, length);
         goto bail;
     }
@@ -617,7 +617,7 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
         success = dvmUnboxObjectArray(newArray, srcArray, dstElemClass);
     }
     if (!success) {
-        LOGE("Annotation array copy failed");
+        ALOGE("Annotation array copy failed");
         dvmReleaseTrackedAlloc((Object*)newArray, self);
         newArray = NULL;
         goto bail;
@@ -686,7 +686,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
     if (newMember == NULL || nameObj == NULL || methodObj == NULL ||
         methodReturn == NULL)
     {
-        LOGE("Failed creating annotation element (m=%p n=%p a=%p r=%p)",
+        ALOGE("Failed creating annotation element (m=%p n=%p a=%p r=%p)",
             newMember, nameObj, methodObj, methodReturn);
         goto bail;
     }
@@ -755,7 +755,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
     if (annoClass == NULL) {
         annoClass = dvmResolveClass(clazz, typeIdx, true);
         if (annoClass == NULL) {
-            LOGE("Unable to resolve %s annotation class %d",
+            ALOGE("Unable to resolve %s annotation class %d",
                 clazz->descriptor, typeIdx);
             assert(dvmCheckException(self));
             return NULL;
@@ -778,7 +778,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
             gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray,
             size, ALLOC_DEFAULT);
         if (elementArray == NULL) {
-            LOGE("failed to allocate annotation member array (%d elements)",
+            ALOGE("failed to allocate annotation member array (%d elements)",
                 size);
             goto bail;
         }
@@ -1000,7 +1000,7 @@ static bool skipAnnotationValue(const ClassObject* clazz, const u1** pPtr)
         width = 0;
         break;
     default:
-        LOGE("Bad annotation element value byte 0x%02x", valueType);
+        ALOGE("Bad annotation element value byte 0x%02x", valueType);
         assert(false);
         return false;
     }
@@ -1616,7 +1616,7 @@ static u4 getMethodIdx(const Method* method)
     if (hi < lo) {
         /* this should be impossible -- the method came out of this DEX */
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGE("Unable to find method %s.%s %s in DEX file!",
+        ALOGE("Unable to find method %s.%s %s in DEX file!",
             method->clazz->descriptor, method->name, desc);
         free(desc);
         dvmAbort();
@@ -1925,7 +1925,7 @@ static u4 getFieldIdx(const Field* field)
 
     if (hi < lo) {
         /* this should be impossible -- the field came out of this DEX */
-        LOGE("Unable to find field %s.%s %s in DEX file!",
+        ALOGE("Unable to find field %s.%s %s in DEX file!",
             field->clazz->descriptor, field->name, field->signature);
         dvmAbort();
     }
@@ -2254,7 +2254,7 @@ bool dvmEncodedArrayIteratorGetNext(EncodedArrayIterator* iterator,
             value, kPrimitivesOrObjects);
 
     if (! processed) {
-        LOGE("Failed to process array element %d from %p",
+        ALOGE("Failed to process array element %d from %p",
                 iterator->size - iterator->elementsLeft,
                 iterator->encodedArray);
         iterator->elementsLeft = 0;

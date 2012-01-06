@@ -49,12 +49,12 @@ bool dvmValidateBoxClasses()
 
         clazz = dvmFindClassNoInit(*ccp, NULL);
         if (clazz == NULL) {
-            LOGE("Couldn't find '%s'", *ccp);
+            ALOGE("Couldn't find '%s'", *ccp);
             return false;
         }
 
         if (clazz->ifieldCount != 1) {
-            LOGE("Found %d instance fields in '%s'",
+            ALOGE("Found %d instance fields in '%s'",
                 clazz->ifieldCount, *ccp);
             return false;
         }
@@ -1165,7 +1165,7 @@ ClassObject* dvmGetBoxedReturnType(const Method* meth)
     default: {
         /* should not have passed verification */
         char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-        LOGE("Bad return type in signature '%s'", desc);
+        ALOGE("Bad return type in signature '%s'", desc);
         free(desc);
         dvmThrowInternalError(NULL);
         return NULL;

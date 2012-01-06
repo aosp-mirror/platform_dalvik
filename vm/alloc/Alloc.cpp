@@ -99,14 +99,14 @@ static Object* createStockException(const char* descriptor, const char* msg)
     /* find class, initialize if necessary */
     clazz = dvmFindSystemClass(descriptor);
     if (clazz == NULL) {
-        LOGE("Unable to find %s", descriptor);
+        ALOGE("Unable to find %s", descriptor);
         return NULL;
     }
 
     init = dvmFindDirectMethodByDescriptor(clazz, "<init>",
             "(Ljava/lang/String;)V");
     if (init == NULL) {
-        LOGE("Unable to find String-arg constructor for %s", descriptor);
+        ALOGE("Unable to find String-arg constructor for %s", descriptor);
         return NULL;
     }
 
@@ -259,7 +259,7 @@ void dvmAddTrackedAlloc(Object* obj, Thread* self)
     assert(obj != NULL);
     assert(self != NULL);
     if (!dvmAddToReferenceTable(&self->internalLocalRefTable, obj)) {
-        LOGE("threadid=%d: unable to add %p to internal ref table",
+        ALOGE("threadid=%d: unable to add %p to internal ref table",
             self->threadId, obj);
         dvmDumpThread(self, false);
         dvmAbort();
@@ -284,7 +284,7 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self)
     if (!dvmRemoveFromReferenceTable(&self->internalLocalRefTable,
             self->internalLocalRefTable.table, obj))
     {
-        LOGE("threadid=%d: failed to remove %p from internal ref table",
+        ALOGE("threadid=%d: failed to remove %p from internal ref table",
             self->threadId, obj);
         dvmAbort();
     }

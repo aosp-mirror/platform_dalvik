@@ -180,9 +180,9 @@ static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
     thisStr = dvmCreateCstrFromString(thisStrObj);
     compStr = dvmCreateCstrFromString(compStrObj);
 
-    LOGE("%s expected %d got %d", compareType, expectResult, newResult);
-    LOGE(" this (o=%d l=%d) '%s'", thisOffset, thisCount, thisStr);
-    LOGE(" comp (o=%d l=%d) '%s'", compOffset, compCount, compStr);
+    ALOGE("%s expected %d got %d", compareType, expectResult, newResult);
+    ALOGE(" this (o=%d l=%d) '%s'", thisOffset, thisCount, thisStr);
+    ALOGE(" comp (o=%d l=%d) '%s'", compOffset, compCount, compStr);
     dvmPrintHexDumpEx(ANDROID_LOG_INFO, LOG_TAG,
         ((const u2*) thisArray->contents) + thisOffset, thisCount*2,
         kHexDumpLocal);
@@ -823,7 +823,7 @@ Method* dvmFindInlinableMethod(const char* classDescriptor,
      */
     ClassObject* clazz = dvmFindClassNoInit(classDescriptor, NULL);
     if (clazz == NULL) {
-        LOGE("dvmFindInlinableMethod: can't find class '%s'",
+        ALOGE("dvmFindInlinableMethod: can't find class '%s'",
             classDescriptor);
         dvmClearException(dvmThreadSelf());
         return NULL;
@@ -840,7 +840,7 @@ Method* dvmFindInlinableMethod(const char* classDescriptor,
             methodSignature);
     }
     if (method == NULL) {
-        LOGE("dvmFindInlinableMethod: can't find method %s.%s %s",
+        ALOGE("dvmFindInlinableMethod: can't find method %s.%s %s",
             clazz->descriptor, methodName, methodSignature);
         return NULL;
     }
@@ -849,13 +849,13 @@ Method* dvmFindInlinableMethod(const char* classDescriptor,
      * Check that the method is appropriate for inlining.
      */
     if (!dvmIsFinalClass(clazz) && !dvmIsFinalMethod(method)) {
-        LOGE("dvmFindInlinableMethod: can't inline non-final method %s.%s",
+        ALOGE("dvmFindInlinableMethod: can't inline non-final method %s.%s",
             clazz->descriptor, method->name);
         return NULL;
     }
     if (dvmIsSynchronizedMethod(method) ||
             dvmIsDeclaredSynchronizedMethod(method)) {
-        LOGE("dvmFindInlinableMethod: can't inline synchronized method %s.%s",
+        ALOGE("dvmFindInlinableMethod: can't inline synchronized method %s.%s",
             clazz->descriptor, method->name);
         return NULL;
     }

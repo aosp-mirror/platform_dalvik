@@ -134,9 +134,9 @@ static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
 #if WITH_EXTRA_GC_CHECKS
                         if (fp[i] != 0 && !dvmIsValidObject((Object *)fp[i])) {
                             /* this is very bad */
-                            LOGE("PGC: invalid ref in reg %d: %#x",
+                            ALOGE("PGC: invalid ref in reg %d: %#x",
                                  method->registersSize - 1 - i, fp[i]);
-                            LOGE("PGC: %s.%s addr %#x",
+                            ALOGE("PGC: %s.%s addr %#x",
                                  method->clazz->descriptor, method->name,
                                  saveArea->xtra.currentPc - method->insns);
                             continue;

@@ -317,7 +317,7 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
     if (idx < 0) {
         /* breakpoint not found in set -- unexpected */
         if (*(u1*)addr == OP_BREAKPOINT) {
-            LOGE("Unable to restore breakpoint opcode (%s.%s +%#x)",
+            ALOGE("Unable to restore breakpoint opcode (%s.%s +%#x)",
                 method->clazz->descriptor, method->name, instrOffset);
             dvmAbort();
         } else {
@@ -462,7 +462,7 @@ u1 dvmGetOriginalOpcode(const u2* addr)
     if (!dvmBreakpointSetOriginalOpcode(pSet, addr, &orig)) {
         orig = *(u1*)addr;
         if (orig == OP_BREAKPOINT) {
-            LOGE("GLITCH: can't find breakpoint, opcode is still set");
+            ALOGE("GLITCH: can't find breakpoint, opcode is still set");
             dvmAbort();
         }
     }
@@ -865,7 +865,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
              * during single-step.
              */
             char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-            LOGE("HEY: invalid 'this' ptr %p (%s.%s %s)", thisPtr,
+            ALOGE("HEY: invalid 'this' ptr %p (%s.%s %s)", thisPtr,
                 method->clazz->descriptor, method->name, desc);
             free(desc);
             dvmAbort();
@@ -920,15 +920,15 @@ void dvmInterpCheckTrackedRefs(Thread* self, const Method* method,
 
         count = dvmReferenceTableEntries(&self->internalLocalRefTable);
 
-        LOGE("TRACK: unreleased internal reference (prev=%d total=%d)",
+        ALOGE("TRACK: unreleased internal reference (prev=%d total=%d)",
             debugTrackedRefStart, count);
         desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGE("       current method is %s.%s %s", method->clazz->descriptor,
+        ALOGE("       current method is %s.%s %s", method->clazz->descriptor,
             method->name, desc);
         free(desc);
         top = self->internalLocalRefTable.table + debugTrackedRefStart;
         while (top < self->internalLocalRefTable.nextEntry) {
-            LOGE("  %p (%s)",
+            ALOGE("  %p (%s)",
                  *top,
                  ((*top)->clazz != NULL) ? (*top)->clazz->descriptor : "");
             top++;
@@ -1179,7 +1179,7 @@ static void copySwappedArrayData(void* dest, const u2* src, u4 size, u2 width)
         }
         break;
     default:
-        LOGE("Unexpected width %d in copySwappedArrayData", width);
+        ALOGE("Unexpected width %d in copySwappedArrayData", width);
         dvmAbort();
         break;
     }
@@ -1616,7 +1616,7 @@ void dvmArmSafePointCallback(Thread* thread, SafePointCallback funct,
         if ((funct != thread->callback) ||
             (arg != thread->callbackArg)) {
             // Yes - report failure and die
-            LOGE("ArmSafePointCallback failed, thread %d", thread->threadId);
+            ALOGE("ArmSafePointCallback failed, thread %d", thread->threadId);
             dvmUnlockMutex(&thread->callbackMutex);
             dvmAbort();
         }
@@ -1944,7 +1944,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     if (method->clazz->status < CLASS_INITIALIZING ||
         method->clazz->status == CLASS_ERROR)
     {
-        LOGE("ERROR: tried to execute code in unprepared class '%s' (%d)",
+        ALOGE("ERROR: tried to execute code in unprepared class '%s' (%d)",
             method->clazz->descriptor, method->clazz->status);
         dvmDumpThread(self, false);
         dvmAbort();

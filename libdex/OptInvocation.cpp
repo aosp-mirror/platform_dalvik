@@ -63,7 +63,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
          * the leading "./" out, but it'll do.
          */
         if (getcwd(absoluteFile, kBufLen) == NULL) {
-            LOGE("Can't get CWD while opening jar file");
+            ALOGE("Can't get CWD while opening jar file");
             return NULL;
         }
         strncat(absoluteFile, "/", kBufLen);
@@ -135,7 +135,7 @@ int dexOptCreateEmptyHeader(int fd)
     actual = write(fd, &optHdr, sizeof(optHdr));
     if (actual != sizeof(optHdr)) {
         int err = errno ? errno : -1;
-        LOGE("opt header write failed: %s", strerror(errno));
+        ALOGE("opt header write failed: %s", strerror(errno));
         return errno;
     }
 

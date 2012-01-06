@@ -206,7 +206,7 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
         int err;
 
         if (rlimit_tuple->length != 3) {
-            LOGE("rlimits array must have a second dimension of size 3");
+            ALOGE("rlimits array must have a second dimension of size 3");
             return -1;
         }
 
@@ -236,7 +236,7 @@ static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
     }
 
     if (!dvmGcPreZygoteFork()) {
-        LOGE("pre-fork heap failed");
+        ALOGE("pre-fork heap failed");
         dvmAbort();
     }
 
@@ -312,14 +312,14 @@ static void enableDebugFeatures(u4 debugFlags)
          * to disable that
          */
         if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) < 0) {
-            LOGE("could not set dumpable bit flag for pid %d: %s",
+            ALOGE("could not set dumpable bit flag for pid %d: %s",
                  getpid(), strerror(errno));
         } else {
             struct rlimit rl;
             rl.rlim_cur = 0;
             rl.rlim_max = RLIM_INFINITY;
             if (setrlimit(RLIMIT_CORE, &rl) < 0) {
-                LOGE("could not disable core file generation for pid %d: %s",
+                ALOGE("could not disable core file generation for pid %d: %s",
                     getpid(), strerror(errno));
             }
         }
@@ -391,7 +391,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
     }
 
     if (!dvmGcPreZygoteFork()) {
-        LOGE("pre-fork heap failed");
+        ALOGE("pre-fork heap failed");
         dvmAbort();
     }
 
@@ -413,7 +413,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
             err = prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
 
             if (err < 0) {
-                LOGE("cannot PR_SET_KEEPCAPS: %s", strerror(errno));
+                ALOGE("cannot PR_SET_KEEPCAPS: %s", strerror(errno));
                 dvmAbort();
             }
         }
@@ -423,32 +423,32 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         err = setgroupsIntarray(gids);
 
         if (err < 0) {
-            LOGE("cannot setgroups(): %s", strerror(errno));
+            ALOGE("cannot setgroups(): %s", strerror(errno));
             dvmAbort();
         }
 
         err = setrlimitsFromArray(rlimits);
 
         if (err < 0) {
-            LOGE("cannot setrlimit(): %s", strerror(errno));
+            ALOGE("cannot setrlimit(): %s", strerror(errno));
             dvmAbort();
         }
 
         err = setgid(gid);
         if (err < 0) {
-            LOGE("cannot setgid(%d): %s", gid, strerror(errno));
+            ALOGE("cannot setgid(%d): %s", gid, strerror(errno));
             dvmAbort();
         }
 
         err = setuid(uid);
         if (err < 0) {
-            LOGE("cannot setuid(%d): %s", uid, strerror(errno));
+            ALOGE("cannot setuid(%d): %s", uid, strerror(errno));
             dvmAbort();
         }
 
         err = setCapabilities(permittedCapabilities, effectiveCapabilities);
         if (err != 0) {
-            LOGE("cannot set capabilities (%llx,%llx): %s",
+            ALOGE("cannot set capabilities (%llx,%llx): %s",
                 permittedCapabilities, effectiveCapabilities, strerror(err));
             dvmAbort();
         }
@@ -465,7 +465,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         unsetSignalHandler();
         gDvm.zygote = false;
         if (!dvmInitAfterZygote()) {
-            LOGE("error in post-zygote initialization");
+            ALOGE("error in post-zygote initialization");
             dvmAbort();
         }
     } else if (pid > 0) {
@@ -509,7 +509,7 @@ static void Dalvik_dalvik_system_Zygote_forkSystemServer(
          * we recheck here just to make sure that all is well.
          */
         if (waitpid(pid, &status, WNOHANG) == pid) {
-            LOGE("System server process %d has died. Restarting Zygote!", pid);
+            ALOGE("System server process %d has died. Restarting Zygote!", pid);
             kill(getpid(), SIGKILL);
         }
     }

@@ -120,13 +120,13 @@ void dvmThrowChainedException(ClassObject* excepClass, const char* msg,
          * early on in VM initialization. There's nothing better to do
          * than just log the message as an error and abort.
          */
-        LOGE("Fatal error: %s", msg);
+        ALOGE("Fatal error: %s", msg);
         dvmAbort();
     }
 
     /* make sure the exception is initialized */
     if (!dvmIsClassInitialized(excepClass) && !dvmInitClass(excepClass)) {
-        LOGE("ERROR: unable to initialize exception class '%s'",
+        ALOGE("ERROR: unable to initialize exception class '%s'",
             excepClass->descriptor);
         if (strcmp(excepClass->descriptor, "Ljava/lang/InternalError;") == 0)
             dvmAbort();
@@ -147,7 +147,7 @@ void dvmThrowChainedException(ClassObject* excepClass, const char* msg,
          */
         if (dvmCheckException(self))
             goto bail;
-        LOGE("FATAL: unable to allocate exception '%s' '%s'",
+        ALOGE("FATAL: unable to allocate exception '%s' '%s'",
             excepClass->descriptor, msg != NULL ? msg : "(no msg)");
         dvmAbort();
     }
@@ -278,7 +278,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
 
     if (cause != NULL) {
         if (!dvmInstanceof(cause->clazz, gDvm.exThrowable)) {
-            LOGE("Tried to init exception with cause '%s'",
+            ALOGE("Tried to init exception with cause '%s'",
                 cause->clazz->descriptor);
             dvmAbort();
         }
@@ -539,7 +539,7 @@ void dvmWrapException(const char* newExcepStr)
 Object* dvmGetExceptionCause(const Object* exception)
 {
     if (!dvmInstanceof(exception->clazz, gDvm.exThrowable)) {
-        LOGE("Tried to get cause from object of type '%s'",
+        ALOGE("Tried to get cause from object of type '%s'",
             exception->clazz->descriptor);
         dvmAbort();
     }
@@ -1286,7 +1286,7 @@ void dvmThrowExceptionInInitializerError()
          * anything fancier, we just abort here with a blatant
          * message.
          */
-        LOGE("Fatal error during early class initialization:");
+        ALOGE("Fatal error during early class initialization:");
         dvmLogExceptionStackTrace();
         dvmAbort();
     }

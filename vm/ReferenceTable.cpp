@@ -78,7 +78,7 @@ bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj)
 
         newTable = (Object**) realloc(pRef->table, newSize * sizeof(Object*));
         if (newTable == NULL) {
-            LOGE("Unable to expand ref table (from %d to %d %d-byte entries)",
+            ALOGE("Unable to expand ref table (from %d to %d %d-byte entries)",
                 pRef->allocEntries, newSize, sizeof(Object*));
             return false;
         }
@@ -310,7 +310,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     // Make a copy of the table, and sort it.
     Object** tableCopy = (Object**)malloc(sizeof(Object*) * count);
     if (tableCopy == NULL) {
-        LOGE("Unable to copy table with %d elements", count);
+        ALOGE("Unable to copy table with %d elements", count);
         return;
     }
     memcpy(tableCopy, refs, sizeof(Object*) * count);

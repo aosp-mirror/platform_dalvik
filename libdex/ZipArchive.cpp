@@ -616,7 +616,7 @@ static int inflateToFile(int outFd, int inFd, size_t uncompLen, size_t compLen)
     zerr = inflateInit2(&zstream, -MAX_WBITS);
     if (zerr != Z_OK) {
         if (zerr == Z_VERSION_ERROR) {
-            LOGE("Installed zlib is not compatible with linked version (%s)",
+            ALOGE("Installed zlib is not compatible with linked version (%s)",
                 ZLIB_VERSION);
         } else {
             ALOGW("Call to inflateInit2 failed (zerr=%d)", zerr);

@@ -98,11 +98,11 @@ Monitor* dvmCreateMonitor(Object* obj)
 
     mon = (Monitor*) calloc(1, sizeof(Monitor));
     if (mon == NULL) {
-        LOGE("Unable to allocate monitor");
+        ALOGE("Unable to allocate monitor");
         dvmAbort();
     }
     if (((u4)mon & 7) != 0) {
-        LOGE("Misaligned monitor: %p", mon);
+        ALOGE("Misaligned monitor: %p", mon);
         dvmAbort();
     }
     mon->obj = obj;
@@ -1365,7 +1365,7 @@ retry:
         dvmUnlockThreadList();
         goto retry;
     }
-    LOGE("object %p has an unknown hash state %#x", obj, hashState);
+    ALOGE("object %p has an unknown hash state %#x", obj, hashState);
     dvmDumpThread(dvmThreadSelf(), false);
     dvmAbort();
     return 0;  /* Quiet the compiler. */

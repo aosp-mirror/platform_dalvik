@@ -27,7 +27,7 @@ bool dvmCompilerHeapInit(void)
     arenaHead =
         (ArenaMemBlock *) malloc(sizeof(ArenaMemBlock) + ARENA_DEFAULT_SIZE);
     if (arenaHead == NULL) {
-        LOGE("No memory left to create compiler heap memory");
+        ALOGE("No memory left to create compiler heap memory");
         return false;
     }
     arenaHead->blockSize = ARENA_DEFAULT_SIZE;
@@ -69,7 +69,7 @@ retry:
         ArenaMemBlock *newArena = (ArenaMemBlock *)
             malloc(sizeof(ArenaMemBlock) + blockSize);
         if (newArena == NULL) {
-            LOGE("Arena allocation failure");
+            ALOGE("Arena allocation failure");
             dvmAbort();
         }
         newArena->blockSize = blockSize;
@@ -326,7 +326,7 @@ bool dvmCompilerSetBit(BitVector *pBits, unsigned int num)
 bool dvmCompilerClearBit(BitVector *pBits, unsigned int num)
 {
     if (num >= pBits->storageSize * sizeof(u4) * 8) {
-        LOGE("Trying to clear a bit that is not set in the vector yet!");
+        ALOGE("Trying to clear a bit that is not set in the vector yet!");
         dvmAbort();
     }
 
@@ -347,17 +347,17 @@ void dvmDebugBitVector(char *msg, const BitVector *bv, int length)
 {
     int i;
 
-    LOGE("%s", msg);
+    ALOGE("%s", msg);
     for (i = 0; i < length; i++) {
         if (dvmIsBitSet(bv, i)) {
-            LOGE("    Bit %d is set", i);
+            ALOGE("    Bit %d is set", i);
         }
     }
 }
 
 void dvmCompilerAbort(CompilationUnit *cUnit)
 {
-    LOGE("Jit: aborting trace compilation, reverting to interpreter");
+    ALOGE("Jit: aborting trace compilation, reverting to interpreter");
     /* Force a traceback in debug builds */
     assert(0);
     /*
@@ -372,14 +372,14 @@ void dvmDumpBlockBitVector(const GrowableList *blocks, char *msg,
 {
     int i;
 
-    LOGE("%s", msg);
+    ALOGE("%s", msg);
     for (i = 0; i < length; i++) {
         if (dvmIsBitSet(bv, i)) {
             BasicBlock *bb =
                 (BasicBlock *) dvmGrowableListGetElement(blocks, i);
             char blockName[BLOCK_NAME_LEN];
             dvmGetBlockName(bb, blockName);
-            LOGE("Bit %d / %s is set", i, blockName);
+            ALOGE("Bit %d / %s is set", i, blockName);
         }
     }
 }

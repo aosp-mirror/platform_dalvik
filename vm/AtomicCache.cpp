@@ -156,7 +156,7 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
             newVersion, newVersion & ~ATOMIC_LOCK_FLAG,
             (volatile s4*) &pEntry->version) != 0)
     {
-        //LOGE("unable to reset the instanceof cache ownership");
+        //ALOGE("unable to reset the instanceof cache ownership");
         dvmAbort();
     }
 }

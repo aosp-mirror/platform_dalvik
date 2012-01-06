@@ -250,7 +250,7 @@ static void checkMergeTab()
     for (i = 0; i < kRegTypeMAX; i++) {
         for (j = i; j < kRegTypeMAX; j++) {
             if (gDvmMergeTab[i][j] != gDvmMergeTab[j][i]) {
-                LOGE("Symmetry violation: %d,%d vs %d,%d", i, j, j, i);
+                ALOGE("Symmetry violation: %d,%d vs %d,%d", i, j, j, i);
                 dvmAbort();
             }
         }
@@ -1534,7 +1534,7 @@ static void setRegisterType(RegisterLine* registerLine, u4 vdst,
     case kRegTypeLongHi:
     case kRegTypeDoubleHi:
         /* should never set these explicitly */
-        LOGE("BUG: explicit set of high register type");
+        ALOGE("BUG: explicit set of high register type");
         dvmAbort();
         break;
 
@@ -1559,7 +1559,7 @@ static void setRegisterType(RegisterLine* registerLine, u4 vdst,
         /* bad type - fall through */
 
     case kRegTypeConflict:      // should only be set during a merge
-        LOGE("BUG: set register to unknown type %d", newType);
+        ALOGE("BUG: set register to unknown type %d", newType);
         dvmAbort();
         break;
     }
@@ -1728,7 +1728,7 @@ static void markRefsAsInitialized(RegisterLine* registerLine, int insnRegCount,
 
     clazz = getUninitInstance(uninitMap, regTypeToUninitIndex(uninitType));
     if (clazz == NULL) {
-        LOGE("VFY: unable to find type=%#x (idx=%d)",
+        ALOGE("VFY: unable to find type=%#x (idx=%d)",
             uninitType, regTypeToUninitIndex(uninitType));
         *pFailure = VERIFY_ERROR_GENERIC;
         return;
@@ -3327,7 +3327,7 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
     default:
         /* whoops */
-        LOGE("ERROR: stomped a %d-unit instruction with a verifier error",
+        ALOGE("ERROR: stomped a %d-unit instruction with a verifier error",
             width);
         dvmAbort();
     }

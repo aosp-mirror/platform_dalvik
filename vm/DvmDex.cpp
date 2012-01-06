@@ -81,7 +81,7 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
         pDvmDex->pResFields == NULL ||
         pDvmDex->pInterfaceCache == NULL)
     {
-        LOGE("Alloc failure in allocateAuxStructures");
+        ALOGE("Alloc failure in allocateAuxStructures");
         free(pDvmDex->pResStrings);
         free(pDvmDex->pResClasses);
         free(pDvmDex->pResMethods);
@@ -112,18 +112,18 @@ int dvmDexFileOpenFromFd(int fd, DvmDex** ppDvmDex)
         parseFlags |= kDexParseVerifyChecksum;
 
     if (lseek(fd, 0, SEEK_SET) < 0) {
-        LOGE("lseek rewind failed");
+        ALOGE("lseek rewind failed");
         goto bail;
     }
 
     if (sysMapFileInShmemWritableReadOnly(fd, &memMap) != 0) {
-        LOGE("Unable to map file");
+        ALOGE("Unable to map file");
         goto bail;
     }
 
     pDexFile = dexFileParse((u1*)memMap.addr, memMap.length, parseFlags);
     if (pDexFile == NULL) {
-        LOGE("DEX parse failed");
+        ALOGE("DEX parse failed");
         sysReleaseShmem(&memMap);
         goto bail;
     }
@@ -167,7 +167,7 @@ int dvmDexFileOpenPartial(const void* addr, int len, DvmDex** ppDvmDex)
 
     pDexFile = dexFileParse((u1*)addr, len, parseFlags);
     if (pDexFile == NULL) {
-        LOGE("DEX parse failed");
+        ALOGE("DEX parse failed");
         goto bail;
     }
     pDvmDex = allocateAuxStructures(pDexFile);

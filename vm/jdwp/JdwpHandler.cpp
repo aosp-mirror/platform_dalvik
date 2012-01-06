@@ -1927,7 +1927,7 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
         }
     }
     if (i == NELEM(gHandlerMap)) {
-        LOGE("REQ: UNSUPPORTED (cmd=%d/%d dataLen=%d id=0x%06x)",
+        ALOGE("REQ: UNSUPPORTED (cmd=%d/%d dataLen=%d id=0x%06x)",
             pHeader->cmdSet, pHeader->cmd, dataLen, pHeader->id);
         if (dataLen > 0)
             dvmPrintHexDumpDbg(buf, dataLen, LOG_TAG);

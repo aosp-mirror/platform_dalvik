@@ -357,22 +357,22 @@ CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
 #if 0
     /* Uncomment the following to explore various callee patterns */
     if (attributes & METHOD_IS_THROW_FREE) {
-        LOGE("%s%s is inlinable%s", method->clazz->descriptor, method->name,
+        ALOGE("%s%s is inlinable%s", method->clazz->descriptor, method->name,
              (attributes & METHOD_IS_EMPTY) ? " empty" : "");
     }
 
     if (attributes & METHOD_IS_LEAF) {
-        LOGE("%s%s is leaf %d%s", method->clazz->descriptor, method->name,
+        ALOGE("%s%s is leaf %d%s", method->clazz->descriptor, method->name,
              insnSize, insnSize < 5 ? " (small)" : "");
     }
 
     if (attributes & (METHOD_IS_GETTER | METHOD_IS_SETTER)) {
-        LOGE("%s%s is %s", method->clazz->descriptor, method->name,
+        ALOGE("%s%s is %s", method->clazz->descriptor, method->name,
              attributes & METHOD_IS_GETTER ? "getter": "setter");
     }
     if (attributes ==
         (METHOD_IS_LEAF | METHOD_IS_THROW_FREE | METHOD_IS_CALLEE)) {
-        LOGE("%s%s is inlinable non setter/getter", method->clazz->descriptor,
+        ALOGE("%s%s is inlinable non setter/getter", method->clazz->descriptor,
              method->name);
     }
 #endif
@@ -519,7 +519,7 @@ static BasicBlock *splitBlock(CompilationUnit *cUnit,
         insn = insn->next;
     }
     if (insn == NULL) {
-        LOGE("Break split failed");
+        ALOGE("Break split failed");
         dvmAbort();
     }
     BasicBlock *bottomBlock = dvmCompilerNewBB(kDalvikByteCode,
@@ -814,7 +814,7 @@ static bool verifyPredInfo(CompilationUnit *cUnit, BasicBlock *bb)
             dvmGetBlockName(bb, blockName1);
             dvmGetBlockName(predBB, blockName2);
             dvmDumpCFG(cUnit, "/sdcard/cfg/");
-            LOGE("Successor %s not found from %s",
+            ALOGE("Successor %s not found from %s",
                  blockName1, blockName2);
             dvmAbort();
         }
@@ -909,7 +909,7 @@ static void processCanBranch(CompilationUnit *cUnit, BasicBlock *curBlock,
             target += (int) insn->dalvikInsn.vB;
             break;
         default:
-            LOGE("Unexpected opcode(%d) with kInstrCanBranch set",
+            ALOGE("Unexpected opcode(%d) with kInstrCanBranch set",
                  insn->dalvikInsn.opcode);
             dvmAbort();
     }
@@ -999,7 +999,7 @@ static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
     }
 
     if (curBlock->successorBlockList.blockListType != kNotUsed) {
-        LOGE("Successor block list already in use: %d",
+        ALOGE("Successor block list already in use: %d",
              curBlock->successorBlockList.blockListType);
         dvmAbort();
     }
@@ -1050,13 +1050,13 @@ static void processCanThrow(CompilationUnit *cUnit, BasicBlock *curBlock,
         DexCatchIterator iterator;
 
         if (!dexFindCatchHandler(&iterator, dexCode, curOffset)) {
-            LOGE("Catch block not found in dexfile for insn %x in %s",
+            ALOGE("Catch block not found in dexfile for insn %x in %s",
                  curOffset, method->name);
             dvmAbort();
 
         }
         if (curBlock->successorBlockList.blockListType != kNotUsed) {
-            LOGE("Successor block list already in use: %d",
+            ALOGE("Successor block list already in use: %d",
                  curBlock->successorBlockList.blockListType);
             dvmAbort();
         }

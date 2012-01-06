@@ -93,11 +93,11 @@ static void verifyReference(void *addr, void *arg)
     if (!isValid) {
         Object **parent = (Object **)arg;
         if (*parent != NULL) {
-            LOGE("Verify of object %p failed", *parent);
+            ALOGE("Verify of object %p failed", *parent);
             dvmDumpObject(*parent);
             *parent = NULL;
         }
-        LOGE("Verify of reference %p @ %p failed", obj, addr);
+        ALOGE("Verify of reference %p @ %p failed", obj, addr);
         dvmDumpObject(obj);
     }
 }

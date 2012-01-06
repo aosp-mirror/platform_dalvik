@@ -105,7 +105,7 @@ JdwpState* dvmJdwpStartup(const JdwpStartupParams* pParams)
         /* TODO */
         break;
     default:
-        LOGE("Unknown transport %d", pParams->transport);
+        ALOGE("Unknown transport %d", pParams->transport);
         assert(false);
         goto fail;
     }
@@ -158,7 +158,7 @@ JdwpState* dvmJdwpStartup(const JdwpStartupParams* pParams)
         dvmChangeStatus(NULL, THREAD_RUNNING);
 
         if (!dvmJdwpIsActive(state)) {
-            LOGE("JDWP connection failed");
+            ALOGE("JDWP connection failed");
             goto fail;
         }
 
@@ -316,7 +316,7 @@ static void* jdwpThreadStart(void* arg)
         while (true) {
             // sanity check -- shouldn't happen?
             if (dvmThreadSelf()->status != THREAD_VMWAIT) {
-                LOGE("JDWP thread no longer in VMWAIT (now %d); resetting",
+                ALOGE("JDWP thread no longer in VMWAIT (now %d); resetting",
                     dvmThreadSelf()->status);
                 dvmDbgThreadWaiting();
             }

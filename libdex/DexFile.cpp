@@ -294,7 +294,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
     int result = -1;
 
     if (length < sizeof(DexHeader)) {
-        LOGE("too short to be a valid .dex");
+        ALOGE("too short to be a valid .dex");
         goto bail;      /* bad file format */
     }
 
@@ -309,7 +309,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
     if (memcmp(data, DEX_OPT_MAGIC, 4) == 0) {
         magic = data;
         if (memcmp(magic+4, DEX_OPT_MAGIC_VERS, 4) != 0) {
-            LOGE("bad opt version (0x%02x %02x %02x %02x)",
+            ALOGE("bad opt version (0x%02x %02x %02x %02x)",
                  magic[4], magic[5], magic[6], magic[7]);
             goto bail;
         }
@@ -326,7 +326,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
         data += pDexFile->pOptHeader->dexOffset;
         length -= pDexFile->pOptHeader->dexOffset;
         if (pDexFile->pOptHeader->dexLength > length) {
-            LOGE("File truncated? stored len=%d, rem len=%d",
+            ALOGE("File truncated? stored len=%d, rem len=%d",
                 pDexFile->pOptHeader->dexLength, (int) length);
             goto bail;
         }
@@ -348,7 +348,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
     if (flags & kDexParseVerifyChecksum) {
         u4 adler = dexComputeChecksum(pHeader);
         if (adler != pHeader->checksum) {
-            LOGE("ERROR: bad checksum (%08x vs %08x)",
+            ALOGE("ERROR: bad checksum (%08x vs %08x)",
                 adler, pHeader->checksum);
             if (!(flags & kDexParseContinueOnError))
                 goto bail;
@@ -360,7 +360,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
         if (pOptHeader != NULL) {
             adler = dexComputeOptChecksum(pOptHeader);
             if (adler != pOptHeader->checksum) {
-                LOGE("ERROR: bad opt checksum (%08x vs %08x)",
+                ALOGE("ERROR: bad opt checksum (%08x vs %08x)",
                     adler, pOptHeader->checksum);
                 if (!(flags & kDexParseContinueOnError))
                     goto bail;
@@ -385,7 +385,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
         if (memcmp(sha1Digest, pHeader->signature, kSHA1DigestLen) != 0) {
             char tmpBuf1[kSHA1DigestOutputLen];
             char tmpBuf2[kSHA1DigestOutputLen];
-            LOGE("ERROR: bad SHA1 digest (%s vs %s)",
+            ALOGE("ERROR: bad SHA1 digest (%s vs %s)",
                 dexSHA1DigestToStr(sha1Digest, tmpBuf1),
                 dexSHA1DigestToStr(pHeader->signature, tmpBuf2));
             if (!(flags & kDexParseContinueOnError))
@@ -396,14 +396,14 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
     }
 
     if (pHeader->fileSize != length) {
-        LOGE("ERROR: stored file size (%d) != expected (%d)",
+        ALOGE("ERROR: stored file size (%d) != expected (%d)",
             (int) pHeader->fileSize, (int) length);
         if (!(flags & kDexParseContinueOnError))
             goto bail;
     }
 
     if (pHeader->classDefsSize == 0) {
-        LOGE("ERROR: DEX file has no classes in it, failing");
+        ALOGE("ERROR: DEX file has no classes in it, failing");
         goto bail;
     }
 

@@ -133,7 +133,7 @@ bool dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
         LOGVV("expanding %p to %d", pSet, pSet->alloc);
         newList = (const void**)realloc(pSet->list, pSet->alloc * sizeof(void*));
         if (newList == NULL) {
-            LOGE("Failed expanding ptr set (alloc=%d)", pSet->alloc);
+            ALOGE("Failed expanding ptr set (alloc=%d)", pSet->alloc);
             dvmAbort();
         }
         pSet->list = newList;

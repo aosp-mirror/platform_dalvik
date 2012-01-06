@@ -102,7 +102,7 @@
         {                                                                   \
             char* desc;                                                     \
             desc = dexProtoCopyMethodDescriptor(&curMethod->prototype);     \
-            LOGE("Invalid branch %d at 0x%04x in %s.%s %s",                 \
+            ALOGE("Invalid branch %d at 0x%04x in %s.%s %s",                 \
                 myoff, (int) (pc - curMethod->insns),                       \
                 curMethod->clazz->descriptor, curMethod->name, desc);       \
             free(desc);                                                     \
@@ -321,14 +321,14 @@ static inline bool checkForNull(Object* obj)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsHeapAddress(obj)) {
-        LOGE("Invalid object %p", obj);
+        ALOGE("Invalid object %p", obj);
         dvmAbort();
     }
 #endif
 #ifndef NDEBUG
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
         /* probable heap corruption */
-        LOGE("Invalid object class %p (in %p)", obj->clazz, obj);
+        ALOGE("Invalid object class %p (in %p)", obj->clazz, obj);
         dvmAbort();
     }
 #endif
@@ -353,14 +353,14 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsHeapAddress(obj)) {
-        LOGE("Invalid object %p", obj);
+        ALOGE("Invalid object %p", obj);
         dvmAbort();
     }
 #endif
 #ifndef NDEBUG
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
         /* probable heap corruption */
-        LOGE("Invalid object class %p (in %p)", obj->clazz, obj);
+        ALOGE("Invalid object class %p (in %p)", obj->clazz, obj);
         dvmAbort();
     }
 #endif
@@ -3018,7 +3018,7 @@ HANDLE_OPCODE(OP_UNUSED_FF)
     /*
      * In portable interp, most unused opcodes will fall through to here.
      */
-    LOGE("unknown opcode 0x%02x\n", INST_INST(inst));
+    ALOGE("unknown opcode 0x%02x\n", INST_INST(inst));
     dvmAbort();
     FINISH(1);
 OP_END
@@ -3091,7 +3091,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool)
             GOTO_exceptionThrown();
         } else if (typeCh != 'L' && typeCh != '[' && typeCh != 'I') {
             /* TODO: requires multiple "fill in" loops with different widths */
-            LOGE("non-int primitives not implemented");
+            ALOGE("non-int primitives not implemented");
             dvmThrowInternalError(
                 "filled-new-array not implemented for anything but 'int'");
             GOTO_exceptionThrown();
@@ -3608,7 +3608,7 @@ GOTO_TARGET(returnFromMethod)
         {
             FINISH(3);
         } else {
-            //LOGE("Unknown invoke instr %02x at %d",
+            //ALOGE("Unknown invoke instr %02x at %d",
             //    invokeInstr, (int) (pc - curMethod->insns));
             assert(false);
         }
@@ -3985,7 +3985,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             {
                 FINISH(3);
             } else {
-                //LOGE("Unknown invoke instr %02x at %d",
+                //ALOGE("Unknown invoke instr %02x at %d",
                 //    invokeInstr, (int) (pc - curMethod->insns));
                 assert(false);
             }

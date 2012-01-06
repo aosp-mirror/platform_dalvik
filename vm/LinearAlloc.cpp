@@ -134,7 +134,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
 
     fd = ashmem_create_region("dalvik-LinearAlloc", DEFAULT_MAX_LENGTH);
     if (fd < 0) {
-        LOGE("ashmem LinearAlloc failed %s", strerror(errno));
+        ALOGE("ashmem LinearAlloc failed %s", strerror(errno));
         free(pHdr);
         return NULL;
     }
@@ -142,7 +142,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
     pHdr->mapAddr = (char*)mmap(NULL, pHdr->mapLength, PROT_READ | PROT_WRITE,
         MAP_PRIVATE, fd, 0);
     if (pHdr->mapAddr == MAP_FAILED) {
-        LOGE("LinearAlloc mmap(%d) failed: %s", pHdr->mapLength,
+        ALOGE("LinearAlloc mmap(%d) failed: %s", pHdr->mapLength,
             strerror(errno));
         free(pHdr);
         close(fd);
@@ -156,7 +156,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
     pHdr->mapAddr = mmap(NULL, pHdr->mapLength, PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANON, -1, 0);
     if (pHdr->mapAddr == MAP_FAILED) {
-        LOGE("LinearAlloc mmap(%d) failed: %s", pHdr->mapLength,
+        ALOGE("LinearAlloc mmap(%d) failed: %s", pHdr->mapLength,
             strerror(errno));
         free(pHdr);
         return NULL;
@@ -312,7 +312,7 @@ void* dvmLinearAlloc(Object* classLoader, size_t size)
          * works if the users of these functions actually free everything
          * they allocate.
          */
-        LOGE("LinearAlloc exceeded capacity (%d), last=%d",
+        ALOGE("LinearAlloc exceeded capacity (%d), last=%d",
             pHdr->mapLength, (int) size);
         dvmAbort();
     }
@@ -354,7 +354,7 @@ void* dvmLinearAlloc(Object* classLoader, size_t size)
         LOGVV("---    calling mprotect(start=%d len=%d RW)", start, len);
         cc = mprotect(pHdr->mapAddr + start, len, PROT_READ | PROT_WRITE);
         if (cc != 0) {
-            LOGE("LinearAlloc mprotect (+%d %d) failed: %s",
+            ALOGE("LinearAlloc mprotect (+%d %d) failed: %s",
                 start, len, strerror(errno));
             /* we're going to fail soon, might as do it now */
             dvmAbort();
@@ -487,7 +487,7 @@ static void updatePages(Object* classLoader, void* mem, int direction)
             }
 
             if (pHdr->writeRefCount[i] == 0) {
-                LOGE("Can't make page %d any less writable", i);
+                ALOGE("Can't make page %d any less writable", i);
                 dvmAbort();
             }
             pHdr->writeRefCount[i]--;
@@ -502,7 +502,7 @@ static void updatePages(Object* classLoader, void* mem, int direction)
              * Trying to mark writable.
              */
             if (pHdr->writeRefCount[i] >= 32767) {
-                LOGE("Can't make page %d any more writable", i);
+                ALOGE("Can't make page %d any more writable", i);
                 dvmAbort();
             }
             if (pHdr->writeRefCount[i] == 0) {

@@ -53,7 +53,7 @@ static void* sysCreateAnonShmem(size_t length)
 
     return ptr;
 #else
-    LOGE("sysCreateAnonShmem not implemented.");
+    ALOGE("sysCreateAnonShmem not implemented.");
     return NULL;
 #endif
 }
@@ -90,13 +90,13 @@ static int getFileStartAndLength(int fd, off_t *start_, size_t *length_)
     (void) lseek(fd, start, SEEK_SET);
 
     if (start == (off_t) -1 || end == (off_t) -1) {
-        LOGE("could not determine length of file");
+        ALOGE("could not determine length of file");
         return -1;
     }
 
     length = end - start;
     if (length == 0) {
-        LOGE("file is empty");
+        ALOGE("file is empty");
         return -1;
     }
 
@@ -131,7 +131,7 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap)
 
     actual = read(fd, memPtr, length);
     if (actual != length) {
-        LOGE("only read %d of %d bytes", (int) actual, (int) length);
+        ALOGE("only read %d of %d bytes", (int) actual, (int) length);
         sysReleaseShmem(pMap);
         return -1;
     }
@@ -141,7 +141,7 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap)
 
     return 0;
 #else
-    LOGE("sysLoadFileInShmem not implemented.");
+    ALOGE("sysLoadFileInShmem not implemented.");
     return -1;
 #endif
 }
@@ -301,7 +301,7 @@ int sysMapFileSegmentInShmem(int fd, off_t start, size_t length,
 
     return 0;
 #else
-    LOGE("sysMapFileSegmentInShmem not implemented.");
+    ALOGE("sysMapFileSegmentInShmem not implemented.");
     return -1;
 #endif
 }
@@ -321,7 +321,7 @@ int sysChangeMapAccess(void* addr, size_t length, int wantReadWrite,
     if (addr < pMap->baseAddr ||
         (u1*)addr >= (u1*)pMap->baseAddr + pMap->baseLength)
     {
-        LOGE("Attempted to change %p; map is %p - %p",
+        ALOGE("Attempted to change %p; map is %p - %p",
             addr, pMap->baseAddr, (u1*)pMap->baseAddr + pMap->baseLength);
         return -1;
     }
@@ -394,7 +394,7 @@ int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg)
         ssize_t actual = TEMP_FAILURE_RETRY(write(fd, buf, count));
         if (actual < 0) {
             int err = errno;
-            LOGE("%s: write failed: %s", logMsg, strerror(err));
+            ALOGE("%s: write failed: %s", logMsg, strerror(err));
             return err;
         } else if (actual != (ssize_t) count) {
             ALOGD("%s: partial write (will retry): (%d of %zd)",

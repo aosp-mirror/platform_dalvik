@@ -410,7 +410,7 @@ bool dvmClassStartup()
 {
     /* make this a requirement -- don't currently support dirs in path */
     if (strcmp(gDvm.bootClassPathStr, ".") == 0) {
-        LOGE("ERROR: must specify non-'.' bootclasspath");
+        ALOGE("ERROR: must specify non-'.' bootclasspath");
         return false;
     }
 
@@ -609,7 +609,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
         return false;
     }
     if (S_ISDIR(sb.st_mode)) {
-        LOGE("Directory classpath elements are not supported: %s", cpe->fileName);
+        ALOGE("Directory classpath elements are not supported: %s", cpe->fileName);
         return false;
     }
 
@@ -632,7 +632,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
             return true;
         }
     } else {
-        LOGE("Unknown type suffix '%s'", suffix);
+        ALOGE("Unknown type suffix '%s'", suffix);
     }
 
     ALOGD("Unable to process classpath element '%s'", cpe->fileName);
@@ -700,7 +700,7 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
         } else {
             if (isBootstrap &&
                     dvmPathToAbsolutePortion(cp) == NULL) {
-                LOGE("Non-absolute bootclasspath entry '%s'", cp);
+                ALOGE("Non-absolute bootclasspath entry '%s'", cp);
                 free(cpe);
                 cpe = NULL;
                 goto bail;
@@ -737,7 +737,7 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
          * There's no way the vm will be doing anything if this is the
          * case, so just bail out (reasonably) gracefully.
          */
-        LOGE("No valid entries found in bootclasspath '%s'", pathStr);
+        ALOGE("No valid entries found in bootclasspath '%s'", pathStr);
         gDvm.lastMessage = pathStr;
         dvmAbort();
     }
@@ -811,7 +811,7 @@ static DvmDex* searchBootPathForClass(const char* descriptor,
             }
             break;
         default:
-            LOGE("Unknown kind %d", cpe->kind);
+            ALOGE("Unknown kind %d", cpe->kind);
             assert(false);
             break;
         }
@@ -1495,7 +1495,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
      * making it an informative abort rather than an assert).
      */
     if (dvmCheckException(self)) {
-        LOGE("Class lookup %s attempted with exception pending", descriptor);
+        ALOGE("Class lookup %s attempted with exception pending", descriptor);
         ALOGW("Pending exception is:");
         dvmLogExceptionStackTrace();
         dvmDumpAllThreads(false);
@@ -1874,7 +1874,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         if (classMapData != NULL &&
             pHeader->directMethodsSize + pHeader->virtualMethodsSize != numMethods)
         {
-            LOGE("ERROR: in %s, direct=%d virtual=%d, maps have %d",
+            ALOGE("ERROR: in %s, direct=%d virtual=%d, maps have %d",
                 newClass->descriptor, pHeader->directMethodsSize,
                 pHeader->virtualMethodsSize, numMethods);
             assert(false);
@@ -2132,8 +2132,8 @@ static void freeMethodInnards(Method* meth)
 static void cloneMethod(Method* dst, const Method* src)
 {
     if (src->registerMap != NULL) {
-        LOGE("GLITCH: only expected abstract methods here");
-        LOGE("        cloning %s.%s", src->clazz->descriptor, src->name);
+        ALOGE("GLITCH: only expected abstract methods here");
+        ALOGE("        cloning %s.%s", src->clazz->descriptor, src->name);
         dvmAbort();
     }
     memcpy(dst, src, sizeof(Method));
@@ -2425,7 +2425,7 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
     }
     dvmLinearReadOnly(clazz->classLoader, clazz->ifields);
     if (i == clazz->ifieldRefCount) {
-        LOGE("Unable to reorder 'referent' in %s", clazz->descriptor);
+        ALOGE("Unable to reorder 'referent' in %s", clazz->descriptor);
         return false;
     }
 
@@ -2434,7 +2434,7 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
      * info about the class.
      */
     if (!dvmFindReferenceMembers(clazz)) {
-        LOGE("Trouble with Reference setup");
+        ALOGE("Trouble with Reference setup");
         return false;
     }
 
@@ -2521,12 +2521,12 @@ bool dvmLinkClass(ClassObject* clazz)
         (strcmp(clazz->descriptor, "Ljava/lang/Class;") == 0))
     {
         if (gDvm.classJavaLangClass->ifieldCount > CLASS_FIELD_SLOTS) {
-            LOGE("java.lang.Class has %d instance fields (expected at most %d)",
+            ALOGE("java.lang.Class has %d instance fields (expected at most %d)",
                  gDvm.classJavaLangClass->ifieldCount, CLASS_FIELD_SLOTS);
             dvmAbort();
         }
         if (gDvm.classJavaLangClass->sfieldCount != CLASS_SFIELD_SLOTS) {
-            LOGE("java.lang.Class has %d static fields (expected %d)",
+            ALOGE("java.lang.Class has %d static fields (expected %d)",
                  gDvm.classJavaLangClass->sfieldCount, CLASS_SFIELD_SLOTS);
             dvmAbort();
         }
@@ -2757,7 +2757,7 @@ bool dvmLinkClass(ClassObject* clazz)
         int count = clazz->virtualMethodCount;
 
         if (count != (u2) count) {
-            LOGE("Too many methods (%d) in interface '%s'", count,
+            ALOGE("Too many methods (%d) in interface '%s'", count,
                  clazz->descriptor);
             goto bail;
         }
@@ -2801,7 +2801,7 @@ bool dvmLinkClass(ClassObject* clazz)
     if ((clazz->classLoader == NULL)
             && (strcmp(clazz->descriptor, "Ljava/lang/ref/Reference;") == 0)) {
         if (!precacheReferenceOffsets(clazz)) {
-            LOGE("failed pre-caching Reference offsets");
+            ALOGE("failed pre-caching Reference offsets");
             dvmThrowInternalError(NULL);
             goto bail;
         }
@@ -2942,7 +2942,7 @@ static bool createVtable(ClassObject* clazz)
         }
 
         if (actualCount != (u2) actualCount) {
-            LOGE("Too many methods (%d) in class '%s'", actualCount,
+            ALOGE("Too many methods (%d) in class '%s'", actualCount,
                  clazz->descriptor);
             goto bail;
         }
@@ -2955,7 +2955,7 @@ static bool createVtable(ClassObject* clazz)
             clazz->vtable = (Method **)dvmLinearRealloc(clazz->classLoader,
                 clazz->vtable, sizeof(*(clazz->vtable)) * actualCount);
             if (clazz->vtable == NULL) {
-                LOGE("vtable realloc failed");
+                ALOGE("vtable realloc failed");
                 goto bail;
             } else {
                 LOGVV("+++  reduced vtable from %d to %d",
@@ -2968,7 +2968,7 @@ static bool createVtable(ClassObject* clazz)
         /* java/lang/Object case */
         int count = clazz->virtualMethodCount;
         if (count != (u2) count) {
-            LOGE("Too many methods (%d) in base class '%s'", count,
+            ALOGE("Too many methods (%d) in base class '%s'", count,
                  clazz->descriptor);
             goto bail;
         }
@@ -3819,7 +3819,7 @@ static void initSFields(ClassObject* clazz)
              * that this can't happen at least due to a data integrity
              * problem.
              */
-            LOGE("Static initializer parse failed for %s at index %d",
+            ALOGE("Static initializer parse failed for %s at index %d",
                     clazz->descriptor, i);
             dvmAbort();
         }
@@ -3887,7 +3887,7 @@ static void initSFields(ClassObject* clazz)
              * Something up above had a problem. TODO: See comment
              * above the switch about verfication.
              */
-            LOGE("Bogus static initialization: value type %d in field type "
+            ALOGE("Bogus static initialization: value type %d in field type "
                     "%s for %s at index %d",
                 value.type, descriptor, clazz->descriptor, i);
             dvmAbort();

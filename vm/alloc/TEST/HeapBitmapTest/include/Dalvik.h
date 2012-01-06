@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <limits.h>
 
-#define LOGW(...) printf("W/" __VA_ARGS__)
-#define LOGE(...) printf("E/" __VA_ARGS__)
+#define ALOGW(...) printf("W/" __VA_ARGS__)
+#define ALOGE(...) printf("E/" __VA_ARGS__)
 
 inline void dvmAbort(void) {
     exit(1);

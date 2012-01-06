@@ -61,13 +61,13 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
      * properly aligned. This test will catch both of these cases.
      */
     if (!isValidPointer(pOpt, pOptStart, pOptEnd)) {
-        LOGE("Bogus opt data start pointer");
+        ALOGE("Bogus opt data start pointer");
         return false;
     }
 
     /* Make sure that the opt data length is a whole number of words. */
     if ((optLength & 3) != 0) {
-        LOGE("Unaligned opt data area end");
+        ALOGE("Unaligned opt data area end");
         return false;
     }
 
@@ -76,14 +76,14 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
      * one chunk header.
      */
     if (optLength < 8) {
-        LOGE("Undersized opt data area (%u)", optLength);
+        ALOGE("Undersized opt data area (%u)", optLength);
         return false;
     }
 
     /* Process chunks until we see the end marker. */
     while (*pOpt != kDexChunkEnd) {
         if (!isValidPointer(pOpt + 2, pOptStart, pOptEnd)) {
-            LOGE("Bogus opt data content pointer at offset %u",
+            ALOGE("Bogus opt data content pointer at offset %u",
                     ((const u1*) pOpt) - data);
             return false;
         }
@@ -99,7 +99,7 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
         const u4* pNextOpt = pOpt + (roundedSize / sizeof(u4));
 
         if (!isValidPointer(pNextOpt, pOptStart, pOptEnd)) {
-            LOGE("Opt data area problem for chunk of size %u at offset %u",
+            ALOGE("Opt data area problem for chunk of size %u at offset %u",
                     size, ((const u1*) pOpt) - data);
             return false;
         }

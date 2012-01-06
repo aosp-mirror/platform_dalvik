@@ -239,7 +239,7 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
         }
         default:
             res = false;
-            LOGE("Jit: unknown work order type");
+            ALOGE("Jit: unknown work order type");
             assert(0);  // Bail if debug build, discard otherwise
     }
     return res;

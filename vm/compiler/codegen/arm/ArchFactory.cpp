@@ -40,7 +40,7 @@ static TGT_LIR *genRegImmCheck(CompilationUnit *cUnit,
             branch->generic.target = (LIR *) exceptionLabel;
             return exceptionLabel;
         } else {
-            LOGE("Catch blocks not handled yet");
+            ALOGE("Catch blocks not handled yet");
             dvmAbort();
             return NULL;
         }

@@ -382,7 +382,7 @@ static void Dalvik_java_lang_Class_getNameNative(const u4* args, JValue* pResult
             case 'D': name = "double";  break;
             case 'V': name = "void";    break;
             default: {
-                LOGE("Unknown primitive type '%c'", descriptor[0]);
+                ALOGE("Unknown primitive type '%c'", descriptor[0]);
                 assert(false);
                 RETURN_PTR(NULL);
             }

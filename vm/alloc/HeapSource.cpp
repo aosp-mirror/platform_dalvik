@@ -347,7 +347,7 @@ static bool addNewHeap(HeapSource *hs)
 
     assert(hs != NULL);
     if (hs->numHeaps >= HEAP_SOURCE_MAX_HEAP_COUNT) {
-        LOGE("Attempt to create too many heaps (%zd >= %zd)",
+        ALOGE("Attempt to create too many heaps (%zd >= %zd)",
                 hs->numHeaps, HEAP_SOURCE_MAX_HEAP_COUNT);
         dvmAbort();
         return false;
@@ -512,7 +512,7 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
     assert(gHs == NULL);
 
     if (!(startSize <= growthLimit && growthLimit <= maximumSize)) {
-        LOGE("Bad heap size parameters (start=%zd, max=%zd, limit=%zd)",
+        ALOGE("Bad heap size parameters (start=%zd, max=%zd, limit=%zd)",
              startSize, maximumSize, growthLimit);
         return NULL;
     }
@@ -575,7 +575,7 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
         goto fail;
     }
     if (!allocMarkStack(&gcHeap->markContext.stack, hs->maximumSize)) {
-        LOGE("Can't create markStack");
+        ALOGE("Can't create markStack");
         dvmHeapBitmapDelete(&hs->markBits);
         dvmHeapBitmapDelete(&hs->liveBits);
         goto fail;

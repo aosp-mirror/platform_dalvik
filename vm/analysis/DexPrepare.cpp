@@ -81,22 +81,22 @@ static bool directoryIsValid(const std::string& fileName)
 
     struct stat sb;
     if (stat(dirName.c_str(), &sb) < 0) {
-        LOGE("Could not stat dex cache directory '%s': %s", dirName.c_str(), strerror(errno));
+        ALOGE("Could not stat dex cache directory '%s': %s", dirName.c_str(), strerror(errno));
         return false;
     }
 
     if (!S_ISDIR(sb.st_mode)) {
-        LOGE("Dex cache directory isn't a directory: %s", dirName.c_str());
+        ALOGE("Dex cache directory isn't a directory: %s", dirName.c_str());
         return false;
     }
 
     if (access(dirName.c_str(), W_OK) < 0) {
-        LOGE("Dex cache directory isn't writable: %s", dirName.c_str());
+        ALOGE("Dex cache directory isn't writable: %s", dirName.c_str());
         return false;
     }
 
     if (access(dirName.c_str(), R_OK) < 0) {
-        LOGE("Dex cache directory isn't readable: %s", dirName.c_str());
+        ALOGE("Dex cache directory isn't readable: %s", dirName.c_str());
         return false;
     }
 
@@ -148,7 +148,7 @@ retry:
                 // TODO: write an equivalent of strerror_r that returns a std::string.
                 const std::string errnoString(strerror(errno));
                 if (directoryIsValid(cacheFileName)) {
-                    LOGE("Can't open dex cache file '%s': %s", cacheFileName, errnoString.c_str());
+                    ALOGE("Can't open dex cache file '%s': %s", cacheFileName, errnoString.c_str());
                 }
             }
             return fd;
@@ -173,7 +173,7 @@ retry:
     }
     dvmChangeStatus(NULL, oldStatus);
     if (cc != 0) {
-        LOGE("Can't lock dex cache '%s': %d", cacheFileName, cc);
+        ALOGE("Can't lock dex cache '%s': %d", cacheFileName, cc);
         close(fd);
         return -1;
     }
@@ -188,7 +188,7 @@ retry:
      */
     cc = fstat(fd, &fdStat);
     if (cc != 0) {
-        LOGE("Can't stat open file '%s'", cacheFileName);
+        ALOGE("Can't stat open file '%s'", cacheFileName);
         LOGVV("DexOpt: unlocking cache file %s", cacheFileName);
         goto close_fail;
     }
@@ -472,7 +472,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         else
             execv(execFile, const_cast<char**>(argv));
 
-        LOGE("execv '%s'%s failed: %s", execFile,
+        ALOGE("execv '%s'%s failed: %s", execFile,
             kUseValgrind ? " [valgrind]" : "", strerror(errno));
         exit(1);
     } else {
@@ -495,7 +495,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         }
         dvmChangeStatus(NULL, oldStatus);
         if (gotPid != pid) {
-            LOGE("waitpid failed: wanted %d, got %d: %s",
+            ALOGE("waitpid failed: wanted %d, got %d: %s",
                 (int) pid, (int) gotPid, strerror(errno));
             return false;
         }
@@ -538,11 +538,11 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 
     /* quick test so we don't blow up on empty file */
     if (dexLength < (int) sizeof(DexHeader)) {
-        LOGE("too small to be DEX");
+        ALOGE("too small to be DEX");
         return false;
     }
     if (dexOffset < (int) sizeof(DexOptHeader)) {
-        LOGE("not enough room for opt header");
+        ALOGE("not enough room for opt header");
         return false;
     }
 
@@ -566,7 +566,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
         mapAddr = mmap(NULL, dexOffset + dexLength, PROT_READ|PROT_WRITE,
                     MAP_SHARED, fd, 0);
         if (mapAddr == MAP_FAILED) {
-            LOGE("unable to mmap DEX cache: %s", strerror(errno));
+            ALOGE("unable to mmap DEX cache: %s", strerror(errno));
             goto bail;
         }
 
@@ -607,7 +607,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
             u1* dexAddr = ((u1*) mapAddr) + dexOffset;
 
             if (dvmDexFileOpenPartial(dexAddr, dexLength, &pDvmDex) != 0) {
-                LOGE("Unable to create DexFile");
+                ALOGE("Unable to create DexFile");
                 success = false;
             } else {
                 /*
@@ -618,7 +618,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
                 if (gDvm.generateRegisterMaps) {
                     pRegMapBuilder = dvmGenerateRegisterMaps(pDvmDex);
                     if (pRegMapBuilder == NULL) {
-                        LOGE("Failed generating register maps");
+                        ALOGE("Failed generating register maps");
                         success = false;
                     }
                 }
@@ -643,7 +643,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
          * Exclude this code when doing clean shutdown for valgrind.
          */
         if (munmap(mapAddr, dexOffset + dexLength) != 0) {
-            LOGE("munmap failed: %s", strerror(errno));
+            ALOGE("munmap failed: %s", strerror(errno));
             goto bail;
         }
 #endif
@@ -659,7 +659,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 
     depsOffset = lseek(fd, 0, SEEK_END);
     if (depsOffset < 0) {
-        LOGE("lseek to EOF failed: %s", strerror(errno));
+        ALOGE("lseek to EOF failed: %s", strerror(errno));
         goto bail;
     }
     adjOffset = (depsOffset + 7) & ~(0x07);
@@ -809,7 +809,7 @@ static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
      * for it.
      */
     if (dvmDexFileOpenPartial(addr, len, &pDvmDex) != 0) {
-        LOGE("Unable to create DexFile");
+        ALOGE("Unable to create DexFile");
         goto bail;
     }
 
@@ -953,7 +953,7 @@ static bool loadAllClasses(DvmDex* pDvmDex)
      * list, but it costs very little to do it in all cases.)
      */
     if (!dvmInitClass(gDvm.classJavaLangClass)) {
-        LOGE("ERROR: failed to initialize the class Class!");
+        ALOGE("ERROR: failed to initialize the class Class!");
         return false;
     }
 
@@ -1107,7 +1107,7 @@ static const char* getCacheFileName(const ClassPathEntry* cpe)
     case kCpeDex:
         return dvmGetRawDexFileCacheFileName((RawDexFile*) cpe->ptr);
     default:
-        LOGE("DexOpt: unexpected cpe kind %d", cpe->kind);
+        ALOGE("DexOpt: unexpected cpe kind %d", cpe->kind);
         dvmAbort();
         return NULL;
     }
@@ -1128,7 +1128,7 @@ static const u1* getSignature(const ClassPathEntry* cpe)
         pDvmDex = dvmGetRawDexFileDex((RawDexFile*) cpe->ptr);
         break;
     default:
-        LOGE("unexpected cpe kind %d", cpe->kind);
+        ALOGE("unexpected cpe kind %d", cpe->kind);
         dvmAbort();
         pDvmDex = NULL;         // make gcc happy
     }
@@ -1181,7 +1181,7 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
      * the first thing in the file.
      */
     if (lseek(fd, 0, SEEK_SET) != 0) {
-        LOGE("DexOpt: failed to seek to start of file: %s", strerror(errno));
+        ALOGE("DexOpt: failed to seek to start of file: %s", strerror(errno));
         goto bail;
     }
 
@@ -1191,10 +1191,10 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
      */
     actual = read(fd, &optHdr, sizeof(optHdr));
     if (actual < 0) {
-        LOGE("DexOpt: failed reading opt header: %s", strerror(errno));
+        ALOGE("DexOpt: failed reading opt header: %s", strerror(errno));
         goto bail;
     } else if (actual != sizeof(optHdr)) {
-        LOGE("DexOpt: failed reading opt header (got %d of %zd)",
+        ALOGE("DexOpt: failed reading opt header (got %d of %zd)",
             (int) actual, sizeof(optHdr));
         goto bail;
     }
@@ -1404,7 +1404,7 @@ static int writeDependencies(int fd, u4 modWhen, u4 crc)
         int len = strlen(cacheFileName) +1;
 
         if (ptr + 4 + len + kSHA1DigestLen > buf + bufLen) {
-            LOGE("DexOpt: overran buffer");
+            ALOGE("DexOpt: overran buffer");
             dvmAbort();
         }
 
@@ -1519,7 +1519,7 @@ static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum)
     uLong adler;
 
     if (lseek(fd, start, SEEK_SET) != start) {
-        LOGE("Unable to seek to start of checksum area (%ld): %s",
+        ALOGE("Unable to seek to start of checksum area (%ld): %s",
             (long) start, strerror(errno));
         return false;
     }
@@ -1530,7 +1530,7 @@ static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum)
         size_t wanted = (length < sizeof(readBuf)) ? length : sizeof(readBuf);
         actual = read(fd, readBuf, wanted);
         if (actual <= 0) {
-            LOGE("Read failed (%d) while computing checksum (len=%zu): %s",
+            ALOGE("Read failed (%d) while computing checksum (len=%zu): %s",
                 (int) actual, length, strerror(errno));
             return false;
         }

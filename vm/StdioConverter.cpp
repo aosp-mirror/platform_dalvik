@@ -163,7 +163,7 @@ static void* stdioConverterThreadStart(void* arg)
 
         if (fdCount < 0) {
             if (errno != EINTR) {
-                LOGE("select on stdout/stderr failed");
+                ALOGE("select on stdout/stderr failed");
                 break;
             }
             ALOGD("Got EINTR, ignoring");

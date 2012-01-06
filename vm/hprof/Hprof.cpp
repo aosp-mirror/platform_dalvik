@@ -43,7 +43,7 @@ hprof_context_t* hprofStartup(const char *outputFileName, int fd,
 
     hprof_context_t *ctx = (hprof_context_t *)malloc(sizeof(*ctx));
     if (ctx == NULL) {
-        LOGE("hprof: can't allocate context.");
+        ALOGE("hprof: can't allocate context.");
         return NULL;
     }
 
@@ -69,7 +69,7 @@ bool hprofShutdown(hprof_context_t *tailCtx)
      */
     hprof_context_t *headCtx = (hprof_context_t *)malloc(sizeof(*headCtx));
     if (headCtx == NULL) {
-        LOGE("hprof: can't allocate context.");
+        ALOGE("hprof: can't allocate context.");
         hprofFreeContext(tailCtx);
         return false;
     }
@@ -115,13 +115,13 @@ bool hprofShutdown(hprof_context_t *tailCtx)
         if (headCtx->fd >= 0) {
             outFd = dup(headCtx->fd);
             if (outFd < 0) {
-                LOGE("dup(%d) failed: %s", headCtx->fd, strerror(errno));
+                ALOGE("dup(%d) failed: %s", headCtx->fd, strerror(errno));
                 /* continue to fail-handler below */
             }
         } else {
             outFd = open(tailCtx->fileName, O_WRONLY|O_CREAT|O_TRUNC, 0644);
             if (outFd < 0) {
-                LOGE("can't open %s: %s", headCtx->fileName, strerror(errno));
+                ALOGE("can't open %s: %s", headCtx->fileName, strerror(errno));
                 /* continue to fail-handler below */
             }
         }

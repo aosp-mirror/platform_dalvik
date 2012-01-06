@@ -958,7 +958,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             intptr_t target = lirTarget->generic.offset;
             int delta = target - pc;
             if (delta & 0x3) {
-                LOGE("PC-rel distance is not multiples of 4: %d", delta);
+                ALOGE("PC-rel distance is not multiples of 4: %d", delta);
                 dvmCompilerAbort(cUnit);
             }
             if ((lir->opcode == kThumb2LdrPcRel12) && (delta > 4091)) {
@@ -1035,7 +1035,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if (delta > 2046 || delta < -2048) {
-                LOGE("Unconditional branch distance out of range: %d", delta);
+                ALOGE("Unconditional branch distance out of range: %d", delta);
                 dvmCompilerAbort(cUnit);
             }
             lir->operands[0] = delta >> 1;
@@ -1437,7 +1437,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* Allocate enough space for the code block */
     cUnit->codeBuffer = (unsigned char *)dvmCompilerNew(chainCellOffset, true);
     if (cUnit->codeBuffer == NULL) {
-        LOGE("Code buffer allocation failure");
+        ALOGE("Code buffer allocation failure");
         info->discardResult = true;
         return;
     }
@@ -1467,7 +1467,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
         case kRetryHalve:
             return;
         default:
-             LOGE("Unexpected assembler status: %d", cUnit->assemblerStatus);
+             ALOGE("Unexpected assembler status: %d", cUnit->assemblerStatus);
              dvmAbort();
     }
 
@@ -1939,7 +1939,7 @@ static u4* unchainSingle(JitEntry *trace)
                     predChainCell->clazz = PREDICTED_CHAIN_CLAZZ_INIT;
                     break;
                 default:
-                    LOGE("Unexpected chaining type: %d", i);
+                    ALOGE("Unexpected chaining type: %d", i);
                     dvmAbort();  // dvmAbort OK here - can't safely recover
             }
             COMPILER_TRACE_CHAINING(
@@ -2418,7 +2418,7 @@ static int selfVerificationLoad(int addr, int size)
             data = *((u4*) addr);
             break;
         default:
-            LOGE("*** ERROR: BAD SIZE IN selfVerificationLoad: %d", size);
+            ALOGE("*** ERROR: BAD SIZE IN selfVerificationLoad: %d", size);
             data = 0;
             dvmAbort();
     }
@@ -2498,7 +2498,7 @@ static void selfVerificationStore(int addr, int data, int size)
             *((u4*) addr) = data;
             break;
         default:
-            LOGE("*** ERROR: BAD SIZE IN selfVerificationSave: %d", size);
+            ALOGE("*** ERROR: BAD SIZE IN selfVerificationSave: %d", size);
             dvmAbort();
     }
 }
@@ -2712,7 +2712,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                     if (insn & 0x400000) rt |= 0x10;
                     rt = rt << 1;
                 } else {
-                    LOGE("*** ERROR: UNRECOGNIZED VECTOR MEM OP: %x", opcode4);
+                    ALOGE("*** ERROR: UNRECOGNIZED VECTOR MEM OP: %x", opcode4);
                     dvmAbort();
                 }
                 rt += 14;
@@ -2745,7 +2745,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                 offset = 0;
                 break;
             default:
-                LOGE("*** ERROR: UNRECOGNIZED THUMB2 MEM OP: %x", opcode12);
+                ALOGE("*** ERROR: UNRECOGNIZED THUMB2 MEM OP: %x", opcode12);
                 offset = 0;
                 dvmAbort();
         }
@@ -2895,7 +2895,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                 offset = 0;
                 break;
             default:
-                LOGE("*** ERROR: UNRECOGNIZED THUMB MEM OP: %x", opcode5);
+                ALOGE("*** ERROR: UNRECOGNIZED THUMB MEM OP: %x", opcode5);
                 offset = 0;
                 dvmAbort();
         }

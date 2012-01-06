@@ -136,7 +136,7 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
          */
         if (!dvmUnlockCachedDexFile(fd)) {
             /* uh oh -- this process needs to exit or we'll wedge the system */
-            LOGE("Unable to unlock DEX file");
+            ALOGE("Unable to unlock DEX file");
             goto bail;
         }
 
@@ -158,8 +158,8 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
 
         ALOGV("Using alternate file (odex) for %s ...", fileName);
         if (!dvmCheckOptHeaderAndDependencies(fd, false, 0, 0, true, true)) {
-            LOGE("%s odex has stale dependencies", fileName);
-            LOGE("odex source not available -- failing");
+            ALOGE("%s odex has stale dependencies", fileName);
+            ALOGE("odex source not available -- failing");
             result = DEX_CACHE_STALE_ODEX;
             goto bail;
         } else {
@@ -219,7 +219,7 @@ int dvmJarFileOpen(const char* fileName, const char* odexOutputName,
     if (fd >= 0) {
         ALOGV("Using alternate file (odex) for %s ...", fileName);
         if (!dvmCheckOptHeaderAndDependencies(fd, false, 0, 0, true, true)) {
-            LOGE("%s odex has stale dependencies", fileName);
+            ALOGE("%s odex has stale dependencies", fileName);
             free(cachedName);
             cachedName = NULL;
             close(fd);
@@ -304,7 +304,7 @@ tryArchive:
                 }
 
                 if (!result) {
-                    LOGE("Unable to extract+optimize DEX from '%s'",
+                    ALOGE("Unable to extract+optimize DEX from '%s'",
                         fileName);
                     goto bail;
                 }
@@ -335,7 +335,7 @@ tryArchive:
         /* unlock the fd */
         if (!dvmUnlockCachedDexFile(fd)) {
             /* uh oh -- this process needs to exit or we'll wedge the system */
-            LOGE("Unable to unlock DEX file");
+            ALOGE("Unable to unlock DEX file");
             goto bail;
         }
         locked = false;

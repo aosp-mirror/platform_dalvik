@@ -150,7 +150,7 @@ ArrayObject* dvmAllocPrimitiveArray(char type, size_t length, int allocFlags)
         width = 8;
         break;
     default:
-        LOGE("Unknown primitive type '%c'", type);
+        ALOGE("Unknown primitive type '%c'", type);
         dvmAbort();
         return NULL; // Keeps the compiler happy.
     }
@@ -413,7 +413,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         dvmFindSystemClassNoInit("Ljava/io/Serializable;");
     dvmLinearReadOnly(newClass->classLoader, newClass->interfaces);
     if (newClass->interfaces[0] == NULL || newClass->interfaces[1] == NULL) {
-        LOGE("Unable to create array class '%s': missing interfaces",
+        ALOGE("Unable to create array class '%s': missing interfaces",
             descriptor);
         dvmFreeClassInnards(newClass);
         dvmThrowInternalError("missing array ifaces");
@@ -614,7 +614,7 @@ size_t dvmArrayClassElementWidth(const ClassObject* arrayClass)
         case 'Z': return 1;  /* boolean */
         }
     }
-    LOGE("class %p has an unhandled descriptor '%s'", arrayClass, descriptor);
+    ALOGE("class %p has an unhandled descriptor '%s'", arrayClass, descriptor);
     dvmDumpThread(dvmThreadSelf(), false);
     dvmAbort();
     return 0;  /* Quiet the compiler. */

@@ -200,7 +200,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
      * with a duplicate name.
      */
     if (!dvmAddClassToHash(newClass)) {
-        LOGE("ERROR: attempted to generate %s more than once",
+        ALOGE("ERROR: attempted to generate %s more than once",
             newClass->descriptor);
         goto bail;
     }
@@ -492,7 +492,7 @@ static int copyWithoutDuplicates(Method** allMethods, int allCount,
                             gDvm.classJavaLangClassArray, commonCount,
                             ALLOC_DEFAULT);
                     if (throwArray == NULL) {
-                        LOGE("common-throw array alloc failed");
+                        ALOGE("common-throw array alloc failed");
                         return -1;
                     }
 
@@ -893,7 +893,7 @@ static void proxyInvoker(const u4* args, JValue* pResult,
     invoke = dvmFindVirtualMethodHierByDescriptor(handler->clazz, "invoke",
             "(Ljava/lang/Object;Ljava/lang/reflect/Method;[Ljava/lang/Object;)Ljava/lang/Object;");
     if (invoke == NULL) {
-        LOGE("Unable to find invoke()");
+        ALOGE("Unable to find invoke()");
         dvmAbort();
     }
 
@@ -925,7 +925,7 @@ static void proxyInvoker(const u4* args, JValue* pResult,
     returnType = dvmGetBoxedReturnType(method);
     if (returnType == NULL) {
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        LOGE("Could not determine return type for '%s'", desc);
+        ALOGE("Could not determine return type for '%s'", desc);
         free(desc);
         assert(dvmCheckException(self));
         goto bail;

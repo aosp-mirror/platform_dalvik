@@ -172,7 +172,7 @@ static void getStaticFieldValue(const StaticField* sfield, JValue* value)
             value->l = dvmGetStaticFieldObjectVolatile(sfield);
             break;
         default:
-            LOGE("Unhandled field signature '%s'", sfield->signature);
+            ALOGE("Unhandled field signature '%s'", sfield->signature);
             dvmAbort();
         }
     }
@@ -219,7 +219,7 @@ static void getInstFieldValue(const InstField* ifield, Object* obj,
             value->l = dvmGetFieldObject(obj, ifield->byteOffset);
             break;
         default:
-            LOGE("Unhandled field signature '%s'", ifield->signature);
+            ALOGE("Unhandled field signature '%s'", ifield->signature);
             dvmAbort();
         }
     } else {
@@ -254,7 +254,7 @@ static void getInstFieldValue(const InstField* ifield, Object* obj,
             value->l = dvmGetFieldObjectVolatile(obj, ifield->byteOffset);
             break;
         default:
-            LOGE("Unhandled field signature '%s'", ifield->signature);
+            ALOGE("Unhandled field signature '%s'", ifield->signature);
             dvmAbort();
         }
     }
@@ -321,7 +321,7 @@ static void setStaticFieldValue(StaticField* sfield, const JValue* value)
             dvmSetStaticFieldObjectVolatile(sfield, (Object*)value->l);
             break;
         default:
-            LOGE("Unhandled field signature '%s'", sfield->signature);
+            ALOGE("Unhandled field signature '%s'", sfield->signature);
             dvmAbort();
         }
     }
@@ -366,7 +366,7 @@ static void setInstFieldValue(InstField* ifield, Object* obj,
             dvmSetFieldObject(obj, ifield->byteOffset, (Object *)value->l);
             break;
         default:
-            LOGE("Unhandled field signature '%s'", ifield->signature);
+            ALOGE("Unhandled field signature '%s'", ifield->signature);
             dvmAbort();
         }
 #if ANDROID_SMP != 0
@@ -410,7 +410,7 @@ static void setInstFieldValue(InstField* ifield, Object* obj,
             dvmSetFieldObjectVolatile(obj, ifield->byteOffset, (Object*)value->l);
             break;
         default:
-            LOGE("Unhandled field signature '%s'", ifield->signature);
+            ALOGE("Unhandled field signature '%s'", ifield->signature);
             dvmAbort();
         }
     }

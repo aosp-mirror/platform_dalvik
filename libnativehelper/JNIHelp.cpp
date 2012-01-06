@@ -72,12 +72,12 @@ extern "C" int jniRegisterNativeMethods(C_JNIEnv* env, const char* className,
 
     scoped_local_ref<jclass> c(env, findClass(env, className));
     if (c.get() == NULL) {
-        LOGE("Native registration unable to find class '%s', aborting", className);
+        ALOGE("Native registration unable to find class '%s', aborting", className);
         abort();
     }
 
     if ((*env)->RegisterNatives(e, c.get(), gMethods, numMethods) < 0) {
-        LOGE("RegisterNatives failed for '%s', aborting", className);
+        ALOGE("RegisterNatives failed for '%s', aborting", className);
         abort();
     }
 
@@ -220,13 +220,13 @@ extern "C" int jniThrowException(C_JNIEnv* env, const char* className, const cha
 
     scoped_local_ref<jclass> exceptionClass(env, findClass(env, className));
     if (exceptionClass.get() == NULL) {
-        LOGE("Unable to find exception class %s", className);
+        ALOGE("Unable to find exception class %s", className);
         /* ClassNotFoundException now pending */
         return -1;
     }
 
     if ((*env)->ThrowNew(e, exceptionClass.get(), msg) != JNI_OK) {
-        LOGE("Failed throwing '%s' '%s'", className, msg);
+        ALOGE("Failed throwing '%s' '%s'", className, msg);
         /* an exception, most likely OOM, will now be pending */
         return -1;
     }

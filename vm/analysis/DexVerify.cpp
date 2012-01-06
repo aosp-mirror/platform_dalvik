@@ -1179,7 +1179,7 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_UNUSED_FF:
-            LOGE("VFY: unexpected opcode %04x", decInsn.opcode);
+            ALOGE("VFY: unexpected opcode %04x", decInsn.opcode);
             okay = false;
             break;
 

@@ -220,7 +220,7 @@ void* dvmHashTableLookup(HashTable* pHashTable, u4 itemHash, void* item,
             {
                 if (!resizeHash(pHashTable, pHashTable->tableSize * 2)) {
                     /* don't really have a way to indicate failure */
-                    LOGE("Dalvik hash resize failure");
+                    ALOGE("Dalvik hash resize failure");
                     dvmAbort();
                 }
                 /* note "pEntry" is now invalid */

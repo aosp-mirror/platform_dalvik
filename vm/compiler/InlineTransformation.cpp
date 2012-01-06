@@ -73,7 +73,7 @@ static bool inlineGetter(CompilationUnit *cUnit,
 
     /* Expecting vA to be the destination register */
     if (dfFlags & (DF_UA | DF_UA_WIDE)) {
-        LOGE("opcode %d has DF_UA set (not expected)", getterInsn.opcode);
+        ALOGE("opcode %d has DF_UA set (not expected)", getterInsn.opcode);
         dvmAbort();
     }
 

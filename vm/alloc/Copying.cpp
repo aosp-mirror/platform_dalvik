@@ -338,7 +338,7 @@ static void *allocateBlocks(HeapSource *heapSource, size_t blocks)
         return addr;
     }
     /* Insufficient space, fail. */
-    LOGE("Insufficient space, %zu blocks, %zu blocks allocated and %zu bytes allocated",
+    ALOGE("Insufficient space, %zu blocks, %zu blocks allocated and %zu bytes allocated",
          heapSource->totalBlocks,
          heapSource->allocBlocks,
          heapSource->bytesAllocated);
@@ -1000,7 +1000,7 @@ static void enqueueReference(Object *ref)
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue) != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queueNext) == NULL);
     if (!dvmHeapAddRefToLargeTable(&gDvm.gcHeap->referenceOperations, ref)) {
-        LOGE("no room for any more reference operations");
+        ALOGE("no room for any more reference operations");
         dvmAbort();
     }
 }
@@ -1579,9 +1579,9 @@ static void scavengeThreadStack(Thread *thread)
                         saveArea->xtra.currentPc, thread->currentPc2,
                         method->clazz->descriptor, method->name, method->insns);
                     if (saveArea->xtra.currentPc != NULL)
-                        LOGE("  pc inst = 0x%04x", *saveArea->xtra.currentPc);
+                        ALOGE("  pc inst = 0x%04x", *saveArea->xtra.currentPc);
                     if (thread->currentPc2 != NULL)
-                        LOGE("  pc2 inst = 0x%04x", *thread->currentPc2);
+                        ALOGE("  pc2 inst = 0x%04x", *thread->currentPc2);
                     dvmDumpThread(thread, false);
                 }
             } else {
@@ -1668,7 +1668,7 @@ static void scavengeThreadStack(Thread *thread)
 #if WITH_EXTRA_GC_CHECKS > 0
                         if ((rval & 0x3) != 0 || !dvmIsValidObject((Object*) rval)) {
                             /* this is very bad */
-                            LOGE("PGC: invalid ref in reg %d: 0x%08x",
+                            ALOGE("PGC: invalid ref in reg %d: 0x%08x",
                                 method->registersSize-1 - i, rval);
                         } else
 #endif

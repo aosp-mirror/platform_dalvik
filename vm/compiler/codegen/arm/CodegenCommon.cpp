@@ -62,7 +62,7 @@ static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
             *maskPtr |= ENCODE_MUST_NOT_ALIAS;
             break;
         default:
-            LOGE("Jit: invalid memref kind - %d", memType);
+            ALOGE("Jit: invalid memref kind - %d", memType);
             assert(0);  // Bail if debug build, set worst-case in the field
             *maskPtr |= ENCODE_ALL;
     }
@@ -302,7 +302,7 @@ static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpcode opcode,
 {
     ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     if (!(EncodingMap[opcode].flags & IS_TERTIARY_OP)) {
-        LOGE("Bad LIR3: %s[%d]",EncodingMap[opcode].name,opcode);
+        ALOGE("Bad LIR3: %s[%d]",EncodingMap[opcode].name,opcode);
     }
     assert(isPseudoOpcode(opcode) ||
            (EncodingMap[opcode].flags & IS_TERTIARY_OP));

@@ -639,7 +639,7 @@ public:
                 } else if (ch == '.') {
                     msg += "...";
                 } else {
-                    LOGE("unknown trace format specifier %c", ch);
+                    ALOGE("unknown trace format specifier %c", ch);
                     dvmAbort();
                 }
                 if (*fmt) {
@@ -694,7 +694,7 @@ public:
                     va_arg(ap, long); // Skip this argument.
                 } else if (ch == '.') {
                 } else {
-                    LOGE("unknown check format specifier %c", ch);
+                    ALOGE("unknown check format specifier %c", ch);
                     dvmAbort();
                 }
             }
@@ -832,12 +832,12 @@ private:
          */
         bool printWarn = false;
         if (threadEnv == NULL) {
-            LOGE("JNI ERROR: non-VM thread making JNI calls");
+            ALOGE("JNI ERROR: non-VM thread making JNI calls");
             // don't set printWarn -- it'll try to call showLocation()
             dvmAbort();
         } else if ((JNIEnvExt*) mEnv != threadEnv) {
             if (dvmThreadSelf()->threadId != threadEnv->envThreadId) {
-                LOGE("JNI: threadEnv != thread->env?");
+                ALOGE("JNI: threadEnv != thread->env?");
                 dvmAbort();
             }
 
@@ -854,7 +854,7 @@ private:
             //dvmThrowRuntimeException("invalid use of JNI env ptr");
         } else if (((JNIEnvExt*) mEnv)->self != dvmThreadSelf()) {
             /* correct JNIEnv*; make sure the "self" pointer is correct */
-            LOGE("JNI ERROR: env->self != thread-self (%p vs. %p)",
+            ALOGE("JNI ERROR: env->self != thread-self (%p vs. %p)",
                     ((JNIEnvExt*) mEnv)->self, dvmThreadSelf());
             dvmAbort();
         }
@@ -1139,7 +1139,7 @@ struct GuardedCopy {
         if (memcmp(&pExtra->magic, &kMagicCmp, 4) != 0) {
             u1 buf[4];
             memcpy(buf, &pExtra->magic, 4);
-            LOGE("JNI: guard magic does not match (found 0x%02x%02x%02x%02x) -- incorrect data pointer %p?",
+            ALOGE("JNI: guard magic does not match (found 0x%02x%02x%02x%02x) -- incorrect data pointer %p?",
                     buf[3], buf[2], buf[1], buf[0], dataBuf); /* assume little endian */
             return false;
         }
@@ -1150,7 +1150,7 @@ struct GuardedCopy {
         const u2* pat = (u2*) fullBuf;
         for (size_t i = sizeof(GuardedCopy) / 2; i < (kGuardLen / 2 - sizeof(GuardedCopy)) / 2; i++) {
             if (pat[i] != kGuardPattern) {
-                LOGE("JNI: guard pattern(1) disturbed at %p + %d", fullBuf, i*2);
+                ALOGE("JNI: guard pattern(1) disturbed at %p + %d", fullBuf, i*2);
                 return false;
             }
         }
@@ -1160,7 +1160,7 @@ struct GuardedCopy {
             /* odd byte; expected value depends on endian-ness of host */
             const u2 patSample = kGuardPattern;
             if (fullBuf[offset] != ((const u1*) &patSample)[1]) {
-                LOGE("JNI: guard pattern disturbed in odd byte after %p (+%d) 0x%02x 0x%02x",
+                ALOGE("JNI: guard pattern disturbed in odd byte after %p (+%d) 0x%02x 0x%02x",
                         fullBuf, offset, fullBuf[offset], ((const u1*) &patSample)[1]);
                 return false;
             }
@@ -1171,7 +1171,7 @@ struct GuardedCopy {
         pat = (u2*) (fullBuf + offset);
         for (size_t i = 0; i < kGuardLen / 4; i++) {
             if (pat[i] != kGuardPattern) {
-                LOGE("JNI: guard pattern(2) disturbed at %p + %d", fullBuf, offset + i*2);
+                ALOGE("JNI: guard pattern(2) disturbed at %p + %d", fullBuf, offset + i*2);
                 return false;
             }
         }
@@ -1185,7 +1185,7 @@ struct GuardedCopy {
             uLong adler = adler32(0L, Z_NULL, 0);
             adler = adler32(adler, (const Bytef*)dataBuf, len);
             if (pExtra->adler != adler) {
-                LOGE("JNI: buffer modified (0x%08lx vs 0x%08lx) at addr %p",
+                ALOGE("JNI: buffer modified (0x%08lx vs 0x%08lx) at addr %p",
                         pExtra->adler, adler, dataBuf);
                 return false;
             }
@@ -1198,7 +1198,7 @@ private:
     static u1* debugAlloc(size_t len) {
         void* result = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
         if (result == MAP_FAILED) {
-            LOGE("GuardedCopy::create mmap(%d) failed: %s", len, strerror(errno));
+            ALOGE("GuardedCopy::create mmap(%d) failed: %s", len, strerror(errno));
             dvmAbort();
         }
         return reinterpret_cast<u1*>(result);
@@ -1279,7 +1279,7 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf, int m
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(dvmThreadSelf(), jarr);
 
     if (!GuardedCopy::check(dataBuf, true)) {
-        LOGE("JNI: failed guarded copy check in releaseGuardedPACopy");
+        ALOGE("JNI: failed guarded copy check in releaseGuardedPACopy");
         abortMaybe();
         return NULL;
     }
@@ -1708,7 +1708,7 @@ static void Check_ReleaseStringChars(JNIEnv* env, jstring string, const jchar* c
     sc.checkNonNull(chars);
     if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(chars, false)) {
-            LOGE("JNI: failed guarded copy check in ReleaseStringChars");
+            ALOGE("JNI: failed guarded copy check in ReleaseStringChars");
             abortMaybe();
             return;
         }
@@ -1744,7 +1744,7 @@ static void Check_ReleaseStringUTFChars(JNIEnv* env, jstring string, const char*
     CHECK_JNI_ENTRY(kFlag_ExcepOkay | kFlag_Release, "Esu", env, string, utf); // TODO: show pointer and truncate string.
     if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(utf, false)) {
-            LOGE("JNI: failed guarded copy check in ReleaseStringUTFChars");
+            ALOGE("JNI: failed guarded copy check in ReleaseStringUTFChars");
             abortMaybe();
             return;
         }
@@ -1951,7 +1951,7 @@ static void Check_ReleaseStringCritical(JNIEnv* env, jstring string, const jchar
     sc.checkNonNull(carray);
     if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(carray, false)) {
-            LOGE("JNI: failed guarded copy check in ReleaseStringCritical");
+            ALOGE("JNI: failed guarded copy check in ReleaseStringCritical");
             abortMaybe();
             return;
         }

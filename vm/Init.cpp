@@ -323,7 +323,7 @@ static bool handleJdwpOption(const char* name, const char* value)
         } else if (strcmp(value, "dt_android_adb") == 0) {
             gDvm.jdwpTransport = kJdwpTransportAndroidAdb;
         } else {
-            LOGE("JDWP transport '%s' not supported", value);
+            ALOGE("JDWP transport '%s' not supported", value);
             return false;
         }
     } else if (strcmp(name, "server") == 0) {
@@ -332,7 +332,7 @@ static bool handleJdwpOption(const char* name, const char* value)
         else if (*value == 'y')
             gDvm.jdwpServer = true;
         else {
-            LOGE("JDWP option 'server' must be 'y' or 'n'");
+            ALOGE("JDWP option 'server' must be 'y' or 'n'");
             return false;
         }
     } else if (strcmp(name, "suspend") == 0) {
@@ -341,7 +341,7 @@ static bool handleJdwpOption(const char* name, const char* value)
         else if (*value == 'y')
             gDvm.jdwpSuspend = true;
         else {
-            LOGE("JDWP option 'suspend' must be 'y' or 'n'");
+            ALOGE("JDWP option 'suspend' must be 'y' or 'n'");
             return false;
         }
     } else if (strcmp(name, "address") == 0) {
@@ -358,12 +358,12 @@ static bool handleJdwpOption(const char* name, const char* value)
             value = colon + 1;
         }
         if (*value == '\0') {
-            LOGE("JDWP address missing port");
+            ALOGE("JDWP address missing port");
             return false;
         }
         port = strtol(value, &end, 10);
         if (*end != '\0') {
-            LOGE("JDWP address has junk in port field '%s'", value);
+            ALOGE("JDWP address has junk in port field '%s'", value);
             return false;
         }
         gDvm.jdwpPort = port;
@@ -400,14 +400,14 @@ static bool parseJdwpOptions(const char* str)
 
         value = strchr(name, '=');
         if (value == NULL) {
-            LOGE("JDWP opts: garbage at '%s'", name);
+            ALOGE("JDWP opts: garbage at '%s'", name);
             goto bail;
         }
 
         comma = strchr(name, ',');      // use name, not value, for safety
         if (comma != NULL) {
             if (comma < value) {
-                LOGE("JDWP opts: found comma before '=' in '%s'", mangle);
+                ALOGE("JDWP opts: found comma before '=' in '%s'", mangle);
                 goto bail;
             }
             *comma = '\0';
@@ -429,11 +429,11 @@ static bool parseJdwpOptions(const char* str)
      * Make sure the combination of arguments makes sense.
      */
     if (gDvm.jdwpTransport == kJdwpTransportUnknown) {
-        LOGE("JDWP opts: must specify transport");
+        ALOGE("JDWP opts: must specify transport");
         goto bail;
     }
     if (!gDvm.jdwpServer && (gDvm.jdwpHost == NULL || gDvm.jdwpPort == 0)) {
-        LOGE("JDWP opts: when server=n, must specify host and port");
+        ALOGE("JDWP opts: when server=n, must specify host and port");
         goto bail;
     }
     // transport mandatory
@@ -1105,7 +1105,7 @@ static void busCatcher(int signum, siginfo_t* info, void* context)
 {
     void* addr = info->si_addr;
 
-    LOGE("Caught a SIGBUS (%d), addr=%p", signum, addr);
+    ALOGE("Caught a SIGBUS (%d), addr=%p", signum, addr);
 
     /*
      * If we return at this point the SIGBUS just keeps happening, so we
@@ -1374,9 +1374,9 @@ std::string dvmStartup(int argc, const char* const argv[],
 
 #ifndef NDEBUG
     if (!dvmTestHash())
-        LOGE("dvmTestHash FAILED");
+        ALOGE("dvmTestHash FAILED");
     if (false /*noisy!*/ && !dvmTestIndirectRefTable())
-        LOGE("dvmTestIndirectRefTable FAILED");
+        ALOGE("dvmTestIndirectRefTable FAILED");
 #endif
 
     if (dvmCheckException(dvmThreadSelf())) {
@@ -1411,7 +1411,7 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     self->status = THREAD_NATIVE;
 
     if (jniRegisterSystemMethods(pEnv) < 0) {
-        LOGE("jniRegisterSystemMethods failed");
+        ALOGE("jniRegisterSystemMethods failed");
         return false;
     }
 
@@ -1527,7 +1527,7 @@ static bool initJdwp()
 
         if (gDvm.jdwpHost != NULL) {
             if (strlen(gDvm.jdwpHost) >= sizeof(params.host)-1) {
-                LOGE("ERROR: hostname too long: '%s'", gDvm.jdwpHost);
+                ALOGE("ERROR: hostname too long: '%s'", gDvm.jdwpHost);
                 return false;
             }
             strcpy(params.host, gDvm.jdwpHost);
@@ -1769,7 +1769,7 @@ void dvmPrintNativeBackTrace()
      */
     char** strings = backtrace_symbols(stackFrames, frameCount);
     if (strings == NULL) {
-        LOGE("backtrace_symbols failed: %s", strerror(errno));
+        ALOGE("backtrace_symbols failed: %s", strerror(errno));
         return;
     }
 
@@ -1828,7 +1828,7 @@ void dvmAbort()
         result += messageBuffer[i];
     }
 
-    LOGE("VM aborting");
+    ALOGE("VM aborting");
 
     fflush(NULL);       // flush all open file buffers
 

@@ -164,7 +164,7 @@ static void broadcast(int event)
     Thread* self = dvmThreadSelf();
 
     if (self->status != THREAD_RUNNING) {
-        LOGE("ERROR: DDM broadcast with thread status=%d", self->status);
+        ALOGE("ERROR: DDM broadcast with thread status=%d", self->status);
         /* try anyway? */
     }
 

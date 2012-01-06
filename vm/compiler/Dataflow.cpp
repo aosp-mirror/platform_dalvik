@@ -864,7 +864,7 @@ char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
                 offset = (int) insn->vA;
                 break;
             default:
-                LOGE("Unexpected branch format %d / opcode %#x", dalvikFormat,
+                ALOGE("Unexpected branch format %d / opcode %#x", dalvikFormat,
                      opcode);
                 dvmAbort();
                 break;
@@ -974,7 +974,7 @@ char *dvmCompilerFullDisassembler(const CompilationUnit *cUnit,
                 delta = (int) insn->vA;
                 break;
             default:
-                LOGE("Unexpected branch format: %d", dalvikFormat);
+                ALOGE("Unexpected branch format: %d", dalvikFormat);
                 dvmAbort();
                 break;
         }

@@ -97,8 +97,8 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
             free(desc);
         }
         if (dvmIsSynchronizedMethod(method)) {
-            LOGE("ERROR: internal-native can't be declared 'synchronized'");
-            LOGE("Failing on %s.%s", method->clazz->descriptor, method->name);
+            ALOGE("ERROR: internal-native can't be declared 'synchronized'");
+            ALOGE("Failing on %s.%s", method->clazz->descriptor, method->name);
             dvmAbort();     // harsh, but this is VM-internal problem
         }
         DalvikBridgeFunc dfunc = (DalvikBridgeFunc) infunc;
@@ -753,7 +753,7 @@ bail:
 static void* lookupSharedLibMethod(const Method* method)
 {
     if (gDvm.nativeLibs == NULL) {
-        LOGE("Unexpected init state: nativeLibs not ready");
+        ALOGE("Unexpected init state: nativeLibs not ready");
         dvmAbort();
     }
     return (void*) dvmHashForeach(gDvm.nativeLibs, findMethodInLib,

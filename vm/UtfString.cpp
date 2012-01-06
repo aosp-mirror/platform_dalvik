@@ -48,7 +48,7 @@ static StringObject* makeStringObject(u4 charsLength, ArrayObject** pChars)
     if (!dvmIsClassInitialized(gDvm.classJavaLangString)) {
         /* Perform first-time use initialization of the class. */
         if (!dvmInitClass(gDvm.classJavaLangString)) {
-            LOGE("FATAL: Could not initialize class String");
+            ALOGE("FATAL: Could not initialize class String");
             dvmAbort();
         }
     }

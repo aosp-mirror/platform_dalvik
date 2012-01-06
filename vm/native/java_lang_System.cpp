@@ -204,7 +204,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 length * 8);
             break;
         default:        /* illegal array type */
-            LOGE("Weird array type '%s'", srcClass->descriptor);
+            ALOGE("Weird array type '%s'", srcClass->descriptor);
             dvmAbort();
         }
     } else {

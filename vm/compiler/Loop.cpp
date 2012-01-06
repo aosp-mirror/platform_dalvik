@@ -26,11 +26,11 @@
 static void dumpConstants(CompilationUnit *cUnit)
 {
     int i;
-    LOGE("LOOP starting offset: %x", cUnit->entryBlock->startOffset);
+    ALOGE("LOOP starting offset: %x", cUnit->entryBlock->startOffset);
     for (i = 0; i < cUnit->numSSARegs; i++) {
         if (dvmIsBitSet(cUnit->isConstantV, i)) {
             int subNReg = dvmConvertSSARegToDalvik(cUnit, i);
-            LOGE("CONST: s%d(v%d_%d) has %d", i,
+            ALOGE("CONST: s%d(v%d_%d) has %d", i,
                  DECODE_REG(subNReg), DECODE_SUB(subNReg),
                  cUnit->constantValues[i]);
         }
@@ -48,7 +48,7 @@ static void dumpIVList(CompilationUnit *cUnit)
         int iv = dvmConvertSSARegToDalvik(cUnit, ivInfo->ssaReg);
         /* Basic IV */
         if (ivInfo->ssaReg == ivInfo->basicSSAReg) {
-            LOGE("BIV %d: s%d(v%d_%d) + %d", i,
+            ALOGE("BIV %d: s%d(v%d_%d) + %d", i,
                  ivInfo->ssaReg,
                  DECODE_REG(iv), DECODE_SUB(iv),
                  ivInfo->inc);
@@ -56,7 +56,7 @@ static void dumpIVList(CompilationUnit *cUnit)
         } else {
             int biv = dvmConvertSSARegToDalvik(cUnit, ivInfo->basicSSAReg);
 
-            LOGE("DIV %d: s%d(v%d_%d) = %d * s%d(v%d_%d) + %d", i,
+            ALOGE("DIV %d: s%d(v%d_%d) = %d * s%d(v%d_%d) + %d", i,
                  ivInfo->ssaReg,
                  DECODE_REG(iv), DECODE_SUB(iv),
                  ivInfo->m,
@@ -80,13 +80,13 @@ static void dumpHoistedChecks(CompilationUnit *cUnit)
             dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->arrayReg));
         int idxReg = DECODE_REG(
             dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->ivReg));
-        LOGE("Array access %d", i);
-        LOGE("  arrayReg %d", arrayReg);
-        LOGE("  idxReg %d", idxReg);
-        LOGE("  endReg %d", loopAnalysis->endConditionReg);
-        LOGE("  maxC %d", arrayAccessInfo->maxC);
-        LOGE("  minC %d", arrayAccessInfo->minC);
-        LOGE("  opcode %d", loopAnalysis->loopBranchOpcode);
+        ALOGE("Array access %d", i);
+        ALOGE("  arrayReg %d", arrayReg);
+        ALOGE("  idxReg %d", idxReg);
+        ALOGE("  endReg %d", loopAnalysis->endConditionReg);
+        ALOGE("  maxC %d", arrayAccessInfo->maxC);
+        ALOGE("  minC %d", arrayAccessInfo->minC);
+        ALOGE("  opcode %d", loopAnalysis->loopBranchOpcode);
     }
 }
 
@@ -149,7 +149,7 @@ static Opcode negateOpcode(Opcode opcode)
         case OP_IF_LEZ:
             return OP_IF_GTZ;
         default:
-            LOGE("opcode %d cannot be negated", opcode);
+            ALOGE("opcode %d cannot be negated", opcode);
             dvmAbort();
             break;
     }
@@ -391,7 +391,7 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
                     break;
                 default:
                     refIdx = 0;
-                    LOGE("Jit: bad case in doLoopBodyCodeMotion");
+                    ALOGE("Jit: bad case in doLoopBodyCodeMotion");
                     dvmCompilerAbort(cUnit);
             }
 
@@ -504,7 +504,7 @@ static void genHoistedChecks(CompilationUnit *cUnit)
                     dvmCompilerAppendMIR(entry, boundCheckMIR);
                 }
             } else {
-                LOGE("Jit: bad case in genHoistedChecks");
+                ALOGE("Jit: bad case in genHoistedChecks");
                 dvmCompilerAbort(cUnit);
             }
         }

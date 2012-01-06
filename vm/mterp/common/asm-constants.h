@@ -12,19 +12,19 @@
    */
 # define MTERP_OFFSET(_name, _type, _field, _offset)                        \
     if (OFFSETOF_MEMBER(_type, _field) != _offset) {                        \
-        LOGE("Bad asm offset %s (%d), should be %d",                        \
+        ALOGE("Bad asm offset %s (%d), should be %d",                        \
             #_name, _offset, OFFSETOF_MEMBER(_type, _field));               \
         failed = true;                                                      \
     }
 # define MTERP_SIZEOF(_name, _type, _size)                                  \
     if (sizeof(_type) != (_size)) {                                         \
-        LOGE("Bad asm sizeof %s (%d), should be %d",                        \
+        ALOGE("Bad asm sizeof %s (%d), should be %d",                        \
             #_name, (_size), sizeof(_type));                                \
         failed = true;                                                      \
     }
 # define MTERP_CONSTANT(_name, _value)                                      \
     if ((_name) != (_value)) {                                              \
-        LOGE("Bad asm constant %s (%d), should be %d",                      \
+        ALOGE("Bad asm constant %s (%d), should be %d",                      \
             #_name, (_value), (_name));                                     \
         failed = true;                                                      \
     }

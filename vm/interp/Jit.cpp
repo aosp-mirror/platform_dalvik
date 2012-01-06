@@ -926,7 +926,7 @@ void dvmCheckJit(const u2* pc, Thread* self)
                      sizeof(JitTraceRun) * (self->currTraceRun+1));
 
                 if (desc == NULL) {
-                    LOGE("Out of memory in trace selection");
+                    ALOGE("Out of memory in trace selection");
                     dvmJitStopTranslationRequests();
                     self->jitState = kJitDone;
                     allDone = true;
@@ -965,7 +965,7 @@ void dvmCheckJit(const u2* pc, Thread* self)
             allDone = true;
             break;
         default:
-            LOGE("Unexpected JIT state: %d", self->jitState);
+            ALOGE("Unexpected JIT state: %d", self->jitState);
             dvmAbort();
             break;
     }
@@ -1284,7 +1284,7 @@ void dvmJitCheckTraceRequest(Thread* self)
             case kJitDone:
                 break;
             default:
-                LOGE("Unexpected JIT state: %d", self->jitState);
+                ALOGE("Unexpected JIT state: %d", self->jitState);
                 dvmAbort();
         }
     } else {
@@ -1410,7 +1410,7 @@ JitTraceCounter_t *dvmJitNextTraceCounter()
         JitTraceCounter_t *p =
               (JitTraceCounter_t*) calloc(JIT_PROF_BLOCK_ENTRIES, sizeof(*p));
         if (!p) {
-            LOGE("Failed to allocate block of trace profile counters");
+            ALOGE("Failed to allocate block of trace profile counters");
             dvmAbort();
         }
         gDvmJit.pJitTraceProfCounters->buckets[idx] = p;

@@ -255,7 +255,7 @@ static void dumpWhiteReferenceVisitor(void *addr, void *arg)
     if (dvmHeapBitmapIsObjectBitSet(ctx->markBits, obj)) {
         return;
     }
-    LOGE("object %p is white", obj);
+    ALOGE("object %p is white", obj);
 }
 
 /*
@@ -380,7 +380,7 @@ static void verifyCardTableCallback(Object *obj, void *arg)
     } else if (isPushedOnMarkStack(obj)) {
         return;
     } else {
-        LOGE("Verify failed, object %p is gray and on an unmarked card", obj);
+        ALOGE("Verify failed, object %p is gray and on an unmarked card", obj);
         dvmDumpObject(obj);
         dvmVisitObject(dumpWhiteReferenceVisitor, obj, &ctx);
         dumpReferences(obj);

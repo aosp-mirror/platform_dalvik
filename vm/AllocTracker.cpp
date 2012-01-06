@@ -527,7 +527,7 @@ bool dvmGenerateTrackedAllocationReport(u1** pData, size_t* pDataLen)
     methodNames = dvmPointerSetAlloc(128);
     fileNames = dvmPointerSetAlloc(128);
     if (classNames == NULL || methodNames == NULL || fileNames == NULL) {
-        LOGE("Failed allocating pointer sets");
+        ALOGE("Failed allocating pointer sets");
         goto bail;
     }
 
@@ -569,7 +569,7 @@ bool dvmGenerateTrackedAllocationReport(u1** pData, size_t* pDataLen)
     strPtr += outputStringTable(methodNames, strPtr);
     strPtr += outputStringTable(fileNames, strPtr);
     if (strPtr - buffer != (int)totalSize) {
-        LOGE("size mismatch (%d vs %zd)", strPtr - buffer, totalSize);
+        ALOGE("size mismatch (%d vs %zd)", strPtr - buffer, totalSize);
         dvmAbort();
     }
     //dvmPrintHexDump(buffer, totalSize);

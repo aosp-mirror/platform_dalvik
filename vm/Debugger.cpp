@@ -794,7 +794,7 @@ static bool isTagPrimitive(u1 tag)
     case JT_CLASS_LOADER:
         return false;
     default:
-        LOGE("ERROR: unhandled tag '%c'", tag);
+        ALOGE("ERROR: unhandled tag '%c'", tag);
         assert(false);
         return false;
     }
@@ -889,7 +889,7 @@ int dvmDbgGetTagWidth(int tag)
     case JT_LONG:
         return 8;
     default:
-        LOGE("ERROR: unhandled tag '%c'", tag);
+        ALOGE("ERROR: unhandled tag '%c'", tag);
         assert(false);
         return -1;
     }
@@ -1504,7 +1504,7 @@ void dvmDbgGetFieldValue(ObjectId objectId, FieldId fieldId, ExpandBuf* pReply)
             expandBufAdd8BE(pReply, dvmGetFieldLong(obj, ifield->byteOffset));
             break;
         default:
-            LOGE("ERROR: unhandled field type '%s'", ifield->signature);
+            ALOGE("ERROR: unhandled field type '%s'", ifield->signature);
             assert(false);
             break;
         }
@@ -1551,7 +1551,7 @@ void dvmDbgSetFieldValue(ObjectId objectId, FieldId fieldId, u8 value,
         dvmSetFieldLong(obj, field->byteOffset, value);
         break;
     default:
-        LOGE("ERROR: unhandled class type '%s'", field->signature);
+        ALOGE("ERROR: unhandled class type '%s'", field->signature);
         assert(false);
         break;
     }
@@ -1608,7 +1608,7 @@ void dvmDbgGetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
             expandBufAdd8BE(pReply, value.j);
             break;
         default:
-            LOGE("ERROR: unhandled field type '%s'", sfield->signature);
+            ALOGE("ERROR: unhandled field type '%s'", sfield->signature);
             assert(false);
             break;
         }
@@ -1667,7 +1667,7 @@ void dvmDbgSetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
         dvmSetStaticFieldDouble(sfield, value.d);
         break;
     default:
-        LOGE("ERROR: unhandled class type '%s'", sfield->signature);
+        ALOGE("ERROR: unhandled class type '%s'", sfield->signature);
         assert(false);
         break;
     }
@@ -2331,7 +2331,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
         set8BE(buf+1, longVal);
         break;
     default:
-        LOGE("ERROR: unhandled tag '%c'", tag);
+        ALOGE("ERROR: unhandled tag '%c'", tag);
         assert(false);
         break;
     }
@@ -2392,7 +2392,7 @@ void dvmDbgSetLocalValue(ObjectId threadId, FrameId frameId, int slot, u1 tag,
     case JT_CLASS_LOADER:
         /* not expecting these from debugger; fall through to failure */
     default:
-        LOGE("ERROR: unhandled tag '%c'", tag);
+        ALOGE("ERROR: unhandled tag '%c'", tag);
         assert(false);
         break;
     }
@@ -2581,11 +2581,11 @@ bool dvmDbgConfigureStep(ObjectId threadId, JdwpStepSize size,
     thread = threadObjToThread(threadObj);
 
     if (thread == NULL) {
-        LOGE("Thread for single-step not found");
+        ALOGE("Thread for single-step not found");
         goto bail;
     }
     if (!dvmIsSuspended(thread)) {
-        LOGE("Thread for single-step not suspended");
+        ALOGE("Thread for single-step not suspended");
         assert(!"non-susp step");      // I want to know if this can happen
         goto bail;
     }

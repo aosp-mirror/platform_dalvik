@@ -77,7 +77,7 @@ bool dvmCompilerArchVariantInit(void)
      */
     if ((offsetof(Thread, jitToInterpEntries) +
          sizeof(struct JitToInterpEntries)) >= 128) {
-        LOGE("Thread.jitToInterpEntries size overflow");
+        ALOGE("Thread.jitToInterpEntries size overflow");
         dvmAbort();
     }
 
@@ -98,7 +98,7 @@ int dvmCompilerTargetOptHint(int key)
             res = 2;
             break;
         default:
-            LOGE("Unknown target optimization hint key: %d",key);
+            ALOGE("Unknown target optimization hint key: %d",key);
             res = 0;
     }
     return res;

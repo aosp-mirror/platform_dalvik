@@ -74,7 +74,7 @@ void hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
     FILE* fp = open_memstream(&ctx->fileDataPtr, &ctx->fileDataSize);
     if (fp == NULL) {
         /* not expected */
-        LOGE("hprof: open_memstream failed: %s", strerror(errno));
+        ALOGE("hprof: open_memstream failed: %s", strerror(errno));
         dvmAbort();
     }
 
