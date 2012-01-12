@@ -17,6 +17,10 @@
 package com.android.dx.dex.file;
 
 import com.android.dx.util.DexException;
+import java.util.Formatter;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Member (field or method) refs list section of a {@code .dex} file.
@@ -42,14 +46,34 @@ public abstract class MemberIdsSection extends UniformItemSection {
         int idx = 0;
 
         if (items().size() > MAX_MEMBERS) {
-            String memberType = this instanceof MethodIdsSection ? "methods" : "fields";
-            throw new DexException("Too many " + memberType + ": " + items().size()
-                    + "; max is " + MAX_MEMBERS);
+            throw new DexException(tooManyMembersMessage());
         }
 
         for (Object i : items()) {
             ((MemberIdItem) i).setIndex(idx);
             idx++;
         }
+    }
+
+    private String tooManyMembersMessage() {
+        Map<String, AtomicInteger> membersByPackage = new TreeMap<String, AtomicInteger>();
+        for (Object member : items()) {
+            String packageName = ((MemberIdItem) member).getDefiningClass().getPackageName();
+            AtomicInteger count = membersByPackage.get(packageName);
+            if (count == null) {
+                count = new AtomicInteger();
+                membersByPackage.put(packageName, count);
+            }
+            count.incrementAndGet();
+        }
+
+        Formatter formatter = new Formatter();
+        String memberType = this instanceof MethodIdsSection ? "methods" : "fields";
+        formatter.format("Too many %s: %d; max is %d. By package:",
+                memberType, items().size(), MAX_MEMBERS);
+        for (Map.Entry<String, AtomicInteger> entry : membersByPackage.entrySet()) {
+            formatter.format("%n%6d %s", entry.getValue().get(), entry.getKey());
+        }
+        return formatter.toString();
     }
 }

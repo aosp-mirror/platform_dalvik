@@ -17,7 +17,6 @@
 package com.android.dx.rop.cst;
 
 import com.android.dx.rop.type.Type;
-
 import java.util.HashMap;
 
 /**
@@ -228,5 +227,23 @@ public final class CstType extends TypedConstant {
         }
 
         return descriptor;
+    }
+
+    /**
+     * Returns a human readable package name for this type, like "java.util".
+     * If this is an array type, this returns the package name of the array's
+     * component type. If this is a primitive type, this returns "default".
+     */
+    public String getPackageName() {
+        // descriptor is a string like "[[Ljava/util/String;"
+        String descriptor = getDescriptor().getString();
+        int lastSlash = descriptor.lastIndexOf('/');
+        int lastLeftSquare = descriptor.lastIndexOf('['); // -1 unless this is an array
+        if (lastSlash == -1) {
+            return "default";
+        } else {
+            // +2 to skip the '[' and the 'L' prefix
+            return descriptor.substring(lastLeftSquare + 2, lastSlash).replace('/', '.');
+        }
     }
 }
