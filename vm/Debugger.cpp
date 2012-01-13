@@ -1264,20 +1264,15 @@ void dvmDbgOutputAllMethods(RefTypeId refTypeId, bool withGeneric,
 void dvmDbgOutputAllInterfaces(RefTypeId refTypeId, ExpandBuf* pReply)
 {
     ClassObject* clazz;
-    int i, start, count;
+    int i, count;
 
     clazz = refTypeIdToClassObject(refTypeId);
     assert(clazz != NULL);
 
-    if (clazz->super == NULL)
-        start = 0;
-    else
-        start = clazz->super->iftableCount;
-
-    count = clazz->iftableCount - start;
+    count = clazz->interfaceCount;
     expandBufAdd4BE(pReply, count);
-    for (i = start; i < clazz->iftableCount; i++) {
-        ClassObject* iface = clazz->iftable[i].clazz;
+    for (i = 0; i < count; i++) {
+        ClassObject* iface = clazz->interfaces[i];
         expandBufAddRefTypeId(pReply, classObjectToRefTypeId(iface));
     }
 }
