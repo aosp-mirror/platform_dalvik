@@ -21,12 +21,12 @@
 #include "native/InternalNativePriv.h"
 
 #include <signal.h>
-#include <linux/personality.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <grp.h>
 #include <errno.h>
 #include <paths.h>
+#include <sys/personality.h>
 
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>

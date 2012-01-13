@@ -69,9 +69,6 @@ ifeq ($(WITH_JIT),true)
     # Enable assertions and JIT self-verification
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
                     -DWITH_SELF_VERIFICATION $(target_smp_flag)
-
-    LOCAL_C_INCLUDES += bionic/libc/kernel/common
-
     LOCAL_MODULE := libdvm_sv
     include $(BUILD_SHARED_LIBRARY)
 
@@ -125,8 +122,6 @@ ifeq ($(WITH_HOST_DALVIK),true)
         LOCAL_SHARED_LIBRARIES := \
             $(patsubst libffi, ,$(LOCAL_SHARED_LIBRARIES))
     endif
-
-    LOCAL_C_INCLUDES += bionic/libc/kernel/common
 
     LOCAL_CFLAGS += $(host_smp_flag)
     LOCAL_MODULE_TAGS := optional
