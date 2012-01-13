@@ -21,6 +21,7 @@
 #include "native/InternalNativePriv.h"
 
 #include <signal.h>
+#include <linux/personality.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <grp.h>
@@ -444,6 +445,12 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         if (err < 0) {
             ALOGE("cannot setuid(%d): %s", uid, strerror(errno));
             dvmAbort();
+        }
+
+        int current = personality(0xffffFFFF);
+        int success = personality((ADDR_NO_RANDOMIZE | current));
+        if (success == -1) {
+          LOGW("Personality switch failed. current=%d error=%d\n", current, errno);
         }
 
         err = setCapabilities(permittedCapabilities, effectiveCapabilities);
