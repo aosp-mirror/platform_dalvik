@@ -450,7 +450,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         int current = personality(0xffffFFFF);
         int success = personality((ADDR_NO_RANDOMIZE | current));
         if (success == -1) {
-          LOGW("Personality switch failed. current=%d error=%d\n", current, errno);
+          ALOGW("Personality switch failed. current=%d error=%d\n", current, errno);
         }
 
         err = setCapabilities(permittedCapabilities, effectiveCapabilities);
