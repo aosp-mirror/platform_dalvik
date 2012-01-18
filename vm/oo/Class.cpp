@@ -3071,53 +3071,48 @@ static bool createIftable(ClassObject* clazz)
 
         /* add entries for the interface's superinterfaces */
         for (int j = 0; j < interf->iftableCount; j++) {
-            clazz->iftable[idx++].clazz = interf->iftable[j].clazz;
+            int k;
+            ClassObject *cand;
+
+            cand = interf->iftable[j].clazz;
+
+            /*
+             * Check if this interface was already added and add only if new.
+             * This is to avoid a potential blowup in the number of
+             * interfaces for sufficiently complicated interface hierarchies.
+             * This has quadratic runtime in the number of interfaces.
+             * However, in common cases with little interface inheritance, this
+             * doesn't make much of a difference.
+             */
+            for (k = 0; k < idx; k++)
+                if (clazz->iftable[k].clazz == cand)
+                    break;
+
+            if (k == idx)
+                clazz->iftable[idx++].clazz = cand;
         }
     }
 
-    assert(idx == ifCount);
+    assert(idx <= ifCount);
 
+    /*
+     * Adjust the ifCount. We could reallocate the interface memory here,
+     * but it's probably not worth the effort, the important thing here
+     * is to avoid the interface blowup and keep the ifCount low.
+     */
     if (false) {
-        /*
-         * Remove anything redundant from our recent additions.  Note we have
-         * to traverse the recent adds when looking for duplicates, because
-         * it's possible the recent additions are self-redundant.  This
-         * reduces the memory footprint of classes with lots of inherited
-         * interfaces.
-         *
-         * (I don't know if this will cause problems later on when we're trying
-         * to find a static field.  It looks like the proper search order is
-         * (1) current class, (2) interfaces implemented by current class,
-         * (3) repeat with superclass.  A field implemented by an interface
-         * and by a superclass might come out wrong if the superclass also
-         * implements the interface.  The javac compiler will reject the
-         * situation as ambiguous, so the concern is somewhat artificial.)
-         *
-         * UPDATE: this makes ReferenceType.Interfaces difficult to implement,
-         * because it wants to return just the interfaces declared to be
-         * implemented directly by the class.  I'm excluding this code for now.
-         */
-        for (int i = superIfCount; i < ifCount; i++) {
-            for (int j = 0; j < ifCount; j++) {
-                if (i == j)
-                    continue;
-                if (clazz->iftable[i].clazz == clazz->iftable[j].clazz) {
-                    LOGVV("INTF: redundant interface %s in %s",
-                        clazz->iftable[i].clazz->descriptor,
-                        clazz->descriptor);
+        if (idx != ifCount) {
+            int newIfCount = idx;
+            InterfaceEntry* oldmem = clazz->iftable;
 
-                    if (i != ifCount-1)
-                        memmove(&clazz->iftable[i], &clazz->iftable[i+1],
-                            (ifCount - i -1) * sizeof(InterfaceEntry));
-                    ifCount--;
-                    i--;        // adjust for i++ above
-                    break;
-                }
-            }
+            clazz->iftable = (InterfaceEntry*) dvmLinearAlloc(clazz->classLoader,
+                            sizeof(InterfaceEntry) * newIfCount);
+            memcpy(clazz->iftable, oldmem, sizeof(InterfaceEntry) * newIfCount);
+            dvmLinearFree(clazz->classLoader, oldmem);
         }
-        LOGVV("INTF: class '%s' nodupes=%d", clazz->descriptor, ifCount);
-    } // if (false)
+    }
 
+    ifCount = idx;
     clazz->iftableCount = ifCount;
 
     /*
