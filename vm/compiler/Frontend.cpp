@@ -511,7 +511,8 @@ bool dvmCompilerCanIncludeThisInstruction(const Method *method,
 /* Split an existing block from the specified code offset into two */
 static BasicBlock *splitBlock(CompilationUnit *cUnit,
                               unsigned int codeOffset,
-                              BasicBlock *origBlock)
+                              BasicBlock *origBlock,
+                              BasicBlock **immedPredBlockP)
 {
     MIR *insn = origBlock->firstMIRInsn;
     while (insn) {
@@ -573,16 +574,29 @@ static BasicBlock *splitBlock(CompilationUnit *cUnit,
 
     insn->prev->next = NULL;
     insn->prev = NULL;
+
+    /*
+     * Update the immediate predecessor block pointer so that outgoing edges
+     * can be applied to the proper block.
+     */
+    if (immedPredBlockP) {
+        assert(*immedPredBlockP == origBlock);
+        *immedPredBlockP = bottomBlock;
+    }
     return bottomBlock;
 }
 
 /*
  * Given a code offset, find out the block that starts with it. If the offset
- * is in the middle of an existing block, split it into two.
+ * is in the middle of an existing block, split it into two. If immedPredBlockP
+ * is non-null and is the block being split, update *immedPredBlockP to point
+ * to the bottom block so that outgoing edges can be setup properly (by the
+ * caller).
  */
 static BasicBlock *findBlock(CompilationUnit *cUnit,
                              unsigned int codeOffset,
-                             bool split, bool create)
+                             bool split, bool create,
+                             BasicBlock **immedPredBlockP)
 {
     GrowableList *blockList = &cUnit->blockList;
     BasicBlock *bb;
@@ -596,7 +610,9 @@ static BasicBlock *findBlock(CompilationUnit *cUnit,
         if ((split == true) && (codeOffset > bb->startOffset) &&
             (bb->lastMIRInsn != NULL) &&
             (codeOffset <= bb->lastMIRInsn->offset)) {
-            BasicBlock *newBB = splitBlock(cUnit, codeOffset, bb);
+            BasicBlock *newBB = splitBlock(cUnit, codeOffset, bb,
+                                           bb == *immedPredBlockP ?
+                                               immedPredBlockP : NULL);
             return newBB;
         }
     }
@@ -873,7 +889,9 @@ static void processTryCatchBlocks(CompilationUnit *cUnit)
                       /* split */
                       false,
                       /* create */
-                      true);
+                      true,
+                      /* immedPredBlockP */
+                      NULL);
         }
 
         offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
@@ -917,7 +935,9 @@ static void processCanBranch(CompilationUnit *cUnit, BasicBlock *curBlock,
                                        /* split */
                                        true,
                                        /* create */
-                                       true);
+                                       true,
+                                       /* immedPredBlockP */
+                                       &curBlock);
     curBlock->taken = takenBlock;
     dvmCompilerSetBit(takenBlock->predecessors, curBlock->id);
 
@@ -939,7 +959,9 @@ static void processCanBranch(CompilationUnit *cUnit, BasicBlock *curBlock,
                                                   */
                                                  true,
                                                  /* create */
-                                                 true);
+                                                 true,
+                                                 /* immedPredBlockP */
+                                                 &curBlock);
         curBlock->fallThrough = fallthroughBlock;
         dvmCompilerSetBit(fallthroughBlock->predecessors, curBlock->id);
     } else if (codePtr < codeEnd) {
@@ -949,7 +971,9 @@ static void processCanBranch(CompilationUnit *cUnit, BasicBlock *curBlock,
                       /* split */
                       false,
                       /* create */
-                      true);
+                      true,
+                      /* immedPredBlockP */
+                      NULL);
         }
     }
 }
@@ -1013,7 +1037,9 @@ static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
                                           /* split */
                                           true,
                                           /* create */
-                                          true);
+                                          true,
+                                          /* immedPredBlockP */
+                                          &curBlock);
         SuccessorBlockInfo *successorBlockInfo =
             (SuccessorBlockInfo *) dvmCompilerNew(sizeof(SuccessorBlockInfo),
                                                   false);
@@ -1031,7 +1057,9 @@ static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
                                              /* split */
                                              false,
                                              /* create */
-                                             true);
+                                             true,
+                                             /* immedPredBlockP */
+                                             NULL);
     curBlock->fallThrough = fallthroughBlock;
     dvmCompilerSetBit(fallthroughBlock->predecessors, curBlock->id);
 }
@@ -1074,7 +1102,9 @@ static void processCanThrow(CompilationUnit *cUnit, BasicBlock *curBlock,
                                                /* split */
                                                false,
                                                /* create */
-                                               false);
+                                               false,
+                                               /* immedPredBlockP */
+                                               NULL);
 
             SuccessorBlockInfo *successorBlockInfo =
               (SuccessorBlockInfo *) dvmCompilerNew(sizeof(SuccessorBlockInfo),
@@ -1108,7 +1138,9 @@ static void processCanThrow(CompilationUnit *cUnit, BasicBlock *curBlock,
                                                      /* split */
                                                      false,
                                                      /* create */
-                                                     true);
+                                                     true,
+                                                     /* immedPredBlockP */
+                                                     NULL);
             /*
              * OP_THROW and OP_THROW_VERIFICATION_ERROR are unconditional
              * branches.
@@ -1226,7 +1258,9 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
                               /* split */
                               false,
                               /* create */
-                              true);
+                              true,
+                              /* immedPredBlockP */
+                              NULL);
                 }
             }
         } else if (flags & kInstrCanThrow) {
@@ -1240,7 +1274,9 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
                                           /* split */
                                           false,
                                           /* create */
-                                          false);
+                                          false,
+                                          /* immedPredBlockP */
+                                          NULL);
         if (nextBlock) {
             /*
              * The next instruction could be the target of a previously parsed
@@ -1380,7 +1416,9 @@ static bool exhaustTrace(CompilationUnit *cUnit, BasicBlock *curBlock)
                                           /* split */
                                           false,
                                           /* create */
-                                          false);
+                                          false,
+                                          /* immedPredBlockP */
+                                          NULL);
         if (nextBlock) {
             /*
              * The next instruction could be the target of a previously parsed

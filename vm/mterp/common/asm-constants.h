@@ -193,7 +193,7 @@ MTERP_OFFSET(offThread_methodToCall,      Thread, methodToCall, 164)
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.segmentState.all, 168)
 #if defined(WITH_SELF_VERIFICATION)
-MTERP_OFFSET(offThread_shadowSpace,       Thread, shadowSpace, 192)
+MTERP_OFFSET(offThread_shadowSpace,       Thread, shadowSpace, 188)
 #endif
 #else
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
