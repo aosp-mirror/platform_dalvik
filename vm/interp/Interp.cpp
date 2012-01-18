@@ -1696,7 +1696,6 @@ void dvmInitializeInterpBreak(Thread* thread)
 void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
 {
     const Method* method = self->interpSave.method;
-    assert(self->interpBreak.ctl.breakFlags != 0);
     assert(pc >= method->insns && pc <
            method->insns + dvmGetMethodInsnsSize(method));
 
