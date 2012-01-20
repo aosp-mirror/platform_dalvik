@@ -76,7 +76,7 @@ public class Main {
                  * through reflection, then call loadCLass on it.
                  */
                 Class mDexClass = ClassLoader.getSystemClassLoader().
-                        loadClass("dalvik/system/DexFile");
+                        loadClass("dalvik.system.DexFile");
                 Constructor ctor = mDexClass.
                         getConstructor(new Class[] {String.class});
                 Object mDexFile = ctor.newInstance(DEX_FILE);
