@@ -3,11 +3,18 @@
 import java.lang.reflect.*;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Reflection test.
  */
 public class Main {
+    private static boolean FULL_ACCESS_CHECKS = false;  // b/5861201
+    public Main() {}
+    public Main(ArrayList<Integer> stuff) {}
+
     void printMethodInfo(Method meth) {
         Class[] params, exceptions;
         int i;
@@ -53,6 +60,48 @@ public class Main {
         three = (String) field.get(instance);
 
         System.out.println("  ::: " + one + ":" + two + ":" + three);
+    }
+
+    public static void checkAccess() {
+        try {
+            Class target = otherpackage.Other.class;
+            Object instance = new otherpackage.Other();
+            Method meth;
+
+            meth = target.getMethod("publicMethod", (Class[]) null);
+            meth.invoke(instance);
+
+            try {
+                meth = target.getMethod("packageMethod", (Class[]) null);
+                System.err.println("succeeded on package-scope method");
+            } catch (NoSuchMethodException nsme) {
+                // good
+            }
+
+
+            instance = otherpackage.Other.getInnerClassInstance();
+            target = instance.getClass();
+            meth = target.getMethod("innerMethod", (Class[]) null);
+            try {
+                if (!FULL_ACCESS_CHECKS) { throw new IllegalAccessException(); }
+                meth.invoke(instance);
+                System.err.println("inner-method invoke unexpectedly worked");
+            } catch (IllegalAccessException iae) {
+                // good
+            }
+
+            Field field = target.getField("innerField");
+            try {
+                int x = field.getInt(instance);
+                if (!FULL_ACCESS_CHECKS) { throw new IllegalAccessException(); }
+                System.err.println("field get unexpectedly worked: " + x);
+            } catch (IllegalAccessException iae) {
+                // good
+            }
+        } catch (Exception ex) {
+            System.out.println("----- unexpected exception -----");
+            ex.printStackTrace();
+        }
     }
 
     public void run() {
@@ -295,8 +344,7 @@ public class Main {
             targ = cons.newInstance(args);
             targ.myMethod(17);
 
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.out.println("----- unexpected exception -----");
             ex.printStackTrace();
         }
@@ -347,14 +395,80 @@ public class Main {
         /* neither NoisyInit nor NoisyInitUser should be initialized yet */
         NoisyInitUser niu = new NoisyInitUser();
         NoisyInit ni = new NoisyInit();
+
+        System.out.println("");
     }
+
+
+    /*
+     * Test some generic type stuff.
+     */
+    public List<String> dummy;
+    public Map<Integer,String> fancyMethod(ArrayList<String> blah) { return null; }
+    public static void checkGeneric() {
+        Field field;
+        try {
+            field = Main.class.getField("dummy");
+        } catch (NoSuchFieldException nsfe) {
+            throw new RuntimeException(nsfe);
+        }
+        Type listType = field.getGenericType();
+        System.out.println("generic field: " + listType);
+
+        Method method;
+        try {
+            method = Main.class.getMethod("fancyMethod",
+                new Class[] { ArrayList.class });
+        } catch (NoSuchMethodException nsme) {
+            throw new RuntimeException(nsme);
+        }
+        Type[] parmTypes = method.getGenericParameterTypes();
+        Type ret = method.getGenericReturnType();
+        System.out.println("generic method " + method.getName() + " params='"
+            + stringifyTypeArray(parmTypes) + "' ret='" + ret + "'");
+
+        Constructor ctor;
+        try {
+            ctor = Main.class.getConstructor(new Class[] { ArrayList.class });
+        } catch (NoSuchMethodException nsme) {
+            throw new RuntimeException(nsme);
+        }
+        parmTypes = ctor.getGenericParameterTypes();
+        System.out.println("generic ctor " + ctor.getName() + " params='"
+            + stringifyTypeArray(parmTypes) + "'");
+    }
+
+    /*
+     * Convert an array of Type into a string.  Start with an array count.
+     */
+    private static String stringifyTypeArray(Type[] types) {
+        StringBuilder stb = new StringBuilder();
+        boolean first = true;
+
+        stb.append("[" + types.length + "]");
+
+        for (Type t: types) {
+            if (first) {
+                stb.append(" ");
+                first = false;
+            } else {
+                stb.append(", ");
+            }
+            stb.append(t.toString());
+        }
+
+        return stb.toString();
+    }
+
 
     public static void main(String[] args) {
         Main test = new Main();
         test.run();
 
+        checkAccess();
         checkType();
         checkInit();
+        checkGeneric();
     }
 }
 

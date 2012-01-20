@@ -16,12 +16,12 @@
 
 import java.lang.reflect.Constructor;
 
-import java.lang.reflect.Constructor;
-
 /**
  * Test instance creation.
  */
 public class Main {
+    private static boolean FULL_ACCESS_CHECKS = false;  // b/5861201
+
     public static void main(String[] args) {
         testClassNewInstance();
         testConstructorNewInstance();
@@ -98,6 +98,7 @@ public class Main {
             Constructor cons = c.getConstructor(new Class[0] /*(Class[])null*/);
             System.err.println("ERROR: Cons PackageAccess succeeded unexpectedly");
         } catch (NoSuchMethodException nsme) {
+            // constructor isn't public
             System.out.println("Cons got expected PackageAccess complaint");
         } catch (Exception ex) {
             System.err.println("Cons got unexpected PackageAccess failure");
@@ -117,6 +118,22 @@ public class Main {
             System.err.println("Cons got unexpected MaybeAbstract failure");
             ex.printStackTrace();
         }
+
+        // should fail
+        try {
+            Class c = Class.forName("otherpackage.PackageAccess2");
+            Constructor cons = c.getConstructor((Class[]) null);
+            if (!FULL_ACCESS_CHECKS) { throw new IllegalAccessException(); }
+            Object obj = cons.newInstance();
+            System.err.println("ERROR: Cons PackageAccess2 succeeded unexpectedly");
+        } catch (IllegalAccessException iae) {
+            // constructor is public, but class has package scope
+            System.out.println("Cons got expected PackageAccess2 complaint");
+        } catch (Exception ex) {
+            System.err.println("Cons got unexpected PackageAccess2 failure");
+            ex.printStackTrace();
+        }
+
     }
 }
 

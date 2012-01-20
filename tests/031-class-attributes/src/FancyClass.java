@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,9 @@
  * limitations under the License.
  */
 
-package otherpackage;
+import java.util.HashMap;
+import java.util.Map;
 
-class PackageAccess {
-    /*package*/ PackageAccess() {
-        System.out.println("created PackageAccess");
-    }
+public class FancyClass<K,V> extends HashMap<K,V> implements Map<K,V> {
 }
 
-class PackageAccess2 {
-    public PackageAccess2() {
-        System.out.println("created PackageAccess2");
-    }
-}
