@@ -118,12 +118,12 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
 
     IF_ALOGW() {
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        ALOGW("No implementation found for native %s.%s %s",
+        ALOGW("No implementation found for native %s.%s:%s",
             clazz->descriptor, method->name, desc);
         free(desc);
     }
 
-    dvmThrowUnsatisfiedLinkError(method->name);
+    dvmThrowUnsatisfiedLinkError("Native method not found", method);
 }
 
 

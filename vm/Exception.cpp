@@ -1430,6 +1430,15 @@ void dvmThrowUnsatisfiedLinkError(const char* msg) {
     dvmThrowException(gDvm.exUnsatisfiedLinkError, msg);
 }
 
+void dvmThrowUnsatisfiedLinkError(const char* msg, const Method* method) {
+    char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
+    char* className = dvmDescriptorToDot(method->clazz->descriptor);
+    dvmThrowExceptionFmt(gDvm.exUnsatisfiedLinkError, "%s: %s.%s:%s",
+        msg, className, method->name, desc);
+    free(className);
+    free(desc);
+}
+
 void dvmThrowUnsupportedOperationException(const char* msg) {
     dvmThrowException(gDvm.exUnsupportedOperationException, msg);
 }
