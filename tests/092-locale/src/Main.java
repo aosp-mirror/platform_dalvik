@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.Currency;
 import java.util.Date;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.TimeZone;
 
 /**
@@ -55,7 +56,7 @@ public class Main {
         }
 
         try {
-            testTimeZone();
+            testIso3();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -66,11 +67,14 @@ public class Main {
 
         Locale usa = new Locale("en", "US");
         Calendar usaCal = Calendar.getInstance(tz, usa);
+        usaCal.clear();     // don't want current date/time
         usaCal.set(2012, Calendar.JANUARY, 1);
 
         Date when = usaCal.getTime();
         DateFormat fmt = DateFormat.getDateInstance(DateFormat.FULL, usa);
-        System.out.println("USA: " + fmt.format(when));
+        fmt.setTimeZone(tz);    // defaults to local TZ; force GMT
+        System.out.println("USA(" + fmt.getTimeZone().getID() + "): "
+            + fmt.format(when));
 
         System.out.println("USA: first="
             + usaCal.getFirstDayOfWeek() + ", name="
@@ -79,11 +83,14 @@ public class Main {
 
         Locale france = new Locale("fr", "FR");
         Calendar franceCal = Calendar.getInstance(tz, france);
+        franceCal.clear();
         franceCal.set(2012, Calendar.JANUARY, 2);
 
         when = franceCal.getTime();
         fmt = DateFormat.getDateInstance(DateFormat.FULL, usa);
-        System.out.println("France: " + fmt.format(when));
+        fmt.setTimeZone(tz);    // defaults to local TZ; force GMT
+        System.out.println("France(" + fmt.getTimeZone().getID() + "): "
+            + fmt.format(when));
 
         System.out.println("France: first="
             + franceCal.getFirstDayOfWeek() + ", name="
@@ -131,6 +138,22 @@ public class Main {
         System.out.println("Normalizer passed");
     }
 
-    static void testTimeZone() {
+    /*
+     * Test that we can set and get an ISO3 language code.  Support for this
+     * is expected by the Android framework.
+     */
+    static void testIso3() {
+        Locale loc;
+        loc = new Locale("en", "US");
+        System.out.println("loc: " + loc);
+        System.out.println(" iso3=" + loc.getISO3Language());
+
+        loc = new Locale("eng", "USA");
+        System.out.println("loc: " + loc);
+        try {
+            System.out.println(" iso3=" + loc.getISO3Language());
+        } catch (MissingResourceException mre) {
+            System.err.println("couldn't get iso3 language");
+        }
     }
 }
