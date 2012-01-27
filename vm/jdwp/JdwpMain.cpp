@@ -442,7 +442,7 @@ s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
 
     /* now get the current time */
     s8 now = dvmJdwpGetNowMsec();
-    assert(now > last);
+    assert(now >= last);
 
     ALOGV("+++ debugger interval=%lld", now - last);
     return now - last;
