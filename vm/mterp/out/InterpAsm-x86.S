@@ -15643,10 +15643,10 @@ common_invokeMethodNoRange:
      */
     SPILL_TMP1(%eax)                    # save methodTocall
     movl        rPC, offThread_pc(%ecx)
-    movl        %ecx, OUT_ARG0(%esp)
-    movl        %eax, OUT_ARG1(%esp)
+    movl        %eax, OUT_ARG0(%esp)
+    movl        %ecx, OUT_ARG1(%esp)
     movl        rFP, OUT_ARG2(%esp)
-    call        dvmReportPreNativeInvoke # (self, methodToCall, fp)
+    call        dvmReportPreNativeInvoke # (methodToCall, self, fp)
     UNSPILL_TMP1(%eax)                  # restore methodToCall
     movl        rSELF,%ecx              # restore self
 
@@ -15660,10 +15660,10 @@ common_invokeMethodNoRange:
 
     UNSPILL_TMP1(%eax)                  # restore methodToCall
     movl        rSELF, %ecx
-    movl        %ecx, OUT_ARG0(%esp)
-    movl        %eax, OUT_ARG1(%esp)
+    movl        %eax, OUT_ARG0(%esp)
+    movl        %ecx, OUT_ARG1(%esp)
     movl        rFP, OUT_ARG2(%esp)
-    call        dvmReportPostNativeInvoke # (self, methodToCall, fp)
+    call        dvmReportPostNativeInvoke # (methodToCall, self, fp)
     jmp         7b                      # rejoin
 
 .LstackOverflow:    # eax=methodToCall
