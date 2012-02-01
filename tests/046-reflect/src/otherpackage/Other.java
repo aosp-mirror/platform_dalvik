@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,23 @@
 
 package otherpackage;
 
-class PackageAccess {
-    /*package*/ PackageAccess() {
-        System.out.println("created PackageAccess");
+public class Other {
+    public void publicMethod() {
+        System.out.println("public method");
     }
-}
+    void packageMethod() {
+        System.out.println("package method");
+    }
 
-class PackageAccess2 {
-    public PackageAccess2() {
-        System.out.println("created PackageAccess2");
+    public static InnerOther getInnerClassInstance() {
+        return new InnerOther();
+    }
+
+    private static class InnerOther {
+        public void innerMethod() {
+            System.out.println("inner method");
+        }
+
+        public int innerField = 7;
     }
 }

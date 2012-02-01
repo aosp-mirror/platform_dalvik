@@ -53,7 +53,7 @@ public class FancyLoader extends ClassLoader {
         super(parent);
 
         try {
-            mDexClass = parent.loadClass("dalvik/system/DexFile");
+            mDexClass = parent.loadClass("dalvik.system.DexFile");
         } catch (ClassNotFoundException cnfe) {
             // ignore -- not running Dalvik
         }
