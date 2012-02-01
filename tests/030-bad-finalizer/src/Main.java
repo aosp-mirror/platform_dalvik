@@ -14,7 +14,7 @@ public class Main {
         System.gc();
 
         for (int i = 0; i < 8; i++) {
-            BadFinalizer.snooze(5000);
+            BadFinalizer.snooze(4000);
             System.out.println("Requesting another GC.");
             System.gc();
         }

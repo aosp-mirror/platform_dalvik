@@ -90,8 +90,13 @@ Target constructor (IF)V : ii=7 ff=3.3333
 myMethod (I)I
  arg=17 anInt=7
 ReflectTest done!
+public method
 checkType invoking null
 checkType got expected exception
 got methods
 NoisyInitUser is initializing
 NoisyInit is initializing
+
+generic field: java.util.List<java.lang.String>
+generic method fancyMethod params='[1] java.util.ArrayList<java.lang.String>' ret='java.util.Map<java.lang.Integer, java.lang.String>'
+generic ctor Main params='[1] java.util.ArrayList<java.lang.Integer>'

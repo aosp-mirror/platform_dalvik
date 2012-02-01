@@ -17,14 +17,21 @@
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.CharBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 import java.nio.ShortBuffer;
 
 public class Main {
     public static void main(String[] args) {
-         intFloatTest();
-         basicShortTest();
+        ByteBuffer buf = ByteBuffer.allocateDirect(16);
+        System.out.println("Direct byte buffer has array: " + buf.hasArray());
+
+        intFloatTest();
+        basicShortTest();
+        primTest();
     }
 
     /*
@@ -93,5 +100,78 @@ public class Main {
         int1.clear ();
         int1.put (data);
         int1.position (0);
+    }
+
+    /*
+     * Exercise all "view buffer" classes, in both byte orders.
+     */
+    public static void primTest() {
+        ByteBuffer directBuf = ByteBuffer.allocateDirect(36);
+        directBuf.order(ByteOrder.BIG_ENDIAN);
+        storeValues(directBuf);
+
+        for (int i = 0; i < 36; i++) {
+            directBuf.put(i, (byte) 0xcc);
+        }
+
+        directBuf.order(ByteOrder.LITTLE_ENDIAN);
+        storeValues(directBuf);
+    }
+
+    static void storeValues(ByteBuffer directBuf) {
+        directBuf.position(0);
+        ShortBuffer shortBuf = directBuf.asShortBuffer();
+        CharBuffer charBuf = directBuf.asCharBuffer();
+        IntBuffer intBuf = directBuf.asIntBuffer();
+        FloatBuffer floatBuf = directBuf.asFloatBuffer();
+        LongBuffer longBuf = directBuf.asLongBuffer();
+        DoubleBuffer doubleBuf = directBuf.asDoubleBuffer();
+
+        final byte byteValue = -5;
+        final short shortValue = -1234;
+        final char charValue = 49200;
+        final int intValue = 0x12345678;
+        final float floatValue = 3.14159f;
+        final long longValue = 0x1122334455667788L;
+        final double doubleValue = Double.MIN_VALUE;
+
+        if (directBuf.put(1, byteValue).get(1) != byteValue) {
+            throw new RuntimeException("byte get/store failed");
+        }
+        if (shortBuf.put(1, shortValue).get(1) != shortValue) {
+            throw new RuntimeException("short get/store failed");
+        }
+        if (charBuf.put(2, charValue).get(2) != charValue) {
+            throw new RuntimeException("char get/store failed");
+        }
+        if (intBuf.put(2, intValue).get(2) != intValue) {
+            throw new RuntimeException("int get/store failed");
+        }
+        if (floatBuf.put(3, floatValue).get(3) != floatValue) {
+            throw new RuntimeException("float get/store failed");
+        }
+        if (longBuf.put(2, longValue).get(2) != longValue) {
+            throw new RuntimeException("long get/store failed");
+        }
+        if (doubleBuf.put(3, doubleValue).get(3) != doubleValue) {
+            throw new RuntimeException("double get/store failed");
+        }
+
+        directBuf.position(0);
+        char[] outBuf = new char[directBuf.limit() * 2];
+        for (int i = 0; i < directBuf.limit(); i++) {
+            byte b = directBuf.get();
+            outBuf[i*2] = hexChar((byte) ((b >> 4) & 0x0f));
+            outBuf[i*2+1] = hexChar((byte) (b & 0x0f));
+        }
+        System.out.println(new String(outBuf));
+    }
+
+    static char hexChar(byte b) {
+        if (b < 10) {
+            return (char) ('0' + b);
+        } else {
+            return (char) ('a' + b - 10);
+        }
     }
 }

@@ -4,6 +4,7 @@ public class Main {
     public static void main(String[] args) {
         Special special = new Special();
         special.callInner();
+        System.out.println("done");
     }
 
     public static class Special {
@@ -14,7 +15,10 @@ public class Main {
         }
 
         public void callInner() {
-            mBlort.repaint();
+            try {
+                mBlort.repaint();
+                throw new RuntimeException("fail");
+            } catch (NullPointerException npe) {}
         }
     }
 

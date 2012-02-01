@@ -32,7 +32,7 @@ public class SlowInit {
         FIELD0.setValue(111);
         FIELD1.setValue(222);
         printMsg("SlowInit static block pre-sleep");
-        Main.sleep(600);
+        Main.sleep(4000);
         printMsg("SlowInit static block post-sleep");
         FIELD2.setValue(333);
         FIELD3.setValue(444);
