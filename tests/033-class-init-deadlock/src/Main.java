@@ -16,11 +16,13 @@ public class Main {
         thread1 = new Thread() { public void run() { new A(); } };
         thread2 = new Thread() { public void run() { new B(); } };
         thread1.start();
+        // Give thread1 a chance to start before starting thread2.
+        try { Thread.sleep(1000); } catch (InterruptedException ie) { }
         thread2.start();
 
         try { Thread.sleep(6000); } catch (InterruptedException ie) { }
 
-        System.out.println("Deadlock test interupting threads.");
+        System.out.println("Deadlock test interrupting threads.");
         thread1.interrupt();
         thread2.interrupt();
         System.out.println("Deadlock test main thread bailing.");
