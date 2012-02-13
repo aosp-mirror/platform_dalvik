@@ -4490,7 +4490,12 @@ aget_1nr_common:
                     failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
-
+            } else {
+                /*
+                 * Null array ref; this code path will fail at runtime. Label
+                 * result as zero to allow it to remain mergeable.
+                 */
+                tmpType = kRegTypeZero;
             }
             setRegisterType(workLine, decInsn.vA, tmpType);
         }
