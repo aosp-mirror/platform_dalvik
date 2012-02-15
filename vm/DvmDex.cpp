@@ -18,7 +18,7 @@
  * VM-specific state associated with a DEX file.
  */
 #include "Dalvik.h"
-
+#include <sys/mman.h>
 
 /*
  * Create auxillary data structures.
@@ -37,61 +37,49 @@
  * invoke-virtual-quick), creating the possibility of some space reduction
  * at dexopt time.
  */
+
 static DvmDex* allocateAuxStructures(DexFile* pDexFile)
 {
     DvmDex* pDvmDex;
     const DexHeader* pHeader;
-    u4 stringCount, classCount, methodCount, fieldCount;
+    u4 stringSize, classSize, methodSize, fieldSize;
 
-    pDvmDex = (DvmDex*) calloc(1, sizeof(DvmDex));
-    if (pDvmDex == NULL)
+    pHeader = pDexFile->pHeader;
+
+    stringSize = pHeader->stringIdsSize * sizeof(struct StringObject*);
+    classSize  = pHeader->typeIdsSize * sizeof(struct ClassObject*);
+    methodSize = pHeader->methodIdsSize * sizeof(struct Method*);
+    fieldSize  = pHeader->fieldIdsSize * sizeof(struct Field*);
+
+    u4 totalSize = sizeof(DvmDex) +
+                   stringSize + classSize + methodSize + fieldSize;
+
+    u1 *blob = (u1 *)dvmAllocRegion(totalSize,
+                              PROT_READ | PROT_WRITE, "dalvik-aux-structure");
+    if ((void *)blob == MAP_FAILED)
         return NULL;
 
+    pDvmDex = (DvmDex*)blob;
+    blob += sizeof(DvmDex);
+
     pDvmDex->pDexFile = pDexFile;
-    pDvmDex->pHeader = pDexFile->pHeader;
+    pDvmDex->pHeader = pHeader;
 
-    pHeader = pDvmDex->pHeader;
+    pDvmDex->pResStrings = (struct StringObject**)blob;
+    blob += stringSize;
+    pDvmDex->pResClasses = (struct ClassObject**)blob;
+    blob += classSize;
+    pDvmDex->pResMethods = (struct Method**)blob;
+    blob += methodSize;
+    pDvmDex->pResFields = (struct Field**)blob;
 
-    stringCount = pHeader->stringIdsSize;
-    classCount = pHeader->typeIdsSize;
-    methodCount = pHeader->methodIdsSize;
-    fieldCount = pHeader->fieldIdsSize;
-
-    pDvmDex->pResStrings = (struct StringObject**)
-        calloc(stringCount, sizeof(struct StringObject*));
-
-    pDvmDex->pResClasses = (struct ClassObject**)
-        calloc(classCount, sizeof(struct ClassObject*));
-
-    pDvmDex->pResMethods = (struct Method**)
-        calloc(methodCount, sizeof(struct Method*));
-
-    pDvmDex->pResFields = (struct Field**)
-        calloc(fieldCount, sizeof(struct Field*));
-
-    ALOGV("+++ DEX %p: allocateAux %d+%d+%d+%d * 4 = %d bytes",
-        pDvmDex, stringCount, classCount, methodCount, fieldCount,
-        (stringCount + classCount + methodCount + fieldCount) * 4);
+    ALOGV("+++ DEX %p: allocateAux (%d+%d+%d+%d)*4 = %d bytes",
+        pDvmDex, stringSizei/4, classSize/4, methodSize/4, fieldSize/4,
+        stringSize + classSize + methodSize + fieldSize);
 
     pDvmDex->pInterfaceCache = dvmAllocAtomicCache(DEX_INTERFACE_CACHE_SIZE);
 
-    if (pDvmDex->pResStrings == NULL ||
-        pDvmDex->pResClasses == NULL ||
-        pDvmDex->pResMethods == NULL ||
-        pDvmDex->pResFields == NULL ||
-        pDvmDex->pInterfaceCache == NULL)
-    {
-        ALOGE("Alloc failure in allocateAuxStructures");
-        free(pDvmDex->pResStrings);
-        free(pDvmDex->pResClasses);
-        free(pDvmDex->pResMethods);
-        free(pDvmDex->pResFields);
-        free(pDvmDex);
-        return NULL;
-    }
-
     return pDvmDex;
-
 }
 
 /*
@@ -191,20 +179,23 @@ bail:
  */
 void dvmDexFileFree(DvmDex* pDvmDex)
 {
+    u4 totalSize;
+
     if (pDvmDex == NULL)
         return;
+
+    totalSize  = pDvmDex->pHeader->stringIdsSize * sizeof(struct StringObject*);
+    totalSize += pDvmDex->pHeader->typeIdsSize * sizeof(struct ClassObject*);
+    totalSize += pDvmDex->pHeader->methodIdsSize * sizeof(struct Method*);
+    totalSize += pDvmDex->pHeader->fieldIdsSize * sizeof(struct Field*);
+    totalSize += sizeof(DvmDex);
 
     dexFileFree(pDvmDex->pDexFile);
 
     ALOGV("+++ DEX %p: freeing aux structs", pDvmDex);
-    free(pDvmDex->pResStrings);
-    free(pDvmDex->pResClasses);
-    free(pDvmDex->pResMethods);
-    free(pDvmDex->pResFields);
     dvmFreeAtomicCache(pDvmDex->pInterfaceCache);
-
     sysReleaseShmem(&pDvmDex->memMap);
-    free(pDvmDex);
+    munmap(pDvmDex, totalSize);
 }
 
 
