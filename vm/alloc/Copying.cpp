@@ -444,9 +444,8 @@ GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
 
     assert(startSize <= absoluteMaxSize);
 
-    heapSource = malloc(sizeof(*heapSource));
+    heapSource = calloc(1, sizeof(*heapSource));
     assert(heapSource != NULL);
-    memset(heapSource, 0, sizeof(*heapSource));
 
     heapSource->minimumSize = alignUp(startSize, BLOCK_SIZE);
     heapSource->maximumSize = alignUp(absoluteMaxSize, BLOCK_SIZE);
@@ -475,9 +474,8 @@ GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     /* Byte indicating space residence or free status of block. */
     {
         size_t size = sizeof(heapSource->blockSpace[0]);
-        heapSource->blockSpace = malloc(heapSource->totalBlocks*size);
+        heapSource->blockSpace = calloc(1, heapSource->totalBlocks*size);
         assert(heapSource->blockSpace != NULL);
-        memset(heapSource->blockSpace, 0, heapSource->totalBlocks*size);
     }
 
     dvmHeapBitmapInit(&heapSource->allocBits,
@@ -489,9 +487,8 @@ GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     heapSource->allocPtr = allocateBlocks(heapSource, 1);
     heapSource->allocLimit = heapSource->allocPtr + BLOCK_SIZE;
 
-    gcHeap = malloc(sizeof(*gcHeap));
+    gcHeap = calloc(1, sizeof(*gcHeap));
     assert(gcHeap != NULL);
-    memset(gcHeap, 0, sizeof(*gcHeap));
     gcHeap->heapSource = heapSource;
 
     return gcHeap;

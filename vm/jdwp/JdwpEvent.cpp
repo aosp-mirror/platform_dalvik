@@ -332,8 +332,7 @@ JdwpEvent* dvmJdwpEventAlloc(int numMods)
     int allocSize = offsetof(JdwpEvent, mods) +
                     numMods * sizeof(newEvent->mods[0]);
 
-    newEvent = (JdwpEvent*)malloc(allocSize);
-    memset(newEvent, 0, allocSize);
+    newEvent = (JdwpEvent*)calloc(1, allocSize);
     return newEvent;
 }
 

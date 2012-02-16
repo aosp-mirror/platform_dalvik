@@ -41,7 +41,7 @@ hprof_context_t* hprofStartup(const char *outputFileName, int fd,
     hprofStartup_String();
     hprofStartup_Class();
 
-    hprof_context_t *ctx = (hprof_context_t *)malloc(sizeof(*ctx));
+    hprof_context_t *ctx = (hprof_context_t *)calloc(1, sizeof(*ctx));
     if (ctx == NULL) {
         ALOGE("hprof: can't allocate context.");
         return NULL;
@@ -67,7 +67,7 @@ bool hprofShutdown(hprof_context_t *tailCtx)
      * Create a new context struct for the start of the file.  We
      * heap-allocate it so we can share the "free" function.
      */
-    hprof_context_t *headCtx = (hprof_context_t *)malloc(sizeof(*headCtx));
+    hprof_context_t *headCtx = (hprof_context_t *)calloc(1, sizeof(*headCtx));
     if (headCtx == NULL) {
         ALOGE("hprof: can't allocate context.");
         hprofFreeContext(tailCtx);

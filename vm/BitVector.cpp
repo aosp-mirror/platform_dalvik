@@ -42,8 +42,7 @@ BitVector* dvmAllocBitVector(unsigned int startBits, bool expandable)
 
     bv->storageSize = count;
     bv->expandable = expandable;
-    bv->storage = (u4*) malloc(count * sizeof(u4));
-    memset(bv->storage, 0x00, count * sizeof(u4));
+    bv->storage = (u4*) calloc(count, sizeof(u4));
     return bv;
 }
 

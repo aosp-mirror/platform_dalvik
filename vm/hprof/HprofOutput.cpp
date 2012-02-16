@@ -60,12 +60,13 @@
  * Initialize an hprof context struct.
  *
  * This will take ownership of "fileName".
+ *
+ * NOTE: ctx is expected to have been zeroed out prior to calling this
+ * function.
  */
 void hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
                       bool writeHeader, bool directToDdms)
 {
-    memset(ctx, 0, sizeof (*ctx));
-
     /*
      * Have to do this here, because it must happen after we
      * memset the struct (want to treat fileDataPtr/fileDataSize

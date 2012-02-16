@@ -57,13 +57,12 @@ HashTable* dvmHashTableCreate(size_t initialSize, HashFreeFunc freeFunc)
     pHashTable->numEntries = pHashTable->numDeadEntries = 0;
     pHashTable->freeFunc = freeFunc;
     pHashTable->pEntries =
-        (HashEntry*) malloc(pHashTable->tableSize * sizeof(HashEntry));
+        (HashEntry*) calloc(pHashTable->tableSize, sizeof(HashEntry));
     if (pHashTable->pEntries == NULL) {
         free(pHashTable);
         return NULL;
     }
 
-    memset(pHashTable->pEntries, 0, pHashTable->tableSize * sizeof(HashEntry));
     return pHashTable;
 }
 

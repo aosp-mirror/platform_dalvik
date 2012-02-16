@@ -535,20 +535,18 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
         goto fail;
     }
 
-    gcHeap = (GcHeap *)malloc(sizeof(*gcHeap));
+    gcHeap = (GcHeap *)calloc(1, sizeof(*gcHeap));
     if (gcHeap == NULL) {
         LOGE_HEAP("Can't allocate heap descriptor");
         goto fail;
     }
-    memset(gcHeap, 0, sizeof(*gcHeap));
 
-    hs = (HeapSource *)malloc(sizeof(*hs));
+    hs = (HeapSource *)calloc(1, sizeof(*hs));
     if (hs == NULL) {
         LOGE_HEAP("Can't allocate heap source");
         free(gcHeap);
         goto fail;
     }
-    memset(hs, 0, sizeof(*hs));
 
     hs->targetUtilization = DEFAULT_HEAP_UTILIZATION;
     hs->startSize = startSize;

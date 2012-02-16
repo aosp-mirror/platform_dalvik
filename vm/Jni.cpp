@@ -3408,8 +3408,7 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
     /*
      * Set up structures for JNIEnv and VM.
      */
-    JavaVMExt* pVM = (JavaVMExt*) malloc(sizeof(JavaVMExt));
-    memset(pVM, 0, sizeof(JavaVMExt));
+    JavaVMExt* pVM = (JavaVMExt*) calloc(1, sizeof(JavaVMExt));
     pVM->funcTable = &gInvokeInterface;
     pVM->envList = NULL;
     dvmInitMutex(&pVM->envListLock);
