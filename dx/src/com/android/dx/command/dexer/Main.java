@@ -483,7 +483,11 @@ public class Main {
             ClassDefItem clazz =
                 CfTranslator.translate(name, bytes, args.cfOptions, args.dexOptions);
             synchronized (outputDex) {
-                outputDex.add(clazz);
+				try{
+					outputDex.add(clazz);
+				} catch(IllegalArgumentException e){
+					//Ignored
+				}
             }
             return true;
         } catch (ParseException ex) {
