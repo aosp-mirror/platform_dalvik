@@ -36,7 +36,7 @@ static void Dalvik_java_lang_Runtime_gc(const u4* args, JValue* pResult)
 }
 
 /*
- * private static void nativeExit(int code, boolean isExit)
+ * private static void nativeExit(int code)
  *
  * Runtime.exit() calls this after doing shutdown processing.  Runtime.halt()
  * uses this as well.
@@ -45,18 +45,16 @@ static void Dalvik_java_lang_Runtime_nativeExit(const u4* args,
     JValue* pResult)
 {
     int status = args[0];
-    bool isExit = (args[1] != 0);
-
-    if (isExit && gDvm.exitHook != NULL) {
+    if (gDvm.exitHook != NULL) {
         dvmChangeStatus(NULL, THREAD_NATIVE);
         (*gDvm.exitHook)(status);     // not expected to return
         dvmChangeStatus(NULL, THREAD_RUNNING);
         ALOGW("JNI exit hook returned");
     }
-    ALOGD("Calling exit(%d)", status);
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
     dvmCompilerDumpStats();
 #endif
+    ALOGD("Calling exit(%d)", status);
     exit(status);
 }
 
@@ -137,7 +135,7 @@ const DalvikNativeMethod dvm_java_lang_Runtime[] = {
         Dalvik_java_lang_Runtime_gc },
     { "maxMemory",          "()J",
         Dalvik_java_lang_Runtime_maxMemory },
-    { "nativeExit",         "(IZ)V",
+    { "nativeExit",         "(I)V",
         Dalvik_java_lang_Runtime_nativeExit },
     { "nativeLoad",         "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/String;",
         Dalvik_java_lang_Runtime_nativeLoad },
