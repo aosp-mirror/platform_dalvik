@@ -217,7 +217,7 @@ public final class DexBuffer {
         return length;
     }
 
-    private static int fourByteAlign(int position) {
+    public static int fourByteAlign(int position) {
         return (position + 3) & ~3;
     }
 

@@ -48,6 +48,7 @@ public final class IndexMap {
     private final HashMap<Integer, Integer> annotationOffsets;
     private final HashMap<Integer, Integer> annotationSetOffsets;
     private final HashMap<Integer, Integer> annotationDirectoryOffsets;
+    private final HashMap<Integer, Integer> staticValuesOffsets;
 
     public IndexMap(DexBuffer target, TableOfContents tableOfContents) {
         this.target = target;
@@ -60,14 +61,16 @@ public final class IndexMap {
         this.annotationOffsets = new HashMap<Integer, Integer>();
         this.annotationSetOffsets = new HashMap<Integer, Integer>();
         this.annotationDirectoryOffsets = new HashMap<Integer, Integer>();
+        this.staticValuesOffsets = new HashMap<Integer, Integer>();
 
         /*
-         * A type list, annotation set, or annotation directory at offset 0 is
-         * always empty. Always map offset 0 to 0.
+         * A type list, annotation set, annotation directory, or static value at
+         * offset 0 is always empty. Always map offset 0 to 0.
          */
         this.typeListOffsets.put(0, 0);
         this.annotationSetOffsets.put(0, 0);
         this.annotationDirectoryOffsets.put(0, 0);
+        this.staticValuesOffsets.put(0, 0);
     }
 
     public void putTypeListOffset(int oldOffset, int newOffset) {
@@ -96,6 +99,13 @@ public final class IndexMap {
             throw new IllegalArgumentException();
         }
         annotationDirectoryOffsets.put(oldOffset, newOffset);
+    }
+
+    public void putStaticValuesOffset(int oldOffset, int newOffset) {
+        if (oldOffset <= 0 || newOffset <= 0) {
+            throw new IllegalArgumentException();
+        }
+        staticValuesOffsets.put(oldOffset, newOffset);
     }
 
     public int adjustString(int stringIndex) {
@@ -143,6 +153,10 @@ public final class IndexMap {
 
     public int adjustAnnotationDirectory(int annotationDirectoryOffset) {
         return annotationDirectoryOffsets.get(annotationDirectoryOffset);
+    }
+
+    public int adjustStaticValues(int staticValuesOffset) {
+        return staticValuesOffsets.get(staticValuesOffset);
     }
 
     public MethodId adjust(MethodId methodId) {
