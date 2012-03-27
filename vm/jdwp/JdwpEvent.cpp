@@ -921,7 +921,7 @@ bool dvmJdwpPostThreadChange(JdwpState* state, ObjectId threadId, bool start)
 {
     JdwpSuspendPolicy suspendPolicy = SP_NONE;
 
-    assert(threadId = dvmDbgGetThreadSelfId());
+    assert(threadId == dvmDbgGetThreadSelfId());
 
     /*
      * I don't think this can happen.
