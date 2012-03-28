@@ -190,8 +190,7 @@ public final class DexMerger {
          * result in too many bytes wasted, compact the result. To compact,
          * simply merge the result with itself.
          */
-        WriterSizes compactedSizes = writerSizes.clone();
-        compactedSizes.minusWaste(this);
+        WriterSizes compactedSizes = new WriterSizes(this);
         int wastedByteCount = writerSizes.size() - compactedSizes.size();
         if (wastedByteCount >  + compactWasteThreshold) {
             DexMerger compacter = new DexMerger(
@@ -853,7 +852,7 @@ public final class DexMerger {
      * <li>By exactly measuring an existing dex.
      * </ul>
      */
-    private static class WriterSizes implements Cloneable {
+    private static class WriterSizes {
         private int header = SizeOf.HEADER_ITEM;
         private int idsDefs;
         private int mapList;
@@ -876,12 +875,20 @@ public final class DexMerger {
             plus(b.getTableOfContents(), false);
         }
 
-        @Override public WriterSizes clone() {
-            try {
-                return (WriterSizes) super.clone();
-            } catch (CloneNotSupportedException e) {
-                throw new AssertionError();
-            }
+        public WriterSizes(DexMerger dexMerger) {
+            header = dexMerger.headerOut.used();
+            idsDefs = dexMerger.idsDefsOut.used();
+            mapList = dexMerger.mapListOut.used();
+            typeList = dexMerger.typeListOut.used();
+            classData = dexMerger.classDataOut.used();
+            code = dexMerger.codeOut.used();
+            stringData = dexMerger.stringDataOut.used();
+            debugInfo = dexMerger.debugInfoOut.used();
+            encodedArray = dexMerger.encodedArrayOut.used();
+            annotationsDirectory = dexMerger.annotationsDirectoryOut.used();
+            annotationsSet = dexMerger.annotationSetOut.used();
+            annotationsSetRefList = dexMerger.annotationSetRefListOut.used();
+            annotation = dexMerger.annotationOut.used();
         }
 
         public void plus(TableOfContents contents, boolean exact) {
@@ -914,22 +921,6 @@ public final class DexMerger {
                 // at most 1/3 of the bytes in an encoding arrays section are uleb/sleb
                 annotation += (int) Math.ceil(contents.annotations.byteCount * 1.34);
             }
-        }
-
-        public void minusWaste(DexMerger dexMerger) {
-            header -= dexMerger.headerOut.remaining();
-            idsDefs -= dexMerger.idsDefsOut.remaining();
-            mapList -= dexMerger.mapListOut.remaining();
-            typeList -= dexMerger.typeListOut.remaining();
-            classData -= dexMerger.classDataOut.remaining();
-            code -= dexMerger.codeOut.remaining();
-            stringData -= dexMerger.stringDataOut.remaining();
-            debugInfo -= dexMerger.debugInfoOut.remaining();
-            encodedArray -= dexMerger.encodedArrayOut.remaining();
-            annotationsDirectory -= dexMerger.annotationsDirectoryOut.remaining();
-            annotationsSet -= dexMerger.annotationSetOut.remaining();
-            annotationsSetRefList -= dexMerger.annotationSetRefListOut.remaining();
-            annotation -= dexMerger.annotationOut.remaining();
         }
 
         public int size() {
