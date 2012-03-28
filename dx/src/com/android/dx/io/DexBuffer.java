@@ -304,10 +304,11 @@ public final class DexBuffer {
         private final String name;
         private int position;
         private final int limit;
+        private final int initialPosition;
 
         private Section(String name, int position, int limit) {
             this.name = name;
-            this.position = position;
+            this.position = this.initialPosition = position;
             this.limit = limit;
         }
 
@@ -644,6 +645,13 @@ public final class DexBuffer {
          */
         public int remaining() {
             return limit - position;
+        }
+
+        /**
+         * Returns the number of bytes used by this section.
+         */
+        public int used () {
+            return position - initialPosition;
         }
     }
 }
