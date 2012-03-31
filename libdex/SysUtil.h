@@ -31,7 +31,11 @@
  *
  * Must be a power of 2.
  */
+#ifdef PAGE_SHIFT
+#define SYSTEM_PAGE_SIZE        (1<<PAGE_SHIFT)
+#else
 #define SYSTEM_PAGE_SIZE        4096
+#endif
 
 /*
  * Use this to keep track of mapped segments.
