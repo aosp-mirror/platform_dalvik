@@ -1176,6 +1176,8 @@ GOTO_TARGET_DECL(exceptionThrown);
  */
 void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
 {
+  // TODO: Clang does not support asm declaration syntax.
+#ifndef __clang__
     register uint32_t rPC       asm("r4");
     register uint32_t rFP       asm("r5");
     register uint32_t rSELF     asm("r6");
@@ -1190,6 +1192,7 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
     printf("    : rPC=%08x rFP=%08x rSELF=%08x rINST=%08x\n",
         rPC, rFP, rSELF, rINST);
     printf("    : rIBASE=%08x r9=%08x r10=%08x\n", rIBASE, r9, r10);
+#endif
 
     //Thread* self = (Thread*) rSELF;
     //const Method* method = self->method;
