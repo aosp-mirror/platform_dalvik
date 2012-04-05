@@ -2301,9 +2301,18 @@ static void SetObjectArrayElement(JNIEnv* env, jobjectArray jarr, jsize index, j
         return;
     }
 
+    Object* obj = dvmDecodeIndirectRef(ts.self(), jobj);
+
+    if (obj != NULL && !dvmCanPutArrayElement(obj->clazz, arrayObj->clazz)) {
+      ALOGV("Can't put a '%s'(%p) into array type='%s'(%p)",
+            obj->clazz->descriptor, obj,
+            arrayObj->obj.clazz->descriptor, arrayObj);
+      dvmThrowArrayStoreExceptionIncompatibleElement(obj->clazz, arrayObj->clazz);
+      return;
+    }
+
     //ALOGV("JNI: set element %d in array %p to %p", index, array, value);
 
-    Object* obj = dvmDecodeIndirectRef(ts.self(), jobj);
     dvmSetObjectArrayElement(arrayObj, index, obj);
 }
 
