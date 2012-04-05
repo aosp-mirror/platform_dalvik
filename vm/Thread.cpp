@@ -3345,7 +3345,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     dumpSchedStat(target, thread->systemTid);
 
     /* grab the native stack, if possible */
-    if (thread->status == THREAD_NATIVE) {
+    if (thread->status == THREAD_NATIVE || thread->status == THREAD_VMWAIT) {
         dvmDumpNativeStack(target, thread->systemTid);
     }
 
