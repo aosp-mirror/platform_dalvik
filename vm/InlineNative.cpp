@@ -463,6 +463,8 @@ static inline int indexOfCommon(Object* strObj, int ch, int start)
 
     if (start < 0)
         start = 0;
+    else if (start > count)
+        start = count;
 
 #if 0
     /* 16-bit loop, simple */
