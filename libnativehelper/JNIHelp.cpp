@@ -257,15 +257,16 @@ int jniThrowIOException(C_JNIEnv* env, int errnum) {
 void jniLogException(C_JNIEnv* env, int priority, const char* tag, jthrowable exception) {
     JNIEnv* e = reinterpret_cast<JNIEnv*>(env);
 
-    scoped_local_ref<jthrowable> currentException(env);
+    scoped_local_ref<jthrowable> currentException(env, (*env)->ExceptionOccurred(e));
     if (exception == NULL) {
-        exception = (*env)->ExceptionOccurred(e);
+        exception = currentException.get();
         if (exception == NULL) {
             return;
         }
+    }
 
+    if (currentException.get() != NULL) {
         (*env)->ExceptionClear(e);
-        currentException.reset(exception);
     }
 
     char* buffer = getStackTrace(env, exception);
@@ -278,7 +279,7 @@ void jniLogException(C_JNIEnv* env, int priority, const char* tag, jthrowable ex
     free(buffer);
 
     if (currentException.get() != NULL) {
-        (*env)->Throw(e, exception); // rethrow
+        (*env)->Throw(e, currentException.get()); // rethrow
     }
 }
 
