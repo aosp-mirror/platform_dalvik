@@ -282,7 +282,7 @@ bool dvmThreadStartup()
 
     gDvm.threadIdMap = dvmAllocBitVector(kMaxThreadId, false);
 
-    thread = allocThread(gDvm.stackSize);
+    thread = allocThread(gDvm.mainThreadStackSize);
     if (thread == NULL)
         return false;
 

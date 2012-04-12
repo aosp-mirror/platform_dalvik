@@ -800,6 +800,9 @@ static int processOptions(int argc, const char* const argv[],
             if (val != 0) {
                 if (val >= kMinStackSize && val <= kMaxStackSize) {
                     gDvm.stackSize = val;
+                    if (val > gDvm.mainThreadStackSize) {
+                        gDvm.mainThreadStackSize = val;
+                    }
                 } else {
                     dvmFprintf(stderr, "Invalid -Xss '%s', range is %d to %d\n",
                         argv[i], kMinStackSize, kMaxStackSize);
@@ -807,6 +810,21 @@ static int processOptions(int argc, const char* const argv[],
                 }
             } else {
                 dvmFprintf(stderr, "Invalid -Xss option '%s'\n", argv[i]);
+                return -1;
+            }
+
+        } else if (strncmp(argv[i], "-XX:mainThreadStackSize=", strlen("-XX:mainThreadStackSize=")) == 0) {
+            size_t val = parseMemOption(argv[i] + strlen("-XX:mainThreadStackSize="), 1);
+            if (val != 0) {
+                if (val >= kMinStackSize && val <= kMaxStackSize) {
+                    gDvm.mainThreadStackSize = val;
+                } else {
+                    dvmFprintf(stderr, "Invalid -XX:mainThreadStackSize '%s', range is %d to %d\n",
+                               argv[i], kMinStackSize, kMaxStackSize);
+                    return -1;
+                }
+            } else {
+                dvmFprintf(stderr, "Invalid -XX:mainThreadStackSize option '%s'\n", argv[i]);
                 return -1;
             }
 
@@ -1056,6 +1074,7 @@ static void setCommandLineDefaults()
     gDvm.heapMaximumSize = 16 * 1024 * 1024;  // Spec says 75% physical mem
     gDvm.heapGrowthLimit = 0;  // 0 means no growth limit
     gDvm.stackSize = kDefaultStackSize;
+    gDvm.mainThreadStackSize = kDefaultStackSize;
 
     gDvm.concurrentMarkSweep = true;
 
