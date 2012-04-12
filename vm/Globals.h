@@ -91,6 +91,7 @@ struct DvmGlobals {
     size_t      heapMaximumSize;
     size_t      heapGrowthLimit;
     size_t      stackSize;
+    size_t      mainThreadStackSize;
 
     bool        verboseGc;
     bool        verboseJni;
