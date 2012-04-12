@@ -46,6 +46,15 @@ include $(LOCAL_PATH)/ReconfigureDvm.mk
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdvm
 LOCAL_CFLAGS += $(target_smp_flag)
+
+# Define WITH_ADDRESS_SANITIZER to build an ASan-instrumented version of the
+# library in /system/lib/asan/libdvm.so.
+ifneq ($(strip $(WITH_ADDRESS_SANITIZER)),)
+    LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/asan
+    LOCAL_ADDRESS_SANITIZER := true
+    LOCAL_CFLAGS := $(filter-out $(CLANG_CONFIG_UNKNOWN_CFLAGS),$(LOCAL_CFLAGS))
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 
 # If WITH_JIT is configured, build multiple versions of libdvm.so to facilitate

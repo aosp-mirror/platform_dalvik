@@ -85,7 +85,8 @@ int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr)
 #elif __arm__
 #include <machine/cpu-features.h>
 
-#ifdef __ARM_HAVE_LDREXD
+// Clang can not process this assembly at the moment.
+#if defined(__ARM_HAVE_LDREXD) && !defined(__clang__)
 static inline int64_t dvmQuasiAtomicSwap64Body(int64_t newvalue,
                                                volatile int64_t* addr)
 {
