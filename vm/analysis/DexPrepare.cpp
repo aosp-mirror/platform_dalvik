@@ -870,10 +870,11 @@ static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
         msgStr = "verify";
     else if (doOpt)
         msgStr = "opt";
-    ALOGD("DexOpt: load %dms, %s %dms",
+    ALOGD("DexOpt: load %dms, %s %dms, %d bytes",
         (int) (loadWhen - prepWhen) / 1000,
         msgStr,
-        (int) (verifyOptWhen - loadWhen) / 1000);
+        (int) (verifyOptWhen - loadWhen) / 1000,
+        gDvm.pBootLoaderAlloc->curOffset);
 
     result = true;
 
