@@ -3340,7 +3340,10 @@ std::string dvmGetThreadName(Thread* thread) {
 
     StringObject* nameObj = (StringObject*)
         dvmGetFieldObject(thread->threadObj, gDvm.offJavaLangThread_name);
-    return dvmCreateCstrFromString(nameObj);
+    char* name = dvmCreateCstrFromString(nameObj);
+    std::string result(name);
+    free(name);
+    return result;
 }
 
 /*
