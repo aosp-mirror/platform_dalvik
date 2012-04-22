@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <paths.h>
 #include <sys/personality.h>
+#include <cutils/sched_policy.h>
 
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>
@@ -457,6 +458,12 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         if (err != 0) {
             ALOGE("cannot set capabilities (%llx,%llx): %s",
                 permittedCapabilities, effectiveCapabilities, strerror(err));
+            dvmAbort();
+        }
+
+        err = set_sched_policy(0, SP_DEFAULT);
+        if (err < 0) {
+            ALOGE("cannot set_sched_policy(0, SP_DEFAULT): %s", strerror(-err));
             dvmAbort();
         }
 
