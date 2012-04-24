@@ -678,7 +678,7 @@ bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
     cUnit->loopAnalysis = loopAnalysis;
 
     /* Constant propagation */
-    cUnit->isConstantV = dvmAllocBitVector(cUnit->numSSARegs, false);
+    cUnit->isConstantV = dvmCompilerAllocBitVector(cUnit->numSSARegs, false);
     cUnit->constantValues =
         (int *)dvmCompilerNew(sizeof(int) * cUnit->numSSARegs,
                               true);
@@ -692,7 +692,7 @@ bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
     loopAnalysis->ivList =
         (GrowableList *)dvmCompilerNew(sizeof(GrowableList), true);
     dvmInitGrowableList(loopAnalysis->ivList, 4);
-    loopAnalysis->isIndVarV = dvmAllocBitVector(cUnit->numSSARegs, false);
+    loopAnalysis->isIndVarV = dvmCompilerAllocBitVector(cUnit->numSSARegs, false);
     dvmCompilerDataFlowAnalysisDispatcher(cUnit,
                                           dvmCompilerFindInductionVariables,
                                           kAllNodes,
