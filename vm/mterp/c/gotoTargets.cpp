@@ -961,7 +961,8 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             self->interpSave.method = curMethod;
             methodClassDex = curMethod->clazz->pDvmDex;
             pc = methodToCall->insns;
-            self->interpSave.curFrame = fp = newFp;
+            self->interpSave.curFrame = newFp;
+            fp = newFp;
 #ifdef EASY_GDB
             debugSaveArea = SAVEAREA_FROM_FP(newFp);
 #endif
@@ -979,7 +980,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
             if (self->interpBreak.ctl.subMode != 0) {
-                dvmReportPreNativeInvoke(methodToCall, self, fp);
+                dvmReportPreNativeInvoke(methodToCall, self, newSaveArea->prevFrame);
             }
 
             ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
@@ -993,12 +994,13 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
             if (self->interpBreak.ctl.subMode != 0) {
-                dvmReportPostNativeInvoke(methodToCall, self, fp);
+                dvmReportPostNativeInvoke(methodToCall, self, newSaveArea->prevFrame);
             }
 
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);
-            self->interpSave.curFrame = fp;
+            self->interpSave.curFrame = newSaveArea->prevFrame;
+            fp = newSaveArea->prevFrame;
 
             /*
              * If the native code threw an exception, or interpreted code
