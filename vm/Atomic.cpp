@@ -184,7 +184,7 @@ void dvmQuasiAtomicsStartup() {
 void dvmQuasiAtomicsShutdown() {
     for (size_t i = 0; i < kSwapLockCount; ++i) {
         pthread_mutex_t* m = gSwapLocks[i];
-        gSwapLocks[kSwapLockCount] = NULL;
+        gSwapLocks[i] = NULL;
         dvmDestroyMutex(m);
         delete m;
     }
