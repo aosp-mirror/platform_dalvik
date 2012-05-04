@@ -1408,6 +1408,15 @@ std::string dvmStartup(int argc, const char* const argv[],
     return "";
 }
 
+static void loadJniLibrary(const char* name) {
+    std::string mappedName(StringPrintf(OS_SHARED_LIB_FORMAT_STR, name));
+    char* reason = NULL;
+    if (!dvmLoadNativeCode(mappedName.c_str(), NULL, &reason)) {
+        ALOGE("dvmLoadNativeCode failed for \"%s\": %s", name, reason);
+        dvmAbort();
+    }
+}
+
 /*
  * Register java.* natives from our class libraries.  We need to do
  * this after we're ready for JNI registration calls, but before we
@@ -1422,20 +1431,18 @@ std::string dvmStartup(int argc, const char* const argv[],
  */
 static bool registerSystemNatives(JNIEnv* pEnv)
 {
-    Thread* self;
+    // Main thread is always first in list.
+    Thread* self = gDvm.threadList;
 
-    /* main thread is always first in list */
-    self = gDvm.threadList;
-
-    /* must set this before allowing JNI-based method registration */
+    // Must set this before allowing JNI-based method registration.
     self->status = THREAD_NATIVE;
 
-    if (jniRegisterSystemMethods(pEnv) < 0) {
-        ALOGE("jniRegisterSystemMethods failed");
-        return false;
-    }
+    // Most JNI libraries can just use System.loadLibrary, but you can't
+    // if you're the library that implements System.loadLibrary!
+    loadJniLibrary("javacore");
+    loadJniLibrary("nativehelper");
 
-    /* back to run mode */
+    // Back to run mode.
     self->status = THREAD_RUNNING;
 
     return true;
