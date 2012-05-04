@@ -24,7 +24,6 @@ subdirs := $(addprefix $(LOCAL_PATH)/,$(addsuffix /Android.mk, \
 		dexdump \
 		dvz \
 		dx \
-		libnativehelper \
 		tools \
 		unit-tests \
 	))
