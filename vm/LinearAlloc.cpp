@@ -69,7 +69,7 @@ guard the pages on debug builds.  Handy when tracking down corruption.
 #define BLOCK_ALIGN         8
 
 /* default length of memory segment (worst case is probably "dexopt") */
-#define DEFAULT_MAX_LENGTH  (8*1024*1024)
+#define DEFAULT_MAX_LENGTH  (16*1024*1024)
 
 /* leave enough space for a length word */
 #define HEADER_EXTRA        4
