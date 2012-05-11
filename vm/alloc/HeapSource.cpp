@@ -42,10 +42,10 @@ static void trimHeaps();
 #define HEAP_IDEAL_FREE             (2 * 1024 * 1024)
 #define HEAP_MIN_FREE               (HEAP_IDEAL_FREE / 4)
 
-/* Number of seconds to wait after a GC before performing a heap trim
+/* How long to wait after a GC before performing a heap trim
  * operation to reclaim unused pages.
  */
-#define HEAP_TRIM_IDLE_TIME_SECONDS 5
+#define HEAP_TRIM_IDLE_TIME_MS (5 * 1000)
 
 /* Start a concurrent collection when free memory falls under this
  * many bytes.
@@ -410,7 +410,7 @@ static void *gcDaemonThread(void* arg)
         bool trim = false;
         if (gHs->gcThreadTrimNeeded) {
             int result = dvmRelativeCondWait(&gHs->gcThreadCond, &gHs->gcThreadMutex,
-                    HEAP_TRIM_IDLE_TIME_SECONDS, 0);
+                    HEAP_TRIM_IDLE_TIME_MS, 0);
             if (result == ETIMEDOUT) {
                 /* Timed out waiting for a GC request, schedule a heap trim. */
                 trim = true;
