@@ -679,7 +679,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
             ALOGW("WARNING: could not find annotation member %s in %s",
                 name, annoClass->descriptor);
         } else {
-            methodObj = dvmCreateReflectMethodObject(annoMeth);
+            methodObj = dvmCreateReflectObjForMethod(annoClass, annoMeth);
             methodReturn = dvmGetBoxedReturnType(annoMeth);
         }
     }
