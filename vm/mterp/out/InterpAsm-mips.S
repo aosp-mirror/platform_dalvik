@@ -15192,7 +15192,7 @@ d2l_doconv:
     addu      rOBJ, rOBJ, a3               #  form address
         #  noop                            #  releasing store
     sw a0, (rOBJ)                      #  obj.field (8/16/32 bits) <- a0
-    # noop
+    # noop 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 
@@ -15286,7 +15286,7 @@ d2l_doconv:
     addu      rOBJ, rOBJ, a3               #  form address
         #  noop                            #  releasing store
     sw a0, (rOBJ)                      #  obj.field (8/16/32 bits) <- a0
-    # noop
+    # noop 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 
@@ -15315,7 +15315,7 @@ d2l_doconv:
     addu      rOBJ, rOBJ, a3               #  form address
         #  noop                            #  releasing store
     sw a0, (rOBJ)                      #  obj.field (8/16/32 bits) <- a0
-    # noop
+    # noop 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 
@@ -15344,7 +15344,7 @@ d2l_doconv:
     addu      rOBJ, rOBJ, a3               #  form address
         #  noop                            #  releasing store
     sw a0, (rOBJ)                      #  obj.field (8/16/32 bits) <- a0
-    # noop
+    # noop 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 
@@ -15373,7 +15373,7 @@ d2l_doconv:
     addu      rOBJ, rOBJ, a3               #  form address
         #  noop                            #  releasing store
     sw a0, (rOBJ)                      #  obj.field (8/16/32 bits) <- a0
-    # noop
+    # noop 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 
@@ -15462,7 +15462,7 @@ d2l_doconv:
     GET_INST_OPCODE(t0)                    #  extract opcode from rINST
           #  no-op                             #  releasing store
     sw        a1, offStaticField_value(a0) #  field <- vBBBB
-          #  no-op
+          #  no-op 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 /* continuation for OP_SPUT_WIDE_JUMBO */
@@ -15506,7 +15506,7 @@ d2l_doconv:
     GET_INST_OPCODE(t0)                    #  extract opcode from rINST
           #  no-op                             #  releasing store
     sw        a1, offStaticField_value(a0) #  field <- vBBBB
-          #  no-op
+          #  no-op 
     beqz      a1, 1f
     srl       t2, t1, GC_CARD_SHIFT
     addu      t3, a2, t2
@@ -15524,7 +15524,7 @@ d2l_doconv:
     GET_INST_OPCODE(t0)                    #  extract opcode from rINST
           #  no-op                             #  releasing store
     sw        a1, offStaticField_value(a0) #  field <- vBBBB
-          #  no-op
+          #  no-op 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 /* continuation for OP_SPUT_BYTE_JUMBO */
@@ -15537,7 +15537,7 @@ d2l_doconv:
     GET_INST_OPCODE(t0)                    #  extract opcode from rINST
           #  no-op                             #  releasing store
     sw        a1, offStaticField_value(a0) #  field <- vBBBB
-          #  no-op
+          #  no-op 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 /* continuation for OP_SPUT_CHAR_JUMBO */
@@ -15550,7 +15550,7 @@ d2l_doconv:
     GET_INST_OPCODE(t0)                    #  extract opcode from rINST
           #  no-op                             #  releasing store
     sw        a1, offStaticField_value(a0) #  field <- vBBBB
-          #  no-op
+          #  no-op 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 /* continuation for OP_SPUT_SHORT_JUMBO */
@@ -15563,7 +15563,7 @@ d2l_doconv:
     GET_INST_OPCODE(t0)                    #  extract opcode from rINST
           #  no-op                             #  releasing store
     sw        a1, offStaticField_value(a0) #  field <- vBBBB
-          #  no-op
+          #  no-op 
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 /* continuation for OP_INVOKE_VIRTUAL_JUMBO */
