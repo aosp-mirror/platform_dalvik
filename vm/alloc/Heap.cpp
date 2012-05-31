@@ -456,6 +456,7 @@ static void verifyRootsAndHeap()
 void dvmCollectGarbageInternal(const GcSpec* spec)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
+    u4 gcEnd = 0;
     u4 rootStart = 0 , rootEnd = 0;
     u4 dirtyStart = 0, dirtyEnd = 0;
     size_t numObjectsFreed, numBytesFreed;
@@ -473,8 +474,8 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
 
     gcHeap->gcRunning = true;
 
-    dvmSuspendAllThreads(SUSPEND_FOR_GC);
     rootStart = dvmGetRelativeTimeMsec();
+    dvmSuspendAllThreads(SUSPEND_FOR_GC);
 
     /*
      * If we are not marking concurrently raise the priority of the
@@ -517,9 +518,9 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
          * heap to allow mutator threads to allocate from free space.
          */
         dvmClearCardTable();
-        rootEnd = dvmGetRelativeTimeMsec();
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
+        rootEnd = dvmGetRelativeTimeMsec();
     }
 
     /* Recursively mark any objects that marked objects point to strongly.
@@ -534,9 +535,9 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
          * Re-acquire the heap lock and perform the final thread
          * suspension.
          */
+        dirtyStart = dvmGetRelativeTimeMsec();
         dvmLockHeap();
         dvmSuspendAllThreads(SUSPEND_FOR_GC);
-        dirtyStart = dvmGetRelativeTimeMsec();
         /*
          * As no barrier intercepts root updates, we conservatively
          * assume all roots may be gray and re-mark them.
@@ -595,9 +596,9 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     }
 
     if (spec->isConcurrent) {
-        dirtyEnd = dvmGetRelativeTimeMsec();
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
+        dirtyEnd = dvmGetRelativeTimeMsec();
     }
     dvmHeapSweepUnmarkedObjects(spec->isPartial, spec->isConcurrent,
                                 &numObjectsFreed, &numBytesFreed);
@@ -636,8 +637,8 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     }
 
     if (!spec->isConcurrent) {
-        dirtyEnd = dvmGetRelativeTimeMsec();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
+        dirtyEnd = dvmGetRelativeTimeMsec();
         /*
          * Restore the original thread scheduling priority if it was
          * changed at the start of the current garbage collection.
@@ -652,28 +653,31 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
      */
     dvmEnqueueClearedReferences(&gDvm.gcHeap->clearedReferences);
 
+    gcEnd = dvmGetRelativeTimeMsec();
     percentFree = 100 - (size_t)(100.0f * (float)currAllocated / currFootprint);
     if (!spec->isConcurrent) {
         u4 markSweepTime = dirtyEnd - rootStart;
+        u4 gcTime = gcEnd - rootStart;
         bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
-        ALOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, paused %ums",
+        ALOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, paused %ums, total %ums",
              spec->reason,
              isSmall ? "<" : "",
              numBytesFreed ? MAX(numBytesFreed / 1024, 1) : 0,
              percentFree,
              currAllocated / 1024, currFootprint / 1024,
-             markSweepTime);
+             markSweepTime, gcTime);
     } else {
         u4 rootTime = rootEnd - rootStart;
         u4 dirtyTime = dirtyEnd - dirtyStart;
+        u4 gcTime = gcEnd - rootStart;
         bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
-        ALOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, paused %ums+%ums",
+        ALOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, paused %ums+%ums, total %ums",
              spec->reason,
              isSmall ? "<" : "",
              numBytesFreed ? MAX(numBytesFreed / 1024, 1) : 0,
              percentFree,
              currAllocated / 1024, currFootprint / 1024,
-             rootTime, dirtyTime);
+             rootTime, dirtyTime, gcTime);
     }
     if (gcHeap->ddmHpifWhen != 0) {
         LOGD_HEAP("Sending VM heap info to DDM");
@@ -713,9 +717,12 @@ void dvmWaitForConcurrentGcToComplete()
 {
     Thread *self = dvmThreadSelf();
     assert(self != NULL);
+    u4 start = dvmGetRelativeTimeMsec();
     while (gDvm.gcHeap->gcRunning) {
         ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         dvmWaitCond(&gDvm.gcHeapCond, &gDvm.gcHeapLock);
         dvmChangeStatus(self, oldStatus);
     }
+    u4 end = dvmGetRelativeTimeMsec();
+    ALOGD("WAIT_FOR_CONCURRENT_GC blocked %ums", end - start);
 }
