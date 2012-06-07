@@ -146,8 +146,8 @@ if [ "$usage" = "yes" ]; then
         echo '  Omitting the test name or specifying "-" will use the' \
              "current directory."
         echo "  Runtime Options:"
-        echo "    --fast         Use the fast interpreter (the default)."
-        echo "    --jit          Use the jit."
+        echo "    --fast         Use the fast interpreter."
+        echo "    --jit          Use the jit (the default)."
         echo "    --portable     Use the portable interpreter."
         echo "    --debug        Wait for a debugger to attach."
         #echo "    --gdb          Run under gdb; incompatible with some tests."
