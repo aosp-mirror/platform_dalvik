@@ -362,6 +362,10 @@ public final class DexBuffer {
             return Leb128Utils.readUnsignedLeb128(this);
         }
 
+        public int readUleb128p1() {
+            return Leb128Utils.readUnsignedLeb128(this) - 1;
+        }
+
         public int readSleb128() {
             return Leb128Utils.readSignedLeb128(this);
         }
@@ -609,6 +613,10 @@ public final class DexBuffer {
             } catch (ArrayIndexOutOfBoundsException e) {
                 throw new DexException("Section limit " + limit + " exceeded by " + name);
             }
+        }
+
+        public void writeUleb128p1(int i) {
+            writeUleb128(i + 1);
         }
 
         public void writeSleb128(int i) {
