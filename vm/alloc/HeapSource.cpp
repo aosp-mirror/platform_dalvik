@@ -35,6 +35,7 @@ extern "C" void dlmalloc_walk_free_pages(void(*)(void*, void*, void*), void*);
 static void snapIdealFootprint();
 static void setIdealFootprint(size_t max);
 static size_t getMaximumSize(const HeapSource *hs);
+static void trimHeaps();
 
 #define HEAP_UTILIZATION_MAX        1024
 #define DEFAULT_HEAP_UTILIZATION    512     // Range 1..HEAP_UTILIZATION_MAX
@@ -427,7 +428,7 @@ static void *gcDaemonThread(void* arg)
         if (!gDvm.gcHeap->gcRunning) {
             dvmChangeStatus(NULL, THREAD_RUNNING);
             if (trim) {
-                dvmHeapSourceTrimHeaps();
+                trimHeaps();
                 gHs->gcThreadTrimNeeded = false;
             } else {
                 dvmCollectGarbageInternal(GC_CONCURRENT);
@@ -1300,7 +1301,7 @@ static void releasePagesInRange(void *start, void *end, void *nbytes)
 /*
  * Return unused memory to the system if possible.
  */
-void dvmHeapSourceTrimHeaps()
+static void trimHeaps()
 {
     HS_BOILERPLATE();
 
