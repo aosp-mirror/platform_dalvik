@@ -186,6 +186,9 @@ public class Main {
         // Reset the error/warning count to start fresh.
         warnings = 0;
         errors = 0;
+        // empty the list, so that  tools that load dx and keep it around
+        // for multiple runs don't reuse older buffers.
+        libraryDexBuffers.clear();
 
         args = arguments;
         args.makeOptionsObjects();
@@ -297,6 +300,7 @@ public class Main {
             DexBuffer ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
             outArray = ab.getBytes();
         }
+
         return outArray;
     }
 
