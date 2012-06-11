@@ -154,11 +154,6 @@ size_t dvmHeapSourceGetIdealFootprint(void);
 void dvmHeapSourceGrowForUtilization(void);
 
 /*
- * Return unused memory to the system if possible.
- */
-void dvmHeapSourceTrimHeaps();
-
-/*
  * Walks over the heap source and passes every allocated and
  * free chunk to the callback.
  */
