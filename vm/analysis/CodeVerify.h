@@ -106,6 +106,17 @@ enum {
 #define kRegTypeUninitMask  0xff
 #define kRegTypeUninitShift 8
 
+enum DetailedVerifyError {
+    DETAILED_NONE = 0,
+    DETAILED_TYPE = 11,
+    DETAILED_MALFORMED_SIGNATURE,
+    DETAILED_OTHER,
+    DETAILED_UNINIT_ACCESS,
+    DETAILED_MALFORMED_INVOKE,
+    DETAILED_MONITOR,
+    DETAILED_MALFORMED_NOP,
+};
+
 /*
  * RegType holds information about the type of data held in a register.
  * For most types it's a simple enum.  For reference types it holds a

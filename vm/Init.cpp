@@ -1575,7 +1575,7 @@ static bool initJdwp()
  * Returns 0 on success.
  */
 int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
-    DexClassVerifyMode verifyMode, int dexoptFlags)
+    DexClassVerifyMode verifyMode, int dexoptFlags, int vfyFd, int verboseVfyFd)
 {
     gDvm.initializing = true;
     gDvm.optimizing = true;
@@ -1600,6 +1600,8 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
     } else {
         gDvm.dexOptForSmp = (ANDROID_SMP != 0);
     }
+    gDvm.vfyFd = vfyFd;
+    gDvm.verboseVfyFd = verboseVfyFd;
 
     /*
      * Initialize the heap, some basic thread control mutexes, and

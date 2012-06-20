@@ -56,7 +56,7 @@ static const char* kClassesDex = "classes.dex";
  */
 static int extractAndProcessZip(int zipFd, int cacheFd,
     const char* debugFileName, bool isBootstrap, const char* bootClassPath,
-    const char* dexoptFlagStr)
+    const char* dexoptFlagStr, int vfyFd, int verboseVfyFd)
 {
     ZipArchive zippy;
     ZipEntry zipEntry;
@@ -174,7 +174,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
      */
 
     if (dvmPrepForDexOpt(bootClassPath, dexOptMode, verifyMode,
-            dexoptFlags) != 0)
+            dexoptFlags, vfyFd, verboseVfyFd) != 0)
     {
         LOGE("DexOptZ: VM init failed");
         goto bail;
@@ -204,7 +204,7 @@ bail:
  * preoptimization.
  */
 static int processZipFile(int zipFd, int cacheFd, const char* zipName,
-        const char *dexoptFlags)
+        const char *dexoptFlags, int vfyFd, int verboseVfyFd)
 {
     char* bcpCopy = NULL;
 
@@ -246,7 +246,7 @@ static int processZipFile(int zipFd, int cacheFd, const char* zipName,
     }
 
     int result = extractAndProcessZip(zipFd, cacheFd, zipName, isBootstrap,
-            bcp, dexoptFlags);
+            bcp, dexoptFlags, vfyFd, verboseVfyFd);
 
     free(bcpCopy);
     return result;
@@ -307,7 +307,7 @@ static int fromZip(int argc, char* const argv[])
     dexoptFlags = *++argv;
     --argc;
 
-    result = processZipFile(zipFd, cacheFd, zipName, dexoptFlags);
+    result = processZipFile(zipFd, cacheFd, zipName, dexoptFlags, -1, -1);
 
 bail:
     return result;
@@ -335,9 +335,11 @@ static int preopt(int argc, char* const argv[])
 {
     int zipFd = -1;
     int outFd = -1;
+    int vfyFd = -1;
+    int verboseVfyFd = -1;
     int result = -1;
 
-    if (argc != 5) {
+    if (argc < 5) {
         /*
          * Use stderr here, since this variant is meant to be called on
          * the host side.
@@ -350,6 +352,16 @@ static int preopt(int argc, char* const argv[])
     const char* zipName = argv[2];
     const char* outName = argv[3];
     const char* dexoptFlags = argv[4];
+
+    const char* vfyLogName = NULL;
+    if (argc >= 6) {
+        vfyLogName = argv[5];
+    }
+
+    const char* verboseVfyLogName = NULL;
+    if (argc == 7) {
+        verboseVfyLogName = argv[6];
+    }
 
     if (strstr(dexoptFlags, "u=y") == NULL &&
         strstr(dexoptFlags, "u=n") == NULL)
@@ -370,7 +382,24 @@ static int preopt(int argc, char* const argv[])
         goto bail;
     }
 
-    result = processZipFile(zipFd, outFd, zipName, dexoptFlags);
+    if (vfyLogName != NULL) {
+        vfyFd = open(vfyLogName, O_RDWR | O_CREAT, 0666);
+        if (vfyFd < 0) {
+            perror(argv[0]);
+            goto bail;
+        }
+    }
+
+    if (verboseVfyLogName != NULL) {
+        verboseVfyFd = open(verboseVfyLogName, O_RDWR | O_CREAT, 0666);
+        if (verboseVfyFd < 0) {
+            perror(argv[0]);
+            goto bail;
+        }
+    }
+
+    result = processZipFile(zipFd, outFd, zipName, dexoptFlags, vfyFd,
+        verboseVfyFd);
 
 bail:
     if (zipFd >= 0) {
@@ -379,6 +408,14 @@ bail:
 
     if (outFd >= 0) {
         close(outFd);
+    }
+
+    if (vfyFd >= 0) {
+        close(vfyFd);
+    }
+
+    if (verboseVfyFd >= 0) {
+        close(verboseVfyFd);
     }
 
     return result;
@@ -510,7 +547,8 @@ static int fromDex(int argc, char* const argv[])
         dexOptMode = OPTIMIZE_MODE_NONE;
     }
 
-    if (dvmPrepForDexOpt(bootClassPath, dexOptMode, verifyMode, flags) != 0) {
+    if (dvmPrepForDexOpt(bootClassPath, dexOptMode, verifyMode,
+    		flags, -1, -1) != 0) {
         LOGE("VM init failed");
         goto bail;
     }

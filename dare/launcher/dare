@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+#Copyright (C) 2011 The Pennsylvania State University
+#Systems and Internet Infrastructure Security Laboratory
+#
+#Author:
+#    Damien Octeau <octeau@cse.psu.edu>
+#
+#This program is free software; you can redistribute it and/or
+#modify it under the terms of the GNU General Public License
+#as published by the Free Software Foundation; either version 2
+#of the License, or (at your option) any later version.
+#
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License
+#along with this program; if not, write to the Free Software
+#Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, 
+#USA.
+
+SCRIPT=`readlink -f $0`
+DED_DIR=`dirname "$SCRIPT"`
+DED=$DED_DIR/dare-launcher-1.0.2
+SOOT_DIR="$DED_DIR/../../../../dalvik/dare/soot/lib"
+ANDROID_LIBS="$DED_DIR/../../../../dalvik/dare/libs/class"
+PREVERIFY_SCRIPT="$DED_DIR/../../../../dalvik/tools/dex-preopt"
+PREVERIFY=""
+
+while getopts ed:ocp p
+do
+	case "$p" in
+	p)	PREVERIFY="-p $PREVERIFY_SCRIPT";;
+	[?])	echo "Usage: $0 [-d <output directory] [-o] [-c] <dex/apk file>"
+		echo "  -o : optimize .class files with Soot"
+		echo "  -c : optimize and decompile .class files with Soot"
+		echo "  -p : preverify classes using the Dalvik verifier and rewrite unverifiable classes"
+		echo "  -e : do not split exception tables"
+		exit 1;;
+	esac
+done
+
+SOOT=$SOOT_DIR/soot-2.4.0.jar
+JASMIN=$SOOT_DIR/jasminclasses-2.4.0.jar
+LIBS="`find $ANDROID_LIBS -type f -name '*.jar' | tr '\n' ':'`$CLASSPATH"
+
+ARGS=`echo "$@" | sed 's/ -p/ /g'`
+$DED -s $SOOT -a $LIBS -j $JASMIN -r $DED_DIR/dare-1.0.2 $PREVERIFY $ARGS
+

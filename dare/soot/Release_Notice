@@ -1,0 +1,34 @@
+Dear Soot Users,
+
+We are pleased to announce that Soot version 2.4.0 is now available
+at: http://www.sable.mcgill.ca/soot/
+
+This release contains the following additions and improvements:
+
+1. Hossein Sadat-Mohtasham's implementation of program dependency graphs
+
+2. Support for creating sound call graphs even for programs that use
+   reflection, custom class loaders and runtime-generated classes.
+   For this purpose, Soot uses TamiFlex to create a runtime log file that
+   contains information about how refleciton is being used. Spark then
+   uses the log file during call-graph and points-to graph construction.
+   See http://code.google.com/p/tamiflex/wiki/DaCapoAndSoot for details.     
+   
+Also we incorporated fixes to numerous bugs. Thanks for reporting bugs
+and/or providing fixes!   
+
+See http://www.sable.mcgill.ca/soot/CHANGES for details.
+
+As of version 2.2.0 the Soot bugzilla is available at:
+http://svn.sable.mcgill.ca/bugzilla/. We encourage you to add any Soot
+bugs there.
+
+Also, as of version 2.2.0 the Soot wiki is available at:
+http://svn.sable.mcgill.ca/wiki/index.php/SootProject. The Soot team
+will be using this site for discussing upcoming work, so if you would
+like to know what's going on look there.
+
+Regards,
+
+Eric Bodden 
+Software Technology Group, Technische Universität Darmstadt

@@ -62,6 +62,7 @@ enum VerifyError {
     VERIFY_ERROR_ACCESS_METHOD, /* IllegalAccessError */
     VERIFY_ERROR_CLASS_CHANGE,  /* IncompatibleClassChangeError */
     VERIFY_ERROR_INSTANTIATION, /* InstantiationError */
+    VERIFY_ERROR_NULL_POINTER,  /* NullPointerException */
 };
 
 /*

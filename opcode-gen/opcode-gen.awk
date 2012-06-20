@@ -214,6 +214,24 @@ emission == "libdex-index-types" {
     }
 }
 
+emission == "tyde-mapping" {
+    emissionHandled = 1;
+
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        printf("  \"  %s\",\n", packedMapping[i]);
+    }
+}
+
+emission == "tyde-formats" {
+    emissionHandled = 1;
+
+    col = 1;
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        value = sprintf("kFmtT%s,", packedTydeFmt[i]);
+        col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 7, 9, "  ");
+    }
+}
+
 # Handle the end of directive processing (must appear after the directive
 # clauses).
 emission != "" {
@@ -285,7 +303,7 @@ function readBytecodes(i, parts, line, cmd, status, count) {
 function defineOpcode(line, count, parts, idx) {
     # locals: count, parts, idx
     count = split(line, parts);
-    if (count != 6)  return -1;
+    if (count != 8)  return -1;
     idx = parseHex(parts[1]);
     if (idx < 0) return -1;
 
@@ -296,6 +314,8 @@ function defineOpcode(line, count, parts, idx) {
     hasResult[idx] = (parts[4] == "n") ? "false" : "true";
     indexType[idx] = parts[5];
     flags[idx] = parts[6];
+    tydeFmt[idx] = parts[7];
+    mapping[idx] = parts[8];
 
     # Calculate derived values.
 
@@ -410,6 +430,8 @@ function createPackedTables(i, op) {
             packedFlags[i]     = 0;
             packedWidth[i]     = 0;
             packedIndexType[i] = "unknown";
+            packedTydeFmt[i]   = "uo";
+            packedMapping[i]   = "unused_ba";
         } else if (isUnused(op)) {
             packedName[i]      = unusedName(op);
             packedConstName[i] = unusedConstName(op);
@@ -417,6 +439,8 @@ function createPackedTables(i, op) {
             packedFlags[i]     = 0;
             packedWidth[i]     = 0;
             packedIndexType[i] = "unknown";
+            packedTydeFmt[i]   = "uo";
+            packedMapping[i]   = "unused_ba";
         } else {
             packedName[i]      = name[op];
             packedConstName[i] = constName[op];
@@ -424,6 +448,12 @@ function createPackedTables(i, op) {
             packedFlags[i]     = flags[op];
             packedWidth[i]     = width[op];
             packedIndexType[i] = indexType[op];
+            packedTydeFmt[i]   = tydeFmt[op];
+            if (mapping[op] == "unused_ff") {
+            	packedMapping[i] = "";
+        	} else {
+	            packedMapping[i] = mapping[op];
+            }
         }
     }
 }

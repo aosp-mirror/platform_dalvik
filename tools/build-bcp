@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+#Copyright (C) 2012 The Pennsylvania State University
+#Systems and Internet Infrastructure Security Laboratory
+#
+#Author:
+#    Damien Octeau <octeau@cse.psu.edu>
+#
+#This program is free software; you can redistribute it and/or
+#modify it under the terms of the GNU General Public License
+#as published by the Free Software Foundation; either version 2
+#of the License, or (at your option) any later version.
+#
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License
+#along with this program; if not, write to the Free Software
+#Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, 
+#USA.
+
+javaLibsDir=$1
+dexDir=$2/system/framework
+javaDir=$3
+
+mkdir -p ${dexDir} 2> /dev/null
+mkdir -p ${javaDir} 2> /dev/null
+
+for i in `ls "${javaLibsDir}"`
+do
+	if [ "${i%_*}" = "android.policy" ] || [ "${i%_*}" = "core" ] || [ "${i%_*}" = "ext" ] || [ "${i%_*}" = "framework" ] || [ "${i%_*}" = "services" ]
+	then
+		if [ -f "${javaLibsDir}"/"${i}"/"javalib.jar" ]
+		then
+		    isClassesDexPresent=`unzip -l "${javaLibsDir}"/"${i}"/"javalib.jar" | grep -c "classes.dex"`
+		    
+		    if [ ${isClassesDexPresent} -eq 1 ]
+		    then
+		        cp "${javaLibsDir}"/"${i}"/"javalib.jar" "${dexDir}"
+		        mv "${dexDir}"/"javalib.jar" "${dexDir}"/"${i%_*}.jar"
+		        echo "Copied ""${dexDir}"/"${i%_*}.jar"
+		        cp "${javaLibsDir}"/"${i}"/"classes.jar" "${javaDir}"
+		        mv "${javaDir}"/"classes.jar" "${javaDir}"/"${i%_*}.jar"
+		        echo "Copied ""${javaDir}"/"${i%_*}.jar"
+	        fi
+	    fi
+	fi
+done

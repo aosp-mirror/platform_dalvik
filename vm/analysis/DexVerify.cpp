@@ -41,21 +41,21 @@ bool dvmVerifyClass(ClassObject* clazz)
 {
     int i;
 
-    if (dvmIsClassVerified(clazz)) {
-        LOGD("Ignoring duplicate verify attempt on %s", clazz->descriptor);
-        return true;
-    }
+//    if (dvmIsClassVerified(clazz)) {
+//        LOGD("Ignoring duplicate verify attempt on %s", clazz->descriptor);
+//        return true;
+//    }
 
     for (i = 0; i < clazz->directMethodCount; i++) {
         if (!verifyMethod(&clazz->directMethods[i])) {
-            LOG_VFY("Verifier rejected class %s", clazz->descriptor);
-            return false;
+//            LOG_VFY("Verifier rejected class %s", clazz->descriptor);
+//            return false;
         }
     }
     for (i = 0; i < clazz->virtualMethodCount; i++) {
         if (!verifyMethod(&clazz->virtualMethods[i])) {
-            LOG_VFY("Verifier rejected class %s", clazz->descriptor);
-            return false;
+//            LOG_VFY("Verifier rejected class %s", clazz->descriptor);
+//            return false;
         }
     }
 

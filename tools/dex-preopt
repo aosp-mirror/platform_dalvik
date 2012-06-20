@@ -70,16 +70,18 @@
 #
 
 # Defaults.
-dexopt=''
-buildDir='.'
-productDir=''
+script=`readlink -f $0`
+scriptDir=`dirname "$script"`
+dexopt=${scriptDir}'/../../out/host/linux-x86/bin/dexopt'
+buildDir=${scriptDir}'/../../out'
+productDir='target/product/generic_x86'
 bootDir='system/framework'
 bootstrap='no'
 doVerify='all'
-doOptimize='verified'
-doRegisterMaps='yes'
+doOptimize='none'
+doRegisterMaps='no'
 doUniprocessor='no'
-bootJars='core'
+bootJars='core:android.policy:ext:framework:services'
 
 optimizeFlags='' # built up from the more human-friendly options
 bogus='no' # indicates if there was an error during processing arguments
@@ -256,7 +258,8 @@ fi
 # really) uses this to know how to generate the names of the
 # dependencies (since we don't want the device files to contain bits
 # of pathname from the host build system).
-productBootDir="${productDir}/./${bootDir}"
+#productBootDir="${productDir}/./${bootDir}"
+productBootDir="${scriptDir}/../dare/libs/dex/./${bootDir}"
 if [ ! '(' -d "${productBootDir}" -a -w "${productBootDir}" ')' ]; then
     echo "boot-dir is not a writable directory: ${productBootDir}" 1>&2
     exit 1
@@ -285,6 +288,10 @@ BOOTCLASSPATH=`echo ":${bootJars}" | \
     sed 's/^://'`
 export BOOTCLASSPATH
 
+#export ANDROID_LOG_TAGS='*:v'
+mkdir -p "${buildDir}"/data/dalvik-cache 2> /dev/null
+export ANDROID_DATA="${buildDir}"/./data
+
 if [ "${bootstrap}" = 'yes' ]; then
     # Split the boot classpath into separate elements and iterate over them,
     # processing each, in order.
@@ -294,6 +301,7 @@ if [ "${bootstrap}" = 'yes' ]; then
         echo "Processing ${inputFile}" 1>&2
         outputFile="`dirname ${inputFile}`/`basename ${inputFile} .jar`.odex"
         "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
+        echo "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
         status="$?"
         if [ "${status}" != '0' ]; then
             exit "${status}"
@@ -301,6 +309,8 @@ if [ "${bootstrap}" = 'yes' ]; then
     done
 else
     echo "Processing ${inputFile}" 1>&2
+    vfyOutput=`echo $outputFile | sed -r 's/(.*)\.odex/\1\.txt/'`
+    verboseVfyOutput=`echo $outputFile | sed -r 's/(.*)\.odex/\1_verbose\.txt/'`
 
     bootJarFile=`expr -- "${inputFile}" : "${productDir}/${bootDir}/\(.*\)"`
     if [ "x${bootJarFile}" != 'x' ]; then
@@ -309,7 +319,9 @@ else
         inputFile="${productBootDir}/${bootJarFile}"
     fi
 
-    "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
+    "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}" "${vfyOutput}" "${verboseVfyOutput}" 2> /dev/null > /dev/null
+#    echo "BOOTCLASSPATH"=$BOOTCLASSPATH
+    echo "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}" "${vfyOutput}" "${verboseVfyOutput}"
 
     status="$?"
     if [ "${status}" != '0' ]; then

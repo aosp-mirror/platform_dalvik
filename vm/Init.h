@@ -38,7 +38,8 @@ void dvmLateEnableAssertions(void);
  * asked to optimize a DEX file holding fundamental classes.
  */
 int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
-    DexClassVerifyMode verifyMode, int dexoptFlags);
+    DexClassVerifyMode verifyMode, int dexoptFlags, int vfyFd,
+    int verboseVfyFd);
 
 /*
  * Look up the set of classes and members used directly by the VM,

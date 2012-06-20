@@ -1019,6 +1019,30 @@ static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
             // TODO: log when in verbose mode
             LOGV("DexOpt: not optimizing unavailable class '%s'",
                 classDescriptor);
+            if (gDvm.vfyFd >= 0) {
+                size_t length = strlen(classDescriptor) + 1
+                    + 2 + 1 + 1;
+
+                char* buffer = (char*) malloc(length);
+                memset(buffer, 0, length);
+                sprintf(buffer, "%s <<\n", classDescriptor);
+                write(gDvm.vfyFd, buffer, strlen(buffer));
+                free(buffer);
+
+                const char* superclassDescriptor = dexStringByTypeIdx(pDexFile,
+                    pClassDef->superclassIdx);
+                if (superclassDescriptor == NULL)
+                    superclassDescriptor = "";
+                length = strlen(classDescriptor) + 1
+                    + strlen(superclassDescriptor) + 1
+                    + 2 + 1 + 1;
+                buffer = (char*) malloc(length);
+                memset(buffer, 0, length);
+                sprintf(buffer, "%s << %s\n", classDescriptor,
+                    superclassDescriptor);
+                write(gDvm.verboseVfyFd, buffer, strlen(buffer));
+                free(buffer);
+            }
         }
     }
 

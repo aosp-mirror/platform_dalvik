@@ -41,6 +41,8 @@ ${progdir}/opcode-gen dx/src/com/android/dx/io/Opcodes.java
 ${progdir}/opcode-gen libdex/DexOpcodes.cpp
 ${progdir}/opcode-gen libdex/DexOpcodes.h
 ${progdir}/opcode-gen libdex/InstrUtils.cpp
+${progdir}/opcode-gen dare/trunk/decompiler/src/tyde/tyde_instr_utils.cpp
+
 
 # It's a minor shame that these files live in a different top-level project.
 # So it goes.

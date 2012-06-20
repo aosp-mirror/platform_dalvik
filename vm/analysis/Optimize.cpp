@@ -548,8 +548,10 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
                     "Ljava/lang/IncompatibleClassChangeError;") == 0)
                 {
                     *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                    gDvm.missingClassName = className;
                 } else {
                     *pFailure = VERIFY_ERROR_NO_CLASS;
+                    gDvm.missingClassName = className;
                 }
             }
             dvmClearOptException(dvmThreadSelf());
@@ -563,13 +565,15 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
     }
 
     /* multiple definitions? */
-    if (IS_CLASS_FLAG_SET(resClass, CLASS_MULTIPLE_DEFS)) {
-        LOGI("DexOpt: not resolving ambiguous class '%s'",
-            resClass->descriptor);
-        if (pFailure != NULL)
-            *pFailure = VERIFY_ERROR_NO_CLASS;
-        return NULL;
-    }
+//    if (IS_CLASS_FLAG_SET(resClass, CLASS_MULTIPLE_DEFS)) {
+//        LOGI("DexOpt: not resolving ambiguous class '%s'",
+//            resClass->descriptor);
+//        if (pFailure != NULL) {
+//            *pFailure = VERIFY_ERROR_NO_CLASS;
+//            gDvm.missingClassName = resClass->descriptor;
+//        }
+//        return NULL;
+//    }
 
     /* access allowed? */
     tweakLoader(referrer, resClass);
@@ -578,8 +582,10 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
     if (!allowed) {
         LOGW("DexOpt: resolve class illegal access: %s -> %s",
             referrer->descriptor, resClass->descriptor);
-        if (pFailure != NULL)
+        if (pFailure != NULL) {
             *pFailure = VERIFY_ERROR_ACCESS_CLASS;
+            gDvm.missingClassName = resClass->descriptor;
+        }
         return NULL;
     }
 
@@ -622,16 +628,24 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
             LOGD("DexOpt: couldn't find field %s.%s",
                 resClass->descriptor,
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
-            if (pFailure != NULL)
+            if (pFailure != NULL) {
                 *pFailure = VERIFY_ERROR_NO_FIELD;
+                gDvm.missingClassName = resClass->descriptor;
+                gDvm.missingMemberName = dexStringById(pDvmDex->pDexFile,
+                    pFieldId->nameIdx);
+                gDvm.missingMemberDescriptor = dexStringByTypeIdx(
+                    pDvmDex->pDexFile, pFieldId->typeIdx);
+            }
             return NULL;
         }
         if (dvmIsStaticField(resField)) {
             LOGD("DexOpt: wanted instance, got static for field %s.%s",
                 resClass->descriptor,
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
-            if (pFailure != NULL)
+            if (pFailure != NULL) {
                 *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                gDvm.missingClassName = resClass->descriptor;
+            }
             return NULL;
         }
 
@@ -649,8 +663,12 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
         LOGI("DexOpt: access denied from %s to field %s.%s",
             referrer->descriptor, resField->clazz->descriptor,
             resField->name);
-        if (pFailure != NULL)
+        if (pFailure != NULL) {
             *pFailure = VERIFY_ERROR_ACCESS_FIELD;
+            gDvm.missingClassName = resField->clazz->descriptor;
+            gDvm.missingMemberName = resField->name;
+            gDvm.missingMemberDescriptor = resField->signature;
+        }
         return NULL;
     }
 
@@ -696,15 +714,22 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
         if (resField == NULL) {
             LOGD("DexOpt: couldn't find static field %s.%s",
                 resClass->descriptor, fieldName);
-            if (pFailure != NULL)
+            if (pFailure != NULL) {
                 *pFailure = VERIFY_ERROR_NO_FIELD;
+                gDvm.missingClassName = resClass->descriptor;
+                gDvm.missingMemberName = fieldName;
+                gDvm.missingMemberDescriptor = dexStringByTypeIdx(
+                    pDvmDex->pDexFile, pFieldId->typeIdx);
+            }
             return NULL;
         }
         if (!dvmIsStaticField(resField)) {
             LOGD("DexOpt: wanted static, got instance for field %s.%s",
                 resClass->descriptor, fieldName);
-            if (pFailure != NULL)
+            if (pFailure != NULL) {
                 *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                gDvm.missingClassName = resClass->descriptor;
+            }
             return NULL;
         }
 
@@ -727,8 +752,12 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
         LOGI("DexOpt: access denied from %s to field %s.%s",
             referrer->descriptor, resField->clazz->descriptor,
             resField->name);
-        if (pFailure != NULL)
+        if (pFailure != NULL) {
             *pFailure = VERIFY_ERROR_ACCESS_FIELD;
+            gDvm.missingClassName = resField->clazz->descriptor;
+            gDvm.missingMemberName = resField->name;
+            gDvm.missingMemberDescriptor = resField->signature;
+        }
         return NULL;
     }
 
@@ -928,24 +957,35 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
         if (resMethod == NULL) {
             LOGV("DexOpt: couldn't find method '%s'",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
-            if (pFailure != NULL)
+            if (pFailure != NULL) {
                 *pFailure = VERIFY_ERROR_NO_METHOD;
+                gDvm.missingClassName = resClass->descriptor;
+                gDvm.missingMemberName = dexStringById(pDvmDex->pDexFile,
+                    pMethodId->nameIdx);
+                gDvm.missingMemberDescriptor = dexStringById(
+                    pDvmDex->pDexFile, pMethodId->protoIdx);
+            }
             return NULL;
         }
         if (methodType == METHOD_STATIC) {
             if (!dvmIsStaticMethod(resMethod)) {
                 LOGD("DexOpt: wanted static, got instance for method %s.%s",
                     resClass->descriptor, resMethod->name);
-                if (pFailure != NULL)
+                if (pFailure != NULL) {
                     *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                    gDvm.missingClassName = resClass->descriptor;
+                }
                 return NULL;
             }
         } else if (methodType == METHOD_VIRTUAL) {
+
             if (dvmIsStaticMethod(resMethod)) {
                 LOGD("DexOpt: wanted instance, got static for method %s.%s",
                     resClass->descriptor, resMethod->name);
-                if (pFailure != NULL)
+                if (pFailure != NULL) {
                     *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                    gDvm.missingClassName = resClass->descriptor;
+                }
                 return NULL;
             }
         }
@@ -987,8 +1027,12 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
                 referrer->descriptor);
             free(desc);
         }
-        if (pFailure != NULL)
+        if (pFailure != NULL) {
             *pFailure = VERIFY_ERROR_ACCESS_METHOD;
+            gDvm.missingClassName = resMethod->clazz->descriptor;
+            gDvm.missingMemberName = resMethod->name;
+            gDvm.missingMemberDescriptor = resMethod->shorty;
+        }
         return NULL;
     }
 

@@ -704,6 +704,19 @@ struct DvmGlobals {
     int             stderrPipe[2];
 
     /*
+     * File descriptors for verifier output.
+     */
+    int vfyFd;
+    int verboseVfyFd;
+
+    /*
+     * Extra verifier output data.
+     */
+    const char* missingClassName;
+    const char* missingMemberName;
+    const char* missingMemberDescriptor;
+
+    /*
      * pid of the system_server process. We track it so that when system server
      * crashes the Zygote process will be killed and restarted.
      */
