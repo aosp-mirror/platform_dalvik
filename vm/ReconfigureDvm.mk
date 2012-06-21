@@ -28,6 +28,12 @@ include $(LOCAL_PATH)/Dvm.mk
 
 LOCAL_SHARED_LIBRARIES += liblog libcutils libnativehelper libz libdl
 
+ifeq ($(HAVE_SELINUX),true)
+LOCAL_C_INCLUDES += external/libselinux/include
+LOCAL_SHARED_LIBRARIES += libselinux
+LOCAL_CFLAGS += -DHAVE_SELINUX
+endif # HAVE_SELINUX
+
 LOCAL_STATIC_LIBRARIES += libdex
 
 LOCAL_C_INCLUDES += external/stlport/stlport bionic/ bionic/libstdc++/include
