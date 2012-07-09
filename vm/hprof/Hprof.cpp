@@ -246,6 +246,8 @@ int hprofDumpHeap(const char* fileName, int fd, bool directToDdms)
     if (ctx == NULL) {
         return -1;
     }
+    // first record
+    hprofStartNewRecord(ctx, HPROF_TAG_HEAP_DUMP_SEGMENT, HPROF_TIME);
     dvmVisitRoots(hprofRootVisitor, ctx);
     dvmHeapBitmapWalk(dvmHeapSourceGetLiveBits(), hprofBitmapCallback, ctx);
     hprofFinishHeapDump(ctx);
