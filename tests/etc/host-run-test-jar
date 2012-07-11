@@ -78,7 +78,7 @@ while true; do
 done
 
 if [ "x$INTERP" = "x" ]; then
-    INTERP="fast"
+    INTERP="fast" # TODO: change this to "jit" when the x86 jit is merged.
     msg "Using fast interpreter by default"
 fi
 
