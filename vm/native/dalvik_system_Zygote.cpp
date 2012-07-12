@@ -413,7 +413,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         if (seInfoObj) {
             seInfo = dvmCreateCstrFromString(seInfoObj);
             if (!seInfo) {
-                LOGE("seInfo dvmCreateCstrFromString failed");
+                ALOGE("seInfo dvmCreateCstrFromString failed");
                 dvmAbort();
             }
         }
@@ -421,7 +421,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         if (niceNameObj) {
             niceName = dvmCreateCstrFromString(niceNameObj);
             if (!niceName) {
-                LOGE("niceName dvmCreateCstrFromString failed");
+                ALOGE("niceName dvmCreateCstrFromString failed");
                 dvmAbort();
             }
         }
@@ -513,7 +513,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
 #ifdef HAVE_SELINUX
         err = setSELinuxContext(uid, isSystemServer, seInfo, niceName);
         if (err < 0) {
-            LOGE("cannot set SELinux context: %s\n", strerror(errno));
+            ALOGE("cannot set SELinux context: %s\n", strerror(errno));
             dvmAbort();
         }
         // These free(3) calls are safe because we know we're only ever forking
