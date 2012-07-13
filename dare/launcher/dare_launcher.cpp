@@ -584,14 +584,12 @@ void DedLauncher::ProcessClasses() {
   dclass_ = output_dir_ + "/retargeted/" + output_dir0;
   sclass_ = output_dir_ + "/optimized/" + output_dir0;
   dojava_ = output_dir_ + "/optimized-decompiled/" + output_dir0;
-  string sl = output_dir_ + "/sl/" + output_dir0;
   string stubs_dir = (generate_stubs_ ?
       output_dir_ + "/stubs/" + output_dir0 : "");
 
   CreateDir(dclass_.c_str());
   CreateDir(sclass_.c_str());
   CreateDir(dojava_.c_str());
-  CreateDir(sl.c_str());
   if (generate_stubs_)
     CreateDir(stubs_dir.c_str());
 
@@ -641,8 +639,8 @@ void DedLauncher::ProcessClasses() {
 
   if (optimize_ && soot_ != NULL) {
     // We initiate optimizations to the files we have just generated.
-    string cmd1 = MakeSootCommand(dclass_, dclass_, sclass_, libraries_,
-        " -p jb.uce remove-unreachable-traps -O -process-dir ");
+    string cmd1 = MakeSootCommand(dclass_, dclass_, sclass_, libraries_  + ":" 
+        + stubs_dir, " -p jb.uce remove-unreachable-traps -O -process-dir ");
 
     // Create optimized files.
     opt_time += StartProcess(cmd1, original_class_names_.size() * 4);

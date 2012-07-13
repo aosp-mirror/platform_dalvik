@@ -25,11 +25,12 @@ SCRIPT=`readlink -f $0`
 DED_DIR=`dirname "$SCRIPT"`
 DED=$DED_DIR/dare-launcher-1.0.2
 SOOT_DIR="$DED_DIR/../../../../dalvik/dare/soot/lib"
+JASMIN_DIR="$DED_DIR/../../../../dalvik/dare/jasmin/lib"
 ANDROID_LIBS="$DED_DIR/../../../../dalvik/dare/libs/class"
 PREVERIFY_SCRIPT="$DED_DIR/../../../../dalvik/tools/dex-preopt"
 PREVERIFY=""
 
-while getopts ed:ocp p
+while getopts ed:ocpb p
 do
 	case "$p" in
 	p)	PREVERIFY="-p $PREVERIFY_SCRIPT";;
@@ -38,12 +39,13 @@ do
 		echo "  -c : optimize and decompile .class files with Soot"
 		echo "  -p : preverify classes using the Dalvik verifier and rewrite unverifiable classes"
 		echo "  -e : do not split exception tables"
+		echo "  -b : generate stubs for some missing classes"
 		exit 1;;
 	esac
 done
 
-SOOT=$SOOT_DIR/soot-2.4.0.jar
-JASMIN=$SOOT_DIR/jasminclasses-2.4.0.jar
+SOOT=$SOOT_DIR/soot-2.5.0.jar
+JASMIN=$JASMIN_DIR/jasminclasses-2.5.0.jar
 LIBS="`find $ANDROID_LIBS -type f -name '*.jar' | tr '\n' ':'`$CLASSPATH"
 
 ARGS=`echo " $@" | sed 's/ -p/ /g'`
