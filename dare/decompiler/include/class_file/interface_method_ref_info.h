@@ -57,7 +57,7 @@ class InterfaceMethodRefInfo : public FMIRefInfo, public Method {
   void WriteStubToJasmin(std::ostream& out) const {
     out << ".method public abstract " << nameandtype_.name().bytes()
         << nameandtype_.descriptor().bytes() << '\n'
-        << ".end method__reserved__jasmin\n\n";
+        << ".end <method>\n\n";
   }
 };
 
