@@ -1,2 +1,0 @@
-java soot.Main -cp classes:$CLASSPATH -f jimp Cat1Cat2
-

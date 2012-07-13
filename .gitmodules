@@ -1,0 +1,6 @@
+[submodule "dare/jasmin"]
+	path = dare/jasmin
+	url = https://github.com/dare-android/jasmin.git
+[submodule "dare/soot"]
+	path = dare/soot
+	url = https://github.com/dare-android/soot.git
