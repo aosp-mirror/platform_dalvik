@@ -276,32 +276,42 @@ void ClassFile::AddAttributeToMethod(u4 method_idx, AttributeInfo* attribute) {
     string method_descriptor, temp;
     // First part: class descriptor.
     in >> method_descriptor;
-    if (method_descriptor == "")
-      break;
-    // Second part: method name.
-    in >> temp;
-    if (temp == "<<") {
-      verifier_data_[method_descriptor].insert(
-          std::pair<int, VerifyError>(-1, VERIFY_ERROR_GENERIC));
-    } else {
-      method_descriptor += temp;
-      // Third part: method signature. This fully qualified name is unique.
+
+    if (method_descriptor == "<<") {
+    	string child, parent;
+    	in >> child;
+    	in >> parent;
+    	char* child_c = strdup(child.c_str());
+    	char* parent_c = strdup(parent.c_str());
+    	ConstantPool::AddClassStub(parent_c, true);
+    	if (child != parent)
+       	  ConstantPool::AddClassStub(child_c, true, false, parent_c);
+    } else if (method_descriptor != "") {
+      // Second part: method name.
       in >> temp;
-      method_descriptor += temp;
-
-      string complete_failure;
-      in >> complete_failure;
-
-      if (complete_failure == "y") {
+      if (temp == "<<") {
         verifier_data_[method_descriptor].insert(
             std::pair<int, VerifyError>(-1, VERIFY_ERROR_GENERIC));
       } else {
-        int i;
-        int j;
-        in >> std::hex >> i;
-        in >> j;
-        std::pair<int, VerifyError> p(i, (VerifyError) j);
-        verifier_data_[method_descriptor].insert(p);
+        method_descriptor += temp;
+        // Third part: method signature. This fully qualified name is unique.
+        in >> temp;
+        method_descriptor += temp;
+
+        string complete_failure;
+        in >> complete_failure;
+
+        if (complete_failure == "y") {
+          verifier_data_[method_descriptor].insert(
+              std::pair<int, VerifyError>(-1, VERIFY_ERROR_GENERIC));
+        } else {
+          int i;
+          int j;
+          in >> std::hex >> i;
+          in >> j;
+          std::pair<int, VerifyError> p(i, (VerifyError) j);
+          verifier_data_[method_descriptor].insert(p);
+        }
       }
     }
   }

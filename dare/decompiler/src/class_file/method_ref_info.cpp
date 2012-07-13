@@ -70,5 +70,5 @@ void MethodRefInfo::WriteStubToJasmin(std::ostream& out) const {
         << ARETURN << '\n';
   }
 
-  out << ".end method__reserved__jasmin\n";
+  out << ".end <method>\n";
 }

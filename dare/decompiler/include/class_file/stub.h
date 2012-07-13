@@ -30,6 +30,8 @@
 #define CLASS_FILE_STUB_H_
 
 
+#include <stdlib.h>
+
 #include <iosfwd>
 #include <set>
 #include <vector>
@@ -40,11 +42,16 @@
 class Stub {
  public:
   Stub(const char* class_name, bool is_interface, bool is_necessary,
-      const char* superclass = NULL)
+      const char* superclass = NULL, bool free_superclass = false)
       : class_name_(class_name),
         superclass_(superclass),
         is_interface_(is_interface),
-        is_necessary_(is_necessary) {}
+        is_necessary_(is_necessary),
+        free_superclass_(false) {}
+  ~Stub() {
+    if (free_superclass_)
+      free((void*) superclass_);
+  }
 
   void set_superclass(const char* superclass) {
     superclass_ = superclass;
@@ -98,6 +105,7 @@ class Stub {
   const char* superclass_;
   bool is_interface_;
   bool is_necessary_;
+  bool free_superclass_;
   std::vector<const char*> interfaces_;
   std::set<u4> field_refs_;
   std::set<u4> interface_method_refs_;

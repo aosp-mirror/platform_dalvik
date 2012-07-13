@@ -236,7 +236,7 @@ public:
   typedef std::map<u4, FieldRefInfo*> FieldRefInfoMap;
   typedef std::map<u4, InterfaceMethodRefInfo*> InterfaceMethodRefInfoMap;
   typedef std::map<u4, MethodRefInfo*> MethodRefInfoMap;
-  typedef std::map<const char*, Stub*> StubMap;
+  typedef std::map<const char*, Stub*, CStringOp> StubMap;
   typedef std::map<u4, ClassInfo*> ClassArrayInfoMap;
   typedef std::map<u4, StringInfo*> StringInfoMap;
   typedef std::map<s4, IntegerInfo*> IntegerInfoMap;

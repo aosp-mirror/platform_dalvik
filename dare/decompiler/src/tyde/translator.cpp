@@ -76,21 +76,21 @@ void Translator::Convert() {
     for(u4 j = 0; j < code_attribute_->tyde_body().tries()[i].handlers.handlers.size(); ++j) {
       out_ << "  .catch ";
       code_attribute_->tyde_body().tries()[i].handlers.handlers[j].type_ptr->WriteToJasmin(out_);
-      out_ << " from__reserved__jasmin Label"
+      out_ << " <from> Label"
           << code_attribute_->tyde_body().tries()[i].start_ptr->label()
-          << " to__reserved__jasmin Label"
+          << " <to> Label"
           << code_attribute_->tyde_body().tries()[i].end_ptr->label()
-          << " using__reserved__jasmin Label"
+          << " <using> Label"
           << code_attribute_->tyde_body().tries()[i].handlers.handlers[j].ptr->label()
           << "\n";
     }
 
     if(code_attribute_->tyde_body().tries()[i].handlers.catch_all_ptr != NULL) {
-      out_ << "  .catch all from__reserved__jasmin Label"
+      out_ << "  .catch all <from> Label"
           << code_attribute_->tyde_body().tries()[i].start_ptr->label()
-          << " to__reserved__jasmin Label"
+          << " <to> Label"
           << code_attribute_->tyde_body().tries()[i].end_ptr->label()
-          << " using__reserved__jasmin Label"
+          << " <using> Label"
           << code_attribute_->tyde_body().tries()[i].handlers.catch_all_ptr->label()
           << "\n";
     }
@@ -221,6 +221,7 @@ void Translator::TranslateFmtTab(const TydeInstruction* ins) {
 void Translator::TranslateFmtTfna(const TydeInstruction* ins) {
   int source_count = ins->sources().size();
   AddIconst(source_count);
+  out_ << "\n";
   JavaOpCode op;
   Type array_type = ins->array_type();
 
@@ -254,6 +255,7 @@ void Translator::TranslateFmtTfna(const TydeInstruction* ins) {
   for (int i = 0; i < (int) source_count; ++i) {
     out_ << DUP << "\n";
     AddIconst(i);
+    out_ << "\n";
     if (source_type.IsFloat())
       AddFload(registers_[ins->sources()[i].reg]);
     else if (source_type.IsIntSubtype())
@@ -311,6 +313,7 @@ void Translator::TranslateFmtTfad(const TydeInstruction* ins) {
   for (u4 i = 0; i < ins->data_ptr().size(); ++i) {
     TranslateSources(ins);
     AddIconst(i);
+    out_ << "\n";
 
     if (op == FASTORE) {
       FloatInfo* float_info = (FloatInfo*) (ins->data_ptr()[i]);
@@ -334,6 +337,7 @@ void Translator::TranslateFmtTfad(const TydeInstruction* ins) {
 
       if (CanInlineIntegerLiteral(value)) {
         AddIconst(value);
+        out_ << "\n";
       } else {
         out_ << LDC;
         ins->data_ptr()[i]->WriteToJasmin(out_);
@@ -814,7 +818,6 @@ void Translator::AddIconst(const s2 value) {
       out_ << " " << value;
       break;
   }
-  out_ << "\n";
 }
 
 void Translator::TranslateSources(const TydeInstruction* ins) {
@@ -832,6 +835,7 @@ void Translator::TranslateSources(const TydeInstruction* ins) {
       AddAload(registers_[ins->sources()[i].reg]);
     } else if (source_type.IsLit()){
       AddIconst((s4) ins->sources()[i].reg);
+      out_ << "\n";
     } else {
       LOGW("Error when translating sources: type %s\n",
           source_type.ToString().c_str());

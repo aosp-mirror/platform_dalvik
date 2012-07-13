@@ -125,7 +125,7 @@ class MethodInfo : public Method, public Member {
       code_attribute_->WriteToJasmin(out);
     Timer::getInstance().End();
     Timer::getInstance().Start(Timer::kTranslationToJasmin);
-    out << ".end method__reserved__jasmin\n";
+    out << ".end <method>\n";
   }
   void Dump(std::ostream& out) const {
     out << name_.bytes() << "\n";

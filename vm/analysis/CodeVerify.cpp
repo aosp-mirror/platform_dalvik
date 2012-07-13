@@ -32,6 +32,8 @@
 
 #include <stddef.h>
 
+#include <vector>
+
 
 /*
  * We don't need to store the register data for many instructions, because
@@ -133,6 +135,8 @@ enum {
 
 namespace {
 DetailedVerifyError detailed_error = DETAILED_NONE;
+std::vector<const char*> extraTypeInfo;
+bool justSetExtraTypeInfo = false;
 }
 
 /*
@@ -850,6 +854,10 @@ static bool setTypesFromSignature(const Method* meth, RegType* regTypes,
                 if (!VERIFY_OK(failure))
                     goto bad_sig;
                 regTypes[argStart + actualArgs] = regTypeFromClass(clazz);
+                if (clazz == gDvm.classJavaLangObject
+                		&& strcmp(descriptor, "Ljava/lang/Object;") != 0) {
+					extraTypeInfo[argStart + actualArgs] = descriptor;
+				}
             }
             actualArgs++;
             break;
@@ -1288,6 +1296,7 @@ static Method* verifyInvocationArgs(const Method* meth,
         switch (*sig) {
         case 'L':
             {
+            	const char* oldSig = sig;
                 ClassObject* clazz = lookupSignatureClass(meth, &sig, pFailure);
                 if (!VERIFY_OK(*pFailure))
                     goto bad_sig;
@@ -1298,6 +1307,31 @@ static Method* verifyInvocationArgs(const Method* meth,
                             actualArgs, clazz->descriptor);
                     goto bad_sig;
                 }
+
+                if (clazz == gDvm.classJavaLangObject
+                		&& extraTypeInfo[getReg] != NULL
+                		&& gDvm.vfyFd > 0) {
+                	char* argumentType = strdup(oldSig);
+                	char* aPtr = argumentType;
+                	while (*++aPtr != ';' && *aPtr != '\0')
+                		continue;
+                	if (*aPtr == ';') {
+                		*++aPtr = '\0';
+						if (strcmp(argumentType, "Ljava/lang/Object;") != 0) {
+							const char* left = extraTypeInfo[getReg];
+
+							size_t length = 2 + 1
+									+ strlen(left) + 1
+									+ strlen(argumentType) + 8;
+							char* buffer = (char*) malloc(length);
+							memset(buffer, 0, length);
+							sprintf(buffer, "<< %s %s\n", left, argumentType);
+							write(gDvm.vfyFd, buffer, strlen(buffer));
+							free(buffer);
+						}
+                	}
+                	free(argumentType);
+				}
             }
             actualArgs++;
             break;
@@ -1398,7 +1432,8 @@ fail:
  * If we can't find the class, we return java.lang.Object, so that
  * verification can continue if a field is only accessed in trivial ways.
  */
-static ClassObject* getFieldClass(const Method* meth, const Field* field)
+static ClassObject* getFieldClass(const Method* meth, const Field* field,
+		u4 reg)
 {
     ClassObject* fieldClass;
     const char* signature = field->signature;
@@ -1415,6 +1450,8 @@ static ClassObject* getFieldClass(const Method* meth, const Field* field)
         LOGV("VFY: unable to find class '%s' for field %s.%s, trying Object",
             field->signature, meth->clazz->descriptor, field->name);
         fieldClass = gDvm.classJavaLangObject;
+        extraTypeInfo[reg] = field->signature;
+        justSetExtraTypeInfo = true;
     } else {
         assert(!dvmIsPrimitiveClass(fieldClass));
     }
@@ -1597,6 +1634,17 @@ static void setRegisterType(RegisterLine* registerLine, u4 vdst,
      */
     if (registerLine->monitorEntries != NULL)
         registerLine->monitorEntries[vdst] = 0;
+
+    /*
+     * Deal with extra type info.
+     */
+    if (extraTypeInfo.size() > vdst && extraTypeInfo[vdst] != NULL) {
+    	if (justSetExtraTypeInfo) {
+    		justSetExtraTypeInfo = false;
+    	} else {
+    		extraTypeInfo[vdst] = NULL;
+    	}
+    }
 }
 
 /*
@@ -3575,6 +3623,7 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
     const int insnsSize = vdata->insnsSize;
     const bool generateRegisterMap = gDvm.generateRegisterMaps;
     RegisterTable regTable;
+    extraTypeInfo.clear();
 
     memset(&regTable, 0, sizeof(regTable));
 
@@ -3632,6 +3681,14 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
             goto bail;
     }
 
+    if (vdata->insnRegCount > 0) {
+		extraTypeInfo.resize(vdata->insnRegCount);
+    }
+
+    for (u4 i = 0; i < vdata->insnRegCount; ++i) {
+    	extraTypeInfo[i] = NULL;
+    }
+
     /*
      * Initialize the types of the registers that correspond to the
      * method arguments.  We can determine this from the method signature.
@@ -3670,6 +3727,7 @@ bail:
     freeRegisterLineInnards(vdata);
     free(regTable.registerLines);
     free(regTable.lineAlloc);
+    extraTypeInfo.clear();
     return result;
 }
 
@@ -5066,7 +5124,7 @@ iget_1nr_common:
                             &failure);
             if (!VERIFY_OK(failure))
                 break;
-            fieldClass = getFieldClass(meth, instField);
+            fieldClass = getFieldClass(meth, instField, decInsn.vB);
             if (fieldClass == NULL) {
                 /* class not found or primitive type */
                 LOG_VFY("VFY: unable to recover field class from '%s'",
@@ -5219,7 +5277,7 @@ iput_1nr_common:
             if (!VERIFY_OK(failure))
                 break;
 
-            fieldClass = getFieldClass(meth, instField);
+            fieldClass = getFieldClass(meth, instField, decInsn.vB);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'",
                     instField->signature);
@@ -5356,7 +5414,7 @@ sget_1nr_common:
             staticField = getStaticField(meth, decInsn.vB, &failure);
             if (!VERIFY_OK(failure))
                 break;
-            fieldClass = getFieldClass(meth, staticField);
+            fieldClass = getFieldClass(meth, staticField, decInsn.vA);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'",
                     staticField->signature);
@@ -5508,7 +5566,7 @@ sput_1nr_common:
             if (!VERIFY_OK(failure))
                 break;
 
-            fieldClass = getFieldClass(meth, staticField);
+            fieldClass = getFieldClass(meth, staticField, decInsn.vA);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'",
                     staticField->signature);
