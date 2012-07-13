@@ -20,7 +20,10 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+script=`readlink -f $0`
+directory=`dirname "$script"`
 
-ant -f jasmin/build.xml jasmin-jar
+ant -f $directory/jasmin/build.xml jasmin-jar
 
-ant -f soot/build.xml fulljar
+ant -f $directory/soot/build.xml fulljar
+
