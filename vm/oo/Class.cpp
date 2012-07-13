@@ -2913,20 +2913,26 @@ static bool createVtable(ClassObject* clazz)
             for (si = 0; si < clazz->super->vtableCount; si++) {
                 Method* superMeth = clazz->vtable[si];
 
-                if (dvmCompareMethodNamesAndProtos(localMeth, superMeth) == 0 &&
-                        dvmCheckMethodAccess(clazz, superMeth)) {
-                    /* verify */
-                    if (dvmIsFinalMethod(superMeth)) {
-                        ALOGW("Method %s.%s overrides final %s.%s",
-                            localMeth->clazz->descriptor, localMeth->name,
-                            superMeth->clazz->descriptor, superMeth->name);
-                        goto bail;
+                if (dvmCompareMethodNamesAndProtos(localMeth, superMeth) == 0) {
+                    if (dvmCheckMethodAccess(clazz, superMeth)) {
+                        /* verify */
+                        if (dvmIsFinalMethod(superMeth)) {
+                            ALOGW("Method %s.%s overrides final %s.%s",
+                                localMeth->clazz->descriptor, localMeth->name,
+                                superMeth->clazz->descriptor, superMeth->name);
+                            goto bail;
+                        }
+                        clazz->vtable[si] = localMeth;
+                        localMeth->methodIndex = (u2) si;
+                        //ALOGV("+++   override %s.%s (slot %d)",
+                        //    clazz->descriptor, localMeth->name, si);
+                        break;
+                    } else {
+                        ALOGW("in older versions of dalvik, method %s.%s would have incorrectly "
+                              "overridden package-private method with same name in %s",
+                              localMeth->clazz->descriptor, localMeth->name,
+                              superMeth->clazz->descriptor);
                     }
-                    clazz->vtable[si] = localMeth;
-                    localMeth->methodIndex = (u2) si;
-                    //ALOGV("+++   override %s.%s (slot %d)",
-                    //    clazz->descriptor, localMeth->name, si);
-                    break;
                 }
             }
 
