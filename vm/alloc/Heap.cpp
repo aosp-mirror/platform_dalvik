@@ -724,5 +724,7 @@ void dvmWaitForConcurrentGcToComplete()
         dvmChangeStatus(self, oldStatus);
     }
     u4 end = dvmGetRelativeTimeMsec();
-    ALOGD("WAIT_FOR_CONCURRENT_GC blocked %ums", end - start);
+    if (end - start > 0) {
+        ALOGD("WAIT_FOR_CONCURRENT_GC blocked %ums", end - start);
+    }
 }
