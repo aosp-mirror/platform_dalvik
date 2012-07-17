@@ -2789,16 +2789,16 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
  * chaining cell for case default [8 bytes]
  * noChain exit
  */
-static s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc)
+static u8 findPackedSwitchIndex(const u2* switchData, int testVal, uintptr_t pc)
 {
     int size;
     int firstKey;
     const int *entries;
     int index;
     int jumpIndex;
-    int caseDPCOffset = 0;
+    uintptr_t caseDPCOffset = 0;
     /* In Thumb mode pc is 4 ahead of the "mov r2, pc" instruction */
-    int chainingPC = (pc + 4) & ~3;
+    uintptr_t chainingPC = (pc + 4) & ~3;
 
     /*
      * Packed switch data format:
@@ -2837,16 +2837,16 @@ static s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc)
     }
 
     chainingPC += jumpIndex * CHAIN_CELL_NORMAL_SIZE;
-    return (((s8) caseDPCOffset) << 32) | (u8) chainingPC;
+    return (((u8) caseDPCOffset) << 32) | (u8) chainingPC;
 }
 
 /* See comments for findPackedSwitchIndex */
-static s8 findSparseSwitchIndex(const u2* switchData, int testVal, int pc)
+static u8 findSparseSwitchIndex(const u2* switchData, int testVal, uintptr_t pc)
 {
     int size;
     const int *keys;
     const int *entries;
-    int chainingPC = (pc + 4) & ~3;
+    uintptr_t chainingPC = (pc + 4) & ~3;
     int i;
 
     /*
@@ -2888,7 +2888,7 @@ static s8 findSparseSwitchIndex(const u2* switchData, int testVal, int pc)
             int jumpIndex = (i < MAX_CHAINED_SWITCH_CASES) ?
                            i : MAX_CHAINED_SWITCH_CASES + 1;
             chainingPC += jumpIndex * CHAIN_CELL_NORMAL_SIZE;
-            return (((s8) entries[i]) << 32) | (u8) chainingPC;
+            return (((u8) entries[i]) << 32) | (u8) chainingPC;
         } else if (k > testVal) {
             break;
         }
