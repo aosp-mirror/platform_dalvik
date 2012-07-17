@@ -1457,7 +1457,7 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
     case VERIFY_ERROR_NONE:
         /* should never happen; use default exception */
         assert(false);
-        msg = strdup("weird - no error specified");
+        msg = "weird - no error specified";
         break;
 
     /* no default clause -- want warning if enum updated */
