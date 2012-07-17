@@ -1561,7 +1561,6 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_DISPATCH_FF:
             LOGE("Codegen: got unused opcode %#x",dalvikOpcode);
             return true;
         case OP_NOP:
