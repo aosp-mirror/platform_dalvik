@@ -428,7 +428,7 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
                  size, rlObj.sRegLow);
     HEAP_ACCESS_SHADOW(false);
     if (isVolatile) {
-	    dvmCompilerGenMemBarrier(cUnit, 0);
+        dvmCompilerGenMemBarrier(cUnit, 0);
     }
 
     storeValue(cUnit, rlDest, rlResult);
@@ -450,7 +450,7 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                  NULL);/* null object? */
 
     if (isVolatile) {
-	dvmCompilerGenMemBarrier(cUnit, 0);
+        dvmCompilerGenMemBarrier(cUnit, 0);
     }
     HEAP_ACCESS_SHADOW(true);
     storeBaseDisp(cUnit, rlObj.lowReg, fieldOffset, rlSrc.lowReg, size);
@@ -1553,7 +1553,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
     }
     switch (dalvikOpcode) {
         case OP_RETURN_VOID_BARRIER:
-	    dvmCompilerGenMemBarrier(cUnit, 0);
+            dvmCompilerGenMemBarrier(cUnit, 0);
             // Intentional fallthrough
         case OP_RETURN_VOID:
             genReturnCommon(cUnit,mir);
@@ -2935,14 +2935,14 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
  * chaining cell for case default [16 bytes]
  * noChain exit
  */
-static s8 findPackedSwitchIndex(const u2* switchData, int testVal)
+static u8 findPackedSwitchIndex(const u2* switchData, int testVal)
 {
     int size;
     int firstKey;
     const int *entries;
     int index;
     int jumpIndex;
-    int caseDPCOffset = 0;
+    uintptr_t caseDPCOffset = 0;
 
     /*
      * Packed switch data format:
@@ -2984,11 +2984,11 @@ static s8 findPackedSwitchIndex(const u2* switchData, int testVal)
         jumpIndex = index;
     }
 
-    return (((s8) caseDPCOffset) << 32) | (u8) (jumpIndex * CHAIN_CELL_NORMAL_SIZE + 20);
+    return (((u8) caseDPCOffset) << 32) | (u8) (jumpIndex * CHAIN_CELL_NORMAL_SIZE + 20);
 }
 
 /* See comments for findPackedSwitchIndex */
-static s8 findSparseSwitchIndex(const u2* switchData, int testVal)
+static u8 findSparseSwitchIndex(const u2* switchData, int testVal)
 {
     int size;
     const int *keys;
@@ -3035,7 +3035,7 @@ static s8 findSparseSwitchIndex(const u2* switchData, int testVal)
             /* MAX_CHAINED_SWITCH_CASES + 1 is the start of the overflow case */
             int jumpIndex = (i < MAX_CHAINED_SWITCH_CASES) ?
                            i : MAX_CHAINED_SWITCH_CASES + 1;
-            return (((s8) entries[i]) << 32) | (u8) (jumpIndex * CHAIN_CELL_NORMAL_SIZE + 20);
+            return (((u8) entries[i]) << 32) | (u8) (jumpIndex * CHAIN_CELL_NORMAL_SIZE + 20);
 #else
         int k = (unsigned int)keys[i] >> 16 | keys[i] << 16;
         if (k == testVal) {
@@ -3043,7 +3043,7 @@ static s8 findSparseSwitchIndex(const u2* switchData, int testVal)
             int jumpIndex = (i < MAX_CHAINED_SWITCH_CASES) ?
                            i : MAX_CHAINED_SWITCH_CASES + 1;
             int temp = (unsigned int)entries[i] >> 16 | entries[i] << 16;
-            return (((s8) temp) << 32) | (u8) (jumpIndex * CHAIN_CELL_NORMAL_SIZE + 20);
+            return (((u8) temp) << 32) | (u8) (jumpIndex * CHAIN_CELL_NORMAL_SIZE + 20);
 #endif
         } else if (k > testVal) {
             break;
