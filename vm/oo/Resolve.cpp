@@ -219,7 +219,11 @@ Method* dvmResolveMethod(const ClassObject* referrer, u4 methodIdx,
     }
 
     if (resMethod == NULL) {
-        dvmThrowNoSuchMethodError(name);
+        std::string msg;
+        msg += resClass->descriptor;
+        msg += ".";
+        msg += name;
+        dvmThrowNoSuchMethodError(msg.c_str());
         return NULL;
     }
 
@@ -333,11 +337,14 @@ Method* dvmResolveInterfaceMethod(const ClassObject* referrer, u4 methodIdx)
     DexProto proto;
     dexProtoSetFromMethodId(&proto, pDvmDex->pDexFile, pMethodId);
 
-    LOGVV("+++ looking for '%s' '%s' in resClass='%s'",
-        methodName, methodSig, resClass->descriptor);
+    LOGVV("+++ looking for '%s' in resClass='%s'", methodName, resClass->descriptor);
     resMethod = dvmFindInterfaceMethodHier(resClass, methodName, &proto);
     if (resMethod == NULL) {
-        dvmThrowNoSuchMethodError(methodName);
+        std::string msg;
+        msg += resClass->descriptor;
+        msg += ".";
+        msg += methodName;
+        dvmThrowNoSuchMethodError(msg.c_str());
         return NULL;
     }
 
