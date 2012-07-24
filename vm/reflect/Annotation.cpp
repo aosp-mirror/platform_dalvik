@@ -2085,9 +2085,15 @@ static ArrayObject* processAnnotationSetRefList(const ClassObject* clazz,
         const DexAnnotationSetRefItem* pItem;
         const DexAnnotationSetItem* pAnnoSet;
         Object *annoSet;
+        DexAnnotationSetItem emptySet;
+        emptySet.size = 0;
 
         pItem = dexGetParameterAnnotationSetRef(pAnnoSetList, idx);
         pAnnoSet = dexGetSetRefItemItem(pDexFile, pItem);
+        if (pAnnoSet == NULL) {
+            pAnnoSet = &emptySet;
+        }
+
         annoSet = (Object *)processAnnotationSet(clazz,
                                                  pAnnoSet,
                                                  kDexVisibilityRuntime);
