@@ -400,7 +400,10 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                 MipsLIR *curLIR = prevInstList[slot];
                 MipsLIR *prevLIR = prevInstList[slot+1];
 
-                /* Check the highest instruction */
+                /*
+                 * Check the highest instruction.
+                 * ENCODE_ALL represents a scheduling barrier.
+                 */
                 if (prevLIR->defMask == ENCODE_ALL) {
                     /*
                      * If the first instruction is a load, don't hoist anything
@@ -408,10 +411,13 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                      */
                     if (EncodingMap[curLIR->opcode].flags & IS_LOAD) continue;
                     /*
-                     * If the remaining number of slots is less than LD_LATENCY,
-                     * insert the hoisted load here.
+                     * Need to unconditionally break here even if the hoisted
+                     * distance is greater than LD_LATENCY (ie more than enough
+                     * cycles are inserted to hide the load latency) since theu
+                     * subsequent code doesn't expect to compare against a
+                     * pseudo opcode (whose opcode value is negative).
                      */
-                    if (slot < LD_LATENCY) break;
+                    break;
                 }
 
                 /*
