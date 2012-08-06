@@ -846,8 +846,8 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      * terminates "with a thrown exception".
      */
     u2 opcode = GET_OPCODE(*pc);
-    if (opcode == OP_RETURN_VOID || opcode == OP_RETURN ||
-        opcode == OP_RETURN_WIDE ||opcode == OP_RETURN_OBJECT)
+    if (opcode == OP_RETURN_VOID || opcode == OP_RETURN || opcode == OP_RETURN_VOID_BARRIER ||
+        opcode == OP_RETURN_OBJECT || opcode == OP_RETURN_WIDE)
     {
         eventFlags |= DBG_METHOD_EXIT;
     }
