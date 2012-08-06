@@ -764,12 +764,21 @@ static char* indexString(DexFile* pDexFile,
                 width, index);
         break;
     case kIndexTypeRef:
-        outSize = snprintf(buf, bufSize, "%s // type@%0*x",
-                getClassDescriptor(pDexFile, index), width, index);
+        if (index < pDexFile->pHeader->typeIdsSize) {
+            outSize = snprintf(buf, bufSize, "%s // type@%0*x",
+                               getClassDescriptor(pDexFile, index), width, index);
+        } else {
+            outSize = snprintf(buf, bufSize, "<type?> // type@%0*x", width, index);
+        }
         break;
     case kIndexStringRef:
-        outSize = snprintf(buf, bufSize, "\"%s\" // string@%0*x",
-                dexStringById(pDexFile, index), width, index);
+        if (index < pDexFile->pHeader->stringIdsSize) {
+            outSize = snprintf(buf, bufSize, "\"%s\" // string@%0*x",
+                               dexStringById(pDexFile, index), width, index);
+        } else {
+            outSize = snprintf(buf, bufSize, "<string?> // string@%0*x",
+                               width, index);
+        }
         break;
     case kIndexMethodRef:
         {
