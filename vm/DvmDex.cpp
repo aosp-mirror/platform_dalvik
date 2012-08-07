@@ -74,7 +74,7 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
     pDvmDex->pResFields = (struct Field**)blob;
 
     ALOGV("+++ DEX %p: allocateAux (%d+%d+%d+%d)*4 = %d bytes",
-        pDvmDex, stringSizei/4, classSize/4, methodSize/4, fieldSize/4,
+        pDvmDex, stringSize/4, classSize/4, methodSize/4, fieldSize/4,
         stringSize + classSize + methodSize + fieldSize);
 
     pDvmDex->pInterfaceCache = dvmAllocAtomicCache(DEX_INTERFACE_CACHE_SIZE);
