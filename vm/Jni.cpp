@@ -2306,7 +2306,7 @@ static void SetObjectArrayElement(JNIEnv* env, jobjectArray jarr, jsize index, j
     if (obj != NULL && !dvmCanPutArrayElement(obj->clazz, arrayObj->clazz)) {
       ALOGV("Can't put a '%s'(%p) into array type='%s'(%p)",
             obj->clazz->descriptor, obj,
-            arrayObj->obj.clazz->descriptor, arrayObj);
+            arrayObj->clazz->descriptor, arrayObj);
       dvmThrowArrayStoreExceptionIncompatibleElement(obj->clazz, arrayObj->clazz);
       return;
     }

@@ -1067,8 +1067,9 @@ static JdwpError handleTR_Status(JdwpState* state,
     if (!dvmDbgGetThreadStatus(threadId, &threadStatus, &suspendStatus))
         return ERR_INVALID_THREAD;
 
-    ALOGV("    --> %s, %s", dvmJdwpThreadStatusStr(threadStatus),
-        dvmJdwpSuspendStatusStr(suspendStatus));
+    ALOGV("    --> %s, %s",
+        dvmJdwpThreadStatusStr((JdwpThreadStatus) threadStatus),
+        dvmJdwpSuspendStatusStr((JdwpSuspendStatus) suspendStatus));
 
     expandBufAdd4BE(pReply, threadStatus);
     expandBufAdd4BE(pReply, suspendStatus);
