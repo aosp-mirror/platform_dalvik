@@ -55,6 +55,9 @@ ifneq ($(strip $(WITH_ADDRESS_SANITIZER)),)
     LOCAL_CFLAGS := $(filter-out $(CLANG_CONFIG_UNKNOWN_CFLAGS),$(LOCAL_CFLAGS))
 endif
 
+# TODO: split out the asflags.
+LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
+
 include $(BUILD_SHARED_LIBRARY)
 
 # If WITH_JIT is configured, build multiple versions of libdvm.so to facilitate
@@ -68,6 +71,8 @@ ifeq ($(WITH_JIT),true)
     # Enable assertions and JIT-tuning
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
                     -DWITH_JIT_TUNING $(target_smp_flag)
+    # TODO: split out the asflags.
+    LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
     LOCAL_MODULE := libdvm_assert
     include $(BUILD_SHARED_LIBRARY)
 
@@ -79,6 +84,8 @@ ifeq ($(WITH_JIT),true)
     # Enable assertions and JIT self-verification
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
                     -DWITH_SELF_VERIFICATION $(target_smp_flag)
+    # TODO: split out the asflags.
+    LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
     LOCAL_MODULE := libdvm_sv
     include $(BUILD_SHARED_LIBRARY)
   endif # dvm_arch!=mips
@@ -89,6 +96,8 @@ ifeq ($(WITH_JIT),true)
     include $(LOCAL_PATH)/ReconfigureDvm.mk
 
     LOCAL_CFLAGS += $(target_smp_flag)
+    # TODO: split out the asflags.
+    LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
     LOCAL_MODULE := libdvm_interp
     include $(BUILD_SHARED_LIBRARY)
 
@@ -143,6 +152,8 @@ ifeq ($(WITH_HOST_DALVIK),true)
     endif
 
     LOCAL_CFLAGS += $(host_smp_flag)
+    # TODO: split out the asflags.
+    LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
     LOCAL_MODULE_TAGS := optional
     LOCAL_MODULE := libdvm
 
