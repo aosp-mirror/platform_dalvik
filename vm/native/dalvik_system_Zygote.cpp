@@ -31,7 +31,13 @@
 #include <errno.h>
 #include <paths.h>
 #include <sys/personality.h>
+#include <sys/mount.h>
+#include <linux/fs.h>
 #include <cutils/sched_policy.h>
+#include <cutils/multiuser.h>
+#include <sched.h>
+
+#include <private/android_filesystem_config.h>
 
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>
@@ -46,6 +52,13 @@ enum {
     DEBUG_ENABLE_ASSERT             = 1 << 2,
     DEBUG_ENABLE_SAFEMODE           = 1 << 3,
     DEBUG_ENABLE_JNI_LOGGING        = 1 << 4,
+};
+
+/* must match values in dalvik.system.Zygote */
+enum {
+    MOUNT_EXTERNAL_NONE = 0,
+    MOUNT_EXTERNAL_SINGLEUSER = 1,
+    MOUNT_EXTERNAL_MULTIUSER = 2,
 };
 
 /*
@@ -229,6 +242,49 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
     return 0;
 }
 
+/*
+ * Create private mount space for this process and mount SD card
+ * into it, based on active user.
+ */
+static int mountExternalStorage(uid_t uid, u4 mountExternal) {
+    userid_t userid = multiuser_getUserId(uid);
+
+    // Create private mount namespace for our process
+    if (unshare(CLONE_NEWNS) == -1) {
+        SLOGE("Failed to unshare(): %s", strerror(errno));
+        return -1;
+    }
+
+    // Mark rootfs as being a slave in our process so that changes
+    // from parent namespace flow into our process.
+    if (mount("rootfs", "/", NULL, (MS_SLAVE | MS_REC), NULL) == -1) {
+        SLOGE("Failed to mount() rootfs as MS_SLAVE: %s", strerror(errno));
+        return -1;
+    }
+
+    // Create bind mount from specific path
+    if (mountExternal == MOUNT_EXTERNAL_SINGLEUSER) {
+        if (mount(EXTERNAL_STORAGE_SYSTEM, EXTERNAL_STORAGE_APP, "none", MS_BIND, NULL) == -1) {
+            SLOGE("Failed to mount() from %s: %s", EXTERNAL_STORAGE_SYSTEM, strerror(errno));
+            return -1;
+        }
+
+    } else if (mountExternal == MOUNT_EXTERNAL_MULTIUSER) {
+        // Assume path has already been created by installd
+        std::string source_path(StringPrintf("%s/%d", EXTERNAL_STORAGE_SYSTEM, userid));
+        if (mount(source_path.c_str(), EXTERNAL_STORAGE_APP, "none", MS_BIND, NULL) == -1) {
+            SLOGE("Failed to mount() from %s: %s", source_path.c_str(), strerror(errno));
+            return -1;
+        }
+
+    } else {
+        SLOGE("Mount mode %d unsupported", mountExternal);
+        return -1;
+    }
+
+    return 0;
+}
+
 /* native public static int fork(); */
 static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
 {
@@ -390,6 +446,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
     ArrayObject* gids = (ArrayObject *)args[2];
     u4 debugFlags = args[3];
     ArrayObject *rlimits = (ArrayObject *)args[4];
+    u4 mountExternal = MOUNT_EXTERNAL_NONE;
     int64_t permittedCapabilities, effectiveCapabilities;
 #ifdef HAVE_SELINUX
     char *seInfo = NULL;
@@ -407,9 +464,10 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         permittedCapabilities = args[5] | (int64_t) args[6] << 32;
         effectiveCapabilities = args[7] | (int64_t) args[8] << 32;
     } else {
+        mountExternal = args[5];
         permittedCapabilities = effectiveCapabilities = 0;
 #ifdef HAVE_SELINUX
-        StringObject* seInfoObj = (StringObject*)args[5];
+        StringObject* seInfoObj = (StringObject*)args[6];
         if (seInfoObj) {
             seInfo = dvmCreateCstrFromString(seInfoObj);
             if (!seInfo) {
@@ -417,7 +475,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
                 dvmAbort();
             }
         }
-        StringObject* niceNameObj = (StringObject*)args[6];
+        StringObject* niceNameObj = (StringObject*)args[7];
         if (niceNameObj) {
             niceName = dvmCreateCstrFromString(niceNameObj);
             if (!niceName) {
@@ -465,15 +523,21 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
 
 #endif /* HAVE_ANDROID_OS */
 
-        err = setgroupsIntarray(gids);
+        if (mountExternal != MOUNT_EXTERNAL_NONE) {
+            err = mountExternalStorage(uid, mountExternal);
+            if (err < 0) {
+                ALOGE("cannot mountExternalStorage(): %s", strerror(errno));
+                dvmAbort();
+            }
+        }
 
+        err = setgroupsIntarray(gids);
         if (err < 0) {
             ALOGE("cannot setgroups(): %s", strerror(errno));
             dvmAbort();
         }
 
         err = setrlimitsFromArray(rlimits);
-
         if (err < 0) {
             ALOGE("cannot setrlimit(): %s", strerror(errno));
             dvmAbort();
@@ -549,8 +613,10 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
     return pid;
 }
 
-/* native public static int forkAndSpecialize(int uid, int gid,
- *     int[] gids, int debugFlags, String seInfo, String niceName);
+/*
+ * native public static int nativeForkAndSpecialize(int uid, int gid,
+ *     int[] gids, int debugFlags, int[][] rlimits, int mountExternal,
+ *     String seInfo, String niceName);
  */
 static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
     JValue* pResult)
@@ -562,9 +628,10 @@ static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
     RETURN_INT(pid);
 }
 
-/* native public static int forkSystemServer(int uid, int gid,
- *     int[] gids, int debugFlags, long permittedCapabilities,
- *     long effectiveCapabilities);
+/*
+ * native public static int nativeForkSystemServer(int uid, int gid,
+ *     int[] gids, int debugFlags, int[][] rlimits,
+ *     long permittedCapabilities, long effectiveCapabilities);
  */
 static void Dalvik_dalvik_system_Zygote_forkSystemServer(
         const u4* args, JValue* pResult)
@@ -609,7 +676,7 @@ static void Dalvik_dalvik_system_Zygote_execShell(
 const DalvikNativeMethod dvm_dalvik_system_Zygote[] = {
     { "nativeFork", "()I",
       Dalvik_dalvik_system_Zygote_fork },
-    { "nativeForkAndSpecialize", "(II[II[[ILjava/lang/String;Ljava/lang/String;)I",
+    { "nativeForkAndSpecialize", "(II[II[[IILjava/lang/String;Ljava/lang/String;)I",
       Dalvik_dalvik_system_Zygote_forkAndSpecialize },
     { "nativeForkSystemServer", "(II[II[[IJJ)I",
       Dalvik_dalvik_system_Zygote_forkSystemServer },
