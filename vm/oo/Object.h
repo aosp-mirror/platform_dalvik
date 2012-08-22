@@ -221,7 +221,7 @@ struct Object {
  * void DVM_OBJECT_INIT(Object *obj, ClassObject *clazz_)
  */
 #define DVM_OBJECT_INIT(obj, clazz_) \
-    dvmSetFieldObject(obj, OFFSETOF_MEMBER(Object, clazz), clazz_)
+    dvmSetFieldObjectVolatile(obj, OFFSETOF_MEMBER(Object, clazz), clazz_)
 
 /*
  * Data objects have an Object header followed by their instance data.
