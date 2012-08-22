@@ -731,8 +731,9 @@ void dvmHeapSourceGrowForUtilization()
     /* do nothing */
 }
 
-void dvmHeapSourceWalk(void(*callback)(void* start, void* end,
-                                       size_t used_bytes, void* arg),
+void dvmHeapSourceWalk(void (*callback)(const void *chunkptr, size_t chunklen,
+                                        const void *userptr, size_t userlen,
+                                        void *arg),
                        void *arg)
 {
     assert(!"implemented");
