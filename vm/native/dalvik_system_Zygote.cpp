@@ -31,13 +31,12 @@
 #include <errno.h>
 #include <paths.h>
 #include <sys/personality.h>
+#include <sys/stat.h>
 #include <sys/mount.h>
 #include <linux/fs.h>
 #include <cutils/sched_policy.h>
 #include <cutils/multiuser.h>
 #include <sched.h>
-
-#include <private/android_filesystem_config.h>
 
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>
@@ -244,7 +243,8 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
 
 /*
  * Create private mount space for this process and mount SD card
- * into it, based on active user.
+ * into it, based on active user.  See storage config details at
+ * http://source.android.com/tech/storage/
  */
 static int mountExternalStorage(uid_t uid, u4 mountExternal) {
     userid_t userid = multiuser_getUserId(uid);
@@ -262,18 +262,45 @@ static int mountExternalStorage(uid_t uid, u4 mountExternal) {
         return -1;
     }
 
-    // Create bind mount from specific path
-    if (mountExternal == MOUNT_EXTERNAL_SINGLEUSER) {
-        if (mount(EXTERNAL_STORAGE_SYSTEM, EXTERNAL_STORAGE_APP, "none", MS_BIND, NULL) == -1) {
-            SLOGE("Failed to mount() from %s: %s", EXTERNAL_STORAGE_SYSTEM, strerror(errno));
+    // Create bind mounts to expose external storage
+    if (mountExternal == MOUNT_EXTERNAL_MULTIUSER) {
+        const char* target_base = getenv("ANDROID_STORAGE");
+        const char* target = getenv("EXTERNAL_STORAGE");
+        const char* source_base = getenv("MULTIUSER_EXTERNAL_STORAGE");
+        if (target_base == NULL || target == NULL || source_base == NULL) {
+            SLOGE("Storage environment undefined; unable to provide external storage");
             return -1;
         }
 
-    } else if (mountExternal == MOUNT_EXTERNAL_MULTIUSER) {
-        // Assume path has already been created by installd
-        std::string source_path(StringPrintf("%s/%d", EXTERNAL_STORAGE_SYSTEM, userid));
-        if (mount(source_path.c_str(), EXTERNAL_STORAGE_APP, "none", MS_BIND, NULL) == -1) {
-            SLOGE("Failed to mount() from %s: %s", source_path.c_str(), strerror(errno));
+        // Give ourselves a tmpfs staging platform to work with, which obscures
+        // any existing shell-specific contents.  Create our mount target, then
+        // remount read-only.
+        if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
+                "uid=0,gid=1028,mode=0050") == -1) {
+            SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
+            return -1;
+        }
+        if (mkdir(target, 0000) == -1) {
+            SLOGE("Failed to mkdir %s: %s", target, strerror(errno));
+            return -1;
+        }
+        if (mount("tmpfs", target_base, NULL,
+                MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NODEV, NULL)) {
+            SLOGE("Failed to remount ro %s: %s", target_base, strerror(errno));
+            return -1;
+        }
+
+        // Mount our user-specific external storage into place, creating path
+        // if it doesn't already exist.
+        std::string source(StringPrintf("%s/%d", source_base, userid));
+        if (access(source.c_str(), F_OK) == -1) {
+            if (mkdir(source.c_str(), 0000) == -1) {
+                SLOGE("Failed to mkdir %s: %s", source.c_str(), strerror(errno));
+                return -1;
+            }
+        }
+        if (mount(source.c_str(), target, NULL, MS_BIND, NULL) == -1) {
+            SLOGE("Failed to bind mount %s to %s: %s", source.c_str(), target, strerror(errno));
             return -1;
         }
 
@@ -527,7 +554,12 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
             err = mountExternalStorage(uid, mountExternal);
             if (err < 0) {
                 ALOGE("cannot mountExternalStorage(): %s", strerror(errno));
-                dvmAbort();
+                if (errno == ENOTCONN) {
+                    // Missing FUSE daemon, which is expected during device
+                    // encryption; let Zygote continue without external storage.
+                } else {
+                    dvmAbort();
+                }
             }
         }
 
