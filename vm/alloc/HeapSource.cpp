@@ -639,6 +639,9 @@ bool dvmHeapSourceStartupBeforeFork()
     assert(gDvm.zygote);
 
     if (!gDvm.newZygoteHeapAllocated) {
+       /* Ensure heaps are trimmed to minimize footprint pre-fork.
+        */
+        trimHeaps();
         /* Create a new heap for post-fork zygote allocations.  We only
          * try once, even if it fails.
          */
@@ -686,6 +689,25 @@ void *dvmHeapSourceGetBase()
 }
 
 /*
+ * Returns a high water mark, between base and limit all objects must have been
+ * allocated.
+ */
+void *dvmHeapSourceGetLimit()
+{
+    HeapSource *hs = gHs;
+    void *max_brk = hs->heaps[0].brk;
+
+#ifndef NDEBUG
+    for (size_t i = 1; i < hs->numHeaps; i++) {
+        Heap *const heap = &hs->heaps[i];
+        void *heap_brk = heap->brk;
+        assert (max_brk > heap_brk);
+    }
+#endif
+    return max_brk;
+}
+
+/*
  * Returns the requested value. If the per-heap stats are requested, fill
  * them as well.
  *
@@ -706,7 +728,8 @@ size_t dvmHeapSourceGetValue(HeapSourceValueSpec spec, size_t perHeapStats[],
 
         switch (spec) {
         case HS_FOOTPRINT:
-            value = mspace_footprint(heap->msp);
+            value = heap->brk - heap->base;
+            assert(value == mspace_footprint(heap->msp));
             break;
         case HS_ALLOWED_FOOTPRINT:
             value = mspace_footprint_limit(heap->msp);
@@ -979,7 +1002,7 @@ bool dvmHeapSourceContainsAddress(const void *ptr)
 {
     HS_BOILERPLATE();
 
-    return (dvmHeapBitmapCoversAddress(&gHs->liveBits, ptr));
+    return (dvmHeapSourceGetBase() <= ptr) && (ptr <= dvmHeapSourceGetLimit());
 }
 
 /*
