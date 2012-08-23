@@ -33,9 +33,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Combine two dex files into one.
@@ -839,6 +837,7 @@ public final class DexMerger {
     private static final byte DBG_SET_FILE = 0x09;
 
     private void transformDebugInfoItem(DexBuffer.Section in, IndexMap indexMap) {
+        contentsOut.debugInfos.size++;
         int lineStart = in.readUleb128();
         debugInfoOut.writeUleb128(lineStart);
 
