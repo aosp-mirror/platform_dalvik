@@ -554,9 +554,9 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
             err = mountExternalStorage(uid, mountExternal);
             if (err < 0) {
                 ALOGE("cannot mountExternalStorage(): %s", strerror(errno));
-                if (errno == ENOTCONN) {
-                    // Missing FUSE daemon, which is expected during device
-                    // encryption; let Zygote continue without external storage.
+                if (errno == ENOTCONN || errno == EROFS) {
+                    // Missing FUSE daemon, which is expected when booting encrypted
+                    // devices; let Zygote continue without external storage.
                 } else {
                     dvmAbort();
                 }
