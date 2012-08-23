@@ -92,6 +92,12 @@ HeapBitmap *dvmHeapSourceGetMarkBits(void);
 void *dvmHeapSourceGetBase(void);
 
 /*
+ * Returns a high water mark, between base and limit all objects must have been
+ * allocated.
+ */
+void *dvmHeapSourceGetLimit(void);
+
+/*
  * Returns the requested value. If the per-heap stats are requested, fill
  * them as well.
  */
