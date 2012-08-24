@@ -560,7 +560,7 @@ static void scanGrayObjects(GcMarkContext *ctx)
 
     footprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
     base = &h->cardTableBase[0];
-    limit = dvmCardFromAddr((u1 *)dvmHeapSourceGetLimit());
+    limit = dvmCardFromAddr((u1 *)dvmHeapSourceGetBase() + footprint);
     assert(limit <= &h->cardTableBase[h->cardTableLength]);
 
     ptr = base;
