@@ -512,7 +512,12 @@ u8 dvmGetOtherThreadCpuTimeNsec(pthread_t thread)
  */
 bool dvmIterativeSleep(int iteration, int maxTotalSleep, u8 relStartTime)
 {
-    const int minSleep = 10000;
+    /*
+     * Minimum sleep is one millisecond, it is important to keep this value
+     * low to ensure short GC pauses since dvmSuspendAllThreads() uses this
+     * function.
+     */
+    const int minSleep = 1000;
     u8 curTime;
     int curDelay;
 
