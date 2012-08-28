@@ -59,6 +59,7 @@ enum {
     MOUNT_EXTERNAL_NONE = 0,
     MOUNT_EXTERNAL_SINGLEUSER = 1,
     MOUNT_EXTERNAL_MULTIUSER = 2,
+    MOUNT_EXTERNAL_MULTIUSER_ALL = 3,
 };
 
 /*
@@ -264,7 +265,8 @@ static int mountExternalStorage(uid_t uid, u4 mountExternal) {
     }
 
     // Create bind mounts to expose external storage
-    if (mountExternal == MOUNT_EXTERNAL_MULTIUSER) {
+    if (mountExternal == MOUNT_EXTERNAL_MULTIUSER
+            || mountExternal == MOUNT_EXTERNAL_MULTIUSER_ALL) {
         const char* storage_base = getenv("ANDROID_STORAGE");
         const char* target = getenv("EXTERNAL_STORAGE");
         const char* source_base = getenv("MULTIUSER_EXTERNAL_STORAGE");
@@ -290,29 +292,38 @@ static int mountExternalStorage(uid_t uid, u4 mountExternal) {
             return -1;
         }
 
-        // Mount our user-specific external storage into place
-        std::string source(StringPrintf("%s/%d", source_base, userid));
-        if (fs_prepare_dir(source.c_str(), 0000, 0, 0) == -1) {
-            return -1;
-        }
-        if (mount(source.c_str(), target, NULL, MS_BIND, NULL) == -1) {
-            SLOGE("Failed to bind mount %s to %s: %s", source.c_str(), target, strerror(errno));
-            return -1;
-        }
+        if (mountExternal == MOUNT_EXTERNAL_MULTIUSER_ALL) {
+            // External storage for all users
+            if (mount(source_base, target, NULL, MS_BIND, NULL) == -1) {
+                SLOGE("Failed to mount %s to %s: %s", source_base, target, strerror(errno));
+                return -1;
+            }
 
-        // Mount shared OBB storage into place
-        std::string obb_source(StringPrintf("%s/obb", source_base));
-        std::string android_target(StringPrintf("%s/Android", target));
-        std::string android_obb_target(StringPrintf("%s/Android/obb", target));
-        if (fs_prepare_dir(obb_source.c_str(), 0000, 0, 0) == -1
-                || fs_prepare_dir(android_target.c_str(), 0000, 0, 0) == -1
-                || fs_prepare_dir(android_obb_target.c_str(), 0000, 0, 0) == -1) {
-            return -1;
-        }
-        if (mount(obb_source.c_str(), android_obb_target.c_str(), NULL, MS_BIND, NULL) == -1) {
-            SLOGE("Failed to bind mount %s to %s: %s",
-                    obb_source.c_str(), android_obb_target.c_str(), strerror(errno));
-            return -1;
+        } else {
+            // External storage for specific user
+            std::string source(StringPrintf("%s/%d", source_base, userid));
+            if (fs_prepare_dir(source.c_str(), 0000, 0, 0) == -1) {
+                return -1;
+            }
+            if (mount(source.c_str(), target, NULL, MS_BIND, NULL) == -1) {
+                SLOGE("Failed to mount %s to %s: %s", source.c_str(), target, strerror(errno));
+                return -1;
+            }
+
+            // Mount shared OBB storage into place
+            std::string obb_source(StringPrintf("%s/obb", source_base));
+            std::string android_target(StringPrintf("%s/Android", target));
+            std::string android_obb_target(StringPrintf("%s/Android/obb", target));
+            if (fs_prepare_dir(obb_source.c_str(), 0000, 0, 0) == -1
+                    || fs_prepare_dir(android_target.c_str(), 0000, 0, 0) == -1
+                    || fs_prepare_dir(android_obb_target.c_str(), 0000, 0, 0) == -1) {
+                return -1;
+            }
+            if (mount(obb_source.c_str(), android_obb_target.c_str(), NULL, MS_BIND, NULL) == -1) {
+                SLOGE("Failed to bind mount %s to %s: %s",
+                        obb_source.c_str(), android_obb_target.c_str(), strerror(errno));
+                return -1;
+            }
         }
 
     } else {
