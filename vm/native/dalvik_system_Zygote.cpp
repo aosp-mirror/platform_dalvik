@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 #include <sys/mount.h>
 #include <linux/fs.h>
+#include <cutils/fs.h>
 #include <cutils/sched_policy.h>
 #include <cutils/multiuser.h>
 #include <sched.h>
@@ -247,7 +248,7 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
  * http://source.android.com/tech/storage/
  */
 static int mountExternalStorage(uid_t uid, u4 mountExternal) {
-    userid_t userid = multiuser_getUserId(uid);
+    userid_t userid = multiuser_get_user_id(uid);
 
     // Create private mount namespace for our process
     if (unshare(CLONE_NEWNS) == -1) {
@@ -264,10 +265,10 @@ static int mountExternalStorage(uid_t uid, u4 mountExternal) {
 
     // Create bind mounts to expose external storage
     if (mountExternal == MOUNT_EXTERNAL_MULTIUSER) {
-        const char* target_base = getenv("ANDROID_STORAGE");
+        const char* storage_base = getenv("ANDROID_STORAGE");
         const char* target = getenv("EXTERNAL_STORAGE");
         const char* source_base = getenv("MULTIUSER_EXTERNAL_STORAGE");
-        if (target_base == NULL || target == NULL || source_base == NULL) {
+        if (storage_base == NULL || target == NULL || source_base == NULL) {
             SLOGE("Storage environment undefined; unable to provide external storage");
             return -1;
         }
@@ -275,32 +276,42 @@ static int mountExternalStorage(uid_t uid, u4 mountExternal) {
         // Give ourselves a tmpfs staging platform to work with, which obscures
         // any existing shell-specific contents.  Create our mount target, then
         // remount read-only.
-        if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
+        if (mount("tmpfs", storage_base, "tmpfs", MS_NOSUID | MS_NODEV,
                 "uid=0,gid=1028,mode=0050") == -1) {
-            SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
+            SLOGE("Failed to mount tmpfs to %s: %s", storage_base, strerror(errno));
             return -1;
         }
-        if (mkdir(target, 0000) == -1) {
-            SLOGE("Failed to mkdir %s: %s", target, strerror(errno));
+        if (fs_prepare_dir(target, 0000, 0, 0) == -1) {
             return -1;
         }
-        if (mount("tmpfs", target_base, NULL,
+        if (mount("tmpfs", storage_base, NULL,
                 MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NODEV, NULL)) {
-            SLOGE("Failed to remount ro %s: %s", target_base, strerror(errno));
+            SLOGE("Failed to remount ro %s: %s", storage_base, strerror(errno));
             return -1;
         }
 
-        // Mount our user-specific external storage into place, creating path
-        // if it doesn't already exist.
+        // Mount our user-specific external storage into place
         std::string source(StringPrintf("%s/%d", source_base, userid));
-        if (access(source.c_str(), F_OK) == -1) {
-            if (mkdir(source.c_str(), 0000) == -1) {
-                SLOGE("Failed to mkdir %s: %s", source.c_str(), strerror(errno));
-                return -1;
-            }
+        if (fs_prepare_dir(source.c_str(), 0000, 0, 0) == -1) {
+            return -1;
         }
         if (mount(source.c_str(), target, NULL, MS_BIND, NULL) == -1) {
             SLOGE("Failed to bind mount %s to %s: %s", source.c_str(), target, strerror(errno));
+            return -1;
+        }
+
+        // Mount shared OBB storage into place
+        std::string obb_source(StringPrintf("%s/obb", source_base));
+        std::string android_target(StringPrintf("%s/Android", target));
+        std::string android_obb_target(StringPrintf("%s/Android/obb", target));
+        if (fs_prepare_dir(obb_source.c_str(), 0000, 0, 0) == -1
+                || fs_prepare_dir(android_target.c_str(), 0000, 0, 0) == -1
+                || fs_prepare_dir(android_obb_target.c_str(), 0000, 0, 0) == -1) {
+            return -1;
+        }
+        if (mount(obb_source.c_str(), android_obb_target.c_str(), NULL, MS_BIND, NULL) == -1) {
+            SLOGE("Failed to bind mount %s to %s: %s",
+                    obb_source.c_str(), android_obb_target.c_str(), strerror(errno));
             return -1;
         }
 
@@ -554,9 +565,13 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
             err = mountExternalStorage(uid, mountExternal);
             if (err < 0) {
                 ALOGE("cannot mountExternalStorage(): %s", strerror(errno));
+
                 if (errno == ENOTCONN || errno == EROFS) {
-                    // Missing FUSE daemon, which is expected when booting encrypted
-                    // devices; let Zygote continue without external storage.
+                    // When device is actively encrypting, we get ENOTCONN here
+                    // since FUSE was mounted before the framework restarted.
+                    // When encrypted device is booting, we get EROFS since
+                    // FUSE hasn't been created yet by init.
+                    // In either case, continue without external storage.
                 } else {
                     dvmAbort();
                 }
