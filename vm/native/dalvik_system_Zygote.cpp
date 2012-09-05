@@ -275,23 +275,6 @@ static int mountExternalStorage(uid_t uid, u4 mountExternal) {
             return -1;
         }
 
-        // Give ourselves a tmpfs staging platform to work with, which obscures
-        // any existing shell-specific contents.  Create our mount target, then
-        // remount read-only.
-        if (mount("tmpfs", storage_base, "tmpfs", MS_NOSUID | MS_NODEV,
-                "uid=0,gid=1028,mode=0050") == -1) {
-            SLOGE("Failed to mount tmpfs to %s: %s", storage_base, strerror(errno));
-            return -1;
-        }
-        if (fs_prepare_dir(target, 0000, 0, 0) == -1) {
-            return -1;
-        }
-        if (mount("tmpfs", storage_base, NULL,
-                MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NODEV, NULL)) {
-            SLOGE("Failed to remount ro %s: %s", storage_base, strerror(errno));
-            return -1;
-        }
-
         if (mountExternal == MOUNT_EXTERNAL_MULTIUSER_ALL) {
             // External storage for all users
             if (mount(source_base, target, NULL, MS_BIND, NULL) == -1) {
