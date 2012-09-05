@@ -24,7 +24,6 @@
 #define MSPACES 1
 #define NO_MALLINFO 1
 #define ONLY_MSPACES 1
-#define USE_DL_PREFIX 1
 #define MALLOC_INSPECT_ALL 1
 
 /* Include the proper definitions. */
