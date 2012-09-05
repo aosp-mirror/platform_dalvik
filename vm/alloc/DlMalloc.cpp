@@ -36,11 +36,7 @@ static void heap_error(const char* msg, const char* function, void* p);
  * dlmalloc for our use for mspaces (regular dlmalloc is still declared
  * in bionic).
  */
-#pragma GCC diagnostic ignored "-Wempty-body"
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #include "../../../bionic/libc/upstream-dlmalloc/malloc.c"
-#pragma GCC diagnostic warning "-Wstrict-aliasing"
-#pragma GCC diagnostic warning "-Wempty-body"
 
 
 static void heap_error(const char* msg, const char* function, void* p) {
