@@ -21,8 +21,19 @@
 #Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, 
 #USA.
 
-SCRIPT=`readlink -f $0`
-DED_DIR=`dirname "$SCRIPT"`
+script=$0
+cd `dirname $script`
+script=`basename $script`
+
+while [ -L "$script" ]
+do
+    script=`readlink $script`
+    cd `dirname $script`
+    script=`basename $script`
+done
+
+DED_DIR=`pwd -P`
+
 DED=$DED_DIR/dare-launcher-1.0.2
 SOOT_DIR="$DED_DIR/../../../../dalvik/dare/soot/lib"
 JASMIN_DIR="$DED_DIR/../../../../dalvik/dare/jasmin/lib"

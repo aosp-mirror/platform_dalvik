@@ -20,8 +20,19 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-script=`readlink -f $0`
-directory=`dirname "$script"`
+script=$0
+cd `dirname $script`
+script=`basename $script`
+
+while [ -L "$script" ]
+do
+    script=`readlink $script`
+    cd `dirname $script`
+    script=`basename $script`
+done
+
+directory=`pwd -P`
+
 
 ant -f $directory/jasmin/build.xml jasmin-jar
 

@@ -644,7 +644,7 @@ void DedLauncher::ProcessClasses() {
 
     // Create optimized files.
     opt_time += StartProcess(cmd1, original_class_names_.size() * 4);
-    opt_classes = MakePipe("ls " + sclass_ + " -1R | grep .*.class$ | wc -l");
+    opt_classes = MakePipe("ls -1R " + sclass_ + " | grep .*.class$ | wc -l");
 
     string options = " -omit-excepting-unit-edges -throw-analysis unit "
         "-dex-mode -synchronous-only ";
@@ -666,7 +666,7 @@ void DedLauncher::ProcessClasses() {
 
     // Optimize and decompile files.
     dec_time += StartProcess(cmd4, original_class_names_.size() * 4);
-    dec_classes = MakePipe("ls " + dojava_ + " -1R | grep .*.java$ | wc -l");
+    dec_classes = MakePipe("ls -1R " + dojava_ + " | grep .*.java$ | wc -l");
 
     if (dec_classes < (int) original_class_names_.size())
       SootPerClass(original_class_names_, " -O -f dava ", dojava_,
@@ -674,7 +674,7 @@ void DedLauncher::ProcessClasses() {
   }
 
   // Figure out how many classes got decompiled.
-  dec_classes = MakePipe("ls " + dojava_ + " -1R | grep .*.java$ | wc -l");
+  dec_classes = MakePipe("ls -1R " + dojava_ + " | grep .*.java$ | wc -l");
 
   // Write statistics to file.
   ofstream stats((output_dir_ + "/stats.csv").c_str(), ofstream::app);
