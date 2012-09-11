@@ -1882,4 +1882,5 @@ void dvmAbort()
     abort();
 
     /* notreached */
+
 }
