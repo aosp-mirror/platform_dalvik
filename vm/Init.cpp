@@ -1618,14 +1618,12 @@ static bool initZygote()
     // bind mount storage into their respective private namespaces, which
     // are isolated from each other.
     const char* target_base = getenv("EMULATED_STORAGE_TARGET");
-    if (target_base == NULL) {
-        SLOGE("Storage environment undefined; unable to provide external storage");
-        return -1;
-    }
-    if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
-            "uid=0,gid=1028,mode=0050") == -1) {
-        SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
-        return -1;
+    if (target_base != NULL) {
+        if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
+                "uid=0,gid=1028,mode=0050") == -1) {
+            SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
+            return -1;
+        }
     }
 
     return true;
