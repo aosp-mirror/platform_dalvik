@@ -23,7 +23,10 @@
 #include <signal.h>
 #include <limits.h>
 #include <ctype.h>
+#include <sys/mount.h>
 #include <sys/wait.h>
+#include <linux/fs.h>
+#include <cutils/fs.h>
 #include <unistd.h>
 
 #include "Dalvik.h"
@@ -1596,6 +1599,34 @@ static bool initZygote()
 {
     /* zygote goes into its own process group */
     setpgid(0,0);
+
+    // See storage config details at http://source.android.com/tech/storage/
+    // Create private mount namespace shared by all children
+    if (unshare(CLONE_NEWNS) == -1) {
+        SLOGE("Failed to unshare(): %s", strerror(errno));
+        return -1;
+    }
+
+    // Mark rootfs as being a slave so that changes from default
+    // namespace only flow into our children.
+    if (mount("rootfs", "/", NULL, (MS_SLAVE | MS_REC), NULL) == -1) {
+        SLOGE("Failed to mount() rootfs as MS_SLAVE: %s", strerror(errno));
+        return -1;
+    }
+
+    // Create a staging tmpfs that is shared by our children; they will
+    // bind mount storage into their respective private namespaces, which
+    // are isolated from each other.
+    const char* target_base = getenv("EMULATED_STORAGE_TARGET");
+    if (target_base == NULL) {
+        SLOGE("Storage environment undefined; unable to provide external storage");
+        return -1;
+    }
+    if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
+            "uid=0,gid=1028,mode=0050") == -1) {
+        SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
+        return -1;
+    }
 
     return true;
 }

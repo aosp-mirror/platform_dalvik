@@ -244,73 +244,89 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
 }
 
 /*
- * Create private mount space for this process and mount SD card
- * into it, based on active user.  See storage config details at
- * http://source.android.com/tech/storage/
+ * Create a private mount namespace and bind mount appropriate emulated
+ * storage for the given user.
  */
-static int mountExternalStorage(uid_t uid, u4 mountExternal) {
+static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
+    // See storage config details at http://source.android.com/tech/storage/
     userid_t userid = multiuser_get_user_id(uid);
 
-    // Create private mount namespace for our process
+    // Create a second private mount namespace for our process
     if (unshare(CLONE_NEWNS) == -1) {
         SLOGE("Failed to unshare(): %s", strerror(errno));
         return -1;
     }
 
-    // Mark rootfs as being a slave in our process so that changes
-    // from parent namespace flow into our process.
-    if (mount("rootfs", "/", NULL, (MS_SLAVE | MS_REC), NULL) == -1) {
-        SLOGE("Failed to mount() rootfs as MS_SLAVE: %s", strerror(errno));
-        return -1;
-    }
-
     // Create bind mounts to expose external storage
-    if (mountExternal == MOUNT_EXTERNAL_MULTIUSER
-            || mountExternal == MOUNT_EXTERNAL_MULTIUSER_ALL) {
-        const char* storage_base = getenv("ANDROID_STORAGE");
-        const char* target = getenv("EXTERNAL_STORAGE");
-        const char* source_base = getenv("MULTIUSER_EXTERNAL_STORAGE");
-        if (storage_base == NULL || target == NULL || source_base == NULL) {
+    if (mountMode == MOUNT_EXTERNAL_MULTIUSER
+            || mountMode == MOUNT_EXTERNAL_MULTIUSER_ALL) {
+        // These paths must already be created by init.rc
+        const char* source = getenv("EMULATED_STORAGE_SOURCE");
+        const char* target = getenv("EMULATED_STORAGE_TARGET");
+        const char* legacy = getenv("EXTERNAL_STORAGE");
+        if (source == NULL || target == NULL || legacy == NULL) {
             SLOGE("Storage environment undefined; unable to provide external storage");
             return -1;
         }
 
-        if (mountExternal == MOUNT_EXTERNAL_MULTIUSER_ALL) {
-            // External storage for all users
-            if (mount(source_base, target, NULL, MS_BIND, NULL) == -1) {
-                SLOGE("Failed to mount %s to %s: %s", source_base, target, strerror(errno));
+        // Prepare source paths
+        char source_user[PATH_MAX];
+        char source_obb[PATH_MAX];
+        snprintf(source_user, PATH_MAX, "%s/%d", source, userid);
+        snprintf(source_obb, PATH_MAX, "%s/obb", source);
+        if (fs_prepare_dir(source_user, 0000, 0, 0) == -1
+                || fs_prepare_dir(source_obb, 0000, 0, 0) == -1) {
+            return -1;
+        }
+
+        // Mount user-specific external storage and OBB into legacy paths
+        if (mount(source_user, legacy, NULL, MS_BIND, NULL) == -1) {
+            SLOGE("Failed to mount %s to %s: %s", source_user, legacy, strerror(errno));
+            return -1;
+        }
+        char legacy_android[PATH_MAX];
+        char legacy_android_obb[PATH_MAX];
+        snprintf(legacy_android, PATH_MAX, "%s/Android", legacy);
+        snprintf(legacy_android_obb, PATH_MAX, "%s/Android/obb", legacy);
+        if (fs_prepare_dir(legacy_android, 0000, 0, 0) == -1
+                || fs_prepare_dir(legacy_android_obb, 0000, 0, 0) == -1) {
+            return -1;
+        }
+        if (mount(source_obb, legacy_android_obb, NULL, MS_BIND, NULL) == -1) {
+            SLOGE("Failed to bind mount %s to %s: %s",
+                    source_obb, legacy_android_obb, strerror(errno));
+            return -1;
+        }
+
+        if (mountMode == MOUNT_EXTERNAL_MULTIUSER_ALL) {
+            // Mount entire external storage tree into updated paths
+            if (mount(source, target, NULL, MS_BIND, NULL) == -1) {
+                SLOGE("Failed to mount %s to %s: %s", source, target, strerror(errno));
                 return -1;
             }
 
         } else {
-            // External storage for specific user
-            std::string source(StringPrintf("%s/%d", source_base, userid));
-            if (fs_prepare_dir(source.c_str(), 0000, 0, 0) == -1) {
+            // Mount user-specific external storage and OBB into updated paths
+            char target_user[PATH_MAX];
+            char target_obb[PATH_MAX];
+            snprintf(target_user, PATH_MAX, "%s/%d", target, userid);
+            snprintf(target_obb, PATH_MAX, "%s/obb", target);
+            if (fs_prepare_dir(target_user, 0000, 0, 0) == -1
+                    || fs_prepare_dir(target_obb, 0000, 0, 0) == -1) {
                 return -1;
             }
-            if (mount(source.c_str(), target, NULL, MS_BIND, NULL) == -1) {
-                SLOGE("Failed to mount %s to %s: %s", source.c_str(), target, strerror(errno));
+            if (mount(source_user, target_user, NULL, MS_BIND, NULL) == -1) {
+                SLOGE("Failed to mount %s to %s: %s", source_user, target_user, strerror(errno));
                 return -1;
             }
-
-            // Mount shared OBB storage into place
-            std::string obb_source(StringPrintf("%s/obb", source_base));
-            std::string android_target(StringPrintf("%s/Android", target));
-            std::string android_obb_target(StringPrintf("%s/Android/obb", target));
-            if (fs_prepare_dir(obb_source.c_str(), 0000, 0, 0) == -1
-                    || fs_prepare_dir(android_target.c_str(), 0000, 0, 0) == -1
-                    || fs_prepare_dir(android_obb_target.c_str(), 0000, 0, 0) == -1) {
-                return -1;
-            }
-            if (mount(obb_source.c_str(), android_obb_target.c_str(), NULL, MS_BIND, NULL) == -1) {
-                SLOGE("Failed to bind mount %s to %s: %s",
-                        obb_source.c_str(), android_obb_target.c_str(), strerror(errno));
+            if (mount(source_obb, target_obb, NULL, MS_BIND, NULL) == -1) {
+                SLOGE("Failed to mount %s to %s: %s", source_obb, target_obb, strerror(errno));
                 return -1;
             }
         }
 
     } else {
-        SLOGE("Mount mode %d unsupported", mountExternal);
+        SLOGE("Mount mode %d unsupported", mountMode);
         return -1;
     }
 
@@ -478,7 +494,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
     ArrayObject* gids = (ArrayObject *)args[2];
     u4 debugFlags = args[3];
     ArrayObject *rlimits = (ArrayObject *)args[4];
-    u4 mountExternal = MOUNT_EXTERNAL_NONE;
+    u4 mountMode = MOUNT_EXTERNAL_NONE;
     int64_t permittedCapabilities, effectiveCapabilities;
 #ifdef HAVE_SELINUX
     char *seInfo = NULL;
@@ -496,7 +512,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         permittedCapabilities = args[5] | (int64_t) args[6] << 32;
         effectiveCapabilities = args[7] | (int64_t) args[8] << 32;
     } else {
-        mountExternal = args[5];
+        mountMode = args[5];
         permittedCapabilities = effectiveCapabilities = 0;
 #ifdef HAVE_SELINUX
         StringObject* seInfoObj = (StringObject*)args[6];
@@ -555,8 +571,8 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
 
 #endif /* HAVE_ANDROID_OS */
 
-        if (mountExternal != MOUNT_EXTERNAL_NONE) {
-            err = mountExternalStorage(uid, mountExternal);
+        if (mountMode != MOUNT_EXTERNAL_NONE) {
+            err = mountEmulatedStorage(uid, mountMode);
             if (err < 0) {
                 ALOGE("cannot mountExternalStorage(): %s", strerror(errno));
 
