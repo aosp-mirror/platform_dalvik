@@ -53,7 +53,7 @@ struct InlineOperation {
 };
 
 /*
- * Must be kept in sync w/ gDvmInlineOpsTable in InlineNative.c
+ * Must be kept in sync w/ gDvmInlineOpsTable in InlineNative.cpp
  *
  * You should also add a test to libcore's IntrinsicTest.
  */
@@ -80,6 +80,13 @@ enum NativeInlineOps {
     INLINE_DOUBLE_TO_LONG_BITS = 19,
     INLINE_DOUBLE_TO_RAW_LONG_BITS = 20,
     INLINE_LONG_BITS_TO_DOUBLE = 21,
+    INLINE_STRICT_MATH_ABS_INT = 22,
+    INLINE_STRICT_MATH_ABS_LONG = 23,
+    INLINE_STRICT_MATH_ABS_FLOAT = 24,
+    INLINE_STRICT_MATH_ABS_DOUBLE = 25,
+    INLINE_STRICT_MATH_MIN_INT = 26,
+    INLINE_STRICT_MATH_MAX_INT = 27,
+    INLINE_STRICT_MATH_SQRT = 28,
 };
 
 /*

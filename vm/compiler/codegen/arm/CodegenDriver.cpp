@@ -3645,30 +3645,40 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
             return false;  /* Nop */
 
         /* These ones we potentially JIT inline. */
+
+        case INLINE_STRING_CHARAT:
+            return genInlinedStringCharAt(cUnit, mir);
         case INLINE_STRING_LENGTH:
             return genInlinedStringLength(cUnit, mir);
         case INLINE_STRING_IS_EMPTY:
             return genInlinedStringIsEmpty(cUnit, mir);
-        case INLINE_MATH_ABS_INT:
-            return genInlinedAbsInt(cUnit, mir);
-        case INLINE_MATH_ABS_LONG:
-            return genInlinedAbsLong(cUnit, mir);
-        case INLINE_MATH_MIN_INT:
-            return genInlinedMinMaxInt(cUnit, mir, true);
-        case INLINE_MATH_MAX_INT:
-            return genInlinedMinMaxInt(cUnit, mir, false);
-        case INLINE_STRING_CHARAT:
-            return genInlinedStringCharAt(cUnit, mir);
-        case INLINE_MATH_SQRT:
-            return genInlineSqrt(cUnit, mir);
-        case INLINE_MATH_ABS_FLOAT:
-            return genInlinedAbsFloat(cUnit, mir);
-        case INLINE_MATH_ABS_DOUBLE:
-            return genInlinedAbsDouble(cUnit, mir);
         case INLINE_STRING_COMPARETO:
             return genInlinedCompareTo(cUnit, mir);
         case INLINE_STRING_FASTINDEXOF_II:
             return genInlinedFastIndexOf(cUnit, mir);
+
+        case INLINE_MATH_ABS_INT:
+        case INLINE_STRICT_MATH_ABS_INT:
+            return genInlinedAbsInt(cUnit, mir);
+        case INLINE_MATH_ABS_LONG:
+        case INLINE_STRICT_MATH_ABS_LONG:
+            return genInlinedAbsLong(cUnit, mir);
+        case INLINE_MATH_MIN_INT:
+        case INLINE_STRICT_MATH_MIN_INT:
+            return genInlinedMinMaxInt(cUnit, mir, true);
+        case INLINE_MATH_MAX_INT:
+        case INLINE_STRICT_MATH_MAX_INT:
+            return genInlinedMinMaxInt(cUnit, mir, false);
+        case INLINE_MATH_SQRT:
+        case INLINE_STRICT_MATH_SQRT:
+            return genInlineSqrt(cUnit, mir);
+        case INLINE_MATH_ABS_FLOAT:
+        case INLINE_STRICT_MATH_ABS_FLOAT:
+            return genInlinedAbsFloat(cUnit, mir);
+        case INLINE_MATH_ABS_DOUBLE:
+        case INLINE_STRICT_MATH_ABS_DOUBLE:
+            return genInlinedAbsDouble(cUnit, mir);
+
         case INLINE_FLOAT_TO_RAW_INT_BITS:
         case INLINE_INT_BITS_TO_FLOAT:
             return genInlinedIntFloatConversion(cUnit, mir);
