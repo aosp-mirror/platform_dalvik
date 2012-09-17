@@ -429,6 +429,10 @@ void dvmCompilerCacheFlush(long start, long end, long flags)
 /* Target-specific cache clearing */
 void dvmCompilerCacheClear(char *start, size_t size)
 {
-    /* 0 is an invalid opcode for arm. */
-    memset(start, 0, size);
+    /*
+     * de is an invalid opcode for arm.
+     * From gdb disassembly:  <UNDEFINED> instruction: 0xdede
+     */
+
+    memset(start, 0xde, size);
 }
