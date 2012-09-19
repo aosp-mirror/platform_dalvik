@@ -1401,6 +1401,8 @@ void dvmDumpNativeStack(const DebugOutputTarget* target, pid_t tid)
         }
 
         free_backtrace_symbols(backtrace_symbols, frames);
+    } else {
+        dvmPrintDebugMessage(target, "  (native backtrace unavailable)\n");
     }
 #endif
 }

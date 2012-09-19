@@ -300,6 +300,7 @@ void *dvmAllocRegion(size_t size, int prot, const char *name);
  * Get some per-thread stats from /proc/self/task/N/stat.
  */
 struct ProcStatData {
+    char state;             /* process state, e.g. 'R', 'S', 'D' */
     unsigned long utime;    /* number of jiffies scheduled in user mode */
     unsigned long stime;    /* number of jiffies scheduled in kernel mode */
     int processor;          /* number of CPU that last executed thread */
