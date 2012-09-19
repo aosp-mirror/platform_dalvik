@@ -3236,9 +3236,9 @@ static void dumpSchedStat(const DebugOutputTarget* target, pid_t tid) {
 
     /* show what we got */
     dvmPrintDebugMessage(target,
-        "  | schedstat=( %s ) utm=%lu stm=%lu core=%d\n",
-        schedstatBuf, procStatData.utime, procStatData.stime,
-        procStatData.processor);
+        "  | state=%c schedstat=( %s ) utm=%lu stm=%lu core=%d\n",
+        procStatData.state, schedstatBuf, procStatData.utime,
+        procStatData.stime, procStatData.processor);
 #endif
 }
 
@@ -3344,7 +3344,15 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
 
     dumpSchedStat(target, thread->systemTid);
 
-    /* grab the native stack, if possible */
+    /*
+     * Grab the native stack, if possible.
+     *
+     * The native thread is still running, even if the Dalvik side is
+     * suspended.  This means the thread can move itself out of NATIVE state
+     * while we're in here, shifting to SUSPENDED after a brief moment at
+     * RUNNING.  At that point the native stack isn't all that interesting,
+     * though, so if we fail to dump it there's little lost.
+     */
     if (thread->status == THREAD_NATIVE || thread->status == THREAD_VMWAIT) {
         dvmDumpNativeStack(target, thread->systemTid);
     }
