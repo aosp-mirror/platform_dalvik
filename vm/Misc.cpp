@@ -699,8 +699,10 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid)
     char* cp = strchr(lineBuf, ')');
     if (cp == NULL)
         goto parse_fail;
-    cp++;
-    for (i = 2; i < 13; i++) {
+    cp += 2;
+    pData->state = *cp++;
+
+    for (i = 3; i < 13; i++) {
         cp = strchr(cp+1, ' ');
         if (cp == NULL)
             goto parse_fail;
