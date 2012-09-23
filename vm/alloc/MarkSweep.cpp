@@ -556,9 +556,7 @@ static void scanGrayObjects(GcMarkContext *ctx)
 {
     GcHeap *h = gDvm.gcHeap;
     const u1 *base, *limit, *ptr, *dirty;
-    size_t footprint;
 
-    footprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
     base = &h->cardTableBase[0];
     limit = dvmCardFromAddr((u1 *)dvmHeapSourceGetLimit());
     assert(limit <= &h->cardTableBase[h->cardTableLength]);
