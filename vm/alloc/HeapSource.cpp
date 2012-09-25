@@ -34,9 +34,6 @@ static size_t getMaximumSize(const HeapSource *hs);
 static void trimHeaps();
 
 #define HEAP_UTILIZATION_MAX        1024
-#define DEFAULT_HEAP_UTILIZATION    512     // Range 1..HEAP_UTILIZATION_MAX
-#define HEAP_IDEAL_FREE             (2 * 1024 * 1024)
-#define HEAP_MIN_FREE               (HEAP_IDEAL_FREE / 4)
 
 /* How long to wait after a GC before performing a heap trim
  * operation to reclaim unused pages.
@@ -133,6 +130,18 @@ struct HeapSource {
      * heap in lieu of actual compaction.
      */
     size_t softLimit;
+
+    /* Minimum number of free bytes. Used with the target utilization when
+     * setting the softLimit. Never allows less bytes than this to be free
+     * when the heap size is below the maximum size or growth limit.
+     */
+    size_t minFree;
+
+    /* Maximum number of free bytes. Used with the target utilization when
+     * setting the softLimit. Never allows more bytes than this to be free
+     * when the heap size is below the maximum size or growth limit.
+     */
+    size_t maxFree;
 
     /* The heaps; heaps[0] is always the active heap,
      * which new objects should be allocated from.
@@ -393,7 +402,7 @@ static bool addNewHeap(HeapSource *hs)
     size_t overhead = base - hs->heaps[0].base;
     assert(((size_t)hs->heaps[0].base & (SYSTEM_PAGE_SIZE - 1)) == 0);
 
-    if (overhead + HEAP_MIN_FREE >= hs->maximumSize) {
+    if (overhead + hs->minFree >= hs->maximumSize) {
         LOGE_HEAP("No room to create any more heaps "
                   "(%zd overhead, %zd max)",
                   overhead, hs->maximumSize);
@@ -401,11 +410,11 @@ static bool addNewHeap(HeapSource *hs)
     }
     size_t morecoreStart = SYSTEM_PAGE_SIZE;
     heap.maximumSize = hs->growthLimit - overhead;
-    heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
+    heap.concurrentStartBytes = hs->minFree - CONCURRENT_START;
     heap.base = base;
     heap.limit = heap.base + heap.maximumSize;
     heap.brk = heap.base + morecoreStart;
-    heap.msp = createMspace(base, morecoreStart, HEAP_MIN_FREE);
+    heap.msp = createMspace(base, morecoreStart, hs->minFree);
     if (heap.msp == NULL) {
         return false;
     }
@@ -577,7 +586,9 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
         goto fail;
     }
 
-    hs->targetUtilization = DEFAULT_HEAP_UTILIZATION;
+    hs->targetUtilization = gDvm.heapTargetUtilization * HEAP_UTILIZATION_MAX;
+    hs->minFree = gDvm.heapMinFree;
+    hs->maxFree = gDvm.heapMaxFree;
     hs->startSize = startSize;
     hs->maximumSize = maximumSize;
     hs->growthLimit = growthLimit;
@@ -588,6 +599,16 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
     hs->hasGcThread = false;
     hs->heapBase = (char *)base;
     hs->heapLength = length;
+
+    if (hs->maxFree > hs->maximumSize) {
+      hs->maxFree = hs->maximumSize;
+    }
+    if (hs->minFree < CONCURRENT_START) {
+      hs->minFree = CONCURRENT_START;
+    } else if (hs->minFree > hs->maxFree) {
+      hs->minFree = hs->maxFree;
+    }
+
     if (!addInitialHeap(hs, msp, growthLimit)) {
         LOGE_HEAP("Can't add initial heap");
         goto fail;
@@ -1242,23 +1263,21 @@ void dvmSetTargetHeapUtilization(float newTarget)
 /*
  * Given the size of a live set, returns the ideal heap size given
  * the current target utilization and MIN/MAX values.
- *
- * targetUtilization is in the range 1..HEAP_UTILIZATION_MAX.
  */
-static size_t getUtilizationTarget(size_t liveSize, size_t targetUtilization)
+static size_t getUtilizationTarget(const HeapSource* hs, size_t liveSize)
 {
     /* Use the current target utilization ratio to determine the
      * ideal heap size based on the size of the live set.
      */
-    size_t targetSize = (liveSize / targetUtilization) * HEAP_UTILIZATION_MAX;
+    size_t targetSize = (liveSize / hs->targetUtilization) * HEAP_UTILIZATION_MAX;
 
     /* Cap the amount of free space, though, so we don't end up
      * with, e.g., 8MB of free space when the live set size hits 8MB.
      */
-    if (targetSize > liveSize + HEAP_IDEAL_FREE) {
-        targetSize = liveSize + HEAP_IDEAL_FREE;
-    } else if (targetSize < liveSize + HEAP_MIN_FREE) {
-        targetSize = liveSize + HEAP_MIN_FREE;
+    if (targetSize > liveSize + hs->maxFree) {
+        targetSize = liveSize + hs->maxFree;
+    } else if (targetSize < liveSize + hs->minFree) {
+        targetSize = liveSize + hs->minFree;
     }
     return targetSize;
 }
@@ -1285,8 +1304,7 @@ void dvmHeapSourceGrowForUtilization()
      * the current heap.
      */
     size_t currentHeapUsed = heap->bytesAllocated;
-    size_t targetHeapSize =
-            getUtilizationTarget(currentHeapUsed, hs->targetUtilization);
+    size_t targetHeapSize = getUtilizationTarget(hs, currentHeapUsed);
 
     /* The ideal size includes the old heaps; add overhead so that
      * it can be immediately subtracted again in setIdealFootprint().

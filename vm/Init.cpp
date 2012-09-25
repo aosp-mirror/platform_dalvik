@@ -921,6 +921,36 @@ static int processOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Invalid -XX:HeapGrowthLimit option '%s'\n", argv[i]);
                 return -1;
             }
+        } else if (strncmp(argv[i], "-XX:HeapMinFree=", 16) == 0) {
+            size_t val = parseMemOption(argv[i] + 16, 1024);
+            if (val != 0) {
+                gDvm.heapMinFree = val;
+            } else {
+                dvmFprintf(stderr, "Invalid -XX:HeapMinFree option '%s'\n", argv[i]);
+                return -1;
+            }
+        } else if (strncmp(argv[i], "-XX:HeapMaxFree=", 16) == 0) {
+            size_t val = parseMemOption(argv[i] + 16, 1024);
+            if (val != 0) {
+                gDvm.heapMaxFree = val;
+            } else {
+                dvmFprintf(stderr, "Invalid -XX:HeapMaxFree option '%s'\n", argv[i]);
+                return -1;
+            }
+        } else if (strncmp(argv[i], "-XX:HeapTargetUtilization=", 26) == 0) {
+            const char* start = argv[i] + 26;
+            const char* end = start;
+            double val = strtod(start, const_cast<char**>(&end));
+            // Ensure that we have a value, there was no cruft after it and it
+            // satisfies a sensible range.
+            bool sane_val = (start != end) && (end[0] == '\0') &&
+                (val >= 0.1) && (val <= 0.9);
+            if (sane_val) {
+                gDvm.heapTargetUtilization = val;
+            } else {
+                dvmFprintf(stderr, "Invalid -XX:HeapTargetUtilization option '%s'\n", argv[i]);
+                return -1;
+            }
         } else if (strncmp(argv[i], "-Xss", 4) == 0) {
             size_t val = parseMemOption(argv[i]+4, 1);
             if (val != 0) {
@@ -1209,6 +1239,15 @@ static void setCommandLineDefaults()
     gDvm.heapGrowthLimit = 0;  // 0 means no growth limit
     gDvm.stackSize = kDefaultStackSize;
     gDvm.mainThreadStackSize = kDefaultStackSize;
+    // When the heap is less than the maximum or growth limited size,
+    // fix the free portion of the heap. The utilization is the ratio
+    // of live to free memory, 0.5 implies half the heap is available
+    // to allocate into before a GC occurs. Min free and max free
+    // force the free memory to never be smaller than min free or
+    // larger than max free.
+    gDvm.heapTargetUtilization = 0.5;
+    gDvm.heapMaxFree = 2 * 1024 * 1024;
+    gDvm.heapMinFree = gDvm.heapMaxFree / 4;
 
     gDvm.concurrentMarkSweep = true;
 
