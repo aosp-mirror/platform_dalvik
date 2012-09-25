@@ -272,57 +272,58 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
         // Prepare source paths
         char source_user[PATH_MAX];
         char source_obb[PATH_MAX];
-        snprintf(source_user, PATH_MAX, "%s/%d", source, userid);
-        snprintf(source_obb, PATH_MAX, "%s/obb", source);
-        if (fs_prepare_dir(source_user, 0000, 0, 0) == -1
-                || fs_prepare_dir(source_obb, 0000, 0, 0) == -1) {
-            return -1;
-        }
+        char target_user[PATH_MAX];
 
-        // Mount user-specific external storage and OBB into legacy paths
-        if (mount(source_user, legacy, NULL, MS_BIND, NULL) == -1) {
-            SLOGE("Failed to mount %s to %s: %s", source_user, legacy, strerror(errno));
-            return -1;
-        }
-        char legacy_android[PATH_MAX];
-        char legacy_android_obb[PATH_MAX];
-        snprintf(legacy_android, PATH_MAX, "%s/Android", legacy);
-        snprintf(legacy_android_obb, PATH_MAX, "%s/Android/obb", legacy);
-        if (fs_prepare_dir(legacy_android, 0000, 0, 0) == -1
-                || fs_prepare_dir(legacy_android_obb, 0000, 0, 0) == -1) {
-            return -1;
-        }
-        if (mount(source_obb, legacy_android_obb, NULL, MS_BIND, NULL) == -1) {
-            SLOGE("Failed to bind mount %s to %s: %s",
-                    source_obb, legacy_android_obb, strerror(errno));
+        // /mnt/shell/emulated/0
+        snprintf(source_user, PATH_MAX, "%s/%d", source, userid);
+        // /mnt/shell/emulated/obb
+        snprintf(source_obb, PATH_MAX, "%s/obb", source);
+        // /storage/emulated/0
+        snprintf(target_user, PATH_MAX, "%s/%d", target, userid);
+
+        if (fs_prepare_dir(source_user, 0000, 0, 0) == -1
+                || fs_prepare_dir(source_obb, 0000, 0, 0) == -1
+                || fs_prepare_dir(target_user, 0000, 0, 0) == -1) {
             return -1;
         }
 
         if (mountMode == MOUNT_EXTERNAL_MULTIUSER_ALL) {
-            // Mount entire external storage tree into updated paths
+            // Mount entire external storage tree for all users
             if (mount(source, target, NULL, MS_BIND, NULL) == -1) {
                 SLOGE("Failed to mount %s to %s: %s", source, target, strerror(errno));
                 return -1;
             }
-
         } else {
-            // Mount user-specific external storage and OBB into updated paths
-            char target_user[PATH_MAX];
-            char target_obb[PATH_MAX];
-            snprintf(target_user, PATH_MAX, "%s/%d", target, userid);
-            snprintf(target_obb, PATH_MAX, "%s/obb", target);
-            if (fs_prepare_dir(target_user, 0000, 0, 0) == -1
-                    || fs_prepare_dir(target_obb, 0000, 0, 0) == -1) {
-                return -1;
-            }
+            // Only mount user-specific external storage
             if (mount(source_user, target_user, NULL, MS_BIND, NULL) == -1) {
                 SLOGE("Failed to mount %s to %s: %s", source_user, target_user, strerror(errno));
                 return -1;
             }
-            if (mount(source_obb, target_obb, NULL, MS_BIND, NULL) == -1) {
-                SLOGE("Failed to mount %s to %s: %s", source_obb, target_obb, strerror(errno));
-                return -1;
-            }
+        }
+
+        // Now that user is mounted, prepare and mount OBB storage
+        // into place for current user
+        char target_android[PATH_MAX];
+        char target_obb[PATH_MAX];
+
+        // /storage/emulated/0/Android
+        snprintf(target_android, PATH_MAX, "%s/%d/Android", target, userid);
+        // /storage/emulated/0/Android/obb
+        snprintf(target_obb, PATH_MAX, "%s/%d/Android/obb", target, userid);
+
+        if (fs_prepare_dir(target_android, 0000, 0, 0) == -1
+                || fs_prepare_dir(target_obb, 0000, 0, 0) == -1) {
+            return -1;
+        }
+        if (mount(source_obb, target_obb, NULL, MS_BIND, NULL) == -1) {
+            SLOGE("Failed to mount %s to %s: %s", source_obb, target_obb, strerror(errno));
+            return -1;
+        }
+
+        // Finally, mount user-specific path into place for legacy users
+        if (mount(target_user, legacy, NULL, MS_BIND | MS_REC, NULL) == -1) {
+            SLOGE("Failed to mount %s to %s: %s", target_user, legacy, strerror(errno));
+            return -1;
         }
 
     } else {
