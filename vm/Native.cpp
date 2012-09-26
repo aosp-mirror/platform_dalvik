@@ -385,6 +385,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
 
     if (handle == NULL) {
         *detail = strdup(dlerror());
+        ALOGE("dlopen(\"%s\") failed: %s", pathName, *detail);
         return false;
     }
 
