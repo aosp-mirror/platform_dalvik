@@ -313,7 +313,8 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
         snprintf(target_obb, PATH_MAX, "%s/%d/Android/obb", target, userid);
 
         if (fs_prepare_dir(target_android, 0000, 0, 0) == -1
-                || fs_prepare_dir(target_obb, 0000, 0, 0) == -1) {
+                || fs_prepare_dir(target_obb, 0000, 0, 0) == -1
+                || fs_prepare_dir(legacy, 0000, 0, 0) == -1) {
             return -1;
         }
         if (mount(source_obb, target_obb, NULL, MS_BIND, NULL) == -1) {
