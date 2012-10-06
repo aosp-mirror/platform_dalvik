@@ -731,6 +731,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
     OpKind firstOp = kOpBkpt;
     OpKind secondOp = kOpBkpt;
     bool callOut = false;
+    bool checkZero = false;
     void *callTgt;
 
     switch (mir->dalvikInsn.opcode) {
@@ -759,12 +760,14 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
         case OP_DIV_LONG:
         case OP_DIV_LONG_2ADDR:
             callOut = true;
+            checkZero = true;
             callTgt = (void*)__divdi3;
             break;
         case OP_REM_LONG:
         case OP_REM_LONG_2ADDR:
             callOut = true;
             callTgt = (void*)__moddi3;
+            checkZero = true;
             break;
         case OP_AND_LONG_2ADDR:
         case OP_AND_LONG:
@@ -802,9 +805,14 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
         genLong3Addr(cUnit, mir, firstOp, secondOp, rlDest, rlSrc1, rlSrc2);
     } else {
         dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
+        loadValueDirectWideFixed(cUnit, rlSrc2, r_ARG2, r_ARG3);
         loadValueDirectWideFixed(cUnit, rlSrc1, r_ARG0, r_ARG1);
         LOAD_FUNC_ADDR(cUnit, r_T9, (int) callTgt);
-        loadValueDirectWideFixed(cUnit, rlSrc2, r_ARG2, r_ARG3);
+        if (checkZero) {
+            int tReg = r_T1; // Using fixed registers during call sequence
+            opRegRegReg(cUnit, kOpOr, tReg, r_ARG2, r_ARG3);
+            genRegImmCheck(cUnit, kMipsCondEq, tReg, 0, mir->offset, NULL);
+        }
         opReg(cUnit, kOpBlx, r_T9);
         newLIR3(cUnit, kMipsLw, r_GP, STACK_OFFSET_GP, r_SP);
         dvmCompilerClobberCallRegs(cUnit);
