@@ -189,8 +189,7 @@ void dvmJitInstallClassObjectPointers(CompilationUnit *cUnit, char *codeAddress)
 
 void dvmCompilerMethodMIR2LIR(CompilationUnit *cUnit)
 {
-    ALOGE("Method-based JIT not supported for the x86 target");
-    dvmAbort();
+    // Method-based JIT not supported for x86.
 }
 
 void dvmJitScanAllClassPointers(void (*callback)(void *))
