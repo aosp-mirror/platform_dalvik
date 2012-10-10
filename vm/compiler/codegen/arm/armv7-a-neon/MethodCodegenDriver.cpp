@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#if 0
+
 /*
  * Rebuild the interpreter frame then punt to the interpreter to execute
  * instruction at specified PC.
@@ -445,3 +447,11 @@ void dvmCompilerMethodMIR2LIR(CompilationUnit *cUnit)
     selfVerificationBranchInsertPass(cUnit);
 #endif
 }
+
+#else
+
+void dvmCompilerMethodMIR2LIR(CompilationUnit *cUnit) {
+    // Method-based JIT not supported for ARM.
+}
+
+#endif

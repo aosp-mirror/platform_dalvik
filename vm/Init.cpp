@@ -1238,7 +1238,6 @@ static void setCommandLineDefaults()
 
     gDvm.constInit = false;
     gDvm.commonInit = false;
-    gDvmJit.disableOpt = 1<<kMethodInlining;
 #else
     gDvm.executionMode = kExecutionModeInterpFast;
 #endif
