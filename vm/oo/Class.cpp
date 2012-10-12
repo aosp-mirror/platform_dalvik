@@ -2914,24 +2914,30 @@ static bool createVtable(ClassObject* clazz)
                 Method* superMeth = clazz->vtable[si];
 
                 if (dvmCompareMethodNamesAndProtos(localMeth, superMeth) == 0) {
-                    if (dvmCheckMethodAccess(clazz, superMeth)) {
-                        /* verify */
+                    // Some apps were relying on us not checking access: http://b/7301030
+                    bool isPreJbMr1 = (gDvm.targetSdkVersion > 0 && gDvm.targetSdkVersion < 17);
+                    bool isAccessible = dvmCheckMethodAccess(clazz, superMeth);
+                    if (isPreJbMr1 || isAccessible) {
                         if (dvmIsFinalMethod(superMeth)) {
                             ALOGW("Method %s.%s overrides final %s.%s",
-                                localMeth->clazz->descriptor, localMeth->name,
-                                superMeth->clazz->descriptor, superMeth->name);
+                                  localMeth->clazz->descriptor, localMeth->name,
+                                  superMeth->clazz->descriptor, superMeth->name);
                             goto bail;
                         }
+
+                        // Warn if we may have just worked around broken code...
+                        if (!isAccessible) {
+                            ALOGW("in older Android releases, method %s.%s would have incorrectly "
+                                  "overridden package-private method with same name in %s",
+                                  localMeth->clazz->descriptor, localMeth->name,
+                                  superMeth->clazz->descriptor);
+                        }
+
                         clazz->vtable[si] = localMeth;
                         localMeth->methodIndex = (u2) si;
                         //ALOGV("+++   override %s.%s (slot %d)",
                         //    clazz->descriptor, localMeth->name, si);
                         break;
-                    } else {
-                        ALOGW("in older versions of dalvik, method %s.%s would have incorrectly "
-                              "overridden package-private method with same name in %s",
-                              localMeth->clazz->descriptor, localMeth->name,
-                              superMeth->clazz->descriptor);
                     }
                 }
             }
