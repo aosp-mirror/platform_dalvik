@@ -124,8 +124,6 @@ struct DvmGlobals {
     void        (*abortHook)(void);
     bool        (*isSensitiveThreadHook)(void);
 
-    int targetSdkVersion;
-
     int         jniGrefLimit;       // 0 means no limit
     char*       jniTrace;
     bool        reduceSignals;
