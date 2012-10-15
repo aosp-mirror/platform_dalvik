@@ -2914,25 +2914,29 @@ static bool createVtable(ClassObject* clazz)
                 Method* superMeth = clazz->vtable[si];
 
                 if (dvmCompareMethodNamesAndProtos(localMeth, superMeth) == 0) {
-                    if (dvmCheckMethodAccess(clazz, superMeth)) {
-                        /* verify */
-                        if (dvmIsFinalMethod(superMeth)) {
-                            ALOGW("Method %s.%s overrides final %s.%s",
-                                localMeth->clazz->descriptor, localMeth->name,
-                                superMeth->clazz->descriptor, superMeth->name);
-                            goto bail;
-                        }
-                        clazz->vtable[si] = localMeth;
-                        localMeth->methodIndex = (u2) si;
-                        //ALOGV("+++   override %s.%s (slot %d)",
-                        //    clazz->descriptor, localMeth->name, si);
-                        break;
-                    } else {
-                        ALOGW("in older versions of dalvik, method %s.%s would have incorrectly "
-                              "overridden package-private method with same name in %s",
+                    // We should have an access check here, but some apps rely on us not
+                    // checking access: http://b/7301030
+                    bool isAccessible = dvmCheckMethodAccess(clazz, superMeth);
+                    if (dvmIsFinalMethod(superMeth)) {
+                        ALOGE("Method %s.%s overrides final %s.%s",
+                              localMeth->clazz->descriptor, localMeth->name,
+                              superMeth->clazz->descriptor, superMeth->name);
+                        goto bail;
+                    }
+
+                    // Warn if we just spotted code relying on this bug...
+                    if (!isAccessible) {
+                        ALOGW("method %s.%s incorrectly overrides "
+                              "package-private method with same name in %s",
                               localMeth->clazz->descriptor, localMeth->name,
                               superMeth->clazz->descriptor);
                     }
+
+                    clazz->vtable[si] = localMeth;
+                    localMeth->methodIndex = (u2) si;
+                    //ALOGV("+++   override %s.%s (slot %d)",
+                    //    clazz->descriptor, localMeth->name, si);
+                    break;
                 }
             }
 
