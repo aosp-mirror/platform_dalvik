@@ -999,9 +999,6 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
 s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
 {
     const int kInstrLen = 3;
-    u2 size;
-    s4 firstKey;
-    const s4* entries;
 
     /*
      * Packed switch data format:
@@ -1018,13 +1015,14 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
         return kInstrLen;
     }
 
-    size = *switchData++;
+    u2 size = *switchData++;
     assert(size > 0);
 
-    firstKey = *switchData++;
+    s4 firstKey = *switchData++;
     firstKey |= (*switchData++) << 16;
 
-    if (testVal < firstKey || testVal >= firstKey + size) {
+    int index = testVal - firstKey;
+    if (index < 0 || index >= size) {
         LOGVV("Value %d not found in switch (%d-%d)",
             testVal, firstKey, firstKey+size-1);
         return kInstrLen;
@@ -1033,14 +1031,14 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
     /* The entries are guaranteed to be aligned on a 32-bit boundary;
      * we can treat them as a native int array.
      */
-    entries = (const s4*) switchData;
+    const s4* entries = (const s4*) switchData;
     assert(((u4)entries & 0x3) == 0);
 
-    assert(testVal - firstKey >= 0 && testVal - firstKey < size);
+    assert(index >= 0 && index < size);
     LOGVV("Value %d found in slot %d (goto 0x%02x)",
-        testVal, testVal - firstKey,
-        s4FromSwitchData(&entries[testVal - firstKey]));
-    return s4FromSwitchData(&entries[testVal - firstKey]);
+        testVal, index,
+        s4FromSwitchData(&entries[index]));
+    return s4FromSwitchData(&entries[index]);
 }
 
 /*
