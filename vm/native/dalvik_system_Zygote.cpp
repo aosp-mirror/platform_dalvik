@@ -481,6 +481,7 @@ static int setSELinuxContext(uid_t uid, bool isSystemServer,
 #endif
 }
 
+#ifdef __arm__
 static bool needsNoRandomizeWorkaround() {
     int major;
     int minor;
@@ -496,6 +497,7 @@ static bool needsNoRandomizeWorkaround() {
     // Kernels before 3.4.* need the workaround.
     return (major < 3) || ((major == 3) && (minor < 4));
 }
+#endif
 
 /*
  * Utility routine to fork zygote and specialize the child process.
@@ -623,6 +625,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
             dvmAbort();
         }
 
+#ifdef __arm__
         if (needsNoRandomizeWorkaround()) {
             int current = personality(0xffffFFFF);
             int success = personality((ADDR_NO_RANDOMIZE | current));
@@ -630,6 +633,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
                 ALOGW("Personality switch failed. current=%d error=%d\n", current, errno);
             }
         }
+#endif
 
         err = setCapabilities(permittedCapabilities, effectiveCapabilities);
         if (err != 0) {
