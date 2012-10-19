@@ -36,6 +36,7 @@
 #include <cutils/sched_policy.h>
 #include <cutils/multiuser.h>
 #include <sched.h>
+#include <sys/utsname.h>
 
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>
@@ -480,6 +481,26 @@ static int setSELinuxContext(uid_t uid, bool isSystemServer,
 #endif
 }
 
+static bool needsNoRandomizeWorkaround() {
+#if !defined(__arm__)
+    return false;
+#else
+    int major;
+    int minor;
+    struct utsname uts;
+    if (uname(&uts) == -1) {
+        return false;
+    }
+
+    if (sscanf(uts.release, "%d.%d", &major, &minor) != 2) {
+        return false;
+    }
+
+    // Kernels before 3.4.* need the workaround.
+    return (major < 3) || ((major == 3) && (minor < 4));
+#endif
+}
+
 /*
  * Utility routine to fork zygote and specialize the child process.
  */
@@ -606,10 +627,12 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
             dvmAbort();
         }
 
-        int current = personality(0xffffFFFF);
-        int success = personality((ADDR_NO_RANDOMIZE | current));
-        if (success == -1) {
-          ALOGW("Personality switch failed. current=%d error=%d\n", current, errno);
+        if (needsNoRandomizeWorkaround()) {
+            int current = personality(0xffffFFFF);
+            int success = personality((ADDR_NO_RANDOMIZE | current));
+            if (success == -1) {
+                ALOGW("Personality switch failed. current=%d error=%d\n", current, errno);
+            }
         }
 
         err = setCapabilities(permittedCapabilities, effectiveCapabilities);
