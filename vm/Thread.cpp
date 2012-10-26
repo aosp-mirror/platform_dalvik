@@ -3488,13 +3488,12 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
     snprintf(path, sizeof(path), "/proc/%d/task", getpid());
 
     DIR* d = opendir(path);
-    if (d) {
-        dirent de;
-        dirent* result;
+    if (d != NULL) {
+        dirent* entry = NULL;
         bool first = true;
-        while (!readdir_r(d, &de, &result) && result) {
+        while ((entry = readdir(d)) != NULL) {
             char* end;
-            pid_t tid = strtol(de.d_name, &end, 10);
+            pid_t tid = strtol(entry->d_name, &end, 10);
             if (!*end && !isDalvikThread(tid)) {
                 if (first) {
                     dvmPrintDebugMessage(target, "NATIVE THREADS:\n");
