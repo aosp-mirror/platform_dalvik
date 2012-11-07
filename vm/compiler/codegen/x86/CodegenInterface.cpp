@@ -1237,7 +1237,6 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit, JitTranslationInfo *info)
             if(cg_ret < 0) {
                 endOfTrace(true/*freeOnly*/);
                 cUnit->baseAddr = NULL;
-                ALOGI("codeGenBasicBlockJit returns negative number");
                 PROTECT_CODE_CACHE(stream, unprotected_code_cache_bytes);
                 return;
             }
