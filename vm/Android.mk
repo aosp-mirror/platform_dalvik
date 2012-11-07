@@ -40,10 +40,10 @@ endif
 host_smp_flag := -DANDROID_SMP=1
 
 # Build the installed version (libdvm.so) first
+WITH_JIT := true
 include $(LOCAL_PATH)/ReconfigureDvm.mk
 
 # Overwrite default settings
-LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdvm
 LOCAL_CFLAGS += $(target_smp_flag)
 
@@ -57,46 +57,34 @@ endif
 
 include $(BUILD_SHARED_LIBRARY)
 
-# If WITH_JIT is configured, build multiple versions of libdvm.so to facilitate
-# correctness/performance bugs triage
-ifeq ($(WITH_JIT),true)
+# Derivation #1
+# Enable assertions and JIT tuning
+include $(LOCAL_PATH)/ReconfigureDvm.mk
+LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
+                -DWITH_JIT_TUNING $(target_smp_flag)
+LOCAL_MODULE := libdvm_assert
+include $(BUILD_SHARED_LIBRARY)
 
-    # Derivation #1
-    # Enable assert and JIT tuning
-    include $(LOCAL_PATH)/ReconfigureDvm.mk
+ifneq ($(dvm_arch),mips)    # MIPS support for self-verification is incomplete
 
-    # Enable assertions and JIT-tuning
-    LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
-                    -DWITH_JIT_TUNING $(target_smp_flag)
-    LOCAL_MODULE := libdvm_assert
-    include $(BUILD_SHARED_LIBRARY)
-
-  ifneq ($(dvm_arch),mips)    # MIPS support for self-verification is incomplete
     # Derivation #2
-    # Enable assert and self-verification
-    include $(LOCAL_PATH)/ReconfigureDvm.mk
-
     # Enable assertions and JIT self-verification
+    include $(LOCAL_PATH)/ReconfigureDvm.mk
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
                     -DWITH_SELF_VERIFICATION $(target_smp_flag)
     LOCAL_MODULE := libdvm_sv
     include $(BUILD_SHARED_LIBRARY)
-  endif # dvm_arch!=mips
 
-    # Derivation #3
-    # Compile out the JIT
-    WITH_JIT := false
-    include $(LOCAL_PATH)/ReconfigureDvm.mk
+endif # dvm_arch!=mips
 
-    LOCAL_CFLAGS += $(target_smp_flag)
-    LOCAL_MODULE := libdvm_interp
-    include $(BUILD_SHARED_LIBRARY)
+# Derivation #3
+# Compile out the JIT
+WITH_JIT := false
+include $(LOCAL_PATH)/ReconfigureDvm.mk
+LOCAL_CFLAGS += $(target_smp_flag)
+LOCAL_MODULE := libdvm_interp
+include $(BUILD_SHARED_LIBRARY)
 
-  ifeq ($(dvm_arch),x86)    # For x86, we enable JIT on host too
-    # restore WITH_JIT = true for host dalvik build
-    WITH_JIT := true
-  endif # dvm_arch==x86
-endif
 
 #
 # Build for the host.
@@ -111,12 +99,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
     dvm_arch := $(HOST_ARCH)
     # Note: HOST_ARCH_VARIANT isn't defined.
     dvm_arch_variant := $(HOST_ARCH)
-
-    # We always want the x86 JIT.
-    ifeq ($(dvm_arch),x86)
-        WITH_JIT := true
-    endif
-
+    WITH_JIT := true
     include $(LOCAL_PATH)/Dvm.mk
 
     LOCAL_SHARED_LIBRARIES += libcrypto libssl libicuuc libicui18n
