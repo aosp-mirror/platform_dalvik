@@ -17,6 +17,7 @@
 package com.android.dx.merge;
 
 import com.android.dx.io.CodeReader;
+import com.android.dx.io.Opcodes;
 import com.android.dx.io.instructions.DecodedInstruction;
 import com.android.dx.io.instructions.ShortArrayCodeOutput;
 import com.android.dx.util.DexException;
@@ -66,7 +67,8 @@ final class InstructionTransformer {
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int stringId = one.getIndex();
             int mappedId = indexMap.adjustString(stringId);
-            jumboCheck(stringId, mappedId);
+            boolean isJumbo = (one.getOpcode() == Opcodes.CONST_STRING_JUMBO);
+            jumboCheck(isJumbo, mappedId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
         }
     }
@@ -75,7 +77,8 @@ final class InstructionTransformer {
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int fieldId = one.getIndex();
             int mappedId = indexMap.adjustField(fieldId);
-            jumboCheck(fieldId, mappedId);
+            boolean isJumbo = (one.getOpcode() == Opcodes.CONST_STRING_JUMBO);
+            jumboCheck(isJumbo, mappedId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
         }
     }
@@ -84,7 +87,8 @@ final class InstructionTransformer {
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int typeId = one.getIndex();
             int mappedId = indexMap.adjustType(typeId);
-            jumboCheck(typeId, mappedId);
+            boolean isJumbo = (one.getOpcode() == Opcodes.CONST_STRING_JUMBO);
+            jumboCheck(isJumbo, mappedId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
         }
     }
@@ -93,14 +97,16 @@ final class InstructionTransformer {
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int methodId = one.getIndex();
             int mappedId = indexMap.adjustMethod(methodId);
-            jumboCheck(methodId, mappedId);
+            boolean isJumbo = (one.getOpcode() == Opcodes.CONST_STRING_JUMBO);
+            jumboCheck(isJumbo, mappedId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
         }
     }
 
-    private static void jumboCheck(int oldIndex, int newIndex) {
-        if ((oldIndex <= 0xffff) && (newIndex > 0xffff)) {
-            throw new DexException("Cannot handle conversion to jumbo index!");
+    private static void jumboCheck(boolean isJumbo, int newIndex) {
+        if (!isJumbo && (newIndex > 0xffff)) {
+            throw new DexException("Cannot merge new index " + newIndex +
+                                   " into a non-jumbo instruction!");
         }
     }
 }
