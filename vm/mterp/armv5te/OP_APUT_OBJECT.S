@@ -43,8 +43,8 @@
     GOTO_OPCODE(ip)                     @ jump to next instruction
 .L${opcode}_skip_check:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     str     r9, [r10, #offArrayObject_contents] @ vBB[vCC]<- vAA
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 .L${opcode}_throw:
     @ The types don't match.  We need to throw an ArrayStoreException.

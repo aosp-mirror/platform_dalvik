@@ -40,6 +40,6 @@
     GET_VREG(r0, r1)                    @ r0<- fp[A]
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     $store  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
