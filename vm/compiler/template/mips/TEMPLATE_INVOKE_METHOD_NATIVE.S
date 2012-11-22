@@ -42,11 +42,12 @@
     move   a3, rSELF                              # a3<- self
 #if defined(TEMPLATE_INLINE_PROFILING)
     # a2: methodToCall
-    # preserve a0-a3
+    # preserve rTEMP,a0-a3
     SCRATCH_STORE(a0, 0)
     SCRATCH_STORE(a1, 4)
     SCRATCH_STORE(a2, 8)
     SCRATCH_STORE(a3, 12)
+    SCRATCH_STORE(rTEMP, 16)
 
     move   a0, a2
     move   a1, rSELF
@@ -55,7 +56,8 @@
     JALR(t9)                                      # off to the native code
     lw     gp, STACK_OFFSET_GP(sp)
 
-    # restore a0-a3
+    # restore rTEMP,a0-a3
+    SCRATCH_LOAD(rTEMP, 16)
     SCRATCH_LOAD(a3, 12)
     SCRATCH_LOAD(a2, 8)
     SCRATCH_LOAD(a1, 4)

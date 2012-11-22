@@ -603,8 +603,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     move   rFP, a1                                # fp = newFp
     sw     rFP, offThread_curFrame(rSELF)         # self->curFrame = newFp
 #if defined(TEMPLATE_INLINE_PROFILING)
-    # preserve a0-a3
-    SCRATCH_STORE(a0, 0)
+    # preserve rTEMP,a1-a3
+    SCRATCH_STORE(rTEMP, 0)
     SCRATCH_STORE(a1, 4)
     SCRATCH_STORE(a2, 8)
     SCRATCH_STORE(a3, 12)
@@ -615,11 +615,11 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     JALR(t9)
     lw     gp, STACK_OFFSET_GP(sp)
 
-    # restore a0-a3
+    # restore rTEMP,a1-a3
     SCRATCH_LOAD(a3, 12)
     SCRATCH_LOAD(a2, 8)
     SCRATCH_LOAD(a1, 4)
-    SCRATCH_LOAD(a0, 0)
+    SCRATCH_LOAD(rTEMP, 0)
 #endif
 
     # Start executing the callee
@@ -813,11 +813,12 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     move   a3, rSELF                              # a3<- self
 #if defined(TEMPLATE_INLINE_PROFILING)
     # a2: methodToCall
-    # preserve a0-a3
+    # preserve rTEMP,a0-a3
     SCRATCH_STORE(a0, 0)
     SCRATCH_STORE(a1, 4)
     SCRATCH_STORE(a2, 8)
     SCRATCH_STORE(a3, 12)
+    SCRATCH_STORE(rTEMP, 16)
 
     move   a0, a2
     move   a1, rSELF
@@ -826,7 +827,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     JALR(t9)                                      # off to the native code
     lw     gp, STACK_OFFSET_GP(sp)
 
-    # restore a0-a3
+    # restore rTEMP,a0-a3
+    SCRATCH_LOAD(rTEMP, 16)
     SCRATCH_LOAD(a3, 12)
     SCRATCH_LOAD(a2, 8)
     SCRATCH_LOAD(a1, 4)
@@ -2818,10 +2820,10 @@ dvmCompiler_TEMPLATE_PERIODIC_PROFILING:
      sw     a3, 0(a1)
      RETURN
 .LTEMPLATE_PERIODIC_PROFILING_disable_profiling:
-     move   rTEMP, ra                   # preserve ra
      la     a0, dvmJitTraceProfilingOff
      JALR(a0)
-     jr     rTEMP
+     # The ra register is preserved by the JALR macro.
+     jr     ra
 
 /* ------------------------------ */
     .balign 4
@@ -2973,8 +2975,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT_PROF:
     move   rFP, a1                                # fp = newFp
     sw     rFP, offThread_curFrame(rSELF)         # self->curFrame = newFp
 #if defined(TEMPLATE_INLINE_PROFILING)
-    # preserve a0-a3
-    SCRATCH_STORE(a0, 0)
+    # preserve rTEMP,a1-a3
+    SCRATCH_STORE(rTEMP, 0)
     SCRATCH_STORE(a1, 4)
     SCRATCH_STORE(a2, 8)
     SCRATCH_STORE(a3, 12)
@@ -2985,11 +2987,11 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT_PROF:
     JALR(t9)
     lw     gp, STACK_OFFSET_GP(sp)
 
-    # restore a0-a3
+    # restore rTEMP,a1-a3
     SCRATCH_LOAD(a3, 12)
     SCRATCH_LOAD(a2, 8)
     SCRATCH_LOAD(a1, 4)
-    SCRATCH_LOAD(a0, 0)
+    SCRATCH_LOAD(rTEMP, 0)
 #endif
 
     # Start executing the callee
@@ -3195,11 +3197,12 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     move   a3, rSELF                              # a3<- self
 #if defined(TEMPLATE_INLINE_PROFILING)
     # a2: methodToCall
-    # preserve a0-a3
+    # preserve rTEMP,a0-a3
     SCRATCH_STORE(a0, 0)
     SCRATCH_STORE(a1, 4)
     SCRATCH_STORE(a2, 8)
     SCRATCH_STORE(a3, 12)
+    SCRATCH_STORE(rTEMP, 16)
 
     move   a0, a2
     move   a1, rSELF
@@ -3208,7 +3211,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     JALR(t9)                                      # off to the native code
     lw     gp, STACK_OFFSET_GP(sp)
 
-    # restore a0-a3
+    # restore rTEMP,a0-a3
+    SCRATCH_LOAD(rTEMP, 16)
     SCRATCH_LOAD(a3, 12)
     SCRATCH_LOAD(a2, 8)
     SCRATCH_LOAD(a1, 4)
@@ -3291,9 +3295,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     SCRATCH_STORE(a1, 4)
     SCRATCH_STORE(a2, 8)
     SCRATCH_STORE(a3, 12)
-    move    rTEMP, a2                            # preserve a2
 
-    move    a0, rTEMP
+    move    a0, a2
     move    a1, rSELF
     la      t9, dvmFastMethodTraceEnter
     JALR(t9)
@@ -3309,7 +3312,10 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     JALR(t9)                                      # call methodToCall->nativeFunc
     lw      gp, STACK_OFFSET_GP(sp)
 
-    move    a0, rTEMP
+    # restore a2 again
+    SCRATCH_LOAD(a2, 8)
+
+    move    a0, a2
     move    a1, rSELF
     la      t9, dvmFastNativeMethodTraceExit
     JALR(t9)
