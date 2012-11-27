@@ -22,7 +22,7 @@
      sw     a3, 0(a1)
      RETURN
 .L${opcode}_disable_profiling:
-     move   rTEMP, ra                   # preserve ra
      la     a0, dvmJitTraceProfilingOff
      JALR(a0)
-     jr     rTEMP
+     # The ra register is preserved by the JALR macro.
+     jr     ra
