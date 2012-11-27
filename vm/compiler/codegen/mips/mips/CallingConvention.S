@@ -24,9 +24,17 @@
     .global dvmJitCalleeSave
     .type dvmJitCalleeSave, %function
 dvmJitCalleeSave:
+#ifdef __mips_hard_float
+    /* For performance reasons, we are not using any "callee saved" */
+    /* fp registers, thus no need to save them.                     */
+#endif
     jr $31
 
     .global dvmJitCalleeRestore
     .type dvmJitCalleeRestore, %function
 dvmJitCalleeRestore:
+#ifdef __mips_hard_float
+    /* For performance reasons, we are not using any "callee saved" */
+    /* fp registers, thus no need to restore them.                  */
+#endif
     jr $31

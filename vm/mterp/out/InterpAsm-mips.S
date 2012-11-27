@@ -1542,15 +1542,15 @@ dalvik_inst:
     move      a1, rBIX                     #  a1 <- vCC
     b         OP_CMPL_FLOAT_continue
 #else
-    GET_VREG_F(fs0, a2)
-    GET_VREG_F(fs1, a3)
-    c.olt.s   fcc0, fs0, fs1               # Is fs0 < fs1
+    GET_VREG_F(ft0, a2)
+    GET_VREG_F(ft1, a3)
+    c.olt.s   fcc0, ft0, ft1               # Is ft0 < ft1
     li        rTEMP, -1
     bc1t      fcc0, OP_CMPL_FLOAT_finish
-    c.olt.s   fcc0, fs1, fs0
+    c.olt.s   fcc0, ft1, ft0
     li        rTEMP, 1
     bc1t      fcc0, OP_CMPL_FLOAT_finish
-    c.eq.s    fcc0, fs0, fs1
+    c.eq.s    fcc0, ft0, ft1
     li        rTEMP, 0
     bc1t      fcc0, OP_CMPL_FLOAT_finish
     b         OP_CMPL_FLOAT_nan
@@ -1605,15 +1605,15 @@ dalvik_inst:
     move      a1, rBIX                     #  a1 <- vCC
     b         OP_CMPG_FLOAT_continue
 #else
-    GET_VREG_F(fs0, a2)
-    GET_VREG_F(fs1, a3)
-    c.olt.s   fcc0, fs0, fs1               # Is fs0 < fs1
+    GET_VREG_F(ft0, a2)
+    GET_VREG_F(ft1, a3)
+    c.olt.s   fcc0, ft0, ft1               # Is ft0 < ft1
     li        rTEMP, -1
     bc1t      fcc0, OP_CMPG_FLOAT_finish
-    c.olt.s   fcc0, fs1, fs0
+    c.olt.s   fcc0, ft1, ft0
     li        rTEMP, 1
     bc1t      fcc0, OP_CMPG_FLOAT_finish
-    c.eq.s    fcc0, fs0, fs1
+    c.eq.s    fcc0, ft0, ft1
     li        rTEMP, 0
     bc1t      fcc0, OP_CMPG_FLOAT_finish
     b         OP_CMPG_FLOAT_nan
@@ -1659,15 +1659,15 @@ dalvik_inst:
     LOAD64(rARG0, rARG1, rOBJ)             #  a0/a1 <- vBB/vBB+1
     b         OP_CMPL_DOUBLE_continue
 #else
-    LOAD64_F(fs0, fs0f, rOBJ)
-    LOAD64_F(fs1, fs1f, rBIX)
-    c.olt.d   fcc0, fs0, fs1
+    LOAD64_F(ft0, ft0f, rOBJ)
+    LOAD64_F(ft1, ft1f, rBIX)
+    c.olt.d   fcc0, ft0, ft1
     li        rTEMP, -1
     bc1t      fcc0, OP_CMPL_DOUBLE_finish
-    c.olt.d   fcc0, fs1, fs0
+    c.olt.d   fcc0, ft1, ft0
     li        rTEMP, 1
     bc1t      fcc0, OP_CMPL_DOUBLE_finish
-    c.eq.d    fcc0, fs0, fs1
+    c.eq.d    fcc0, ft0, ft1
     li        rTEMP, 0
     bc1t      fcc0, OP_CMPL_DOUBLE_finish
     b         OP_CMPL_DOUBLE_nan
@@ -1711,15 +1711,15 @@ dalvik_inst:
     LOAD64(rARG0, rARG1, rOBJ)             #  a0/a1 <- vBB/vBB+1
     b         OP_CMPG_DOUBLE_continue
 #else
-    LOAD64_F(fs0, fs0f, rOBJ)
-    LOAD64_F(fs1, fs1f, rBIX)
-    c.olt.d   fcc0, fs0, fs1
+    LOAD64_F(ft0, ft0f, rOBJ)
+    LOAD64_F(ft1, ft1f, rBIX)
+    c.olt.d   fcc0, ft0, ft1
     li        rTEMP, -1
     bc1t      fcc0, OP_CMPG_DOUBLE_finish
-    c.olt.d   fcc0, fs1, fs0
+    c.olt.d   fcc0, ft1, ft0
     li        rTEMP, 1
     bc1t      fcc0, OP_CMPG_DOUBLE_finish
-    c.eq.d    fcc0, fs0, fs1
+    c.eq.d    fcc0, ft0, ft1
     li        rTEMP, 0
     bc1t      fcc0, OP_CMPG_DOUBLE_finish
     b         OP_CMPG_DOUBLE_nan
