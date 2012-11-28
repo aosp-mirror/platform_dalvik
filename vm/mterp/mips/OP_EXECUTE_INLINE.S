@@ -91,14 +91,14 @@
     addu      a1, rSELF, offThread_retval  #  a1<- &self->retval
     GET_OPB(a0)                            #  a0 <- B
     # Stack should have 16/20 available
-    sw        a1, 16(sp)                   #  push &self->retval
+    sw        a1, STACK_OFFSET_ARG04(sp)   #  push &self->retval
     BAL(.L${opcode}_continue)              #  make call; will return after
     lw        gp, STACK_OFFSET_GP(sp)      #  restore gp
     move      rINST, v0                    #  save result of inline
     move      a0, rOBJ                     #  a0<- method
     move      a1, rSELF                    #  a1<- self
-    JAL(dvmFastMethodTraceExit)            #  (method, self)
-    beqz      v0, common_exceptionThrown   #  returned false, handle exception
+    JAL(dvmFastNativeMethodTraceExit)      #  (method, self)
+    beqz      rINST, common_exceptionThrown   #  returned false, handle exception
     FETCH_ADVANCE_INST(3)                  #  advance rPC, load rINST
     GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction

@@ -78,7 +78,7 @@
     addu      a1, rSELF, offThread_retval  #  a1<- &self->retval
     GET_OPA(a0)                            #  a0 <- A
     # Stack should have 16/20 available
-    sw        a1, 16(sp)                   #  push &self->retval
+    sw        a1, STACK_OFFSET_ARG04(sp)   #  push &self->retval
     move      rINST, rOBJ                  #  rINST<- method
     BAL(.L${opcode}_continue)              #  make call; will return after
     lw        gp, STACK_OFFSET_GP(sp)      #  restore gp
