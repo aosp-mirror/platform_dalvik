@@ -368,6 +368,25 @@ static ArmLIR *scanLiteralPool(LIR *dataTarget, int value, unsigned int delta)
     return NULL;
 }
 
+/* Search the existing constants in the literal pool for an exact wide match */
+ArmLIR* scanLiteralPoolWide(LIR* dataTarget, int valLo, int valHi)
+{
+  bool lowMatch = false;
+  ArmLIR* lowTarget = NULL;
+  while (dataTarget) {
+    if (lowMatch && (((ArmLIR *)dataTarget)->operands[0] == valHi)) {
+      return lowTarget;
+    }
+    lowMatch = false;
+    if (((ArmLIR *) dataTarget)->operands[0] == valLo) {
+      lowMatch = true;
+      lowTarget = (ArmLIR *) dataTarget;
+    }
+    dataTarget = dataTarget->next;
+  }
+  return NULL;
+}
+
 /*
  * The following are building blocks to insert constants into the pool or
  * instruction streams.
@@ -390,6 +409,14 @@ static ArmLIR *addWordData(CompilationUnit *cUnit, LIR **constantListP,
         newLIR1(cUnit, kArm16BitData, (value >> 16));
     }
     return NULL;
+}
+
+/* Add a 64-bit constant to the literal pool or mixed with code */
+ArmLIR* addWideData(CompilationUnit* cUnit, LIR** constantListP,
+                 int valLo, int valHi)
+{
+    addWordData(cUnit, constantListP, valHi);
+    return addWordData(cUnit, constantListP, valLo);
 }
 
 static RegLocation inlinedTargetWide(CompilationUnit *cUnit, MIR *mir,
