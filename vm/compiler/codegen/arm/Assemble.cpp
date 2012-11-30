@@ -952,6 +952,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
         if (lir->opcode == kThumbLdrPcRel ||
             lir->opcode == kThumb2LdrPcRel12 ||
             lir->opcode == kThumbAddPcRel ||
+            ((lir->opcode == kThumb2Vldrd) && (lir->operands[1] == r15pc)) ||
             ((lir->opcode == kThumb2Vldrs) && (lir->operands[1] == r15pc))) {
             ArmLIR *lirTarget = (ArmLIR *) lir->generic.target;
             intptr_t pc = (lir->generic.offset + 4) & ~3;
@@ -976,7 +977,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
                 }
                 return kRetryHalve;
             }
-            if (lir->opcode == kThumb2Vldrs) {
+            if ((lir->opcode == kThumb2Vldrs) || (lir->opcode == kThumb2Vldrd)) {
                 lir->operands[2] = delta >> 2;
             } else {
                 lir->operands[1] = (lir->opcode == kThumb2LdrPcRel12) ?
