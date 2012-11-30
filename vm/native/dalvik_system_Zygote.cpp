@@ -252,7 +252,7 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
 
     // Create a second private mount namespace for our process
     if (unshare(CLONE_NEWNS) == -1) {
-        SLOGE("Failed to unshare(): %s", strerror(errno));
+        ALOGE("Failed to unshare(): %s", strerror(errno));
         return -1;
     }
 
@@ -264,7 +264,7 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
         const char* target = getenv("EMULATED_STORAGE_TARGET");
         const char* legacy = getenv("EXTERNAL_STORAGE");
         if (source == NULL || target == NULL || legacy == NULL) {
-            SLOGE("Storage environment undefined; unable to provide external storage");
+            ALOGE("Storage environment undefined; unable to provide external storage");
             return -1;
         }
 
@@ -289,13 +289,13 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
         if (mountMode == MOUNT_EXTERNAL_MULTIUSER_ALL) {
             // Mount entire external storage tree for all users
             if (mount(source, target, NULL, MS_BIND, NULL) == -1) {
-                SLOGE("Failed to mount %s to %s: %s", source, target, strerror(errno));
+                ALOGE("Failed to mount %s to %s: %s", source, target, strerror(errno));
                 return -1;
             }
         } else {
             // Only mount user-specific external storage
             if (mount(source_user, target_user, NULL, MS_BIND, NULL) == -1) {
-                SLOGE("Failed to mount %s to %s: %s", source_user, target_user, strerror(errno));
+                ALOGE("Failed to mount %s to %s: %s", source_user, target_user, strerror(errno));
                 return -1;
             }
         }
@@ -316,18 +316,18 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
             return -1;
         }
         if (mount(source_obb, target_obb, NULL, MS_BIND, NULL) == -1) {
-            SLOGE("Failed to mount %s to %s: %s", source_obb, target_obb, strerror(errno));
+            ALOGE("Failed to mount %s to %s: %s", source_obb, target_obb, strerror(errno));
             return -1;
         }
 
         // Finally, mount user-specific path into place for legacy users
         if (mount(target_user, legacy, NULL, MS_BIND | MS_REC, NULL) == -1) {
-            SLOGE("Failed to mount %s to %s: %s", target_user, legacy, strerror(errno));
+            ALOGE("Failed to mount %s to %s: %s", target_user, legacy, strerror(errno));
             return -1;
         }
 
     } else {
-        SLOGE("Mount mode %d unsupported", mountMode);
+        ALOGE("Mount mode %d unsupported", mountMode);
         return -1;
     }
 
