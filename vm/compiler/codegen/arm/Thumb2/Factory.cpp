@@ -53,7 +53,14 @@ static ArmLIR *loadFPConstantValue(CompilationUnit *cUnit, int rDest,
 {
     int encodedImm = encodeImmSingle(value);
     assert(SINGLEREG(rDest));
-    if (encodedImm >= 0) {
+    if (value == 0) {
+      // TODO: we need better info about the target CPU.  a vector exclusive or
+      //       would probably be better here if we could rely on its existance.
+      // Load an immediate +2.0 (which encodes to 0)
+      newLIR2(cUnit, kThumb2Vmovs_IMM8, rDest, 0);
+      // +0.0 = +2.0 - +2.0
+      return newLIR3(cUnit, kThumb2Vsubs, rDest, rDest, rDest);
+    } else if (encodedImm >= 0) {
         return newLIR2(cUnit, kThumb2Vmovs_IMM8, rDest, encodedImm);
     }
     ArmLIR *dataTarget = scanLiteralPool(cUnit->literalList, value, 0);
@@ -696,9 +703,34 @@ static ArmLIR *loadConstantValueWide(CompilationUnit *cUnit, int rDestLo,
 {
     int encodedImm = encodeImmDouble(valLo, valHi);
     ArmLIR *res;
-    if (FPREG(rDestLo) && (encodedImm >= 0)) {
-        res = newLIR2(cUnit, kThumb2Vmovd_IMM8, S2D(rDestLo, rDestHi),
-                      encodedImm);
+    int targetReg = S2D(rDestLo, rDestHi);
+    if (FPREG(rDestLo)) {
+        if ((valLo == 0) && (valHi == 0)) {
+          // TODO: we need better info about the target CPU.  a vector
+          // exclusive or would probably be better here if we could rely on
+          // its existance.
+          // Load an immediate +2.0 (which encodes to 0)
+          newLIR2(cUnit, kThumb2Vmovd_IMM8, targetReg, 0);
+          // +0.0 = +2.0 - +2.0
+          res = newLIR3(cUnit, kThumb2Vsubd, targetReg, targetReg, targetReg);
+        } else if (encodedImm >= 0) {
+            res = newLIR2(cUnit, kThumb2Vmovd_IMM8, targetReg, encodedImm);
+        } else {
+            ArmLIR* dataTarget = scanLiteralPoolWide(cUnit->literalList, valLo, valHi);
+            if (dataTarget == NULL) {
+                dataTarget = addWideData(cUnit, &cUnit->literalList, valLo, valHi);
+            }
+            ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+            loadPcRel->opcode = kThumb2Vldrd;
+            loadPcRel->generic.target = (LIR *) dataTarget;
+            loadPcRel->operands[0] = targetReg;
+            loadPcRel->operands[1] = r15pc;
+            setupResourceMasks(loadPcRel);
+            setMemRefType(loadPcRel, true, kLiteral);
+            loadPcRel->aliasInfo = dataTarget->operands[0];
+            dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
+            res =  loadPcRel;
+        }
     } else {
         res = loadConstantNoClobber(cUnit, rDestLo, valLo);
         loadConstantNoClobber(cUnit, rDestHi, valHi);
