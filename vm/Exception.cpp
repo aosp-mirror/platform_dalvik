@@ -1271,13 +1271,10 @@ void dvmThrowChainedClassNotFoundException(const char* name, Object* cause) {
 void dvmThrowExceptionInInitializerError()
 {
     /*
-     * TODO: Do we want to wrap it if the original is an Error rather than
-     * an Exception?
-     *
      * TODO: Should this just use dvmWrapException()?
      */
 
-    if (gDvm.exExceptionInInitializerError == NULL) {
+    if (gDvm.exExceptionInInitializerError == NULL || gDvm.exError == NULL) {
         /*
          * ExceptionInInitializerError isn't itself initialized. This
          * can happen very early during VM startup if there is a
@@ -1293,6 +1290,11 @@ void dvmThrowExceptionInInitializerError()
 
     Thread* self = dvmThreadSelf();
     Object* exception = dvmGetException(self);
+
+    // We only wrap non-Error exceptions; an Error can just be used as-is.
+    if (dvmInstanceof(exception->clazz, gDvm.exError)) {
+        return;
+    }
 
     dvmAddTrackedAlloc(exception, self);
     dvmClearException(self);
