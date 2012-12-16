@@ -101,10 +101,6 @@ Monitor* dvmCreateMonitor(Object* obj)
         ALOGE("Unable to allocate monitor");
         dvmAbort();
     }
-    if (((u4)mon & 7) != 0) {
-        ALOGE("Misaligned monitor: %p", mon);
-        dvmAbort();
-    }
     mon->obj = obj;
     dvmInitMutex(&mon->lock);
 
