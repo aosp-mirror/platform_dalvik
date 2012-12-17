@@ -54,25 +54,6 @@ struct MemMapping {
 void sysCopyMap(MemMapping* dst, const MemMapping* src);
 
 /*
- * Load a file into a new shared memory segment.  All data from the current
- * offset to the end of the file is pulled in.
- *
- * The segment is read-write, allowing VM fixups.  (It should be modified
- * to support .gz/.zip compressed data.)
- *
- * On success, "pMap" is filled in, and zero is returned.
- */
-int sysLoadFileInShmem(int fd, MemMapping* pMap);
-
-/*
- * Map a file (from fd's current offset) into a shared,
- * read-only memory segment.
- *
- * On success, "pMap" is filled in, and zero is returned.
- */
-int sysMapFileInShmemReadOnly(int fd, MemMapping* pMap);
-
-/*
  * Map a file (from fd's current offset) into a shared, read-only memory
  * segment that can be made writable.  (In some cases, such as when
  * mapping a file on a FAT filesystem, the result may be fully writable.)
@@ -82,7 +63,9 @@ int sysMapFileInShmemReadOnly(int fd, MemMapping* pMap);
 int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap);
 
 /*
- * Like sysMapFileInShmemReadOnly, but on only part of a file.
+ * Map part of a file into a shared, read-only memory segment.
+ *
+ * On success, "pMap" is filled in, and zero is returned.
  */
 int sysMapFileSegmentInShmem(int fd, off_t start, size_t length,
     MemMapping* pMap);
