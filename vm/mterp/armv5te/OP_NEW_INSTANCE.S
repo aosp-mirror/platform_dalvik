@@ -48,8 +48,8 @@
 #endif
 .L${opcode}_end:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r3)                    @ vAA<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 #if defined(WITH_JIT)
@@ -68,8 +68,8 @@
     mov     r1, rPC
     bl      dvmJitEndTraceSelect        @ (self, pc)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r9, r10)                   @ vAA<- new object
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
 
