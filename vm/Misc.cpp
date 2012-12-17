@@ -624,6 +624,7 @@ void *dvmAllocRegion(size_t byteCount, int prot, const char *name) {
         return NULL;
     }
     if (ret == -1) {
+        munmap(base, byteCount);
         return NULL;
     }
     return base;
