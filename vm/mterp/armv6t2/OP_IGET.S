@@ -40,6 +40,6 @@
     $load   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
     ubfx    r2, rINST, #8, #4           @ r2<- A
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[A]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
