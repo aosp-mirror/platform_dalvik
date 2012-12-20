@@ -1985,12 +1985,6 @@ static jobjectRefType Check_GetObjectRefType(JNIEnv* env, jobject obj) {
 
 static jobject Check_NewDirectByteBuffer(JNIEnv* env, void* address, jlong capacity) {
     CHECK_JNI_ENTRY(kFlag_Default, "EpJ", env, address, capacity);
-    if (address == NULL || capacity < 0) {
-        ALOGW("JNI WARNING: invalid values for address (%p) or capacity (%ld)",
-            address, (long) capacity);
-        abortMaybe();
-        return NULL;
-    }
     return CHECK_JNI_EXIT("L", baseEnv(env)->NewDirectByteBuffer(env, address, capacity));
 }
 
