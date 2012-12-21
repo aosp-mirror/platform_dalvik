@@ -658,7 +658,7 @@ void dvmDumpJniReferenceTables() {
 void dvmDumpJniStats(DebugOutputTarget* target) {
     dvmPrintDebugMessage(target, "JNI: CheckJNI is %s", gDvmJni.useCheckJni ? "on" : "off");
     if (gDvmJni.forceCopy) {
-        dvmPrintDebugMessage(target, " (with forecopy)");
+        dvmPrintDebugMessage(target, " (with forcecopy)");
     }
     dvmPrintDebugMessage(target, "; workarounds are %s", gDvmJni.workAroundAppJniBugs ? "on" : "off");
 
