@@ -162,4 +162,8 @@ void dvmReleaseJniMonitors(Thread* self);
  */
 void dvmDumpJniReferenceTables(void);
 
+// Dumps JNI statistics in response to SIGQUIT.
+struct DebugOutputTarget;
+void dvmDumpJniStats(DebugOutputTarget* target);
+
 #endif  // DALVIK_JNIINTERNAL_H_
