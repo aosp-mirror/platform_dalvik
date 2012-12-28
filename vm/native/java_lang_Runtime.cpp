@@ -19,8 +19,10 @@
  */
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
-#include <unistd.h>
+
+#include <dlfcn.h>
 #include <limits.h>
+#include <unistd.h>
 
 /*
  * public void gc()
@@ -59,7 +61,7 @@ static void Dalvik_java_lang_Runtime_nativeExit(const u4* args,
 }
 
 /*
- * static String nativeLoad(String filename, ClassLoader loader)
+ * static String nativeLoad(String filename, ClassLoader loader, String ldLibraryPath)
  *
  * Load the specified full path as a dynamic library filled with
  * JNI-compatible methods. Returns null on success, or a failure
@@ -70,15 +72,27 @@ static void Dalvik_java_lang_Runtime_nativeLoad(const u4* args,
 {
     StringObject* fileNameObj = (StringObject*) args[0];
     Object* classLoader = (Object*) args[1];
-    char* fileName = NULL;
-    StringObject* result = NULL;
-    char* reason = NULL;
-    bool success;
+    StringObject* ldLibraryPathObj = (StringObject*) args[2];
 
     assert(fileNameObj != NULL);
-    fileName = dvmCreateCstrFromString(fileNameObj);
+    char* fileName = dvmCreateCstrFromString(fileNameObj);
 
-    success = dvmLoadNativeCode(fileName, classLoader, &reason);
+    if (ldLibraryPathObj != NULL) {
+        char* ldLibraryPath = dvmCreateCstrFromString(ldLibraryPathObj);
+        void* sym = dlsym(RTLD_DEFAULT, "android_update_LD_LIBRARY_PATH");
+        if (sym != NULL) {
+            typedef void (*Fn)(const char*);
+            Fn android_update_LD_LIBRARY_PATH = reinterpret_cast<Fn>(sym);
+            (*android_update_LD_LIBRARY_PATH)(ldLibraryPath);
+        } else {
+            ALOGE("android_update_LD_LIBRARY_PATH not found; .so dependencies will not work!");
+        }
+        free(ldLibraryPath);
+    }
+
+    StringObject* result = NULL;
+    char* reason = NULL;
+    bool success = dvmLoadNativeCode(fileName, classLoader, &reason);
     if (!success) {
         const char* msg = (reason != NULL) ? reason : "unknown failure";
         result = dvmCreateStringFromCstr(msg);
@@ -137,7 +151,7 @@ const DalvikNativeMethod dvm_java_lang_Runtime[] = {
         Dalvik_java_lang_Runtime_maxMemory },
     { "nativeExit",         "(I)V",
         Dalvik_java_lang_Runtime_nativeExit },
-    { "nativeLoad",         "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/String;",
+    { "nativeLoad",         "(Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/String;",
         Dalvik_java_lang_Runtime_nativeLoad },
     { "totalMemory",          "()J",
         Dalvik_java_lang_Runtime_totalMemory },
