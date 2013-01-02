@@ -406,6 +406,9 @@ public final class DexMerger {
             }
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
+                if (newIndex < 0 || newIndex > 0xffff) {
+                    throw new IllegalArgumentException("type ID not in [0, 0xffff]: " + newIndex);
+                }
                 indexMap.typeIds[oldIndex] = (short) newIndex;
             }
 
@@ -446,6 +449,9 @@ public final class DexMerger {
             }
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
+                if (newIndex < 0 || newIndex > 0xffff) {
+                    throw new IllegalArgumentException("proto ID not in [0, 0xffff]: " + newIndex);
+                }
                 indexMap.protoIds[oldIndex] = (short) newIndex;
             }
 
@@ -466,6 +472,9 @@ public final class DexMerger {
             }
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
+                if (newIndex < 0 || newIndex > 0xffff) {
+                    throw new IllegalArgumentException("field ID not in [0, 0xffff]: " + newIndex);
+                }
                 indexMap.fieldIds[oldIndex] = (short) newIndex;
             }
 
@@ -486,6 +495,9 @@ public final class DexMerger {
             }
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
+                if (newIndex < 0 || newIndex > 0xffff) {
+                    throw new IllegalArgumentException("method ID not in [0, 0xffff]: " + newIndex);
+                }
                 indexMap.methodIds[oldIndex] = (short) newIndex;
             }
 
