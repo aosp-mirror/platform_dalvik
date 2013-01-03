@@ -787,6 +787,7 @@ static char* indexString(DexFile* pDexFile,
                 outSize = snprintf(buf, bufSize, "%s.%s:%s // method@%0*x",
                         methInfo.classDescriptor, methInfo.name,
                         methInfo.signature, width, index);
+                free((void *) methInfo.signature);
             } else {
                 outSize = snprintf(buf, bufSize, "<method?> // method@%0*x",
                         width, index);
@@ -1069,6 +1070,7 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
     printf("%06x:                                        |[%06x] %s.%s:%s\n",
         startAddr, startAddr,
         className, methInfo.name, methInfo.signature);
+    free((void *) methInfo.signature);
 
     insnIdx = 0;
     while (insnIdx < (int) pCode->insnsSize) {
