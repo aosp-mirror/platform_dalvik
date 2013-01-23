@@ -65,8 +65,8 @@
 
     move   rOBJ, a2                               # save a2
 #endif
-
-    JALR(rTEMP)                                   # off to the native code
+    move   t9, rTEMP
+    JALR(t9)                                   # off to the native code
     lw     gp, STACK_OFFSET_GP(sp)
 
 #if defined(TEMPLATE_INLINE_PROFILING)
