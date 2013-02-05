@@ -66,7 +66,7 @@ static bool mustWrapException(const Method* method, const Object* throwable);
 ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     Object* loader)
 {
-    int result = -1;
+    ClassObject* result = NULL;
     ArrayObject* throws = NULL;
 
     char* nameStr = dvmCreateCstrFromString(str);
@@ -205,14 +205,13 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
         goto bail;
     }
 
-    result = 0;
+    result = newClass;
 
 bail:
     free(nameStr);
-    if (result != 0) {
+    if (result == NULL) {
         /* must free innards explicitly if we didn't finish linking */
         dvmFreeClassInnards(newClass);
-        newClass = NULL;
         if (!dvmCheckException(dvmThreadSelf())) {
             /* throw something */
             dvmThrowRuntimeException(NULL);
@@ -223,7 +222,7 @@ bail:
     dvmReleaseTrackedAlloc((Object*) throws, NULL);
     dvmReleaseTrackedAlloc((Object*) newClass, NULL);
 
-    return newClass;
+    return result;
 }
 
 
