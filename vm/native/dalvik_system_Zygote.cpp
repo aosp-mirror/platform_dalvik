@@ -727,22 +727,6 @@ static void Dalvik_dalvik_system_Zygote_forkSystemServer(
     RETURN_INT(pid);
 }
 
-/* native private static void nativeExecShell(String command);
- */
-static void Dalvik_dalvik_system_Zygote_execShell(
-        const u4* args, JValue* pResult)
-{
-    StringObject* command = (StringObject*)args[0];
-
-    const char *argp[] = {_PATH_BSHELL, "-c", NULL, NULL};
-    argp[2] = dvmCreateCstrFromString(command);
-
-    ALOGI("Exec: %s %s %s", argp[0], argp[1], argp[2]);
-
-    execv(_PATH_BSHELL, (char**)argp);
-    exit(127);
-}
-
 const DalvikNativeMethod dvm_dalvik_system_Zygote[] = {
     { "nativeFork", "()I",
       Dalvik_dalvik_system_Zygote_fork },
@@ -750,7 +734,5 @@ const DalvikNativeMethod dvm_dalvik_system_Zygote[] = {
       Dalvik_dalvik_system_Zygote_forkAndSpecialize },
     { "nativeForkSystemServer", "(II[II[[IJJ)I",
       Dalvik_dalvik_system_Zygote_forkSystemServer },
-    { "nativeExecShell", "(Ljava/lang/String;)V",
-      Dalvik_dalvik_system_Zygote_execShell },
     { NULL, NULL, NULL },
 };
