@@ -1,4 +1,4 @@
-%default { "jumbo":"0", "cccc":"2" }
+%default { "cccc":"2" }
 %verify "executed"
 %verify "finalizable class"
     /*
@@ -6,7 +6,7 @@
      * Object's nullary constructor doesn't do anything, so we just
      * skip it unless a debugger is active.
      */
-    movzwl     4(rPC),%eax              # eax<- CCCC, offset = 2 * cccc, cccc = 4 for jumbo
+    movzwl     4(rPC),%eax              # eax<- CCCC, offset = 2 * cccc
     GET_VREG_R %ecx, %eax               # ecx<- "this" ptr
     testl      %ecx,%ecx                # null this?
     je         common_errNullObject     # yes, fail
@@ -45,11 +45,7 @@
      */
 .L${opcode}_debugger:
     movl    offThread_mainHandlerTable(%ecx), %ecx # load main handler table
-    .if $jumbo                               # if jumbo is enabled
-    movl       $$OP_INVOKE_DIRECT_JUMBO, %eax
-    .else
     movl       $$OP_INVOKE_DIRECT_RANGE, %eax
-    .endif
     /*
      * We can't use GOTO_NEXT here since we want to jump directly to
      * handler without touching rIBASE.
