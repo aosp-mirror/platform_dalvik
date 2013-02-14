@@ -350,8 +350,7 @@ common_selectTrace2:
 /*
  * For the invoke codes we need to know what register holds the "this" pointer. However
  * it seems the this pointer is assigned consistently most times it is in %ecx but other
- * times it is in OP_INVOKE_INTERFACE_JUMBO OP_INVOKE_INTERFACE OP_INVOKE_SUPER_QUICK and
- * OP_INVOKE_VIRTUAL_QUICK
+ * times it is in OP_INVOKE_INTERFACE, OP_INVOKE_SUPER_QUICK, or OP_INVOKE_VIRTUAL_QUICK.
 */
 
 /*
