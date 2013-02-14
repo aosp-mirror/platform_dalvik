@@ -37,7 +37,6 @@
 #include <cutils/multiuser.h>
 #include <sched.h>
 #include <sys/utsname.h>
-#include <linux/capability.h>
 
 #if defined(HAVE_PRCTL)
 # include <sys/prctl.h>
@@ -581,18 +580,6 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
 
             if (err < 0) {
                 ALOGE("cannot PR_SET_KEEPCAPS: %s", strerror(errno));
-                dvmAbort();
-            }
-        }
-
-        for (int i = 0; prctl(PR_CAPBSET_READ, i, 0, 0, 0) >= 0; i++) {
-            if (i == CAP_NET_RAW) {
-                // Don't break /system/bin/ping
-                continue;
-            }
-            err = prctl(PR_CAPBSET_DROP, i, 0, 0, 0);
-            if (err < 0) {
-                ALOGE("PR_CAPBSET_DROP %d failed: %s", i, strerror(errno));
                 dvmAbort();
             }
         }
