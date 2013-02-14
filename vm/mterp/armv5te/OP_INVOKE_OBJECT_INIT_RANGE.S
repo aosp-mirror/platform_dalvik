@@ -1,4 +1,4 @@
-%default { "jumbo":"0", "cccc":"2" }
+%default { "cccc":"2" }
 %verify "executed"
 %verify "finalizable class"
     /*
