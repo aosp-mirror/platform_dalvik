@@ -592,10 +592,15 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
             }
             err = prctl(PR_CAPBSET_DROP, i, 0, 0, 0);
             if (err < 0) {
-                ALOGW("PR_CAPBSET_DROP %d failed: %s. "
-                      "Please make sure your kernel is compiled with file "
-                      "capabilities support enabled.",
-                      i, strerror(errno));
+                if (errno == EINVAL) {
+                    ALOGW("PR_CAPBSET_DROP %d failed: %s. "
+                          "Please make sure your kernel is compiled with "
+                          "file capabilities support enabled.",
+                          i, strerror(errno));
+                } else {
+                    ALOGE("PR_CAPBSET_DROP %d failed: %s.", i, strerror(errno));
+                    dvmAbort();
+                }
             }
         }
 
