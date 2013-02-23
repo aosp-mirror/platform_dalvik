@@ -3232,7 +3232,9 @@ static bool createIftable(ClassObject* clazz)
                     == 0)
                 {
                     LOGVV("INTF:   matched at %d", j);
-                    if (!dvmIsPublicMethod(clazz->vtable[j])) {
+                    if (!dvmIsAbstractMethod(clazz->vtable[j]) &&
+                        !dvmIsPublicMethod(clazz->vtable[j]))
+                    {
                         ALOGW("Implementation of %s.%s is not public",
                             clazz->descriptor, clazz->vtable[j]->name);
                         dvmThrowIllegalAccessError(
