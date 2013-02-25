@@ -1629,6 +1629,33 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     return true;
 }
 
+/*
+ * Copied and modified slightly from system/core/toolbox/mount.c
+ */
+static std::string getMountsDevDir(const char *arg)
+{
+    char mount_dev[256];
+    char mount_dir[256];
+    int match;
+
+    FILE *fp = fopen("/proc/self/mounts", "r");
+    if (fp == NULL) {
+        ALOGE("Could not open /proc/self/mounts: %s", strerror(errno));
+        return "";
+    }
+
+    while ((match = fscanf(fp, "%255s %255s %*s %*s %*d %*d\n", mount_dev, mount_dir)) != EOF) {
+        mount_dev[255] = 0;
+        mount_dir[255] = 0;
+        if (match == 2 && (strcmp(arg, mount_dir) == 0)) {
+            fclose(fp);
+            return mount_dev;
+        }
+    }
+
+    fclose(fp);
+    return "";
+}
 
 /*
  * Do zygote-mode-only initialization.
@@ -1662,6 +1689,26 @@ static bool initZygote()
             SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
             return -1;
         }
+    }
+
+    // Mark /system as NOSUID | NODEV
+    const char* android_root = getenv("ANDROID_ROOT");
+
+    if (android_root == NULL) {
+        SLOGE("environment variable ANDROID_ROOT does not exist?!?!");
+        return -1;
+    }
+
+    std::string mountDev(getMountsDevDir(android_root));
+    if (mountDev.empty()) {
+        SLOGE("Unable to find mount point for %s", android_root);
+        return -1;
+    }
+
+    if (mount(mountDev.c_str(), android_root, "none",
+            MS_REMOUNT | MS_NOSUID | MS_NODEV | MS_RDONLY, NULL) == -1) {
+        SLOGE("Remount of %s failed: %s", android_root, strerror(errno));
+        return -1;
     }
 
     return true;
