@@ -64,7 +64,9 @@ bool dvmCompilerArchInit() {
     /* Target-specific configuration */
     gDvmJit.jitTableSize = 1 << 12;
     gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
-    gDvmJit.threshold = 255;
+    if (gDvmJit.threshold != 0) {
+        gDvmJit.threshold = 255;
+    }
     gDvmJit.codeCacheSize = 512*1024;
     gDvmJit.optLevel = kJitOptLevelO1;
 
