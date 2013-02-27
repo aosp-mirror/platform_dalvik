@@ -586,10 +586,6 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         }
 
         for (int i = 0; prctl(PR_CAPBSET_READ, i, 0, 0, 0) >= 0; i++) {
-            if (i == CAP_NET_RAW) {
-                // Don't break /system/bin/ping
-                continue;
-            }
             err = prctl(PR_CAPBSET_DROP, i, 0, 0, 0);
             if (err < 0) {
                 if (errno == EINVAL) {
