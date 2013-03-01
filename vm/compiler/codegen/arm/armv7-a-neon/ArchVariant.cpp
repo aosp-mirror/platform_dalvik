@@ -47,7 +47,7 @@ bool dvmCompilerArchVariantInit(void)
     /* Target-specific configuration */
     gDvmJit.jitTableSize = 1 << 12; // 4096
     gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
-    if (gDvmJit.threshold != 0) {
+    if (gDvmJit.threshold == 0) {
         gDvmJit.threshold = 40;
     }
     gDvmJit.codeCacheSize = 1024*1024;
