@@ -28,6 +28,9 @@
 #include <linux/fs.h>
 #include <cutils/fs.h>
 #include <unistd.h>
+#ifdef HAVE_ANDROID_OS
+#include <sys/prctl.h>
+#endif
 
 #include "Dalvik.h"
 #include "test/Test.h"
@@ -1710,6 +1713,20 @@ static bool initZygote()
         SLOGE("Remount of %s failed: %s", android_root, strerror(errno));
         return -1;
     }
+
+#ifdef HAVE_ANDROID_OS
+    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
+        if (errno == EINVAL) {
+            SLOGW("PR_SET_NO_NEW_PRIVS failed. "
+                  "Is your kernel compiled correctly?: %s", strerror(errno));
+            // Don't return -1 here, since it's expected that not all
+            // kernels will support this option.
+        } else {
+            SLOGW("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
+            return -1;
+        }
+    }
+#endif
 
     return true;
 }
