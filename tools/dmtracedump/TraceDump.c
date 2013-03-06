@@ -2879,7 +2879,7 @@ int main(int argc, char** argv)
     DataKeys* dataKeys = parseDataKeys(&data1, gOptions.traceFileName,
                                        &sumThreadTime);
     if (dataKeys == NULL) {
-        fprintf(stderr, "Cannot read trace.\n");
+        fprintf(stderr, "Cannot read \"%s\".\n", gOptions.traceFileName);
         exit(1);
     }
 
@@ -2887,6 +2887,10 @@ int main(int argc, char** argv)
         uint64_t sum2;
         TraceData data2;
         DataKeys* d2 = parseDataKeys(&data2, gOptions.diffFileName, &sum2);
+        if (d2 == NULL) {
+            fprintf(stderr, "Cannot read \"%s\".\n", gOptions.diffFileName);
+            exit(1);
+        }
 
         createDiff(d2, sum2, dataKeys, sumThreadTime);
 
