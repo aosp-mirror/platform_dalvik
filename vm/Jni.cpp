@@ -2845,8 +2845,6 @@ static jint attachThread(JavaVM* vm, JNIEnv** p_env, void* thr_args, bool isDaem
         argsCopy.name = NULL;
         argsCopy.group = (jobject) dvmGetMainThreadGroup();
     } else {
-        assert(args->version >= JNI_VERSION_1_2);
-
         argsCopy.version = args->version;
         argsCopy.name = args->name;
         if (args->group != NULL) {
