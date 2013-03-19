@@ -1962,17 +1962,22 @@ static u4 getFieldIdx(const Field* field)
 static const DexAnnotationSetItem* findAnnotationSetForField(const Field* field)
 {
     ClassObject* clazz = field->clazz;
-    DexFile* pDexFile = clazz->pDvmDex->pDexFile;
-    const DexAnnotationsDirectoryItem* pAnnoDir;
-    const DexFieldAnnotationsItem* pFieldList;
-
-    pAnnoDir = getAnnoDirectory(pDexFile, clazz);
-    if (pAnnoDir == NULL)
+    DvmDex* pDvmDex = clazz->pDvmDex;
+    if (pDvmDex == NULL) {
         return NULL;
+    }
 
-    pFieldList = dexGetFieldAnnotations(pDexFile, pAnnoDir);
-    if (pFieldList == NULL)
+    DexFile* pDexFile = pDvmDex->pDexFile;
+
+    const DexAnnotationsDirectoryItem* pAnnoDir = getAnnoDirectory(pDexFile, clazz);
+    if (pAnnoDir == NULL) {
         return NULL;
+    }
+
+    const DexFieldAnnotationsItem* pFieldList = dexGetFieldAnnotations(pDexFile, pAnnoDir);
+    if (pFieldList == NULL) {
+        return NULL;
+    }
 
     /*
      * Run through the list and find a matching field.  We compare the
