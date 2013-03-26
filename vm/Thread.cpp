@@ -1311,11 +1311,13 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
          * resource limits.  VirtualMachineError is probably too severe,
          * so use OutOfMemoryError.
          */
-        ALOGE("Thread creation failed (err=%s)", strerror(errno));
+        ALOGE("pthread_create (stack size %d bytes) failed: %s", stackSize, strerror(cc));
 
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, NULL);
 
-        dvmThrowOutOfMemoryError("thread creation failed");
+        dvmThrowExceptionFmt(gDvm.exOutOfMemoryError,
+                             "pthread_create (stack size %d bytes) failed: %s",
+                             stackSize, strerror(cc));
         goto fail;
     }
 
@@ -1658,7 +1660,7 @@ bool dvmCreateInternalThread(pthread_t* pHandle, const char* name,
     int cc = pthread_create(pHandle, &threadAttr, internalThreadStart, pArgs);
     pthread_attr_destroy(&threadAttr);
     if (cc != 0) {
-        ALOGE("internal thread creation failed");
+        ALOGE("internal thread creation failed: %s", strerror(cc));
         free(pArgs->name);
         free(pArgs);
         return false;
@@ -2145,13 +2147,14 @@ void dvmDetachCurrentThread()
         gDvm.nonDaemonThreadCount--;        // guarded by thread list lock
 
         if (gDvm.nonDaemonThreadCount == 0) {
-            int cc;
-
             ALOGV("threadid=%d: last non-daemon thread", self->threadId);
             //dvmDumpAllThreads(false);
             // cond var guarded by threadListLock, which we already hold
-            cc = pthread_cond_signal(&gDvm.vmExitCond);
-            assert(cc == 0);
+            int cc = pthread_cond_signal(&gDvm.vmExitCond);
+            if (cc != 0) {
+                ALOGE("pthread_cond_signal(&gDvm.vmExitCond) failed: %s", strerror(cc));
+                dvmAbort();
+            }
         }
     }
 
@@ -2629,7 +2632,6 @@ void dvmResumeAllThreads(SuspendCause why)
 {
     Thread* self = dvmThreadSelf();
     Thread* thread;
-    int cc;
 
     lockThreadSuspend("res-all", why);  /* one suspend/resume at a time */
     LOG_THREAD("threadid=%d: ResumeAll starting", self->threadId);
@@ -2707,8 +2709,11 @@ void dvmResumeAllThreads(SuspendCause why)
      * which may choose to wake up.  No need to wait for them.
      */
     lockThreadSuspendCount();
-    cc = pthread_cond_broadcast(&gDvm.threadSuspendCountCond);
-    assert(cc == 0);
+    int cc = pthread_cond_broadcast(&gDvm.threadSuspendCountCond);
+    if (cc != 0) {
+        ALOGE("pthread_cond_broadcast(&gDvm.threadSuspendCountCond) failed: %s", strerror(cc));
+        dvmAbort();
+    }
     unlockThreadSuspendCount();
 
     LOG_THREAD("threadid=%d: ResumeAll complete", self->threadId);
@@ -2722,7 +2727,6 @@ void dvmUndoDebuggerSuspensions()
 {
     Thread* self = dvmThreadSelf();
     Thread* thread;
-    int cc;
 
     lockThreadSuspend("undo", SUSPEND_FOR_DEBUG);
     LOG_THREAD("threadid=%d: UndoDebuggerSusp starting", self->threadId);
@@ -2756,8 +2760,11 @@ void dvmUndoDebuggerSuspensions()
      * which may choose to wake up.  No need to wait for them.
      */
     lockThreadSuspendCount();
-    cc = pthread_cond_broadcast(&gDvm.threadSuspendCountCond);
-    assert(cc == 0);
+    int cc = pthread_cond_broadcast(&gDvm.threadSuspendCountCond);
+    if (cc != 0) {
+        ALOGE("pthread_cond_broadcast(&gDvm.threadSuspendCountCond) failed: %s", strerror(cc));
+        dvmAbort();
+    }
     unlockThreadSuspendCount();
 
     unlockThreadSuspend();
