@@ -127,7 +127,7 @@ static bool initClassReferences() {
         { &gDvm.classJavaLangReflectMethod,             "Ljava/lang/reflect/Method;" },
         { &gDvm.classJavaLangReflectMethodArray,        "[Ljava/lang/reflect/Method;"},
         { &gDvm.classJavaLangReflectProxy,              "Ljava/lang/reflect/Proxy;" },
-        { &gDvm.classJavaNioReadWriteDirectByteBuffer,  "Ljava/nio/ReadWriteDirectByteBuffer;" },
+        { &gDvm.classJavaNioDirectByteBuffer,           "Ljava/nio/DirectByteBuffer;" },
         { &gDvm.classOrgApacheHarmonyDalvikDdmcChunk,
           "Lorg/apache/harmony/dalvik/ddmc/Chunk;" },
         { &gDvm.classOrgApacheHarmonyDalvikDdmcDdmServer,
@@ -331,7 +331,7 @@ static bool initConstructorReferences() {
         { &gDvm.methJavaLangReflectMethod_init, "Ljava/lang/reflect/Method;",
           "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;Ljava/lang/Class;"
           "Ljava/lang/String;I)V" },
-        { &gDvm.methJavaNioReadWriteDirectByteBuffer_init, "Ljava/nio/ReadWriteDirectByteBuffer;",
+        { &gDvm.methJavaNioDirectByteBuffer_init, "Ljava/nio/DirectByteBuffer;",
           "(II)V" },
         { &gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init,
           "Lorg/apache/harmony/lang/annotation/AnnotationMember;",
