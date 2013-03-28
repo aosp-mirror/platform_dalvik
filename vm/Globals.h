@@ -268,7 +268,7 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectMethod;
     ClassObject* classJavaLangReflectMethodArray;
     ClassObject* classJavaLangReflectProxy;
-    ClassObject* classJavaNioReadWriteDirectByteBuffer;
+    ClassObject* classJavaNioDirectByteBuffer;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
@@ -415,7 +415,7 @@ struct DvmGlobals {
     Method*     methDalvikSystemNativeStart_run;
 
     /* assorted direct buffer helpers */
-    Method*     methJavaNioReadWriteDirectByteBuffer_init;
+    Method*     methJavaNioDirectByteBuffer_init;
     int         offJavaNioBuffer_capacity;
     int         offJavaNioBuffer_effectiveDirectAddress;
 
