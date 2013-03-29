@@ -251,7 +251,7 @@ static bool initFieldOffsets() {
 
     static struct FieldInfo infoBuffer[] = {
         { &gDvm.offJavaNioBuffer_capacity,               "capacity",               "I" },
-        { &gDvm.offJavaNioBuffer_effectiveDirectAddress, "effectiveDirectAddress", "I" },
+        { &gDvm.offJavaNioBuffer_effectiveDirectAddress, "effectiveDirectAddress", "J" },
         { NULL, NULL, NULL }
     };
 
