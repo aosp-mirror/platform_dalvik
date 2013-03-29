@@ -95,7 +95,11 @@ int common_returnFromMethod() {
     typedef void (*vmHelper)(int);
     vmHelper funcPtr = dvmJitToInterpNoChainNoProfile; //%eax is the input
     move_imm_to_reg(OpndSize_32, (int)funcPtr, C_SCRATCH_1, isScratchPhysical);
-
+#if defined(WITH_JIT_TUNING)
+    /* Return address not in code cache. Indicate that continuing with interpreter.
+     */
+    move_imm_to_mem(OpndSize_32, kCallsiteInterpreted, 0, PhysicalReg_ESP, true);
+#endif
     unconditional_jump_reg(C_SCRATCH_1, isScratchPhysical);
     touchEax();
     return 0;
