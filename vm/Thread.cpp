@@ -27,12 +27,9 @@
 #include <sys/resource.h>
 #include <sys/mman.h>
 #include <signal.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-
-#ifdef HAVE_ANDROID_OS
-#include <dirent.h>
-#endif
 
 #if defined(HAVE_PRCTL)
 #include <sys/prctl.h>
@@ -1311,13 +1308,53 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
          * resource limits.  VirtualMachineError is probably too severe,
          * so use OutOfMemoryError.
          */
-        ALOGE("pthread_create (stack size %d bytes) failed: %s", stackSize, strerror(cc));
+
+#if HAVE_ANDROID_OS
+        struct mallinfo malloc_info;
+        malloc_info = mallinfo();
+        ALOGE("Native heap free: %zd of %zd bytes", malloc_info.fordblks, malloc_info.uordblks);
+#endif
+
+        size_t thread_count = 0;
+        DIR* d = opendir("/proc/self/task");
+        if (d != NULL) {
+            dirent* entry = NULL;
+            while ((entry = readdir(d)) != NULL) {
+                char* end;
+                strtol(entry->d_name, &end, 10);
+                if (!*end) {
+                    ++thread_count;
+                }
+            }
+            closedir(d);
+        }
+
+        ALOGE("pthread_create (%d threads) failed: %s", thread_count, strerror(cc));
+
+        // Super-verbose output to help track down http://b/8470684.
+        size_t map_count = 0;
+        FILE* fp = fopen("/proc/self/maps", "r");
+        if (fp != NULL) {
+            char buf[1024];
+            while (fgets(buf, sizeof(buf), fp) != NULL) {
+                ALOGE("/proc/self/maps: %s", buf);
+                ++map_count;
+            }
+            fclose(fp);
+        }
 
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, NULL);
 
         dvmThrowExceptionFmt(gDvm.exOutOfMemoryError,
-                             "pthread_create (stack size %d bytes) failed: %s",
-                             stackSize, strerror(cc));
+                             "pthread_create (%d threads, %d map entries, "
+#if HAVE_ANDROID_OS
+                             "%zd free of %zd native heap bytes"
+#endif
+                             ") failed: %s", thread_count, map_count,
+#if HAVE_ANDROID_OS
+                             malloc_info.fordblks, malloc_info.uordblks,
+#endif
+                             strerror(cc));
         goto fail;
     }
 
@@ -3490,10 +3527,7 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
     }
 
 #ifdef HAVE_ANDROID_OS
-    char path[64];
-    snprintf(path, sizeof(path), "/proc/%d/task", getpid());
-
-    DIR* d = opendir(path);
+    DIR* d = opendir("/proc/self/task");
     if (d != NULL) {
         dirent* entry = NULL;
         bool first = true;
