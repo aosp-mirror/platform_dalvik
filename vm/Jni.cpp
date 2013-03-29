@@ -2757,7 +2757,7 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject jbuf) {
 
     // All Buffer objects have an effectiveDirectAddress field.
     Object* bufObj = dvmDecodeIndirectRef(ts.self(), jbuf);
-    return (void*) dvmGetFieldInt(bufObj, gDvm.offJavaNioBuffer_effectiveDirectAddress);
+    return (void*) dvmGetFieldLong(bufObj, gDvm.offJavaNioBuffer_effectiveDirectAddress);
 }
 
 /*
