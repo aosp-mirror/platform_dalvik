@@ -833,6 +833,12 @@ int common_invokeArgsDone(ArgsDoneType form, bool isJitFull) {
         if(callNoChain) {
             scratchRegs[0] = PhysicalReg_EAX;
             load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+#if defined(WITH_JIT_TUNING)
+            /* Predicted chaining failed. Fall back to interpreter and indicate
+             * inline cache miss.
+             */
+            move_imm_to_reg(OpndSize_32, kInlineCacheMiss, PhysicalReg_EDX, true);
+#endif
             call_dvmJitToInterpTraceSelectNoChain(); //input: rPC in %ebx
         } else {
             //jump to the stub at (%esp)
@@ -906,6 +912,11 @@ void generate_invokeNative(bool generateForNcg) {
         //move rPC by 6 (3 bytecode units for INVOKE)
         alu_binary_imm_reg(OpndSize_32, add_opc, 6, PhysicalReg_EBX, true);
         scratchRegs[0] = PhysicalReg_EAX;
+#if defined(WITH_JIT_TUNING)
+        /* Return address not in code cache. Indicate that continuing with interpreter
+         */
+        move_imm_to_reg(OpndSize_32, kCallsiteInterpreted, PhysicalReg_EDX, true);
+#endif
         call_dvmJitToInterpTraceSelectNoChain(); //rPC in %ebx
     }
     return;
