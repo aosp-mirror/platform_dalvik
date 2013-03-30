@@ -2739,7 +2739,7 @@ static jobject NewDirectByteBuffer(JNIEnv* env, void* address, jlong capacity) {
     jobject result = addLocalReference(ts.self(), newObj);
     JValue unused;
     dvmCallMethod(ts.self(), gDvm.methJavaNioDirectByteBuffer_init,
-            newObj, &unused, (jint) address, (jint) capacity);
+            newObj, &unused, (jlong) address, (jint) capacity);
     if (dvmGetException(ts.self()) != NULL) {
         deleteLocalReference(ts.self(), result);
         return NULL;
