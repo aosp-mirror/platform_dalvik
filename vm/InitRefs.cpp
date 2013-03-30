@@ -332,7 +332,7 @@ static bool initConstructorReferences() {
           "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;Ljava/lang/Class;"
           "Ljava/lang/String;I)V" },
         { &gDvm.methJavaNioDirectByteBuffer_init, "Ljava/nio/DirectByteBuffer;",
-          "(II)V" },
+          "(JI)V" },
         { &gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init,
           "Lorg/apache/harmony/lang/annotation/AnnotationMember;",
           "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/reflect/Method;)V" },
