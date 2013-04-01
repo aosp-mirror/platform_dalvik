@@ -668,7 +668,17 @@ int sget_sput_common(int flag, u2 vA, u2 tmp, bool isObj, bool isVolatile) {
     void *fieldPtr = (void*)
         (currentMethod->clazz->pDvmDex->pResFields[tmp]);
 #endif
-    assert(fieldPtr != NULL);
+
+    /* Usually, fieldPtr should not be null. The interpreter should resolve
+     * it before we come here, or not allow this opcode in a trace. However,
+     * we can be in a loop trace and this opcode might have been picked up
+     * by exhaustTrace. Sending a -1 here will terminate the loop formation
+     * and fall back to normal trace, which will not have this opcode.
+     */
+    if (!fieldPtr) {
+        return -1;
+    }
+
     move_imm_to_reg(OpndSize_32, (int)fieldPtr, PhysicalReg_EAX, true);
     if(flag == SGET) {
         move_mem_to_reg(OpndSize_32, offStaticField_value, PhysicalReg_EAX, true, 7, false); //access field
