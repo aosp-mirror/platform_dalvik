@@ -1163,6 +1163,13 @@ int op_packed_switch() {
     //get rPC, %eax has the relative PC offset
     alu_binary_imm_reg(OpndSize_32, add_opc, (int)rPC, PhysicalReg_EAX, true);
     scratchRegs[0] = PhysicalReg_SCRATCH_2;
+#if defined(WITH_JIT_TUNING)
+    /* Fall back to interpreter after resolving address of switch target.
+     * Indicate a kSwitchOverflow. Note: This is not an "overflow". But it helps
+     * count the times we return from a Switch
+     */
+    move_imm_to_mem(OpndSize_32, kSwitchOverflow, 0, PhysicalReg_ESP, true);
+#endif
     jumpToInterpNoChain();
     rPC += 3;
     return 0;
@@ -1220,6 +1227,13 @@ int op_sparse_switch() {
     //get rPC, %eax has the relative PC offset
     alu_binary_imm_reg(OpndSize_32, add_opc, (int)rPC, PhysicalReg_EAX, true);
     scratchRegs[0] = PhysicalReg_SCRATCH_2;
+#if defined(WITH_JIT_TUNING)
+    /* Fall back to interpreter after resolving address of switch target.
+     * Indicate a kSwitchOverflow. Note: This is not an "overflow". But it helps
+     * count the times we return from a Switch
+     */
+    move_imm_to_mem(OpndSize_32, kSwitchOverflow, 0, PhysicalReg_ESP, true);
+#endif
     jumpToInterpNoChain();
     rPC += 3;
     return 0;

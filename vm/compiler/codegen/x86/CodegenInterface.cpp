@@ -327,7 +327,7 @@ static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
         cellAddr->clazz = newContent->clazz;
         //cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
 #endif
-#if defined(IA_JIT_TUNING)
+#if defined(WITH_JIT_TUNING)
         gDvmJit.icPatchInit++;
 #endif
         COMPILER_TRACE_CHAINING(
@@ -720,6 +720,12 @@ static void handleInvokePredictedChainingCell(CompilationUnit *cUnit, int blockI
 #ifndef PREDICTED_CHAINING
     //assume rPC for callee->insns in %ebx
     scratchRegs[0] = PhysicalReg_EAX;
+#if defined(WITH_JIT_TUNING)
+    /* Predicted chaining is not enabled. Fall back to interpreter and
+     * indicate that predicted chaining was not done.
+     */
+    move_imm_to_reg(OpndSize_32, kInlineCacheMiss, PhysicalReg_EDX, true);
+#endif
     call_dvmJitToInterpTraceSelectNoChain();
 #else
     /* make sure section for predicited chaining cell is 4-byte aligned */
