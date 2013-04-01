@@ -70,6 +70,9 @@ bool dvmCompilerArchInit() {
     gDvmJit.codeCacheSize = 512*1024;
     gDvmJit.optLevel = kJitOptLevelO1;
 
+    //Disable Method-JIT
+    gDvmJit.disableOpt |= (1 << kMethodJit);
+
 #if defined(WITH_SELF_VERIFICATION)
     /* Force into blocking mode */
     gDvmJit.blockingMode = true;
