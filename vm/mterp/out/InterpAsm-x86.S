@@ -15754,7 +15754,9 @@ dvmJitToInterpSingleStep:
  */
 dvmJitToInterpNoChainNoProfile:
 #if defined(WITH_JIT_TUNING)
+    SPILL_TMP1(%eax)
     call   dvmBumpNoChain
+    UNSPILL_TMP1(%eax)
 #endif
     movl   %eax, rPC
     movl   rSELF, %eax
@@ -15782,6 +15784,7 @@ dvmJitToInterpNoChainNoProfile:
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
 #if defined(WITH_JIT_TUNING)
+    movl   %edx, OUT_ARG0(%esp)
     call   dvmBumpNoChain
 #endif
     movl   %ebx, rPC
@@ -15895,6 +15898,11 @@ dvmJitToInterpNormal:
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
 dvmJitToInterpNoChain: #rPC in eax
+#if defined(WITH_JIT_TUNING)
+    SPILL_TMP1(%eax)
+    call   dvmBumpNoChain
+    UNSPILL_TMP1(%eax)
+#endif
     ## TODO, need to clean up stack manipulation ... this isn't signal safe and
     ## doesn't use the calling conventions of header.S
     movl        %eax, rPC
