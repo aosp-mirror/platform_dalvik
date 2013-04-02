@@ -448,7 +448,7 @@ static bool compilerThreadStartup(void)
     pJitProfTable = (unsigned char *)malloc(JIT_PROF_SIZE);
     if (!pJitProfTable) {
         ALOGE("jit prof table allocation failed");
-        free(pJitProfTable);
+        free(pJitTable);
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
     }
@@ -464,6 +464,8 @@ static bool compilerThreadStartup(void)
                              calloc(1, sizeof(*pJitTraceProfCounters));
     if (!pJitTraceProfCounters) {
         ALOGE("jit trace prof counters allocation failed");
+        free(pJitTable);
+        free(pJitProfTable);
         dvmUnlockMutex(&gDvmJit.tableLock);
         goto fail;
     }
