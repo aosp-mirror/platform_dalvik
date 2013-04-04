@@ -22,6 +22,7 @@
     mul     ip, r2, r1                  @  ip<- ZxW
     umull   r9, r10, r2, r0             @  r9/r10 <- ZxX
     mla     r2, r0, r3, ip              @  r2<- YxX + (ZxW)
-    mov     r0, r9
-    add     r1, r2, r10                 @  r1<- r10 + low(ZxW + (YxX))
+    add     r10, r2, r10                @  r10<- r10 + low(ZxW + (YxX))
+    mov     r0,r9
+    mov     r1,r10
     bx      lr
