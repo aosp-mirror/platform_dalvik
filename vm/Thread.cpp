@@ -3309,6 +3309,26 @@ static void getSchedulerStats(SchedulerStats* stats, pid_t tid) {
     }
 }
 
+static bool shouldShowNativeStack(Thread* thread) {
+    // In native code somewhere in the VM? That's interesting.
+    if (thread->status == THREAD_VMWAIT) {
+        return true;
+    }
+
+    // In an Object.wait variant? That's not interesting.
+    if (thread->status == THREAD_TIMED_WAIT || thread->status == THREAD_WAIT) {
+        return false;
+    }
+
+    // In some other native method? That's interesting.
+    // We don't just check THREAD_NATIVE because native methods will be in
+    // state THREAD_SUSPENDED if they're calling back into the VM, or THREAD_MONITOR
+    // if they're blocked on a monitor, or one of the thread-startup states if
+    // it's early enough in their life cycle (http://b/7432159).
+    const Method* currentMethod = SAVEAREA_FROM_FP(thread->interpSave.curFrame)->method;
+    return dvmIsNativeMethod(currentMethod);
+}
+
 /*
  * Print information about the specified thread.
  *
@@ -3387,16 +3407,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
 
     dumpSchedStat(target, thread->systemTid);
 
-    /*
-     * Grab the native stack, if possible.
-     *
-     * The native thread is still running, even if the Dalvik side is
-     * suspended.  This means the thread can move itself out of NATIVE state
-     * while we're in here, shifting to SUSPENDED after a brief moment at
-     * RUNNING.  At that point the native stack isn't all that interesting,
-     * though, so if we fail to dump it there's little lost.
-     */
-    if (thread->status == THREAD_NATIVE || thread->status == THREAD_VMWAIT) {
+    if (shouldShowNativeStack(thread)) {
         dvmDumpNativeStack(target, thread->systemTid);
     }
 
