@@ -39,7 +39,7 @@ libdir="$progdir"
 
 if [ ! -r "$libdir/$jarfile" ]; then
     # set dx.jar location for the SDK case
-    libdir=`dirname "$progdir"`/platform-tools/lib
+    libdir="$libdir/lib"
 fi
 
 
