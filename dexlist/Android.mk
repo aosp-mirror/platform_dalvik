@@ -45,6 +45,6 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := $(dexdump_src_files)
 LOCAL_C_INCLUDES := $(dexdump_c_includes)
 LOCAL_SHARED_LIBRARIES := $(dexdump_shared_libraries)
-LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries) libcutils
+LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries) libcutils liblog
 LOCAL_LDLIBS += -lpthread -lz
 include $(BUILD_HOST_EXECUTABLE)
