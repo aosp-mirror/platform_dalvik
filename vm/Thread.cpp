@@ -3320,13 +3320,18 @@ static bool shouldShowNativeStack(Thread* thread) {
         return false;
     }
 
+    // The Signal Catcher thread? That's not interesting.
+    if (thread->status == THREAD_RUNNING) {
+        return false;
+    }
+
     // In some other native method? That's interesting.
     // We don't just check THREAD_NATIVE because native methods will be in
     // state THREAD_SUSPENDED if they're calling back into the VM, or THREAD_MONITOR
     // if they're blocked on a monitor, or one of the thread-startup states if
     // it's early enough in their life cycle (http://b/7432159).
     const Method* currentMethod = SAVEAREA_FROM_FP(thread->interpSave.curFrame)->method;
-    return dvmIsNativeMethod(currentMethod);
+    return currentMethod != NULL && dvmIsNativeMethod(currentMethod);
 }
 
 /*
