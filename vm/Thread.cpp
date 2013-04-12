@@ -3330,7 +3330,12 @@ static bool shouldShowNativeStack(Thread* thread) {
     // state THREAD_SUSPENDED if they're calling back into the VM, or THREAD_MONITOR
     // if they're blocked on a monitor, or one of the thread-startup states if
     // it's early enough in their life cycle (http://b/7432159).
-    const Method* currentMethod = SAVEAREA_FROM_FP(thread->interpSave.curFrame)->method;
+    u4* fp = thread->interpSave.curFrame;
+    if (fp == NULL) {
+        // The thread has no managed frames, so native frames are all there is.
+        return true;
+    }
+    const Method* currentMethod = SAVEAREA_FROM_FP(fp)->method;
     return currentMethod != NULL && dvmIsNativeMethod(currentMethod);
 }
 
