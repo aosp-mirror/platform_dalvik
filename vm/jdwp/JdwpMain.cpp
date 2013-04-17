@@ -45,8 +45,8 @@ JdwpNetStateBase::JdwpNetStateBase()
 ssize_t JdwpNetStateBase::writePacket(ExpandBuf* pReply)
 {
     dvmDbgLockMutex(&socketLock);
-    ssize_t cc = write(clientSock, expandBufGetBuffer(pReply),
-            expandBufGetLength(pReply));
+    ssize_t cc = TEMP_FAILURE_RETRY(write(clientSock, expandBufGetBuffer(pReply),
+                                          expandBufGetLength(pReply)));
     dvmDbgUnlockMutex(&socketLock);
 
     return cc;
@@ -59,7 +59,7 @@ ssize_t JdwpNetStateBase::writeBufferedPacket(const struct iovec* iov,
     int iovcnt)
 {
     dvmDbgLockMutex(&socketLock);
-    ssize_t actual = writev(clientSock, iov, iovcnt);
+    ssize_t actual = TEMP_FAILURE_RETRY(writev(clientSock, iov, iovcnt));
     dvmDbgUnlockMutex(&socketLock);
 
     return actual;
