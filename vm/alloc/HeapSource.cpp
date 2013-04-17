@@ -457,6 +457,14 @@ static void *gcDaemonThread(void* arg)
             dvmWaitCond(&gHs->gcThreadCond, &gHs->gcThreadMutex);
         }
 
+        // Many JDWP requests cause allocation. We can't take the heap lock and wait to
+        // transition to runnable so we can start a GC if a debugger is connected, because
+        // we don't know that the JDWP thread isn't about to allocate and require the
+        // heap lock itself, leading to deadlock. http://b/8191824.
+        if (gDvm.debuggerConnected) {
+            continue;
+        }
+
         dvmLockHeap();
         /*
          * Another thread may have started a concurrent garbage

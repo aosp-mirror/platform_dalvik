@@ -191,7 +191,7 @@ static void handleSigQuit()
             ALOGE("Unable to open stack trace file '%s': %s",
                 gDvm.stackTraceFile, strerror(errno));
         } else {
-            ssize_t actual = write(fd, traceBuf, traceLen);
+            ssize_t actual = TEMP_FAILURE_RETRY(write(fd, traceBuf, traceLen));
             if (actual != (ssize_t) traceLen) {
                 ALOGE("Failed to write stack traces to %s (%d of %zd): %s",
                     gDvm.stackTraceFile, (int) actual, traceLen,
