@@ -1309,52 +1309,12 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
          * so use OutOfMemoryError.
          */
 
-#if HAVE_ANDROID_OS
-        struct mallinfo malloc_info;
-        malloc_info = mallinfo();
-        ALOGE("Native heap free: %zd of %zd bytes", malloc_info.fordblks, malloc_info.uordblks);
-#endif
-
-        size_t thread_count = 0;
-        DIR* d = opendir("/proc/self/task");
-        if (d != NULL) {
-            dirent* entry = NULL;
-            while ((entry = readdir(d)) != NULL) {
-                char* end;
-                strtol(entry->d_name, &end, 10);
-                if (!*end) {
-                    ++thread_count;
-                }
-            }
-            closedir(d);
-        }
-
-        ALOGE("pthread_create (%d threads) failed: %s", thread_count, strerror(cc));
-
-        // Super-verbose output to help track down http://b/8470684.
-        size_t map_count = 0;
-        FILE* fp = fopen("/proc/self/maps", "r");
-        if (fp != NULL) {
-            char buf[1024];
-            while (fgets(buf, sizeof(buf), fp) != NULL) {
-                ALOGE("/proc/self/maps: %s", buf);
-                ++map_count;
-            }
-            fclose(fp);
-        }
-
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, NULL);
 
+        ALOGE("pthread_create (stack size %d bytes) failed: %s", stackSize, strerror(cc));
         dvmThrowExceptionFmt(gDvm.exOutOfMemoryError,
-                             "pthread_create (%d threads, %d map entries, "
-#if HAVE_ANDROID_OS
-                             "%zd free of %zd native heap bytes"
-#endif
-                             ") failed: %s", thread_count, map_count,
-#if HAVE_ANDROID_OS
-                             malloc_info.fordblks, malloc_info.uordblks,
-#endif
-                             strerror(cc));
+                             "pthread_create (stack size %d bytes) failed: %s",
+                             stackSize, strerror(cc));
         goto fail;
     }
 
