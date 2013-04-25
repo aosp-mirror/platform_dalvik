@@ -604,6 +604,8 @@ public final class DexMerger {
     private void unionAnnotationSetsAndDirectories() {
         transformAnnotationSets(dexA, aIndexMap);
         transformAnnotationSets(dexB, bIndexMap);
+        transformAnnotationSetRefLists(dexA, aIndexMap);
+        transformAnnotationSetRefLists(dexB, bIndexMap);
         transformAnnotationDirectories(dexA, aIndexMap);
         transformAnnotationDirectories(dexB, bIndexMap);
         transformStaticValues(dexA, aIndexMap);
@@ -620,12 +622,22 @@ public final class DexMerger {
         }
     }
 
+    private void transformAnnotationSetRefLists(DexBuffer in, IndexMap indexMap) {
+        TableOfContents.Section section = in.getTableOfContents().annotationSetRefLists;
+        if (section.exists()) {
+            DexBuffer.Section setIn = in.open(section.off);
+            for (int i = 0; i < section.size; i++) {
+                transformAnnotationSetRefList(indexMap, setIn);
+            }
+        }
+    }
+
     private void transformAnnotationDirectories(DexBuffer in, IndexMap indexMap) {
         TableOfContents.Section section = in.getTableOfContents().annotationsDirectories;
         if (section.exists()) {
             DexBuffer.Section directoryIn = in.open(section.off);
             for (int i = 0; i < section.size; i++) {
-                transformAnnotationDirectory(in, directoryIn, indexMap);
+                transformAnnotationDirectory(directoryIn, indexMap);
             }
         }
     }
@@ -674,7 +686,7 @@ public final class DexMerger {
      * Transform all annotations on a class.
      */
     private void transformAnnotationDirectory(
-            DexBuffer in, DexBuffer.Section directoryIn, IndexMap indexMap) {
+            DexBuffer.Section directoryIn, IndexMap indexMap) {
         contentsOut.annotationsDirectories.size++;
         annotationsDirectoryOut.assertFourByteAligned();
         indexMap.putAnnotationDirectoryOffset(
@@ -710,22 +722,12 @@ public final class DexMerger {
         }
 
         for (int i = 0; i < parameterListSize; i++) {
-            contentsOut.annotationSetRefLists.size++;
-            annotationSetRefListOut.assertFourByteAligned();
-
             // method index
             annotationsDirectoryOut.writeInt(indexMap.adjustMethod(directoryIn.readInt()));
 
             // annotations offset
-            annotationsDirectoryOut.writeInt(annotationSetRefListOut.getPosition());
-            DexBuffer.Section refListIn = in.open(directoryIn.readInt());
-
-            // parameters
-            int parameterCount = refListIn.readInt();
-            annotationSetRefListOut.writeInt(parameterCount);
-            for (int p = 0; p < parameterCount; p++) {
-                annotationSetRefListOut.writeInt(indexMap.adjustAnnotationSet(refListIn.readInt()));
-            }
+            annotationsDirectoryOut.writeInt(
+                    indexMap.adjustAnnotationSetRefList(directoryIn.readInt()));
         }
     }
 
@@ -742,6 +744,22 @@ public final class DexMerger {
 
         for (int j = 0; j < size; j++) {
             annotationSetOut.writeInt(indexMap.adjustAnnotation(setIn.readInt()));
+        }
+    }
+
+    /**
+     * Transform all annotation set ref lists.
+     */
+    private void transformAnnotationSetRefList(IndexMap indexMap, DexBuffer.Section refListIn) {
+        contentsOut.annotationSetRefLists.size++;
+        annotationSetRefListOut.assertFourByteAligned();
+        indexMap.putAnnotationSetRefListOffset(
+                refListIn.getPosition(), annotationSetRefListOut.getPosition());
+
+        int parameterCount = refListIn.readInt();
+        annotationSetRefListOut.writeInt(parameterCount);
+        for (int p = 0; p < parameterCount; p++) {
+            annotationSetRefListOut.writeInt(indexMap.adjustAnnotationSet(refListIn.readInt()));
         }
     }
 
