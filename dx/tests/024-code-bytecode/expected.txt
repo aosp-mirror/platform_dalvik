@@ -42,10 +42,10 @@ methods[0]:
   
   attributes[0]:
     name: Code
-    length: 000001dc
+    length: 000001db
     max_stack: 0001
     max_locals: 0001
-    code_length: 000001d0
+    code_length: 000001cf
     0000: nop
     0001: aconst_null
     0002: iconst_m1 // #-01
@@ -251,41 +251,40 @@ methods[0]:
     015d: invokespecial method{Small.blort:()V}
     0160: invokestatic method{Small.blort:()V}
     0163: invokeinterface ifaceMethod{Small.blort:()V}, 0001
-    0168: unused_ba
-    0169: new type{Small}
-    016c: newarray boolean
-    016e: newarray char
-    0170: newarray float
-    0172: newarray double
-    0174: newarray byte
-    0176: newarray short
-    0178: newarray int
-    017a: newarray long
-    017c: anewarray type{Small}
-    017f: arraylength
-    0180: athrow
-    0181: checkcast type{java.lang.Object}
-    0184: instanceof type{java.lang.Object}
-    0187: monitorenter
-    0188: monitorexit
-    0189: wide iload 0123
-    018d: wide lload 0124 // category-2
-    0191: wide fload 0125
-    0195: wide dload 0126 // category-2
-    0199: wide aload 0127
-    019d: wide istore 20f0
-    01a1: wide lstore 20f1 // category-2
-    01a5: wide fstore 20f2
-    01a9: wide dstore 20f3 // category-2
-    01ad: wide astore 20f4
-    01b1: wide ret ffff
-    01b5: wide iinc 0002, #+1000
-    01bb: multianewarray type{java.lang.Object}, 04
-    01bf: ifnull 0000
-    01c2: ifnonnull 01c2
-    01c5: goto_w 700001c5
-    01ca: jsr_w 000001c5
-    01cf: unused_ca
+    0168: new type{Small}
+    016b: newarray boolean
+    016d: newarray char
+    016f: newarray float
+    0171: newarray double
+    0173: newarray byte
+    0175: newarray short
+    0177: newarray int
+    0179: newarray long
+    017b: anewarray type{Small}
+    017e: arraylength
+    017f: athrow
+    0180: checkcast type{java.lang.Object}
+    0183: instanceof type{java.lang.Object}
+    0186: monitorenter
+    0187: monitorexit
+    0188: wide iload 0123
+    018c: wide lload 0124 // category-2
+    0190: wide fload 0125
+    0194: wide dload 0126 // category-2
+    0198: wide aload 0127
+    019c: wide istore 20f0
+    01a0: wide lstore 20f1 // category-2
+    01a4: wide fstore 20f2
+    01a8: wide dstore 20f3 // category-2
+    01ac: wide astore 20f4
+    01b0: wide ret ffff
+    01b4: wide iinc 0002, #+1000
+    01ba: multianewarray type{java.lang.Object}, 04
+    01be: ifnull ffff
+    01c1: ifnonnull 01c1
+    01c4: goto_w 700001c4
+    01c9: jsr_w 000001c4
+    01ce: unused_ca
     exception_table_length: 0000
     attributes_count: 0000
   end attributes[0]

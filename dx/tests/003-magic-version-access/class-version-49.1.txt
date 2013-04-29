@@ -1,6 +1,5 @@
 #
-# classfile with a minor version 1 higher than the highest valid
-# version.  49.1 (0x31.0x01)
+# classfile with the valid version 49.1 (0x31.0x01)
 #
 
 cafe babe  # magic

@@ -1,5 +1,5 @@
 #
-# classfile with the highest valid version, 49.0 (0x31.0x00)
+# classfile with the valid version 49.0 (0x31.0x00)
 #
 
 cafe babe  # magic

@@ -45,10 +45,10 @@ cafe babe  # magic
 0001  # attributes_count
 # attributes[0]
 0007      # name
-000001dc  # length (note: == code_length + 0x0c)
+000001db  # length (note: == code_length + 0x0c)
 0001      # max_stack
 0001      # max_locals
-000001d0  # code_length
+000001cf  # code_length
 
 00        # 0000: nop
 01        # 0001: aconst_null
@@ -262,7 +262,6 @@ b6 0015   # 015a: invokevirtual 0015
 b7 0015   # 015d: invokespecial 0015
 b8 0015   # 0160: invokestatic 0015
 b9 0016 01 00  # 0163: invokeinterface 0016
-ba        # 0168: <unused>
 bb 0001   # 0169: new 0001
 bc 04     # 016c: newarray boolean
 bc 05     # 016e: newarray char
