@@ -22,14 +22,15 @@ import com.android.dx.io.ClassDef;
 import com.android.dx.io.DexBuffer;
 import com.android.dx.io.EncodedValue;
 import com.android.dx.io.EncodedValueReader;
+import static com.android.dx.io.EncodedValueReader.*;
 import com.android.dx.io.FieldId;
 import com.android.dx.io.MethodId;
 import com.android.dx.io.ProtoId;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
-import com.android.dx.util.ByteInput;
 import com.android.dx.util.ByteOutput;
+import com.android.dx.util.DexException;
+import com.android.dx.util.EncodedValueUtils;
 import com.android.dx.util.Leb128Utils;
-import com.android.dx.util.Unsigned;
 import java.util.HashMap;
 
 /**
@@ -208,13 +209,14 @@ public final class IndexMap {
 
     public EncodedValue adjustEncodedValue(EncodedValue encodedValue) {
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput(32);
-        new EncodedValueTransformer(encodedValue, out).readValue();
+        new EncodedValueTransformer(out).transform(new EncodedValueReader(encodedValue));
         return new EncodedValue(out.toByteArray());
     }
 
     public EncodedValue adjustEncodedArray(EncodedValue encodedArray) {
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput(32);
-        new EncodedValueTransformer(encodedArray, out).readArray();
+        new EncodedValueTransformer(out).transformArray(
+                new EncodedValueReader(encodedArray.asByteInput(), ENCODED_ARRAY));
         return new EncodedValue(out.toByteArray());
     }
 
@@ -232,88 +234,101 @@ public final class IndexMap {
     /**
      * Adjust an encoded value or array.
      */
-    private final class EncodedValueTransformer extends EncodedValueReader {
+    private final class EncodedValueTransformer {
         private final ByteOutput out;
 
-        public EncodedValueTransformer(EncodedValue encodedValue, ByteOutput out) {
-            super(encodedValue);
+        public EncodedValueTransformer(ByteOutput out) {
             this.out = out;
         }
 
-        protected void visitArray(int size) {
-            Leb128Utils.writeUnsignedLeb128(out, size);
-        }
-
-        protected void visitAnnotation(int typeIndex, int size) {
-            Leb128Utils.writeUnsignedLeb128(out, adjustType(typeIndex));
-            Leb128Utils.writeUnsignedLeb128(out, size);
-        }
-
-        protected void visitAnnotationName(int index) {
-            Leb128Utils.writeUnsignedLeb128(out, adjustString(index));
-        }
-
-        protected void visitPrimitive(int argAndType, int type, int arg, int size) {
-            out.writeByte(argAndType);
-            copyBytes(in, out, size);
-        }
-
-        protected void visitString(int type, int index) {
-            writeTypeAndSizeAndIndex(type, adjustString(index));
-        }
-
-        protected void visitType(int type, int index) {
-            writeTypeAndSizeAndIndex(type, adjustType(index));
-        }
-
-        protected void visitField(int type, int index) {
-            writeTypeAndSizeAndIndex(type, adjustField(index));
-        }
-
-        protected void visitMethod(int type, int index) {
-            writeTypeAndSizeAndIndex(type, adjustMethod(index));
-        }
-
-        protected void visitArrayValue(int argAndType) {
-            out.writeByte(argAndType);
-        }
-
-        protected void visitAnnotationValue(int argAndType) {
-            out.writeByte(argAndType);
-        }
-
-        protected void visitEncodedBoolean(int argAndType) {
-            out.writeByte(argAndType);
-        }
-
-        protected void visitEncodedNull(int argAndType) {
-            out.writeByte(argAndType);
-        }
-
-        private void writeTypeAndSizeAndIndex(int type, int index) {
-            int byteCount;
-            if (Unsigned.compare(index, 0xff) <= 0) {
-                byteCount = 1;
-            } else if (Unsigned.compare(index, 0xffff) <= 0) {
-                byteCount = 2;
-            } else if (Unsigned.compare(index, 0xffffff) <= 0) {
-                byteCount = 3;
-            } else {
-                byteCount = 4;
-            }
-            int argAndType = ((byteCount - 1) << 5) | type;
-            out.writeByte(argAndType);
-
-            for (int i = 0; i < byteCount; i++) {
-                out.writeByte(index & 0xff);
-                index >>>= 8;
+        public void transform(EncodedValueReader reader) {
+            // TODO: extract this into a helper class, EncodedValueWriter
+            switch (reader.peek()) {
+            case ENCODED_BYTE:
+                EncodedValueUtils.writeSignedIntegralValue(out, ENCODED_BYTE, reader.readByte());
+                break;
+            case ENCODED_SHORT:
+                EncodedValueUtils.writeSignedIntegralValue(out, ENCODED_SHORT, reader.readShort());
+                break;
+            case ENCODED_INT:
+                EncodedValueUtils.writeSignedIntegralValue(out, ENCODED_INT, reader.readInt());
+                break;
+            case ENCODED_LONG:
+                EncodedValueUtils.writeSignedIntegralValue(out, ENCODED_LONG, reader.readLong());
+                break;
+            case ENCODED_CHAR:
+                EncodedValueUtils.writeUnsignedIntegralValue(out, ENCODED_CHAR, reader.readChar());
+                break;
+            case ENCODED_FLOAT:
+                // Shift value left 32 so that right-zero-extension works.
+                long longBits = ((long) Float.floatToIntBits(reader.readFloat())) << 32;
+                EncodedValueUtils.writeRightZeroExtendedValue(out, ENCODED_FLOAT, longBits);
+                break;
+            case ENCODED_DOUBLE:
+                EncodedValueUtils.writeRightZeroExtendedValue(
+                        out, ENCODED_DOUBLE, Double.doubleToLongBits(reader.readDouble()));
+                break;
+            case ENCODED_STRING:
+                EncodedValueUtils.writeUnsignedIntegralValue(
+                        out, ENCODED_STRING, adjustString(reader.readString()));
+                break;
+            case ENCODED_TYPE:
+                EncodedValueUtils.writeUnsignedIntegralValue(
+                        out, ENCODED_TYPE, adjustType(reader.readType()));
+                break;
+            case ENCODED_FIELD:
+                EncodedValueUtils.writeUnsignedIntegralValue(
+                        out, ENCODED_FIELD, adjustField(reader.readField()));
+                break;
+            case ENCODED_ENUM:
+                EncodedValueUtils.writeUnsignedIntegralValue(
+                        out, ENCODED_ENUM, adjustField(reader.readEnum()));
+                break;
+            case ENCODED_METHOD:
+                EncodedValueUtils.writeUnsignedIntegralValue(
+                        out, ENCODED_METHOD, adjustMethod(reader.readMethod()));
+                break;
+            case ENCODED_ARRAY:
+                writeTypeAndArg(ENCODED_ARRAY, 0);
+                transformArray(reader);
+                break;
+            case ENCODED_ANNOTATION:
+                writeTypeAndArg(ENCODED_ANNOTATION, 0);
+                transformAnnotation(reader);
+                break;
+            case ENCODED_NULL:
+                reader.readNull();
+                writeTypeAndArg(ENCODED_NULL, 0);
+                break;
+            case ENCODED_BOOLEAN:
+                boolean value = reader.readBoolean();
+                writeTypeAndArg(ENCODED_BOOLEAN, value ? 1 : 0);
+                break;
+            default:
+                throw new DexException("Unexpected type: " + Integer.toHexString(reader.peek()));
             }
         }
 
-        private void copyBytes(ByteInput in, ByteOutput out, int size) {
+        private void transformAnnotation(EncodedValueReader reader) {
+            int fieldCount = reader.readAnnotation();
+            Leb128Utils.writeUnsignedLeb128(out, adjustType(reader.getAnnotationType()));
+            Leb128Utils.writeUnsignedLeb128(out, fieldCount);
+            for (int i = 0; i < fieldCount; i++) {
+                Leb128Utils.writeUnsignedLeb128(out, adjustString(reader.readAnnotationName()));
+                transform(reader);
+            }
+        }
+
+        private void transformArray(EncodedValueReader reader) {
+            int size = reader.readArray();
+            Leb128Utils.writeUnsignedLeb128(out, size);
             for (int i = 0; i < size; i++) {
-                out.writeByte(in.readByte());
+                transform(reader);
             }
+        }
+
+        private void writeTypeAndArg(int type, int arg) {
+            out.writeByte((arg << 5) | type);
         }
     }
 }

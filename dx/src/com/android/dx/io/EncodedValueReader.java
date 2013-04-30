@@ -17,13 +17,14 @@
 package com.android.dx.io;
 
 import com.android.dx.util.ByteInput;
+import com.android.dx.util.DexException;
+import com.android.dx.util.EncodedValueUtils;
 import com.android.dx.util.Leb128Utils;
 
 /**
- * SAX-style reader for encoded values.
- * TODO: convert this to a pull-style reader
+ * Pull parser for encoded values.
  */
-public class EncodedValueReader {
+public final class EncodedValueReader {
     public static final int ENCODED_BYTE = 0x00;
     public static final int ENCODED_SHORT = 0x02;
     public static final int ENCODED_CHAR = 0x03;
@@ -41,7 +42,13 @@ public class EncodedValueReader {
     public static final int ENCODED_NULL = 0x1e;
     public static final int ENCODED_BOOLEAN = 0x1f;
 
+    /** placeholder type if the type is not yet known */
+    private static final int MUST_READ = -1;
+
     protected final ByteInput in;
+    private int type = MUST_READ;
+    private int annotationType;
+    private int arg;
 
     public EncodedValueReader(ByteInput in) {
         this.in = in;
@@ -51,96 +58,228 @@ public class EncodedValueReader {
         this(in.asByteInput());
     }
 
-    public final void readArray() {
-        int size = Leb128Utils.readUnsignedLeb128(in);
-        visitArray(size);
-
-        for (int i = 0; i < size; i++) {
-            readValue();
-        }
+    /**
+     * Creates a new encoded value reader whose only value is the specified
+     * known type. This is useful for class_def_item, which references an
+     * encoded array that doesn't contain a type+arg prefix.
+     */
+    public EncodedValueReader(ByteInput in, int knownType) {
+        this.in = in;
+        this.type = knownType;
     }
 
-    public final void readAnnotation() {
-        int typeIndex = Leb128Utils.readUnsignedLeb128(in);
-        int size = Leb128Utils.readUnsignedLeb128(in);
-        visitAnnotation(typeIndex, size);
-
-        for (int i = 0; i < size; i++) {
-            visitAnnotationName(Leb128Utils.readUnsignedLeb128(in));
-            readValue();
+    /**
+     * Returns the type of the next value to read.
+     */
+    public int peek() {
+        if (type == MUST_READ) {
+            int argAndType = in.readByte() & 0xff;
+            type = argAndType & 0x1f;
+            arg = (argAndType & 0xe0) >> 5;
         }
+        return type;
     }
 
-    public final void readValue() {
-        int argAndType = in.readByte() & 0xff;
-        int type = argAndType & 0x1f;
-        int arg = (argAndType & 0xe0) >> 5;
-        int size = arg + 1;
+    /**
+     * Begins reading the elements of an array, returning the array's size. The
+     * caller must follow up by calling a read method for each element in the
+     * array. For example, this reads a byte array: <pre>   {@code
+     *   int arraySize = readArray();
+     *   for (int i = 0, i < arraySize; i++) {
+     *     readByte();
+     *   }
+     * }</pre>
+     */
+    public int readArray() {
+        checkType(ENCODED_ARRAY);
+        type = MUST_READ;
+        return Leb128Utils.readUnsignedLeb128(in);
+    }
 
-        switch (type) {
+    /**
+     * Begins reading the fields of an annotation, returning the number of
+     * fields. The caller must follow up by making alternating calls to {@link
+     * #readAnnotationName()} and another read method. For example, this reads
+     * an annotation whose fields are all bytes: <pre>   {@code
+     *   int fieldCount = readAnnotation();
+     *   int annotationType = getAnnotationType();
+     *   for (int i = 0; i < fieldCount; i++) {
+     *       readAnnotationName();
+     *       readByte();
+     *   }
+     * }</pre>
+     */
+    public int readAnnotation() {
+        checkType(ENCODED_ANNOTATION);
+        type = MUST_READ;
+        annotationType = Leb128Utils.readUnsignedLeb128(in);
+        return Leb128Utils.readUnsignedLeb128(in);
+    }
+
+    /**
+     * Returns the type of the annotation just returned by {@link
+     * #readAnnotation()}. This method's value is undefined unless the most
+     * recent call was to {@link #readAnnotation()}.
+     */
+    public int getAnnotationType() {
+        return annotationType;
+    }
+
+    public int readAnnotationName() {
+        return Leb128Utils.readUnsignedLeb128(in);
+    }
+
+    public byte readByte() {
+        checkType(ENCODED_BYTE);
+        type = MUST_READ;
+        return (byte) EncodedValueUtils.readSignedInt(in, arg);
+    }
+
+    public short readShort() {
+        checkType(ENCODED_SHORT);
+        type = MUST_READ;
+        return (short) EncodedValueUtils.readSignedInt(in, arg);
+    }
+
+    public char readChar() {
+        checkType(ENCODED_CHAR);
+        type = MUST_READ;
+        return (char) EncodedValueUtils.readUnsignedInt(in, arg, false);
+    }
+
+    public int readInt() {
+        checkType(ENCODED_INT);
+        type = MUST_READ;
+        return EncodedValueUtils.readSignedInt(in, arg);
+    }
+
+    public long readLong() {
+        checkType(ENCODED_LONG);
+        type = MUST_READ;
+        return EncodedValueUtils.readSignedLong(in, arg);
+    }
+
+    public float readFloat() {
+        checkType(ENCODED_FLOAT);
+        type = MUST_READ;
+        return Float.intBitsToFloat(EncodedValueUtils.readUnsignedInt(in, arg, true));
+    }
+
+    public double readDouble() {
+        checkType(ENCODED_DOUBLE);
+        type = MUST_READ;
+        return Double.longBitsToDouble(EncodedValueUtils.readUnsignedLong(in, arg, true));
+    }
+
+    public int readString() {
+        checkType(ENCODED_STRING);
+        type = MUST_READ;
+        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+    }
+
+    public int readType() {
+        checkType(ENCODED_TYPE);
+        type = MUST_READ;
+        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+    }
+
+    public int readField() {
+        checkType(ENCODED_FIELD);
+        type = MUST_READ;
+        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+    }
+
+    public int readEnum() {
+        checkType(ENCODED_ENUM);
+        type = MUST_READ;
+        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+    }
+
+    public int readMethod() {
+        checkType(ENCODED_METHOD);
+        type = MUST_READ;
+        return EncodedValueUtils.readUnsignedInt(in, arg, false);
+    }
+
+    public void readNull() {
+        checkType(ENCODED_NULL);
+        type = MUST_READ;
+    }
+
+    public boolean readBoolean() {
+        checkType(ENCODED_BOOLEAN);
+        type = MUST_READ;
+        return arg != 0;
+    }
+
+    /**
+     * Skips a single value, including its nested values if it is an array or
+     * annotation.
+     */
+    public void skipValue() {
+        switch (peek()) {
         case ENCODED_BYTE:
+            readByte();
+            break;
         case ENCODED_SHORT:
+            readShort();
+            break;
         case ENCODED_CHAR:
+            readChar();
+            break;
         case ENCODED_INT:
+            readInt();
+            break;
         case ENCODED_LONG:
+            readLong();
+            break;
         case ENCODED_FLOAT:
+            readFloat();
+            break;
         case ENCODED_DOUBLE:
-            visitPrimitive(argAndType, type, arg, size);
+            readDouble();
             break;
         case ENCODED_STRING:
-            visitString(type, readIndex(in, size));
+            readString();
             break;
         case ENCODED_TYPE:
-            visitType(type, readIndex(in, size));
+            readType();
             break;
         case ENCODED_FIELD:
+            readField();
+            break;
         case ENCODED_ENUM:
-            visitField(type, readIndex(in, size));
+            readEnum();
             break;
         case ENCODED_METHOD:
-            visitMethod(type, readIndex(in, size));
+            readMethod();
             break;
         case ENCODED_ARRAY:
-            visitArrayValue(argAndType);
-            readArray();
+            for (int i = 0, size = readArray(); i < size; i++) {
+                skipValue();
+            }
             break;
         case ENCODED_ANNOTATION:
-            visitAnnotationValue(argAndType);
-            readAnnotation();
+            for (int i = 0, size = readAnnotation(); i < size; i++) {
+                readAnnotationName();
+                skipValue();
+            }
             break;
         case ENCODED_NULL:
-            visitEncodedNull(argAndType);
+            readNull();
             break;
         case ENCODED_BOOLEAN:
-            visitEncodedBoolean(argAndType);
+            readBoolean();
             break;
+        default:
+            throw new DexException("Unexpected type: " + Integer.toHexString(type));
         }
     }
 
-    protected void visitArray(int size) {}
-    protected void visitAnnotation(int typeIndex, int size) {}
-    protected void visitAnnotationName(int nameIndex) {}
-    protected void visitPrimitive(int argAndType, int type, int arg, int size) {
-        for (int i = 0; i < size; i++) {
-            in.readByte();
+    private void checkType(int expected) {
+        if (peek() != expected) {
+            throw new IllegalStateException("Expected array but was "
+                    + Integer.toHexString(peek()));
         }
-    }
-    protected void visitString(int type, int index) {}
-    protected void visitType(int type, int index) {}
-    protected void visitField(int type, int index) {}
-    protected void visitMethod(int type, int index) {}
-    protected void visitArrayValue(int argAndType) {}
-    protected void visitAnnotationValue(int argAndType) {}
-    protected void visitEncodedBoolean(int argAndType) {}
-    protected void visitEncodedNull(int argAndType) {}
-
-    private int readIndex(ByteInput in, int byteCount) {
-        int result = 0;
-        int shift = 0;
-        for (int i = 0; i < byteCount; i++) {
-            result += (in.readByte() & 0xff) << shift;
-            shift += 8;
-        }
-        return result;
     }
 }
