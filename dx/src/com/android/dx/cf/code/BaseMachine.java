@@ -16,8 +16,8 @@
 
 package com.android.dx.cf.code;
 
-import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.LocalItem;
+import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;

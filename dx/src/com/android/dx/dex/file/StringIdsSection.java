@@ -21,7 +21,6 @@ import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
-
 import java.util.Collection;
 import java.util.TreeMap;
 

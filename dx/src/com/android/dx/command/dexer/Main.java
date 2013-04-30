@@ -16,13 +16,15 @@
 
 package com.android.dx.command.dexer;
 
+import com.android.dex.Dex;
+import com.android.dex.DexFormat;
+import com.android.dex.util.FileUtils;
 import com.android.dx.Version;
 import com.android.dx.cf.code.SimException;
 import com.android.dx.cf.direct.ClassPathOpener;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.command.DxConsole;
 import com.android.dx.command.UsageException;
-import com.android.dx.dex.DexFormat;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
@@ -31,7 +33,6 @@ import com.android.dx.dex.code.PositionList;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedMethod;
-import com.android.dx.io.DexBuffer;
 import com.android.dx.merge.CollisionPolicy;
 import com.android.dx.merge.DexMerger;
 import com.android.dx.rop.annotation.Annotation;
@@ -39,7 +40,6 @@ import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
-import com.android.dx.util.FileUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -257,18 +257,18 @@ public class Main {
      *     and the base dex do not exist.
      */
     private static byte[] mergeIncremental(byte[] update, File base) throws IOException {
-        DexBuffer dexA = null;
-        DexBuffer dexB = null;
+        Dex dexA = null;
+        Dex dexB = null;
 
         if (update != null) {
-            dexA = new DexBuffer(update);
+            dexA = new Dex(update);
         }
 
         if (base.exists()) {
-            dexB = new DexBuffer(base);
+            dexB = new Dex(base);
         }
 
-        DexBuffer result;
+        Dex result;
         if (dexA == null && dexB == null) {
             return null;
         } else if (dexA == null) {
@@ -289,15 +289,15 @@ public class Main {
      * same type, this fails with an exception.
      */
     private static byte[] mergeLibraryDexBuffers(byte[] outArray) throws IOException {
-        for (byte[] libraryDexBuffer : libraryDexBuffers) {
+        for (byte[] libraryDex : libraryDexBuffers) {
             if (outArray == null) {
-                outArray = libraryDexBuffer;
+                outArray = libraryDex;
                 continue;
             }
 
-            DexBuffer a = new DexBuffer(outArray);
-            DexBuffer b = new DexBuffer(libraryDexBuffer);
-            DexBuffer ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
+            Dex a = new Dex(outArray);
+            Dex b = new Dex(libraryDex);
+            Dex ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
             outArray = ab.getBytes();
         }
 

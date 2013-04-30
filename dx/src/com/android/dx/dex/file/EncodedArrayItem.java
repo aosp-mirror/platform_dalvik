@@ -17,8 +17,8 @@
 package com.android.dx.dex.file;
 
 import com.android.dx.rop.cst.CstArray;
-import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.AnnotatedOutput;
+import com.android.dx.util.ByteArrayAnnotatedOutput;
 
 /**
  * Encoded array of constant values.

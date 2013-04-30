@@ -16,14 +16,12 @@
 
 package com.android.dx.ssa;
 
-import com.android.dx.rop.code.RegisterSpec;
-import com.android.dx.rop.code.RegOps;
 import com.android.dx.rop.code.CstInsn;
 import com.android.dx.rop.code.LocalItem;
+import com.android.dx.rop.code.RegOps;
+import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.cst.CstInteger;
-
 import java.util.HashSet;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

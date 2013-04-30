@@ -16,15 +16,14 @@
 
 package com.android.dx.ssa.back;
 
-import com.android.dx.ssa.SsaMethod;
+import com.android.dx.rop.code.RegisterSpec;
+import com.android.dx.ssa.PhiInsn;
 import com.android.dx.ssa.SsaBasicBlock;
 import com.android.dx.ssa.SsaInsn;
-import com.android.dx.ssa.PhiInsn;
-import com.android.dx.rop.code.RegisterSpec;
-
+import com.android.dx.ssa.SsaMethod;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * From Appel "Modern Compiler Implementation in Java" algorithm 19.17

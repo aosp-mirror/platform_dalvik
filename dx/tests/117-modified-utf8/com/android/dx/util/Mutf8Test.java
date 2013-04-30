@@ -16,6 +16,9 @@
 
 package com.android.dx.util;
 
+import com.android.dex.util.ByteArrayByteInput;
+import com.android.dex.util.ByteInput;
+import com.android.dex.Mutf8;
 import java.io.IOException;
 import java.util.Arrays;
 import junit.framework.TestCase;

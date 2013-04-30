@@ -18,16 +18,15 @@ package com.android.dx.dex.code;
 
 import com.android.dx.rop.code.Insn;
 import com.android.dx.rop.code.RegOps;
+import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.Rop;
 import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.ThrowingCstInsn;
-import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstFieldRef;
-import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Type;
-
 import java.util.HashMap;
 
 /**

@@ -16,11 +16,11 @@
 
 package com.android.dx.merge;
 
+import com.android.dex.DexException;
 import com.android.dx.io.CodeReader;
 import com.android.dx.io.Opcodes;
 import com.android.dx.io.instructions.DecodedInstruction;
 import com.android.dx.io.instructions.ShortArrayCodeOutput;
-import com.android.dx.util.DexException;
 
 final class InstructionTransformer {
     private final IndexMap indexMap;

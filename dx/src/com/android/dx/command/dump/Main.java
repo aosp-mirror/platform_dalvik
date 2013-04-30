@@ -16,10 +16,9 @@
 
 package com.android.dx.command.dump;
 
+import com.android.dex.util.FileUtils;
 import com.android.dx.cf.iface.ParseException;
-import com.android.dx.util.FileUtils;
 import com.android.dx.util.HexParser;
-
 import java.io.UnsupportedEncodingException;
 
 /**

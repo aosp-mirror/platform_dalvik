@@ -19,12 +19,10 @@ package com.android.dx.command.dump;
 import com.android.dx.cf.code.ConcreteMethod;
 import com.android.dx.cf.iface.Member;
 import com.android.dx.cf.iface.ParseObserver;
-import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
 import com.android.dx.util.IndentingWriter;
 import com.android.dx.util.TwoColumnOutput;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;

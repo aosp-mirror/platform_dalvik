@@ -16,6 +16,8 @@
 
 package com.android.dx.dex;
 
+import com.android.dex.DexFormat;
+
 /**
  * Container for options used to control details of dex file generation.
  */

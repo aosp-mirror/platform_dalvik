@@ -25,11 +25,11 @@ import com.android.dx.rop.code.RegisterSpecSet;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstMemberRef;
-import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Type;
 
-import com.android.dx.util.DexException;
+import com.android.dex.DexException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;

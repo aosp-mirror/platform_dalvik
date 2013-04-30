@@ -17,11 +17,7 @@
 package com.android.dx.ssa;
 
 import com.android.dx.util.IntSet;
-import com.android.dx.util.BitIntSet;
-import com.android.dx.util.ListIntSet;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
 
 /**

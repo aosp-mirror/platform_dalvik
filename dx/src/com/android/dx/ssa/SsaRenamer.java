@@ -24,7 +24,6 @@ import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.type.Type;
 import com.android.dx.util.IntList;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;

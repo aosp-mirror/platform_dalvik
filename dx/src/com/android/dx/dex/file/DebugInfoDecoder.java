@@ -16,25 +16,35 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.util.ByteArrayByteInput;
+import com.android.dex.util.ByteInput;
+import com.android.dex.util.ExceptionWithContext;
+import com.android.dex.Leb128;
 import com.android.dx.dex.code.DalvCode;
 import com.android.dx.dex.code.DalvInsnList;
 import com.android.dx.dex.code.LocalList;
 import com.android.dx.dex.code.PositionList;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_ADVANCE_LINE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_ADVANCE_PC;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_END_LOCAL;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_END_SEQUENCE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_FIRST_SPECIAL;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_LINE_BASE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_LINE_RANGE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_RESTART_LOCAL;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_SET_EPILOGUE_BEGIN;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_SET_FILE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_SET_PROLOGUE_END;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_START_LOCAL;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_START_LOCAL_EXTENDED;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
-import com.android.dx.util.ByteArrayByteInput;
-import com.android.dx.util.ByteInput;
-import com.android.dx.util.ExceptionWithContext;
-
-import com.android.dx.util.Leb128Utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.android.dx.dex.file.DebugInfoConstants.*;
 
 /**
  * A decoder for the dex debug info state machine format.
@@ -219,7 +229,7 @@ public class DebugInfoDecoder {
      * @throws IOException
      */
     private int readStringIndex(ByteInput bs) throws IOException {
-        int offsetIndex = Leb128Utils.readUnsignedLeb128(bs);
+        int offsetIndex = Leb128.readUnsignedLeb128(bs);
 
         return offsetIndex - 1;
     }
@@ -239,8 +249,8 @@ public class DebugInfoDecoder {
     private void decode0() throws IOException {
         ByteInput bs = new ByteArrayByteInput(encoded);
 
-        line = Leb128Utils.readUnsignedLeb128(bs);
-        int szParams = Leb128Utils.readUnsignedLeb128(bs);
+        line = Leb128.readUnsignedLeb128(bs);
+        int szParams = Leb128.readUnsignedLeb128(bs);
         StdTypeList params = desc.getParameterTypes();
         int curReg = getParamBase();
 
@@ -285,7 +295,7 @@ public class DebugInfoDecoder {
 
             switch (opcode) {
                 case DBG_START_LOCAL: {
-                    int reg = Leb128Utils.readUnsignedLeb128(bs);
+                    int reg = Leb128.readUnsignedLeb128(bs);
                     int nameIdx = readStringIndex(bs);
                     int typeIdx = readStringIndex(bs);
                     LocalEntry le = new LocalEntry(
@@ -297,7 +307,7 @@ public class DebugInfoDecoder {
                 break;
 
                 case DBG_START_LOCAL_EXTENDED: {
-                    int reg = Leb128Utils.readUnsignedLeb128(bs);
+                    int reg = Leb128.readUnsignedLeb128(bs);
                     int nameIdx = readStringIndex(bs);
                     int typeIdx = readStringIndex(bs);
                     int sigIdx = readStringIndex(bs);
@@ -310,7 +320,7 @@ public class DebugInfoDecoder {
                 break;
 
                 case DBG_RESTART_LOCAL: {
-                    int reg = Leb128Utils.readUnsignedLeb128(bs);
+                    int reg = Leb128.readUnsignedLeb128(bs);
                     LocalEntry prevle;
                     LocalEntry le;
 
@@ -336,7 +346,7 @@ public class DebugInfoDecoder {
                 break;
 
                 case DBG_END_LOCAL: {
-                    int reg = Leb128Utils.readUnsignedLeb128(bs);
+                    int reg = Leb128.readUnsignedLeb128(bs);
                     LocalEntry prevle;
                     LocalEntry le;
 
@@ -366,11 +376,11 @@ public class DebugInfoDecoder {
                 return;
 
                 case DBG_ADVANCE_PC:
-                    address += Leb128Utils.readUnsignedLeb128(bs);
+                    address += Leb128.readUnsignedLeb128(bs);
                 break;
 
                 case DBG_ADVANCE_LINE:
-                    line += Leb128Utils.readSignedLeb128(bs);
+                    line += Leb128.readSignedLeb128(bs);
                 break;
 
                 case DBG_SET_PROLOGUE_END:

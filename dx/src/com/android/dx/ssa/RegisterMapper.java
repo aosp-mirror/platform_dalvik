@@ -18,7 +18,6 @@ package com.android.dx.ssa;
 
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
-import com.android.dx.util.ToHuman;
 
 /**
  * Represents a mapping between two register numbering schemes.

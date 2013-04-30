@@ -16,7 +16,6 @@
 
 package com.android.dx.cf.code;
 
-import com.android.dx.util.FixedSizeList;
 import com.android.dx.util.Hex;
 import com.android.dx.util.LabeledList;
 

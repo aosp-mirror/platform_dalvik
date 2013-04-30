@@ -16,9 +16,9 @@
 
 package com.android.dx.cf.code;
 
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
-import com.android.dx.util.ExceptionWithContext;
 import com.android.dx.util.Hex;
 import com.android.dx.util.MutabilityControl;
 
