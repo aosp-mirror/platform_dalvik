@@ -22,7 +22,22 @@ import com.android.dx.io.ClassDef;
 import com.android.dx.io.DexBuffer;
 import com.android.dx.io.EncodedValue;
 import com.android.dx.io.EncodedValueReader;
-import static com.android.dx.io.EncodedValueReader.*;
+import static com.android.dx.io.EncodedValueReader.ENCODED_ANNOTATION;
+import static com.android.dx.io.EncodedValueReader.ENCODED_ARRAY;
+import static com.android.dx.io.EncodedValueReader.ENCODED_BOOLEAN;
+import static com.android.dx.io.EncodedValueReader.ENCODED_BYTE;
+import static com.android.dx.io.EncodedValueReader.ENCODED_CHAR;
+import static com.android.dx.io.EncodedValueReader.ENCODED_DOUBLE;
+import static com.android.dx.io.EncodedValueReader.ENCODED_ENUM;
+import static com.android.dx.io.EncodedValueReader.ENCODED_FIELD;
+import static com.android.dx.io.EncodedValueReader.ENCODED_FLOAT;
+import static com.android.dx.io.EncodedValueReader.ENCODED_INT;
+import static com.android.dx.io.EncodedValueReader.ENCODED_LONG;
+import static com.android.dx.io.EncodedValueReader.ENCODED_METHOD;
+import static com.android.dx.io.EncodedValueReader.ENCODED_NULL;
+import static com.android.dx.io.EncodedValueReader.ENCODED_SHORT;
+import static com.android.dx.io.EncodedValueReader.ENCODED_STRING;
+import static com.android.dx.io.EncodedValueReader.ENCODED_TYPE;
 import com.android.dx.io.FieldId;
 import com.android.dx.io.MethodId;
 import com.android.dx.io.ProtoId;
@@ -216,19 +231,16 @@ public final class IndexMap {
     public EncodedValue adjustEncodedArray(EncodedValue encodedArray) {
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput(32);
         new EncodedValueTransformer(out).transformArray(
-                new EncodedValueReader(encodedArray.asByteInput(), ENCODED_ARRAY));
+                new EncodedValueReader(encodedArray, ENCODED_ARRAY));
         return new EncodedValue(out.toByteArray());
     }
 
     public Annotation adjust(Annotation annotation) {
-        int[] names = annotation.getNames().clone();
-        EncodedValue[] values = annotation.getValues().clone();
-        for (int i = 0; i < names.length; i++) {
-            names[i] = adjustString(names[i]);
-            values[i] = adjustEncodedValue(values[i]);
-        }
+        ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput(32);
+        new EncodedValueTransformer(out).transformAnnotation(
+                annotation.getReader());
         return new Annotation(target, annotation.getVisibility(),
-                adjustType(annotation.getTypeIndex()), names, values);
+                new EncodedValue(out.toByteArray()));
     }
 
     /**

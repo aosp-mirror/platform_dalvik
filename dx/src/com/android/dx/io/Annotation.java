@@ -16,7 +16,7 @@
 
 package com.android.dx.io;
 
-import com.android.dx.util.Unsigned;
+import static com.android.dx.io.EncodedValueReader.ENCODED_ANNOTATION;
 
 /**
  * An annotation.
@@ -24,81 +24,40 @@ import com.android.dx.util.Unsigned;
 public final class Annotation implements Comparable<Annotation> {
     private final DexBuffer buffer;
     private final byte visibility;
-    private final int typeIndex;
-    private final int[] names;
-    private final EncodedValue[] values;
+    private final EncodedValue encodedAnnotation;
 
-    public Annotation(DexBuffer buffer, byte visibility, int typeIndex, int[] names,
-            EncodedValue[] values) {
-        this.buffer = buffer;
+    public Annotation(DexBuffer dexBuffer, byte visibility, EncodedValue encodedAnnotation) {
+        this.buffer = dexBuffer;
         this.visibility = visibility;
-        this.typeIndex = typeIndex;
-        this.names = names;
-        this.values = values;
+        this.encodedAnnotation = encodedAnnotation;
     }
 
     public byte getVisibility() {
         return visibility;
     }
 
+    public EncodedValueReader getReader() {
+        return new EncodedValueReader(encodedAnnotation, ENCODED_ANNOTATION);
+    }
+
     public int getTypeIndex() {
-        return typeIndex;
-    }
-
-    public int[] getNames() {
-        return names;
-    }
-
-    public EncodedValue[] getValues() {
-        return values;
+        EncodedValueReader reader = getReader();
+        reader.readAnnotation();
+        return reader.getAnnotationType();
     }
 
     public void writeTo(DexBuffer.Section out) {
         out.writeByte(visibility);
-        out.writeUleb128(typeIndex);
-        out.writeUleb128(names.length);
-        for (int i = 0; i < names.length; i++) {
-            out.writeUleb128(names[i]);
-            values[i].writeTo(out);
-        }
+        encodedAnnotation.writeTo(out);
     }
 
     @Override public int compareTo(Annotation other) {
-        if (typeIndex != other.typeIndex) {
-            return Unsigned.compare(typeIndex, other.typeIndex);
-        }
-        int size = Math.min(names.length, other.names.length);
-        for (int i = 0; i < size; i++) {
-            if (names[i] != other.names[i]) {
-                return Unsigned.compare(names[i], other.names[i]);
-            }
-            int compare = values[i].compareTo(other.values[i]);
-            if (compare != 0) {
-                return compare;
-            }
-        }
-        return names.length - other.names.length;
+        return encodedAnnotation.compareTo(other.encodedAnnotation);
     }
 
     @Override public String toString() {
-        if (buffer == null) {
-            return visibility + " " + typeIndex;
-        }
-
-        StringBuilder result = new StringBuilder();
-        result.append(visibility);
-        result.append(" ");
-        result.append(buffer.typeNames().get(typeIndex));
-        result.append("[");
-        for (int i = 0; i < names.length; i++) {
-            if (i > 0) {
-                result.append(", ");
-            }
-            result.append(buffer.strings().get(names[i]));
-            result.append("=");
-            result.append(values[i]);
-        }
-        result.append("]");
-        return result.toString();
+        return buffer == null
+                ? visibility + " " + getTypeIndex()
+                : visibility + " " + buffer.typeNames().get(getTypeIndex());
     }
 }

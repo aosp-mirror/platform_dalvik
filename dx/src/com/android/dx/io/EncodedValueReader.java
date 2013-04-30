@@ -60,12 +60,17 @@ public final class EncodedValueReader {
 
     /**
      * Creates a new encoded value reader whose only value is the specified
-     * known type. This is useful for class_def_item, which references an
-     * encoded array that doesn't contain a type+arg prefix.
+     * known type. This is useful for encoded values without a type prefix,
+     * such as class_def_item's encoded_array or annotation_item's
+     * encoded_annotation.
      */
     public EncodedValueReader(ByteInput in, int knownType) {
         this.in = in;
         this.type = knownType;
+    }
+
+    public EncodedValueReader(EncodedValue in, int knownType) {
+        this(in.asByteInput(), knownType);
     }
 
     /**

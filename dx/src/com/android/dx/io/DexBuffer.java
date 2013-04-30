@@ -552,22 +552,11 @@ public final class DexBuffer {
 
         public Annotation readAnnotation() {
             byte visibility = readByte();
-            int typeIndex = readUleb128();
-            int size = readUleb128();
-            int[] names = new int[size];
-            EncodedValue[] values = new EncodedValue[size];
-            for (int i = 0; i < size; i++) {
-                names[i] = readUleb128();
-                values[i] = readEncodedValue();
-            }
-            return new Annotation(DexBuffer.this, visibility, typeIndex, names, values);
-        }
-
-        public EncodedValue readEncodedValue() {
             int start = position;
-            new EncodedValueReader(this).skipValue();
+            new EncodedValueReader(this, EncodedValueReader.ENCODED_ANNOTATION).skipValue();
             int end = position;
-            return new EncodedValue(Arrays.copyOfRange(data, start, end));
+            return new Annotation(DexBuffer.this, visibility,
+                    new EncodedValue(Arrays.copyOfRange(data, start, end)));
         }
 
         public EncodedValue readEncodedArray() {
