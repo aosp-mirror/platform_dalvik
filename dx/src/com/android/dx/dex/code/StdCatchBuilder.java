@@ -23,7 +23,6 @@ import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.IntList;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 

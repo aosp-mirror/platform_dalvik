@@ -19,7 +19,6 @@ package com.android.dx.dex.file;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.ToHuman;
-
 import java.io.PrintWriter;
 
 /**

@@ -16,7 +16,7 @@
 
 package com.android.dx.cf.iface;
 
-import com.android.dx.util.ExceptionWithContext;
+import com.android.dex.util.ExceptionWithContext;
 
 /**
  * Exception from parsing.

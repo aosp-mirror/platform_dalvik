@@ -19,7 +19,6 @@ package com.android.dx.command.dump;
 import com.android.dx.cf.direct.DirectClassFile;
 import com.android.dx.cf.direct.StdAttributeFactory;
 import com.android.dx.util.ByteArray;
-
 import java.io.PrintStream;
 
 /**

@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.EncodedValueCodec;
 import com.android.dx.rop.annotation.Annotation;
 import com.android.dx.rop.annotation.NameValuePair;
 import com.android.dx.rop.cst.Constant;
@@ -37,7 +38,6 @@ import com.android.dx.rop.cst.CstShort;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.util.AnnotatedOutput;
-import com.android.dx.util.EncodedValueUtils;
 import com.android.dx.util.Hex;
 import java.util.Collection;
 
@@ -134,49 +134,49 @@ public final class ValueEncoder {
             case VALUE_INT:
             case VALUE_LONG: {
                 long value = ((CstLiteralBits) cst).getLongBits();
-                EncodedValueUtils.writeSignedIntegralValue(out, type, value);
+                EncodedValueCodec.writeSignedIntegralValue(out, type, value);
                 break;
             }
             case VALUE_CHAR: {
                 long value = ((CstLiteralBits) cst).getLongBits();
-                EncodedValueUtils.writeUnsignedIntegralValue(out, type, value);
+                EncodedValueCodec.writeUnsignedIntegralValue(out, type, value);
                 break;
             }
             case VALUE_FLOAT: {
                 // Shift value left 32 so that right-zero-extension works.
                 long value = ((CstFloat) cst).getLongBits() << 32;
-                EncodedValueUtils.writeRightZeroExtendedValue(out, type, value);
+                EncodedValueCodec.writeRightZeroExtendedValue(out, type, value);
                 break;
             }
             case VALUE_DOUBLE: {
                 long value = ((CstDouble) cst).getLongBits();
-                EncodedValueUtils.writeRightZeroExtendedValue(out, type, value);
+                EncodedValueCodec.writeRightZeroExtendedValue(out, type, value);
                 break;
             }
             case VALUE_STRING: {
                 int index = file.getStringIds().indexOf((CstString) cst);
-                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
+                EncodedValueCodec.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_TYPE: {
                 int index = file.getTypeIds().indexOf((CstType) cst);
-                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
+                EncodedValueCodec.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_FIELD: {
                 int index = file.getFieldIds().indexOf((CstFieldRef) cst);
-                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
+                EncodedValueCodec.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_METHOD: {
                 int index = file.getMethodIds().indexOf((CstMethodRef) cst);
-                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
+                EncodedValueCodec.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_ENUM: {
                 CstFieldRef fieldRef = ((CstEnumRef) cst).getFieldRef();
                 int index = file.getFieldIds().indexOf(fieldRef);
-                EncodedValueUtils.writeUnsignedIntegralValue(out, type, (long) index);
+                EncodedValueCodec.writeUnsignedIntegralValue(out, type, (long) index);
                 break;
             }
             case VALUE_ARRAY: {

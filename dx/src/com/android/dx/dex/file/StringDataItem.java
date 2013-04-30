@@ -16,11 +16,11 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.Leb128;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
-import com.android.dx.util.Leb128Utils;
 
 /**
  * Representation of string data for a particular string, in a Dalvik file.
@@ -50,7 +50,7 @@ public final class StringDataItem extends OffsettedItem {
         int utf16Size = value.getUtf16Size();
 
         // The +1 is for the '\0' termination byte.
-        return Leb128Utils.unsignedLeb128Size(utf16Size)
+        return Leb128.unsignedLeb128Size(utf16Size)
             + value.getUtf8Size() + 1;
     }
 
@@ -73,7 +73,7 @@ public final class StringDataItem extends OffsettedItem {
         int utf16Size = value.getUtf16Size();
 
         if (out.annotates()) {
-            out.annotate(Leb128Utils.unsignedLeb128Size(utf16Size),
+            out.annotate(Leb128.unsignedLeb128Size(utf16Size),
                     "utf16_size: " + Hex.u4(utf16Size));
             out.annotate(bytes.size() + 1, value.toQuoted());
         }

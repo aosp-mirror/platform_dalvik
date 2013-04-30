@@ -16,8 +16,9 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.dex.DexFormat;
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.dex.DexOptions;
+import static com.android.dx.dex.file.MixedItemSection.SortType;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstBaseMethodRef;
 import com.android.dx.rop.cst.CstEnumRef;
@@ -26,8 +27,6 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Type;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
-import com.android.dx.util.ExceptionWithContext;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
@@ -35,8 +34,6 @@ import java.security.DigestException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.Adler32;
-
-import static com.android.dx.dex.file.MixedItemSection.SortType;
 
 /**
  * Representation of an entire {@code .dex} (Dalvik EXecutable)

@@ -22,7 +22,6 @@ import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 import com.android.dx.util.TwoColumnOutput;
-
 import java.util.BitSet;
 
 /**

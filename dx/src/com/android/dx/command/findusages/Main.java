@@ -16,7 +16,7 @@
 
 package com.android.dx.command.findusages;
 
-import com.android.dx.io.DexBuffer;
+import com.android.dex.Dex;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,7 +27,7 @@ public final class Main {
         String declaredBy = args[1];
         String memberName = args[2];
 
-        DexBuffer dex = new DexBuffer(new File(dexFile));
+        Dex dex = new Dex(new File(dexFile));
         PrintWriter out = new PrintWriter(System.out);
         new FindUsages(dex, declaredBy, memberName, out).findUsages();
         out.flush();

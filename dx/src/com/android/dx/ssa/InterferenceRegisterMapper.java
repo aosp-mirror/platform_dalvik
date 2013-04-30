@@ -16,14 +16,12 @@
 
 package com.android.dx.ssa;
 
-import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.RegisterSpec;
+import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.ssa.back.InterferenceGraph;
-import com.android.dx.util.IntSet;
 import com.android.dx.util.BitIntSet;
-
+import com.android.dx.util.IntSet;
 import java.util.ArrayList;
-import java.util.BitSet;
 
 /**
  * A register mapper that keeps track of the accumulated interference

@@ -16,10 +16,10 @@
 
 package com.android.dx.cf.code;
 
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
-import com.android.dx.util.ExceptionWithContext;
 import com.android.dx.util.IntList;
 
 /**

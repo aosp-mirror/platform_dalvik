@@ -16,21 +16,19 @@
 
 package com.android.dx.ssa.back;
 
+import com.android.dx.rop.code.PlainInsn;
 import com.android.dx.rop.code.RegOps;
 import com.android.dx.rop.code.RegisterSpec;
-import com.android.dx.rop.code.PlainInsn;
+import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.SourcePosition;
-import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.ssa.NormalSsaInsn;
 import com.android.dx.ssa.RegisterMapper;
+import com.android.dx.ssa.SsaBasicBlock;
 import com.android.dx.ssa.SsaInsn;
 import com.android.dx.ssa.SsaMethod;
-import com.android.dx.ssa.SsaBasicBlock;
-import com.android.dx.util.IntSet;
 import com.android.dx.util.IntIterator;
-
-import java.util.BitSet;
+import com.android.dx.util.IntSet;
 import java.util.ArrayList;
 
 /**

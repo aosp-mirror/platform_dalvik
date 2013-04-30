@@ -16,7 +16,6 @@
 
 package com.android.dx.io.instructions;
 
-import java.io.EOFException;
 import java.util.HashMap;
 
 /**
