@@ -20,7 +20,6 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.util.MutabilityControl;
 import com.android.dx.util.ToHuman;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;

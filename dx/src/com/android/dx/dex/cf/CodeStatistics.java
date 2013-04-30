@@ -18,7 +18,6 @@ package com.android.dx.dex.cf;
 
 import com.android.dx.dex.code.DalvCode;
 import com.android.dx.rop.code.RopMethod;
-
 import java.io.PrintStream;
 
 /**

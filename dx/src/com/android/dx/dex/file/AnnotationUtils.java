@@ -17,6 +17,7 @@
 package com.android.dx.dex.file;
 
 import com.android.dx.rop.annotation.Annotation;
+import static com.android.dx.rop.annotation.AnnotationVisibility.SYSTEM;
 import com.android.dx.rop.annotation.NameValuePair;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstAnnotation;
@@ -28,10 +29,7 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
-
 import java.util.ArrayList;
-
-import static com.android.dx.rop.annotation.AnnotationVisibility.*;
 
 /**
  * Utility class for dealing with annotations.

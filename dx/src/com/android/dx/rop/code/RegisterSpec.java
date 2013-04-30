@@ -21,7 +21,6 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
 import com.android.dx.util.ToHuman;
-
 import java.util.HashMap;
 
 /**

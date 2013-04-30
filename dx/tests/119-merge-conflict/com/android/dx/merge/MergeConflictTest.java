@@ -16,19 +16,19 @@
 
 package com.android.dx.merge;
 
-import com.android.dx.io.DexBuffer;
-import com.android.dx.util.DexException;
+import com.android.dex.Dex;
+import com.android.dex.DexException;
 import java.io.IOException;
 import junit.framework.TestCase;
 
 public final class MergeConflictTest extends TestCase {
 
     public void testMergeConflict() throws IOException {
-        DexBuffer a = resourceToDexBuffer("/testdata/A.dex");
-        DexBuffer b = resourceToDexBuffer("/testdata/B.dex");
+        Dex a = resourceToDexBuffer("/testdata/A.dex");
+        Dex b = resourceToDexBuffer("/testdata/B.dex");
 
         // a and b don't overlap; this should succeed
-        DexBuffer ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
+        Dex ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
 
         // a and ab overlap; this should fail
         DexMerger dexMerger = new DexMerger(a, ab, CollisionPolicy.FAIL);
@@ -40,7 +40,7 @@ public final class MergeConflictTest extends TestCase {
         }
     }
 
-    private DexBuffer resourceToDexBuffer(String resource) throws IOException {
-        return new DexBuffer(getClass().getResourceAsStream(resource));
+    private Dex resourceToDexBuffer(String resource) throws IOException {
+        return new Dex(getClass().getResourceAsStream(resource));
     }
 }

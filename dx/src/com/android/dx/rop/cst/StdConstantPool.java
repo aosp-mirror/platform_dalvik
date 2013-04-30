@@ -16,7 +16,7 @@
 
 package com.android.dx.rop.cst;
 
-import com.android.dx.util.ExceptionWithContext;
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.util.Hex;
 import com.android.dx.util.MutabilityControl;
 

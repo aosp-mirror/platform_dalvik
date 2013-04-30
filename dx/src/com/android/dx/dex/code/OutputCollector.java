@@ -17,7 +17,6 @@
 package com.android.dx.dex.code;
 
 import com.android.dx.dex.DexOptions;
-
 import java.util.ArrayList;
 
 /**

@@ -16,7 +16,7 @@
 
 package com.android.dx.command.grep;
 
-import com.android.dx.io.DexBuffer;
+import com.android.dex.Dex;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,7 +27,7 @@ public final class Main {
         String dexFile = args[0];
         String pattern = args[1];
 
-        DexBuffer dex = new DexBuffer(new File(dexFile));
+        Dex dex = new Dex(new File(dexFile));
         int count = new Grep(dex, Pattern.compile(pattern), new PrintWriter(System.out)).grep();
         System.exit((count > 0) ? 0 : 1);
     }

@@ -16,28 +16,36 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.dex.code.LocalList;
 import com.android.dx.dex.code.PositionList;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_ADVANCE_LINE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_ADVANCE_PC;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_END_LOCAL;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_END_SEQUENCE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_FIRST_SPECIAL;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_LINE_BASE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_LINE_RANGE;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_RESTART_LOCAL;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_SET_PROLOGUE_END;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_START_LOCAL;
+import static com.android.dx.dex.file.DebugInfoConstants.DBG_START_LOCAL_EXTENDED;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.cst.CstMethodRef;
-import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
-import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.AnnotatedOutput;
-import com.android.dx.util.ExceptionWithContext;
-
+import com.android.dx.util.ByteArrayAnnotatedOutput;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.BitSet;
-
-import static com.android.dx.dex.file.DebugInfoConstants.*;
 
 /**
  * An encoder for the dex debug info state machine format. The format

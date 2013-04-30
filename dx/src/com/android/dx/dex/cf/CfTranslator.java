@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.cf;
 
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.cf.code.ConcreteMethod;
 import com.android.dx.cf.code.Ropper;
 import com.android.dx.cf.direct.DirectClassFile;
@@ -34,10 +35,10 @@ import com.android.dx.dex.file.EncodedMethod;
 import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.code.AccessFlags;
+import com.android.dx.rop.code.DexTranslationAdvice;
 import com.android.dx.rop.code.LocalVariableExtractor;
 import com.android.dx.rop.code.LocalVariableInfo;
 import com.android.dx.rop.code.RopMethod;
-import com.android.dx.rop.code.DexTranslationAdvice;
 import com.android.dx.rop.code.TranslationAdvice;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstBoolean;
@@ -53,7 +54,6 @@ import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.ssa.Optimizer;
-import com.android.dx.util.ExceptionWithContext;
 
 /**
  * Static method that turns {@code byte[]}s containing Java

@@ -16,20 +16,19 @@
 
 package com.android.dx.ssa;
 
-import com.android.dx.rop.code.PlainCstInsn;
-import com.android.dx.rop.code.TranslationAdvice;
-import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.Insn;
-import com.android.dx.rop.code.Rop;
-import com.android.dx.rop.code.RegisterSpec;
+import com.android.dx.rop.code.PlainCstInsn;
 import com.android.dx.rop.code.PlainInsn;
-import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.RegOps;
+import com.android.dx.rop.code.RegisterSpec;
+import com.android.dx.rop.code.RegisterSpecList;
+import com.android.dx.rop.code.Rop;
+import com.android.dx.rop.code.Rops;
+import com.android.dx.rop.code.TranslationAdvice;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
-
 import java.util.ArrayList;
 import java.util.List;
 

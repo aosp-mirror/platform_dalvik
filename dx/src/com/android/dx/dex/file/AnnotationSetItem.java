@@ -16,8 +16,8 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.Annotation;
+import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 

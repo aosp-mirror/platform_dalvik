@@ -18,15 +18,13 @@ package com.android.dx.ssa.back;
 
 import com.android.dx.rop.code.CstInsn;
 import com.android.dx.rop.cst.CstInteger;
-import com.android.dx.ssa.NormalSsaInsn;
 import com.android.dx.ssa.BasicRegisterMapper;
+import com.android.dx.ssa.NormalSsaInsn;
 import com.android.dx.ssa.RegisterMapper;
 import com.android.dx.ssa.SsaMethod;
-import com.android.dx.util.IntSet;
 import com.android.dx.util.BitIntSet;
-
+import com.android.dx.util.IntSet;
 import java.util.BitSet;
-import java.util.ArrayList;
 
 /**
  * Allocates registers via a naive n^2 register allocator.

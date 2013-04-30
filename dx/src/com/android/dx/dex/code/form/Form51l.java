@@ -24,7 +24,6 @@ import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstLiteral64;
 import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.util.AnnotatedOutput;
-
 import java.util.BitSet;
 
 /**

@@ -16,14 +16,13 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.dex.code.DalvCode;
 import com.android.dx.dex.code.DalvInsnList;
 import com.android.dx.dex.code.LocalList;
 import com.android.dx.dex.code.PositionList;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.util.AnnotatedOutput;
-import com.android.dx.util.ExceptionWithContext;
-
 import java.io.PrintWriter;
 
 public class DebugInfoItem extends OffsettedItem {

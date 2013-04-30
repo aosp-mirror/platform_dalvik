@@ -16,17 +16,16 @@
 
 package com.android.dx.command.annotool;
 
+import com.android.dx.cf.attrib.AttRuntimeInvisibleAnnotations;
+import com.android.dx.cf.attrib.AttRuntimeVisibleAnnotations;
+import com.android.dx.cf.attrib.BaseAnnotations;
 import com.android.dx.cf.direct.ClassPathOpener;
 import com.android.dx.cf.direct.DirectClassFile;
 import com.android.dx.cf.direct.StdAttributeFactory;
-import com.android.dx.cf.iface.AttributeList;
 import com.android.dx.cf.iface.Attribute;
-import com.android.dx.cf.attrib.AttRuntimeInvisibleAnnotations;
-import com.android.dx.cf.attrib.BaseAnnotations;
-import com.android.dx.cf.attrib.AttRuntimeVisibleAnnotations;
-import com.android.dx.util.ByteArray;
+import com.android.dx.cf.iface.AttributeList;
 import com.android.dx.rop.annotation.Annotation;
-
+import com.android.dx.util.ByteArray;
 import java.io.File;
 import java.lang.annotation.ElementType;
 import java.util.HashSet;

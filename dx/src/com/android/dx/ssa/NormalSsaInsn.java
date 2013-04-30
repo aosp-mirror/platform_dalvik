@@ -16,7 +16,12 @@
 
 package com.android.dx.ssa;
 
-import com.android.dx.rop.code.*;
+import com.android.dx.rop.code.Insn;
+import com.android.dx.rop.code.LocalItem;
+import com.android.dx.rop.code.RegOps;
+import com.android.dx.rop.code.RegisterSpec;
+import com.android.dx.rop.code.RegisterSpecList;
+import com.android.dx.rop.code.Rop;
 
 /**
  * A "normal" (non-phi) instruction in SSA form. Always wraps a rop insn.

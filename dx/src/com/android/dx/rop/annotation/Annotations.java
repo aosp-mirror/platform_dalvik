@@ -18,7 +18,6 @@ package com.android.dx.rop.annotation;
 
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.util.MutabilityControl;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;

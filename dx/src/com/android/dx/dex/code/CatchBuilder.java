@@ -17,7 +17,6 @@
 package com.android.dx.dex.code;
 
 import com.android.dx.rop.type.Type;
-
 import java.util.HashSet;
 
 /**

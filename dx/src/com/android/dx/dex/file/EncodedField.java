@@ -16,13 +16,12 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.Leb128;
 import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
-import com.android.dx.util.Leb128Utils;
-
 import java.io.PrintWriter;
 
 /**
@@ -139,9 +138,9 @@ public final class EncodedField extends EncodedMember
         if (out.annotates()) {
             out.annotate(0, String.format("  [%x] %s", dumpSeq,
                             field.toHuman()));
-            out.annotate(Leb128Utils.unsignedLeb128Size(diff),
+            out.annotate(Leb128.unsignedLeb128Size(diff),
                     "    field_idx:    " + Hex.u4(fieldIdx));
-            out.annotate(Leb128Utils.unsignedLeb128Size(accessFlags),
+            out.annotate(Leb128.unsignedLeb128Size(accessFlags),
                     "    access_flags: " +
                     AccessFlags.fieldString(accessFlags));
         }

@@ -16,10 +16,9 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dex.util.ExceptionWithContext;
 import com.android.dx.util.AnnotatedOutput;
-import com.android.dx.util.ExceptionWithContext;
 import com.android.dx.util.Hex;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

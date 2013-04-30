@@ -16,7 +16,7 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.util.DexException;
+import com.android.dex.DexException;
 import java.util.Formatter;
 import java.util.Map;
 import java.util.TreeMap;

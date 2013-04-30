@@ -19,7 +19,6 @@ package com.android.dx.dex.code;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.SourcePosition;
-import com.android.dx.rop.type.Type;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
