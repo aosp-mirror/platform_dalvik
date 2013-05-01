@@ -23,6 +23,8 @@ LD_LIBRARY_PATH=$ANDROID_BUILD_TOP/out/host/linux-x86/lib \
 exec $ANDROID_BUILD_TOP/out/host/linux-x86/bin/dalvikvm \
 -Xbootclasspath\
 :$ANDROID_BUILD_TOP/out/host/linux-x86/framework/core-hostdex.jar\
+:$ANDROID_BUILD_TOP/out/host/linux-x86/framework/conscrypt-hostdex.jar\
+:$ANDROID_BUILD_TOP/out/host/linux-x86/framework/okhttp-hostdex.jar\
 :$ANDROID_BUILD_TOP/out/host/linux-x86/framework/bouncycastle-hostdex.jar\
 :$ANDROID_BUILD_TOP/out/host/linux-x86/framework/apache-xml-hostdex.jar \
 $*
