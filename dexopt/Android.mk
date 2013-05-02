@@ -27,13 +27,6 @@ local_c_includes := \
 		dalvik/vm \
 		$(JNI_H_INCLUDE)
 
-local_shared_libraries := \
-		libssl \
-		libdvm \
-		libcrypto \
-		libicuuc \
-		libicui18n
-
 include $(CLEAR_VARS)
 ifeq ($(TARGET_CPU_SMP),true)
     LOCAL_CFLAGS += -DANDROID_SMP=1
@@ -43,7 +36,7 @@ endif
 
 LOCAL_SRC_FILES := $(local_src_files)
 LOCAL_C_INCLUDES := $(local_c_includes)
-LOCAL_SHARED_LIBRARIES := $(local_shared_libraries) libcutils libexpat liblog libz
+LOCAL_SHARED_LIBRARIES := libssl libdvm libcrypto libicuuc libicui18n libcutils libexpat liblog libz
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := dexopt
 
@@ -56,7 +49,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
     include $(CLEAR_VARS)
     LOCAL_SRC_FILES := $(local_src_files)
     LOCAL_C_INCLUDES := $(local_c_includes)
-    LOCAL_SHARED_LIBRARIES := $(local_shared_libraries)
+    LOCAL_SHARED_LIBRARIES := libssl-host libdvm libcrypto-host libicuuc-host libicui18n-host
     LOCAL_STATIC_LIBRARIES :=  libcutils libexpat liblog libz
     LOCAL_LDLIBS += -ldl -lpthread
     LOCAL_CFLAGS += -DANDROID_SMP=1
