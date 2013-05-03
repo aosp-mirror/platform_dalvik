@@ -36,7 +36,6 @@ dex_src_files := \
 
 dex_include_files := \
 	dalvik \
-	$(JNI_H_INCLUDE) \
 	external/zlib \
 	external/safe-iop/include
 
