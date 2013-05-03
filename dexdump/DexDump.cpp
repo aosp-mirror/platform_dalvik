@@ -435,6 +435,9 @@ void dumpFileHeader(const DexFile* pDexFile)
     printf("type_ids_size       : %d\n", pHeader->typeIdsSize);
     printf("type_ids_off        : %d (0x%06x)\n",
         pHeader->typeIdsOff, pHeader->typeIdsOff);
+    printf("proto_ids_size       : %d\n", pHeader->protoIdsSize);
+    printf("proto_ids_off        : %d (0x%06x)\n",
+        pHeader->protoIdsOff, pHeader->protoIdsOff);
     printf("field_ids_size      : %d\n", pHeader->fieldIdsSize);
     printf("field_ids_off       : %d (0x%06x)\n",
         pHeader->fieldIdsOff, pHeader->fieldIdsOff);
