@@ -222,7 +222,6 @@ ifeq ($(WITH_JIT),true)
 endif
 
 LOCAL_C_INCLUDES += \
-	$(JNI_H_INCLUDE) \
 	dalvik \
 	dalvik/vm \
 	external/zlib \
