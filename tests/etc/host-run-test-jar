@@ -141,7 +141,7 @@ export DYLD_LIBRARY_PATH="${ANDROID_ROOT}/lib"
 
 exe="${ANDROID_ROOT}/bin/dalvikvm"
 framework="${BASE}/system/framework"
-bpath="${framework}/core.jar:${framework}/ext.jar:${framework}/framework.jar"
+bpath="${framework}/core.jar:${framework}/conscrypt.jar:${framework}/ext.jar:${framework}/framework.jar"
 
 if [ "$DEBUG" = "y" ]; then
     PORT=8000
