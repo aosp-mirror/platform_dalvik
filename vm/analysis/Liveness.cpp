@@ -62,7 +62,7 @@ bool dvmComputeLiveness(VerifierData* vdata)
     const InsnFlags* insnFlags = vdata->insnFlags;
     InstructionWidth* backwardWidth;
     VfyBasicBlock* startGuess = NULL;
-    BitVector* workBits;
+    BitVector* workBits = NULL;
     bool result = false;
 
     bool verbose = false; //= dvmWantVerboseVerification(vdata->method);
@@ -273,6 +273,7 @@ bool dvmComputeLiveness(VerifierData* vdata)
 
 bail:
     free(backwardWidth);
+    dvmFreeBitVector(workBits);
     return result;
 }
 
