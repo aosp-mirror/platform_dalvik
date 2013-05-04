@@ -1102,20 +1102,23 @@ public final class DexMerger {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
+        if (args.length < 2) {
             printUsage();
             return;
         }
 
-        Dex dexA = new Dex(new File(args[1]));
-        Dex dexB = new Dex(new File(args[2]));
-        Dex merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
+        Dex merged = new Dex(new File(args[1]));
+        for (int i = 2; i < args.length; i++) {
+            Dex toMerge = new Dex(new File(args[i]));
+            merged = new DexMerger(merged, toMerge, CollisionPolicy.KEEP_FIRST).merge();
+        }
         merged.writeTo(new File(args[0]));
     }
 
     private static void printUsage() {
-        System.out.println("Usage: DexMerger <out.dex> <a.dex> <b.dex>");
+        System.out.println("Usage: DexMerger <out.dex> <a.dex> <b.dex> ...");
         System.out.println();
-        System.out.println("If both a and b define the same classes, a's copy will be used.");
+        System.out.println(
+            "If a class is defined in several dex, the class found in the first dex will be used.");
     }
 }
