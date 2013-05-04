@@ -112,9 +112,33 @@ public final class Form12x extends InsnFormat {
     public BitSet compatibleRegs(DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
         BitSet bits = new BitSet(2);
+        int r0 = regs.get(0).getReg();
+        int r1 = regs.get(1).getReg();
 
-        bits.set(0, unsignedFitsInNibble(regs.get(0).getReg()));
-        bits.set(1, unsignedFitsInNibble(regs.get(1).getReg()));
+        switch (regs.size()) {
+          case 2: {
+            bits.set(0, unsignedFitsInNibble(r0));
+            bits.set(1, unsignedFitsInNibble(r1));
+            break;
+          }
+          case 3: {
+            if (r0 != r1) {
+                bits.set(0, false);
+                bits.set(1, false);
+            } else {
+                boolean dstRegComp = unsignedFitsInNibble(r1);
+                bits.set(0, dstRegComp);
+                bits.set(1, dstRegComp);
+            }
+
+            bits.set(2, unsignedFitsInNibble(regs.get(2).getReg()));
+            break;
+          }
+          default: {
+            throw new AssertionError();
+          }
+        }
+
         return bits;
     }
 
