@@ -1038,6 +1038,7 @@ public final class DexMerger {
             annotationsSet = dexMerger.annotationSetOut.used();
             annotationsSetRefList = dexMerger.annotationSetRefListOut.used();
             annotation = dexMerger.annotationOut.used();
+            fourByteAlign();
         }
 
         private void plus(TableOfContents contents, boolean exact) {
