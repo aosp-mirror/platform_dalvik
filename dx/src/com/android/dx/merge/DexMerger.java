@@ -805,7 +805,7 @@ public final class DexMerger {
             if (method.getCodeOffset() == 0) {
                 classDataOut.writeUleb128(0);
             } else {
-                codeOut.alignToFourBytes();
+                codeOut.alignToFourBytesWithZeroFill();
                 classDataOut.writeUleb128(codeOut.getPosition());
                 transformCode(in, in.readCode(method), indexMap);
             }
