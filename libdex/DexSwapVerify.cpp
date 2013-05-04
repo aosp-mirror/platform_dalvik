@@ -187,7 +187,7 @@ static inline bool checkPtrRange(const CheckState* state,
  */
 #define CHECK_INDEX(_field, _limit) {                                       \
         if ((_field) >= (_limit)) {                                         \
-            ALOGW("Bad index: %s(%u) > %s(%u)",                              \
+            ALOGW("Bad index: %s(%u) > %s(%u)",                             \
                 #_field, (u4)(_field), #_limit, (u4)(_limit));              \
             return 0;                                                       \
         }                                                                   \
@@ -206,7 +206,7 @@ static inline bool checkPtrRange(const CheckState* state,
  */
 #define CHECK_INDEX_OR_NOINDEX(_field, _limit) {                            \
         if ((_field) != kDexNoIndex && (_field) >= (_limit)) {              \
-            ALOGW("Bad index: %s(%u) > %s(%u)",                              \
+            ALOGW("Bad index: %s(%u) > %s(%u)",                             \
                 #_field, (u4)(_field), #_limit, (u4)(_limit));              \
             return 0;                                                       \
         }                                                                   \
