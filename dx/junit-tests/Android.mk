@@ -5,5 +5,6 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAVA_LIBRARIES := dx junit
 LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE:= dx-tests
 include $(BUILD_HOST_JAVA_LIBRARY)

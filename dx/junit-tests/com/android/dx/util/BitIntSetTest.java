@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.dx.util._tests;
+package com.android.dx.util;
 
-import com.android.dx.util.BitIntSet;
-import com.android.dx.util.IntIterator;
-import com.android.dx.util.ListIntSet;
 import java.util.NoSuchElementException;
 import junit.framework.TestCase;
 
