@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#define ATRACE_TAG ATRACE_TAG_DALVIK
+
 /*
  * Thread support.
  */
@@ -39,6 +41,7 @@
 #include "interp/Jit.h"         // need for self verification
 #endif
 
+ #include <cutils/trace.h>
 
 /* desktop Linux needs a little help with gettid() */
 #if defined(HAVE_GETTID) && !defined(HAVE_ANDROID_OS)
@@ -2894,6 +2897,7 @@ static bool fullSuspendCheck(Thread* self)
         ThreadStatus oldStatus = self->status;      /* should be RUNNING */
         self->status = THREAD_SUSPENDED;
 
+        ATRACE_BEGIN("DVM Suspend");
         while (self->suspendCount != 0) {
             /*
              * Wait for wakeup signal, releasing lock.  The act of releasing
@@ -2903,6 +2907,7 @@ static bool fullSuspendCheck(Thread* self)
             dvmWaitCond(&gDvm.threadSuspendCountCond,
                     &gDvm.threadSuspendCountLock);
         }
+        ATRACE_END();
         assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
         self->status = oldStatus;
         LOG_THREAD("threadid=%d: self-reviving, status=%d",

@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#define ATRACE_TAG ATRACE_TAG_DALVIK
+
 /*
  * Garbage-collecting memory allocator.
  */
@@ -30,6 +33,8 @@
 #include <sys/resource.h>
 #include <limits.h>
 #include <errno.h>
+
+#include <cutils/trace.h>
 
 static const GcSpec kGcForMallocSpec = {
     true,  /* isPartial */
@@ -456,9 +461,23 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
         return;
     }
 
+    // Trace the beginning of the top-level GC.
+    if (spec == GC_FOR_MALLOC) {
+        ATRACE_BEGIN("GC (alloc)");
+    } else if (spec == GC_CONCURRENT) {
+        ATRACE_BEGIN("GC (concurrent)");
+    } else if (spec == GC_EXPLICIT) {
+        ATRACE_BEGIN("GC (explicit)");
+    } else if (spec == GC_BEFORE_OOM) {
+        ATRACE_BEGIN("GC (before OOM)");
+    } else {
+        ATRACE_BEGIN("GC (unknown)");
+    }
+
     gcHeap->gcRunning = true;
 
     rootStart = dvmGetRelativeTimeMsec();
+    ATRACE_BEGIN("GC: Threads Suspended"); // Suspend A
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
 
     /*
@@ -478,6 +497,8 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     /* Set up the marking context.
      */
     if (!dvmHeapBeginMarkStep(spec->isPartial)) {
+        ATRACE_END(); // Suspend A
+        ATRACE_END(); // Top-level GC
         LOGE_HEAP("dvmHeapBeginMarkStep failed; aborting");
         dvmAbort();
     }
@@ -504,6 +525,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
         dvmClearCardTable();
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
+        ATRACE_END(); // Suspend A
         rootEnd = dvmGetRelativeTimeMsec();
     }
 
@@ -521,6 +543,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
          */
         dirtyStart = dvmGetRelativeTimeMsec();
         dvmLockHeap();
+        ATRACE_BEGIN("GC: Threads Suspended"); // Suspend B
         dvmSuspendAllThreads(SUSPEND_FOR_GC);
         /*
          * As no barrier intercepts root updates, we conservatively
@@ -582,6 +605,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     if (spec->isConcurrent) {
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
+        ATRACE_END(); // Suspend B
         dirtyEnd = dvmGetRelativeTimeMsec();
     }
     dvmHeapSweepUnmarkedObjects(spec->isPartial, spec->isConcurrent,
@@ -622,6 +646,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
 
     if (!spec->isConcurrent) {
         dvmResumeAllThreads(SUSPEND_FOR_GC);
+        ATRACE_END(); // Suspend A
         dirtyEnd = dvmGetRelativeTimeMsec();
         /*
          * Restore the original thread scheduling priority if it was
@@ -675,6 +700,8 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
         LOGD_HEAP("Dumping native heap to DDM");
         dvmDdmSendHeapSegments(false, true);
     }
+
+    ATRACE_END(); // Top-level GC
 }
 
 /*
@@ -699,6 +726,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
  */
 bool dvmWaitForConcurrentGcToComplete()
 {
+    ATRACE_BEGIN("GC: Wait For Concurrent");
     bool waited = gDvm.gcHeap->gcRunning;
     Thread *self = dvmThreadSelf();
     assert(self != NULL);
@@ -712,5 +740,6 @@ bool dvmWaitForConcurrentGcToComplete()
     if (end - start > 0) {
         ALOGD("WAIT_FOR_CONCURRENT_GC blocked %ums", end - start);
     }
+    ATRACE_END();
     return waited;
 }
