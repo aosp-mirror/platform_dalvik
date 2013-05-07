@@ -1716,13 +1716,10 @@ static bool initZygote()
 
 #ifdef HAVE_ANDROID_OS
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
-        if (errno == EINVAL) {
-            SLOGW("PR_SET_NO_NEW_PRIVS failed. "
-                  "Is your kernel compiled correctly?: %s", strerror(errno));
-            // Don't return -1 here, since it's expected that not all
-            // kernels will support this option.
-        } else {
-            SLOGW("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
+        // Older kernels don't understand PR_SET_NO_NEW_PRIVS and return
+        // EINVAL. Don't die on such kernels.
+        if (errno != EINVAL) {
+            SLOGE("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
             return -1;
         }
     }
