@@ -21,7 +21,6 @@
 #include "ScopedPthreadMutexLock.h"
 #include "native/InternalNativePriv.h"
 
-#include <cutils/array.h>
 #include <limits.h>
 
 
