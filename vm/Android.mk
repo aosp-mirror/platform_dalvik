@@ -111,7 +111,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
     WITH_JIT := true
     include $(LOCAL_PATH)/Dvm.mk
 
-    LOCAL_SHARED_LIBRARIES += libcrypto-host libssl-host libicuuc-host libicui18n-host
+    LOCAL_SHARED_LIBRARIES += libnativehelper libcrypto-host libssl-host libicuuc-host libicui18n-host
 
     LOCAL_LDLIBS := -lpthread -ldl
     ifeq ($(HOST_OS),linux)
