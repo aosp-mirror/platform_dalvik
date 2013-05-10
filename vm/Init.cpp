@@ -33,6 +33,7 @@
 #include "test/Test.h"
 #include "mterp/Mterp.h"
 #include "Hash.h"
+#include "JniConstants.h"
 
 #if defined(WITH_JIT)
 #include "compiler/codegen/Optimizer.h"
@@ -1617,6 +1618,9 @@ static bool registerSystemNatives(JNIEnv* pEnv)
 
     // Must set this before allowing JNI-based method registration.
     self->status = THREAD_NATIVE;
+
+    // First set up JniConstants, which is used by libcore.
+    JniConstants::init(pEnv);
 
     // Most JNI libraries can just use System.loadLibrary, but you can't
     // if you're the library that implements System.loadLibrary!
