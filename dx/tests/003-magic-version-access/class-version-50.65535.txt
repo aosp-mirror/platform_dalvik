@@ -1,6 +1,5 @@
 #
-# classfile with an invalid version, with a higher major version
-# than the highest valid version.  50.0 (0x32.0x00)
+# classfile with the valid version 50.65535 (0x32.0xffff)
 #
 
 cafe babe  # magic
