@@ -27,6 +27,9 @@ import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Methodref;
 import static com.android.dx.cf.cst.ConstantTags.CONSTANT_NameAndType;
 import static com.android.dx.cf.cst.ConstantTags.CONSTANT_String;
 import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Utf8;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_MethodHandle;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_MethodType;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_InvokeDynamic;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.cf.iface.ParseObserver;
 import com.android.dx.rop.cst.Constant;
@@ -184,41 +187,51 @@ public final class ConstantPoolParser {
         for (int i = 1; i < offsets.length; i += lastCategory) {
             offsets[i] = at;
             int tag = bytes.getUnsignedByte(at);
-            switch (tag) {
-                case CONSTANT_Integer:
-                case CONSTANT_Float:
-                case CONSTANT_Fieldref:
-                case CONSTANT_Methodref:
-                case CONSTANT_InterfaceMethodref:
-                case CONSTANT_NameAndType: {
-                    lastCategory = 1;
-                    at += 5;
-                    break;
+            try {
+                switch (tag) {
+                    case CONSTANT_Integer:
+                    case CONSTANT_Float:
+                    case CONSTANT_Fieldref:
+                    case CONSTANT_Methodref:
+                    case CONSTANT_InterfaceMethodref:
+                    case CONSTANT_NameAndType: {
+                        lastCategory = 1;
+                        at += 5;
+                        break;
+                    }
+                    case CONSTANT_Long:
+                    case CONSTANT_Double: {
+                        lastCategory = 2;
+                        at += 9;
+                        break;
+                    }
+                    case CONSTANT_Class:
+                    case CONSTANT_String: {
+                        lastCategory = 1;
+                        at += 3;
+                        break;
+                    }
+                    case CONSTANT_Utf8: {
+                        lastCategory = 1;
+                        at += bytes.getUnsignedShort(at + 1) + 3;
+                        break;
+                    }
+                    case CONSTANT_MethodHandle: {
+                        throw new ParseException("MethodHandle not supported");
+                    }
+                    case CONSTANT_MethodType: {
+                        throw new ParseException("MethodType not supported");
+                    }
+                    case CONSTANT_InvokeDynamic: {
+                        throw new ParseException("InvokeDynamic not supported");
+                    }
+                    default: {
+                        throw new ParseException("unknown tag byte: " + Hex.u1(tag));
+                    }
                 }
-                case CONSTANT_Long:
-                case CONSTANT_Double: {
-                    lastCategory = 2;
-                    at += 9;
-                    break;
-                }
-                case CONSTANT_Class:
-                case CONSTANT_String: {
-                    lastCategory = 1;
-                    at += 3;
-                    break;
-                }
-                case CONSTANT_Utf8: {
-                    lastCategory = 1;
-                    at += bytes.getUnsignedShort(at + 1) + 3;
-                    break;
-                }
-                default: {
-                    ParseException ex =
-                        new ParseException("unknown tag byte: " + Hex.u1(tag));
-                    ex.addContext("...while preparsing cst " + Hex.u2(i) +
-                                  " at offset " + Hex.u4(at));
-                    throw ex;
-                }
+            } catch (ParseException ex) {
+                ex.addContext("...while preparsing cst " + Hex.u2(i) + " at offset " + Hex.u4(at));
+                throw ex;
             }
         }
 
@@ -312,6 +325,18 @@ public final class ConstantPoolParser {
                     CstString descriptor = (CstString) parse0(descriptorIndex, wasUtf8);
                     cst = new CstNat(name, descriptor);
                     break;
+                }
+                case CONSTANT_MethodHandle: {
+                    throw new ParseException("MethodHandle not supported");
+                }
+                case CONSTANT_MethodType: {
+                    throw new ParseException("MethodType not supported");
+                }
+                case CONSTANT_InvokeDynamic: {
+                    throw new ParseException("InvokeDynamic not supported");
+                }
+                default: {
+                    throw new ParseException("unknown tag byte: " + Hex.u1(tag));
                 }
             }
         } catch (ParseException ex) {

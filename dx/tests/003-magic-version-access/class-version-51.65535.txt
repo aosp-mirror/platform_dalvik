@@ -1,9 +1,10 @@
 #
-# classfile with the highest valid version 51.0 (0x33.0x00)
+# classfile with an invalid version, with the same major version
+# as the highest valid version.  51.65535 (0x33.0xffff)
 #
 
 cafe babe  # magic
-0000       # minor_version
+ffff       # minor_version
 0033       # major_version
 0005       # constant_pool_count
 

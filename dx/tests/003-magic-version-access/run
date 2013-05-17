@@ -35,11 +35,14 @@ dx --debug --dump --width=100 class-version-49.0.txt
 dx --debug --dump --width=100 class-version-49.1.txt
 dx --debug --dump --width=100 class-version-49.65535.txt
 dx --debug --dump --width=100 class-version-50.0.txt
+dx --debug --dump --width=100 class-version-50.1.txt
+dx --debug --dump --width=100 class-version-50.65535.txt
+dx --debug --dump --width=100 class-version-51.0.txt
 
 # Too big (throws an exception)
-dx         --dump --strict class-version-50.1.txt
-dx         --dump --strict class-version-50.65535.txt
-dx         --dump --strict class-version-51.0.txt
+dx         --dump --strict class-version-51.1.txt
+dx         --dump --strict class-version-51.65535.txt
+dx         --dump --strict class-version-52.0.txt
 
 # Show that we can dump the access flags even when they
 # don't make any sense.

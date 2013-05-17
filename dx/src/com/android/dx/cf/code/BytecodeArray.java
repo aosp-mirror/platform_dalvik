@@ -16,6 +16,7 @@
 
 package com.android.dx.cf.code;
 
+import com.android.dx.cf.iface.ParseException;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.ConstantPool;
 import com.android.dx.rop.cst.CstDouble;
@@ -771,6 +772,9 @@ public final class BytecodeArray {
                     visitor.visitConstant(opcode, offset, 5, cst,
                                           count | (expectZero << 8));
                     return 5;
+                }
+                case ByteOps.INVOKEDYNAMIC: {
+                  throw new ParseException("invokedynamic not supported");
                 }
                 case ByteOps.NEWARRAY: {
                     return parseNewarray(offset, visitor);
