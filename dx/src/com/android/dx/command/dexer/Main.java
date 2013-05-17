@@ -126,9 +126,6 @@ public class Main {
         "transaction", "xml"
     };
 
-    /** number of warnings during processing */
-    private static int warnings = 0;
-
     /** number of errors during processing */
     private static int errors = 0;
 
@@ -183,8 +180,7 @@ public class Main {
      * @return 0 if success > 0 otherwise.
      */
     public static int run(Arguments arguments) throws IOException {
-        // Reset the error/warning count to start fresh.
-        warnings = 0;
+        // Reset the error count to start fresh.
         errors = 0;
         // empty the list, so that  tools that load dx and keep it around
         // for multiple runs don't reuse older buffers.
@@ -336,7 +332,7 @@ public class Main {
             }
         } catch (StopProcessing ex) {
             /*
-             * Ignore it and just let the warning/error reporting do
+             * Ignore it and just let the error reporting do
              * their things.
              */
         }
@@ -348,11 +344,6 @@ public class Main {
             } catch (InterruptedException ex) {
                 throw new RuntimeException("Timed out waiting for threads.");
             }
-        }
-
-        if (warnings != 0) {
-            DxConsole.err.println(warnings + " warning" +
-                               ((warnings == 1) ? "" : "s"));
         }
 
         if (errors != 0) {
@@ -498,8 +489,7 @@ public class Main {
                 ex.printContext(DxConsole.err);
             }
         }
-
-        warnings++;
+        errors++;
         return false;
     }
 
