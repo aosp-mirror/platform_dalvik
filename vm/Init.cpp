@@ -141,6 +141,7 @@ static void usage(const char* progName)
                        "[,hexopvalue[-endvalue]]*\n");
     dvmFprintf(stderr, "  -Xincludeselectedmethod\n");
     dvmFprintf(stderr, "  -Xjitthreshold:decimalvalue\n");
+    dvmFprintf(stderr, "  -Xjitcodecachesize:decimalvalueofkbytes\n");
     dvmFprintf(stderr, "  -Xjitblocking\n");
     dvmFprintf(stderr, "  -Xjitmethod:signature[,signature]* "
                        "(eg Ljava/lang/String\\;replace)\n");
@@ -1126,6 +1127,8 @@ static int processOptions(int argc, const char* const argv[],
           gDvmJit.blockingMode = true;
         } else if (strncmp(argv[i], "-Xjitthreshold:", 15) == 0) {
           gDvmJit.threshold = atoi(argv[i] + 15);
+        } else if (strncmp(argv[i], "-Xjitcodecachesize:", 19) == 0) {
+          gDvmJit.codeCacheSize = atoi(argv[i] + 19) * 1024;
         } else if (strncmp(argv[i], "-Xincludeselectedop", 19) == 0) {
           gDvmJit.includeSelectedOp = true;
         } else if (strncmp(argv[i], "-Xincludeselectedmethod", 23) == 0) {
@@ -1281,6 +1284,7 @@ static void setCommandLineDefaults()
     gDvmJit.includeSelectedOffset = false;
     gDvmJit.methodTable = NULL;
     gDvmJit.classTable = NULL;
+    gDvmJit.codeCacheSize = DEFAULT_CODE_CACHE_SIZE;
 
     gDvm.constInit = false;
     gDvm.commonInit = false;

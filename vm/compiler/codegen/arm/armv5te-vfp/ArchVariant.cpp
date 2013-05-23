@@ -55,7 +55,13 @@ bool dvmCompilerArchVariantInit(void)
     if (gDvmJit.threshold == 0) {
         gDvmJit.threshold = 200;
     }
-    gDvmJit.codeCacheSize = 512*1024;
+    if (gDvmJit.codeCacheSize == DEFAULT_CODE_CACHE_SIZE) {
+      gDvmJit.codeCacheSize = 512 * 1024;
+    } else if ((gDvmJit.codeCacheSize == 0) && (gDvm.executionMode == kExecutionModeJit)) {
+      gDvm.executionMode = kExecutionModeInterpFast;
+    }
+    /* Hard limit for Arm of 2M */
+    assert(gDvmJit.codeCacheSize <= 2 * 1024 * 1024);
 
 #if defined(WITH_SELF_VERIFICATION)
     /* Force into blocking mode */
