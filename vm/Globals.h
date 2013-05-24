@@ -738,6 +738,8 @@ extern struct DvmGlobals gDvm;
 
 #if defined(WITH_JIT)
 
+#define DEFAULT_CODE_CACHE_SIZE 0xffffffff
+
 /* Trace profiling modes.  Ordering matters - off states before on states */
 enum TraceProfilingModes {
     kTraceProfilingDisabled = 0,      // Not profiling
@@ -802,7 +804,7 @@ struct DvmJitGlobals {
     /* How many entries in the JitEntryTable are in use */
     unsigned int jitTableEntriesUsed;
 
-    /* Bytes allocated for the code cache */
+    /* Max bytes allocated for the code cache.  Rough rule of thumb: 1K per 1M of system RAM */
     unsigned int codeCacheSize;
 
     /* Trigger for trace selection */
