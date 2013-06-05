@@ -1278,6 +1278,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
             "thread has already been started");
         freeThread(newThread);
         dvmReleaseTrackedAlloc(vmThreadObj, NULL);
+        return false;
     }
 
     /*
