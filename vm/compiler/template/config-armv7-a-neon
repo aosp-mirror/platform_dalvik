@@ -31,7 +31,7 @@ import armv5te-vfp/platform.S
 #import c/opcommon.c
 
 # opcode list; argument to op-start is default directory
-op-start armv5te-vfp
+op-start armv7-a-neon
     op TEMPLATE_CMP_LONG armv5te
     op TEMPLATE_INVOKE_METHOD_CHAIN armv5te
     op TEMPLATE_INVOKE_METHOD_NATIVE armv5te
@@ -54,6 +54,7 @@ op-start armv5te-vfp
     op TEMPLATE_INVOKE_METHOD_NATIVE_PROF armv5te
     op TEMPLATE_INVOKE_METHOD_NO_OPT_PROF armv5te
     op TEMPLATE_RETURN_PROF armv5te
+    op TEMPLATE_MEM_OP_DECODE armv5te-vfp
 op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
