@@ -83,6 +83,7 @@ bool dvmCreateInlineSubsTable()
             ALOGE("Unable to find method for inlining: %s.%s:%s",
                 ops[i].classDescriptor, ops[i].methodName,
                 ops[i].methodSignature);
+            free(table);
             return false;
         }
 
