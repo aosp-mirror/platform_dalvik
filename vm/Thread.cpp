@@ -3598,7 +3598,7 @@ void dvmNukeThread(Thread* thread)
     ALOGD("Sent, pausing to let debuggerd run");
     usleep(8 * 1000 * 1000);    // TODO: timed-wait until debuggerd finishes
 
-    /* ignore SIGSEGV so the eventual dmvAbort() doesn't notify debuggerd */
+    /* ignore SIGSEGV so the eventual dvmAbort() doesn't notify debuggerd */
     signal(SIGSEGV, SIG_IGN);
     ALOGD("Continuing");
 }
