@@ -20,7 +20,7 @@
 /* Create the TemplateOpcode enum */
 #define JIT_TEMPLATE(X) TEMPLATE_##X,
 enum TemplateOpcode {
-#include "../../../template/armv5te-vfp/TemplateOpList.h"
+#include "../../../template/armv7-a/TemplateOpList.h"
 /*
  * For example,
  *     TEMPLATE_CMP_LONG,

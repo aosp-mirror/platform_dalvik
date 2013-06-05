@@ -27,7 +27,7 @@ JitInstructionSetType dvmCompilerInstructionSet(void)
 
 /* First, declare dvmCompiler_TEMPLATE_XXX for each template */
 #define JIT_TEMPLATE(X) extern "C" void dvmCompiler_TEMPLATE_##X();
-#include "../../../template/armv5te-vfp/TemplateOpList.h"
+#include "../../../template/armv7-a-neon/TemplateOpList.h"
 #undef JIT_TEMPLATE
 
 /* Architecture-specific initializations and checks go here */
@@ -41,7 +41,7 @@ bool dvmCompilerArchVariantInit(void)
      */
 #define JIT_TEMPLATE(X) templateEntryOffsets[i++] = \
     (intptr_t) dvmCompiler_TEMPLATE_##X - (intptr_t) dvmCompilerTemplateStart;
-#include "../../../template/armv5te-vfp/TemplateOpList.h"
+#include "../../../template/armv7-a-neon/TemplateOpList.h"
 #undef JIT_TEMPLATE
 
     /* Target-specific configuration */
