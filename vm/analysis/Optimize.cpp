@@ -70,6 +70,11 @@ bool dvmCreateInlineSubsTable()
      * One slot per entry, plus an end-of-list marker.
      */
     table = (InlineSub*) calloc(count + 1, sizeof(InlineSub));
+    if (!table)
+    {
+      ALOGE("table allocation failed");
+      return false;
+    }
 
     tableIndex = 0;
     for (i = 0; i < count; i++) {

@@ -280,6 +280,11 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
 
     ALOGV("Opening in-memory DEX");
     pDexOrJar = (DexOrJar*) malloc(sizeof(DexOrJar));
+    if (pDexOrJar == NULL)
+    {
+      dvmThrowRuntimeException("unable to allocate DEX memory");
+      RETURN_VOID();
+    }
     pDexOrJar->isDex = true;
     pDexOrJar->pRawDexFile = pRawDexFile;
     pDexOrJar->pDexMemory = pBytes;
