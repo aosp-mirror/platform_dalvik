@@ -184,6 +184,12 @@ static void Dalvik_dalvik_system_VMRuntime_vmVersion(const u4* args,
     returnCString(pResult, buf);
 }
 
+static void Dalvik_dalvik_system_VMRuntime_vmLibrary(const u4* args,
+    JValue* pResult)
+{
+    returnCString(pResult, "libdvm.so");
+}
+
 static void Dalvik_dalvik_system_VMRuntime_setTargetSdkVersion(const u4* args,
     JValue* pResult)
 {
@@ -226,5 +232,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_startJitCompilation },
     { "vmVersion", "()Ljava/lang/String;",
         Dalvik_dalvik_system_VMRuntime_vmVersion },
+    { "vmLibrary", "()Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_vmLibrary },
     { NULL, NULL, NULL },
 };
