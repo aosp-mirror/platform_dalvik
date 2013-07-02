@@ -121,8 +121,6 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xzygote\n");
     dvmFprintf(stderr, "  -Xdexopt:{none,verified,all,full}\n");
     dvmFprintf(stderr, "  -Xnoquithandler\n");
-    dvmFprintf(stderr,
-                "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
     dvmFprintf(stderr, "  -Xjnitrace:substring (eg NativeClass or nativeMethod)\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
@@ -1076,13 +1074,7 @@ static int processOptions(int argc, const char* const argv[],
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xjnigreflimit:", 15) == 0) {
-            int lim = atoi(argv[i] + 15);
-            if (lim < 200 || (lim % 100) != 0) {
-                dvmFprintf(stderr, "Bad value for -Xjnigreflimit: '%s'\n",
-                    argv[i]+15);
-                return -1;
-            }
-            gDvm.jniGrefLimit = lim;
+            // Ignored for backwards compatibility.
         } else if (strncmp(argv[i], "-Xjnitrace:", 11) == 0) {
             gDvm.jniTrace = strdup(argv[i] + 11);
         } else if (strcmp(argv[i], "-Xlog-stdio") == 0) {
