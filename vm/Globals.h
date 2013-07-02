@@ -124,7 +124,6 @@ struct DvmGlobals {
     void        (*abortHook)(void);
     bool        (*isSensitiveThreadHook)(void);
 
-    int         jniGrefLimit;       // 0 means no limit
     char*       jniTrace;
     bool        reduceSignals;
     bool        noQuitHandler;
@@ -525,8 +524,6 @@ struct DvmGlobals {
     IndirectRefTable jniWeakGlobalRefTable;
     pthread_mutex_t jniGlobalRefLock;
     pthread_mutex_t jniWeakGlobalRefLock;
-    int         jniGlobalRefHiMark;
-    int         jniGlobalRefLoMark;
 
     /*
      * JNI pinned object table (used for primitive arrays).
