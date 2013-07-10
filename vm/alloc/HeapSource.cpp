@@ -883,10 +883,45 @@ void* dvmHeapSourceAlloc(size_t n)
                   FRACTIONAL_MB(hs->softLimit), n);
         return NULL;
     }
-    void* ptr = mspace_calloc(heap->msp, 1, n);
-    if (ptr == NULL) {
-        return NULL;
+    void* ptr;
+    if (gDvm.lowMemoryMode) {
+        /* This is only necessary because mspace_calloc always memsets the
+         * allocated memory to 0. This is bad for memory usage since it leads
+         * to dirty zero pages. If low memory mode is enabled, we use
+         * mspace_malloc which doesn't memset the allocated memory and madvise
+         * the page aligned region back to the kernel.
+         */
+        ptr = mspace_malloc(heap->msp, n);
+        if (ptr == NULL) {
+            return NULL;
+        }
+        uintptr_t zero_begin = (uintptr_t)ptr;
+        uintptr_t zero_end = (uintptr_t)ptr + n;
+        /* Calculate the page aligned region.
+         */
+        uintptr_t begin = ALIGN_UP_TO_PAGE_SIZE(zero_begin);
+        uintptr_t end = zero_end & ~(uintptr_t)(SYSTEM_PAGE_SIZE - 1);
+        /* If our allocation spans more than one page, we attempt to madvise.
+         */
+        if (begin < end) {
+            /* madvise the page aligned region to kernel.
+             */
+            madvise((void*)begin, end - begin, MADV_DONTNEED);
+            /* Zero the region after the page aligned region.
+             */
+            memset((void*)end, 0, zero_end - end);
+            /* Zero out the region before the page aligned region.
+             */
+            zero_end = begin;
+        }
+        memset((void*)zero_begin, 0, zero_end - zero_begin);
+    } else {
+        ptr = mspace_calloc(heap->msp, 1, n);
+        if (ptr == NULL) {
+            return NULL;
+        }
     }
+
     countAllocation(heap, ptr);
     /*
      * Check to see if a concurrent GC should be initiated.

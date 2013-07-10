@@ -90,6 +90,7 @@ struct DvmGlobals {
     size_t      heapStartingSize;
     size_t      heapMaximumSize;
     size_t      heapGrowthLimit;
+    bool        lowMemoryMode;
     double      heapTargetUtilization;
     size_t      heapMinFree;
     size_t      heapMaxFree;

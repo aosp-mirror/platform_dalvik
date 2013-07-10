@@ -136,21 +136,20 @@ void dvmClearCardTable()
      */
     assert(gDvm.gcHeap->cardTableBase != NULL);
 
-#if 1
-    // zero out cards with memset(), using liveBits as an estimate
-    const HeapBitmap* liveBits = dvmHeapSourceGetLiveBits();
-    size_t maxLiveCard = (liveBits->max - liveBits->base) / GC_CARD_SIZE;
-    maxLiveCard = ALIGN_UP_TO_PAGE_SIZE(maxLiveCard);
-    if (maxLiveCard > gDvm.gcHeap->cardTableLength) {
-        maxLiveCard = gDvm.gcHeap->cardTableLength;
-    }
+    if (gDvm.lowMemoryMode) {
+      // zero out cards with madvise(), discarding all pages in the card table
+      madvise(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength, MADV_DONTNEED);
+    } else {
+      // zero out cards with memset(), using liveBits as an estimate
+      const HeapBitmap* liveBits = dvmHeapSourceGetLiveBits();
+      size_t maxLiveCard = (liveBits->max - liveBits->base) / GC_CARD_SIZE;
+      maxLiveCard = ALIGN_UP_TO_PAGE_SIZE(maxLiveCard);
+      if (maxLiveCard > gDvm.gcHeap->cardTableLength) {
+          maxLiveCard = gDvm.gcHeap->cardTableLength;
+      }
 
-    memset(gDvm.gcHeap->cardTableBase, GC_CARD_CLEAN, maxLiveCard);
-#else
-    // zero out cards with madvise(), discarding all pages in the card table
-    madvise(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength,
-        MADV_DONTNEED);
-#endif
+      memset(gDvm.gcHeap->cardTableBase, GC_CARD_CLEAN, maxLiveCard);
+    }
 }
 
 /*

@@ -940,6 +940,8 @@ static int processOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Invalid -XX:HeapMaxFree option '%s'\n", argv[i]);
                 return -1;
             }
+        } else if (strcmp(argv[i], "-XX:LowMemoryMode") == 0) {
+          gDvm.lowMemoryMode = true;
         } else if (strncmp(argv[i], "-XX:HeapTargetUtilization=", 26) == 0) {
             const char* start = argv[i] + 26;
             const char* end = start;
@@ -1236,6 +1238,7 @@ static void setCommandLineDefaults()
     gDvm.heapStartingSize = 2 * 1024 * 1024;  // Spec says 16MB; too big for us.
     gDvm.heapMaximumSize = 16 * 1024 * 1024;  // Spec says 75% physical mem
     gDvm.heapGrowthLimit = 0;  // 0 means no growth limit
+    gDvm.lowMemoryMode = false;
     gDvm.stackSize = kDefaultStackSize;
     gDvm.mainThreadStackSize = kDefaultStackSize;
     // When the heap is less than the maximum or growth limited size,
