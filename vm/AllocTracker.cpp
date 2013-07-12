@@ -43,8 +43,14 @@
  */
 #include "Dalvik.h"
 
+#ifdef HAVE_ANDROID_OS
+#include "cutils/properties.h"
+static bool isPowerOfTwo(int x) { return (x & (x - 1)) == 0; }
+#endif
+
 #define kMaxAllocRecordStackDepth   16      /* max 255 */
-#define kNumAllocRecords            512     /* MUST be power of 2 */
+
+#define kDefaultNumAllocRecords 64*1024 /* MUST be power of 2 */
 
 /*
  * Record the details of an allocation.
@@ -59,14 +65,6 @@ struct AllocRecord {
         const Method* method;   /* which method we're executing in */
         int         pc;         /* current execution offset, in 16-bit units */
     } stackElem[kMaxAllocRecordStackDepth];
-
-    /*
-     * This was going to be either wall-clock time in seconds or monotonic
-     * time in milliseconds since the VM started, to give a rough sense for
-     * how long ago an allocation happened.  This adds a system call per
-     * allocation, which is too much overhead.
-     */
-    //u4      timestamp;
 };
 
 /*
@@ -100,6 +98,28 @@ void dvmAllocTrackerShutdown()
  * ===========================================================================
  */
 
+static int getAllocRecordMax() {
+#ifdef HAVE_ANDROID_OS
+    // Check whether there's a system property overriding the number of records.
+    const char* propertyName = "dalvik.vm.allocTrackerMax";
+    char allocRecordMaxString[PROPERTY_VALUE_MAX];
+    if (property_get(propertyName, allocRecordMaxString, "") > 0) {
+        char* end;
+        size_t value = strtoul(allocRecordMaxString, &end, 10);
+        if (*end != '\0') {
+            ALOGE("Ignoring %s '%s' --- invalid", propertyName, allocRecordMaxString);
+            return kDefaultNumAllocRecords;
+        }
+        if (!isPowerOfTwo(value)) {
+            ALOGE("Ignoring %s '%s' --- not power of two", propertyName, allocRecordMaxString);
+            return kDefaultNumAllocRecords;
+        }
+        return value;
+    }
+#endif
+    return kDefaultNumAllocRecords;
+}
+
 /*
  * Enable allocation tracking.  Does nothing if tracking is already enabled.
  *
@@ -111,12 +131,13 @@ bool dvmEnableAllocTracker()
     dvmLockMutex(&gDvm.allocTrackerLock);
 
     if (gDvm.allocRecords == NULL) {
+        gDvm.allocRecordMax = getAllocRecordMax();
+
         ALOGI("Enabling alloc tracker (%d entries, %d frames --> %d bytes)",
-            kNumAllocRecords, kMaxAllocRecordStackDepth,
-            sizeof(AllocRecord) * kNumAllocRecords);
+              gDvm.allocRecordMax, kMaxAllocRecordStackDepth,
+              sizeof(AllocRecord) * gDvm.allocRecordMax);
         gDvm.allocRecordHead = gDvm.allocRecordCount = 0;
-        gDvm.allocRecords =
-            (AllocRecord*) malloc(sizeof(AllocRecord) * kNumAllocRecords);
+        gDvm.allocRecords = (AllocRecord*) malloc(sizeof(AllocRecord) * gDvm.allocRecordMax);
 
         if (gDvm.allocRecords == NULL)
             result = false;
@@ -199,7 +220,7 @@ void dvmDoTrackAllocation(ClassObject* clazz, size_t size)
     }
 
     /* advance and clip */
-    if (++gDvm.allocRecordHead == kNumAllocRecords)
+    if (++gDvm.allocRecordHead == gDvm.allocRecordMax)
         gDvm.allocRecordHead = 0;
 
     AllocRecord* pRec = &gDvm.allocRecords[gDvm.allocRecordHead];
@@ -209,7 +230,7 @@ void dvmDoTrackAllocation(ClassObject* clazz, size_t size)
     pRec->threadId = self->threadId;
     getStackFrames(self, pRec);
 
-    if (gDvm.allocRecordCount < kNumAllocRecords)
+    if (gDvm.allocRecordCount < gDvm.allocRecordMax)
         gDvm.allocRecordCount++;
 
     dvmUnlockMutex(&gDvm.allocTrackerLock);
@@ -252,7 +273,7 @@ Message header (all values big-endian):
   followed by UTF-16 data.
 
 We send up 16-bit unsigned indexes into string tables.  In theory there
-can be (kMaxAllocRecordStackDepth * kNumAllocRecords) unique strings in
+can be (kMaxAllocRecordStackDepth * gDvm.allocRecordMax) unique strings in
 each table, but in practice there should be far fewer.
 
 The chief reason for using a string table here is to keep the size of
@@ -276,12 +297,12 @@ const int kStackFrameLen = 8;
  * from it.
  *
  * We need to handle underflow in our circular buffer, so we add
- * kNumAllocRecords and then mask it back down.
+ * gDvm.allocRecordMax and then mask it back down.
  */
 inline static int headIndex()
 {
-    return (gDvm.allocRecordHead+1 + kNumAllocRecords - gDvm.allocRecordCount)
-        & (kNumAllocRecords-1);
+    return (gDvm.allocRecordHead+1 + gDvm.allocRecordMax - gDvm.allocRecordCount)
+            & (gDvm.allocRecordMax-1);
 }
 
 /*
@@ -348,7 +369,7 @@ static bool populateStringTables(PointerSet* classNames,
             fileCount++;
         }
 
-        idx = (idx + 1) & (kNumAllocRecords-1);
+        idx = (idx + 1) & (gDvm.allocRecordMax-1);
     }
 
     ALOGI("class %d/%d, method %d/%d, file %d/%d",
@@ -431,7 +452,7 @@ static size_t generateBaseOutput(u1* ptr, size_t baseLen,
             ptr += kStackFrameLen;
         }
 
-        idx = (idx + 1) & (kNumAllocRecords-1);
+        idx = (idx + 1) & (gDvm.allocRecordMax-1);
     }
 
     return ptr - origPtr;
@@ -641,7 +662,7 @@ void dvmDumpTrackedAllocations(bool enable)
         if ((count % 5) == 0)
             usleep(40000);
 
-        idx = (idx + 1) & (kNumAllocRecords-1);
+        idx = (idx + 1) & (gDvm.allocRecordMax-1);
     }
 
     dvmUnlockMutex(&gDvm.allocTrackerLock);
