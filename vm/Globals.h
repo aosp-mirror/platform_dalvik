@@ -268,6 +268,7 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectMethod;
     ClassObject* classJavaLangReflectMethodArray;
     ClassObject* classJavaLangReflectProxy;
+    ClassObject* classJavaLangSystem;
     ClassObject* classJavaNioDirectByteBuffer;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
@@ -406,6 +407,9 @@ struct DvmGlobals {
 
     /* field offsets - java.lang.reflect.Proxy */
     int         offJavaLangReflectProxy_h;
+
+    /* direct method pointer - java.lang.System.runFinalization */
+    Method*     methJavaLangSystem_runFinalization;
 
     /* field offsets - java.io.FileDescriptor */
     int         offJavaIoFileDescriptor_descriptor;
