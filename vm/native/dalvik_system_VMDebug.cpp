@@ -18,6 +18,7 @@
  * dalvik.system.VMDebug
  */
 #include "Dalvik.h"
+#include "alloc/HeapSource.h"
 #include "native/InternalNativePriv.h"
 #include "hprof/Hprof.h"
 
@@ -745,11 +746,50 @@ static void Dalvik_dalvik_system_VMDebug_countInstancesOfClass(const u4* args,
     }
 }
 
+/*
+ * public static native void getHeapSpaceStats(long[] data)
+ */
+static void Dalvik_dalvik_system_VMDebug_getHeapSpaceStats(const u4* args,
+    JValue* pResult)
+{
+    ArrayObject* dataArray = (ArrayObject*) args[0];
+
+    if (dataArray == NULL || dataArray->length < 6) {
+      RETURN_VOID();
+    }
+
+    jlong* arr = (jlong*)(void*)dataArray->contents;
+
+    int j = 0;
+    size_t per_heap_allocated[2];
+    size_t per_heap_size[2];
+    memset(per_heap_allocated, 0, sizeof(per_heap_allocated));
+    memset(per_heap_size, 0, sizeof(per_heap_size));
+    dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, (size_t*) &per_heap_allocated, 2);
+    dvmHeapSourceGetValue(HS_FOOTPRINT, (size_t*) &per_heap_size, 2);
+    jlong heapSize = per_heap_size[0];
+    jlong heapUsed = per_heap_allocated[0];
+    jlong heapFree = heapSize - heapUsed;
+    jlong zygoteSize = per_heap_size[1];
+    jlong zygoteUsed = per_heap_allocated[1];
+    jlong zygoteFree = zygoteSize - zygoteUsed;
+    arr[j++] = heapSize;
+    arr[j++] = heapUsed;
+    arr[j++] = heapFree;
+    arr[j++] = zygoteSize;
+    arr[j++] = zygoteUsed;
+    arr[j++] = zygoteFree;
+
+    RETURN_VOID();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
     { "getVmFeatureList",           "()[Ljava/lang/String;",
         Dalvik_dalvik_system_VMDebug_getVmFeatureList },
     { "getAllocCount",              "(I)I",
         Dalvik_dalvik_system_VMDebug_getAllocCount },
+    { "getHeapSpaceStats",          "([J)V",
+        Dalvik_dalvik_system_VMDebug_getHeapSpaceStats },
     { "resetAllocCount",            "(I)V",
         Dalvik_dalvik_system_VMDebug_resetAllocCount },
     { "startAllocCounting",         "()V",
