@@ -1702,7 +1702,6 @@ static JdwpError handleDDM_Chunk(JdwpState* state,
      * heap requirements is probably more valuable than the efficiency.
      */
     if (dvmDbgDdmHandlePacket(buf, dataLen, &replyBuf, &replyLen)) {
-        assert(replyLen > 0 && replyLen < 1*1024*1024);
         memcpy(expandBufAddSpace(pReply, replyLen), replyBuf, replyLen);
         free(replyBuf);
     }
