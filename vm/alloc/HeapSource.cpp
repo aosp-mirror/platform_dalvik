@@ -177,6 +177,13 @@ struct HeapSource {
     HeapBitmap markBits;
 
     /*
+     * Native allocations.
+     */
+    int32_t nativeBytesAllocated;
+    size_t nativeFootprintGCWatermark;
+    size_t nativeFootprintLimit;
+
+    /*
      * State for the GC daemon.
      */
     bool hasGcThread;
@@ -604,6 +611,9 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
     hs->softLimit = SIZE_MAX;    // no soft limit at first
     hs->numHeaps = 0;
     hs->sawZygote = gDvm.zygote;
+    hs->nativeBytesAllocated = 0;
+    hs->nativeFootprintGCWatermark = startSize;
+    hs->nativeFootprintLimit = startSize * 2;
     hs->hasGcThread = false;
     hs->heapBase = (char *)base;
     hs->heapLength = length;
@@ -1457,4 +1467,89 @@ void *dvmHeapSourceGetImmuneLimit(bool isPartial)
     } else {
         return NULL;
     }
+}
+
+static void dvmHeapSourceUpdateMaxNativeFootprint()
+{
+    /* Use the current target utilization ratio to determine the new native GC
+     * watermarks.
+     */
+    size_t nativeSize = gHs->nativeBytesAllocated;
+    size_t targetSize =
+        (nativeSize / gHs->targetUtilization) * HEAP_UTILIZATION_MAX;
+
+    if (targetSize > nativeSize + gHs->maxFree) {
+        targetSize = nativeSize + gHs->maxFree;
+    } else if (targetSize < nativeSize + gHs->minFree) {
+        targetSize = nativeSize + gHs->minFree;
+    }
+    gHs->nativeFootprintGCWatermark = targetSize;
+    gHs->nativeFootprintLimit = 2 * targetSize - nativeSize;
+}
+
+void dvmHeapSourceRegisterNativeAllocation(int bytes)
+{
+    android_atomic_add(bytes, &gHs->nativeBytesAllocated);
+
+    if ((size_t)gHs->nativeBytesAllocated > gHs->nativeFootprintGCWatermark) {
+        /* The second watermark is higher than the gc watermark. If you hit
+         * this it means you are allocating native objects faster than the GC
+         * can keep up with. If this occurs, we do a GC for alloc.
+         */
+        if ((size_t)gHs->nativeBytesAllocated > gHs->nativeFootprintLimit) {
+            Thread* self = dvmThreadSelf();
+
+            dvmRunFinalization();
+            if (!dvmCheckException(self)) {
+                return;
+            }
+
+            dvmLockHeap();
+            bool waited = dvmWaitForConcurrentGcToComplete();
+            dvmUnlockHeap();
+            if (waited) {
+                // Just finished a GC, attempt to run finalizers.
+                dvmRunFinalization();
+                if (!dvmCheckException(self)) {
+                    return;
+                }
+            }
+
+            // If we still are over the watermark, attempt a GC for alloc and run finalizers.
+            if ((size_t)gHs->nativeBytesAllocated > gHs->nativeFootprintLimit) {
+                dvmLockHeap();
+                dvmWaitForConcurrentGcToComplete();
+                dvmCollectGarbageInternal(GC_FOR_MALLOC);
+                dvmUnlockHeap();
+                dvmRunFinalization();
+
+                if (!dvmCheckException(self)) {
+                    return;
+                }
+            }
+            /* We have just run finalizers, update the native watermark since
+             * it is very likely that finalizers released native managed
+             * allocations.
+             */
+            dvmHeapSourceUpdateMaxNativeFootprint();
+        } else {
+            dvmSignalCond(&gHs->gcThreadCond);
+        }
+    }
+}
+
+/*
+ * Called from VMRuntime.registerNativeFree.
+ */
+void dvmHeapSourceRegisterNativeFree(int bytes)
+{
+    int expected_size, new_size;
+    do {
+        expected_size = gHs->nativeBytesAllocated;
+        new_size = expected_size - bytes;
+        if (new_size < 0) {
+            break;
+        }
+    } while (android_atomic_cas(expected_size, new_size,
+                                &gHs->nativeBytesAllocated));
 }

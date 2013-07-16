@@ -17,9 +17,12 @@
  * Garbage-collecting memory allocator.
  */
 #include "Dalvik.h"
+#include "Globals.h"
 #include "alloc/Heap.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
+#include "cutils/atomic.h"
+#include "cutils/atomic-inline.h"
 
 /*
  * Initialize the GC universe.
@@ -303,6 +306,16 @@ void dvmCollectGarbage()
     dvmWaitForConcurrentGcToComplete();
     dvmCollectGarbageInternal(GC_EXPLICIT);
     dvmUnlockHeap();
+}
+
+/*
+ * Run finalization.
+ */
+void dvmRunFinalization() {
+  Thread *self = dvmThreadSelf();
+  assert(self != NULL);
+  JValue unusedResult;
+  dvmCallMethod(self, gDvm.methJavaLangSystem_runFinalization, NULL, &unusedResult);
 }
 
 struct CountContext {

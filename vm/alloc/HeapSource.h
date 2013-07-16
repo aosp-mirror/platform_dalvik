@@ -200,4 +200,14 @@ void *dvmHeapSourceGetImmuneLimit(bool isPartial);
  */
 size_t dvmHeapSourceGetMaximumSize(void);
 
+/*
+ * Called from VMRuntime.registerNativeAllocation.
+ */
+void dvmHeapSourceRegisterNativeAllocation(int bytes);
+
+/*
+ * Called from VMRuntime.registerNativeFree.
+ */
+void dvmHeapSourceRegisterNativeFree(int bytes);
+
 #endif  // DALVIK_HEAP_SOURCE_H_
