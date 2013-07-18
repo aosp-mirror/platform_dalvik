@@ -230,6 +230,13 @@ static void Dalvik_dalvik_system_VMRuntime_registerNativeFree(const u4* args,
   RETURN_VOID();
 }
 
+static void Dalvik_dalvik_system_VMRuntime_updateProcessState(const u4* args,
+                                                              JValue* pResult) {
+  // updateProcessState is used in ART to help determine GC behavior. Currently
+  // in Dalvik we don't use process states for anything.
+  RETURN_VOID();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
     { "addressOf", "(Ljava/lang/Object;)J",
         Dalvik_dalvik_system_VMRuntime_addressOf },
@@ -263,5 +270,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_registerNativeAllocation },
     { "registerNativeFree", "(I)V",
         Dalvik_dalvik_system_VMRuntime_registerNativeFree },
+    { "updateProcessState", "(I)V",
+        Dalvik_dalvik_system_VMRuntime_updateProcessState },
     { NULL, NULL, NULL },
 };
