@@ -1123,6 +1123,9 @@ static int processOptions(int argc, const char* const argv[],
           gDvmJit.threshold = atoi(argv[i] + 15);
         } else if (strncmp(argv[i], "-Xjitcodecachesize:", 19) == 0) {
           gDvmJit.codeCacheSize = atoi(argv[i] + 19) * 1024;
+          if (gDvmJit.codeCacheSize == 0) {
+            gDvm.executionMode = kExecutionModeInterpFast;
+          }
         } else if (strncmp(argv[i], "-Xincludeselectedop", 19) == 0) {
           gDvmJit.includeSelectedOp = true;
         } else if (strncmp(argv[i], "-Xincludeselectedmethod", 23) == 0) {
