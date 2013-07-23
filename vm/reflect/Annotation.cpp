@@ -666,9 +666,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
     valueObj = (Object*)avalue.value.l;
 
     /* new member to hold the element */
-    newMember =
-        dvmAllocObject(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember,
-        ALLOC_DEFAULT);
+    newMember = dvmAllocObject(gDvm.classLibcoreReflectAnnotationMember, ALLOC_DEFAULT);
     name = dexStringById(pDexFile, elementNameIdx);
     nameObj = dvmCreateStringFromCstr(name);
 
@@ -775,9 +773,8 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
     JValue result;
 
     if (size > 0) {
-        elementArray = dvmAllocArrayByClass(
-            gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray,
-            size, ALLOC_DEFAULT);
+        elementArray = dvmAllocArrayByClass(gDvm.classLibcoreReflectAnnotationMemberArray,
+                                            size, ALLOC_DEFAULT);
         if (elementArray == NULL) {
             ALOGE("failed to allocate annotation member array (%d elements)",
                 size);
@@ -833,10 +830,10 @@ static ArrayObject* processAnnotationSet(const ClassObject* clazz,
     const DexAnnotationItem* pAnnoItem;
 
     /* we need these later; make sure they're initialized */
-    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory))
-        dvmInitClass(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
-    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember))
-        dvmInitClass(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember);
+    if (!dvmIsClassInitialized(gDvm.classLibcoreReflectAnnotationFactory))
+        dvmInitClass(gDvm.classLibcoreReflectAnnotationFactory);
+    if (!dvmIsClassInitialized(gDvm.classLibcoreReflectAnnotationMember))
+        dvmInitClass(gDvm.classLibcoreReflectAnnotationMember);
 
     /* count up the number of visible elements */
     size_t count = 0;
@@ -907,10 +904,10 @@ static const DexAnnotationItem* getAnnotationItemFromAnnotationSet(
     u4 typeIdx;
 
     /* we need these later; make sure they're initialized */
-    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory))
-        dvmInitClass(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
-    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember))
-        dvmInitClass(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember);
+    if (!dvmIsClassInitialized(gDvm.classLibcoreReflectAnnotationFactory))
+        dvmInitClass(gDvm.classLibcoreReflectAnnotationFactory);
+    if (!dvmIsClassInitialized(gDvm.classLibcoreReflectAnnotationMember))
+        dvmInitClass(gDvm.classLibcoreReflectAnnotationMember);
 
     for (i = 0; i < (int) pAnnoSet->size; i++) {
         pAnnoItem = dexGetAnnotationItem(pDexFile, pAnnoSet, i);
