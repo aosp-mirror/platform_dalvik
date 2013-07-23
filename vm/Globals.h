@@ -268,9 +268,9 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectMethodArray;
     ClassObject* classJavaLangReflectProxy;
     ClassObject* classJavaNioDirectByteBuffer;
-    ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
-    ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
-    ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
+    ClassObject* classLibcoreReflectAnnotationFactory;
+    ClassObject* classLibcoreReflectAnnotationMember;
+    ClassObject* classLibcoreReflectAnnotationMemberArray;
     ClassObject* classOrgApacheHarmonyDalvikDdmcChunk;
     ClassObject* classOrgApacheHarmonyDalvikDdmcDdmServer;
     ClassObject* classJavaLangRefFinalizerReference;
