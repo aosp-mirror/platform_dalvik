@@ -54,3 +54,4 @@ $(call add-clean-step, rm -rf $(OUT)/obj/SHARED_LIBRARIES/libdvm*)
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
 # ************************************************
+$(call add-clean-step, rm -rf $(OUT)/obj/STATIC_LIBRARIES/libdex_intermediates/import_includes)
