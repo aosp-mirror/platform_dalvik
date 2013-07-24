@@ -20,7 +20,7 @@
 #include "enc_base.h"
 #include "enc_wrapper.h"
 #include "dec_base.h"
-#include "utils/Log.h"
+#include <cutils/log.h>
 
 //#define PRINT_ENCODER_STREAM
 bool dump_x86_inst = false;
