@@ -19,7 +19,7 @@
  */
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
-
+#include "ScopedPthreadMutexLock.h"
 
 /*
  * native public boolean desiredAssertionStatus()
@@ -755,6 +755,52 @@ static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
     } else {
         RETURN_PTR(NULL);
     }
+}
+
+JNIEXPORT jobject JNICALL Java_java_lang_Class_getDex(JNIEnv* env, jclass javaClass) {
+    Thread* self = dvmThreadSelf();
+    ClassObject* c = (ClassObject*) dvmDecodeIndirectRef(self, javaClass);
+
+    DvmDex* dvm_dex = c->pDvmDex;
+    if (dvm_dex == NULL) {
+        return NULL;
+    }
+
+    ScopedPthreadMutexLock lock(&dvm_dex->modLock);
+
+    // Already cached?
+    if (dvm_dex->dex_object != NULL) {
+        return dvm_dex->dex_object;
+    }
+
+    jobject byte_buffer = env->NewDirectByteBuffer(dvm_dex->memMap.addr, dvm_dex->memMap.length);
+    if (byte_buffer == NULL) {
+        return NULL;
+    }
+
+    jclass com_android_dex_Dex = env->FindClass("com/android/dex/Dex");
+    if (com_android_dex_Dex == NULL) {
+        return NULL;
+    }
+
+    jmethodID com_android_dex_Dex_create =
+            env->GetStaticMethodID(com_android_dex_Dex,
+                                   "<init>", "(Ljava/nio/ByteBuffer;)Lcom/android/dex/Dex;");
+    if (com_android_dex_Dex_create == NULL) {
+        return NULL;
+    }
+
+    jvalue args[1];
+    args[0].l = byte_buffer;
+    jobject local_ref = env->CallStaticObjectMethodA(com_android_dex_Dex,
+                                                     com_android_dex_Dex_create,
+                                                     args);
+    if (local_ref == NULL) {
+        return NULL;
+    }
+
+    dvm_dex->dex_object = env->NewGlobalRef(local_ref);
+    return dvm_dex->dex_object;
 }
 
 const DalvikNativeMethod dvm_java_lang_Class[] = {

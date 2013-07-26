@@ -226,7 +226,7 @@ static Object* createFieldObject(Field* field, const ClassObject* clazz)
     ClassObject* type;
     char* mangle;
     char* cp;
-    int slot;
+    int slot, field_idx;
 
     assert(dvmIsClassInitialized(gDvm.classJavaLangReflectField));
 
@@ -245,10 +245,11 @@ static Object* createFieldObject(Field* field, const ClassObject* clazz)
         goto bail;
 
     slot = fieldToSlot(field, clazz);
+    field_idx = dvmGetFieldIdx(field);
 
     JValue unused;
     dvmCallMethod(dvmThreadSelf(), gDvm.methJavaLangReflectField_init,
-        fieldObj, &unused, clazz, type, nameObj, slot);
+        fieldObj, &unused, clazz, type, nameObj, slot, field_idx);
     if (dvmCheckException(dvmThreadSelf())) {
         ALOGD("Field class init threw exception");
         goto bail;
@@ -393,7 +394,7 @@ static Object* createConstructorObject(Method* meth)
     Object* consObj;
     DexStringCache mangle;
     char* cp;
-    int slot;
+    int slot, method_idx;
 
     dexStringCacheInit(&mangle);
 
@@ -425,10 +426,11 @@ static Object* createConstructorObject(Method* meth)
         goto bail;
 
     slot = methodToSlot(meth);
+    method_idx = dvmGetMethodIdx(meth);
 
     JValue unused;
     dvmCallMethod(dvmThreadSelf(), gDvm.methJavaLangReflectConstructor_init,
-        consObj, &unused, meth->clazz, params, exceptions, slot);
+        consObj, &unused, meth->clazz, params, exceptions, slot, method_idx);
     if (dvmCheckException(dvmThreadSelf())) {
         ALOGD("Constructor class init threw exception");
         goto bail;
@@ -532,7 +534,7 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
     ClassObject* returnType;
     DexStringCache mangle;
     char* cp;
-    int slot;
+    int slot, method_idx;
 
     if (dvmCheckException(dvmThreadSelf())) {
         ALOGW("WARNING: dvmCreateReflectMethodObject called with "
@@ -577,11 +579,12 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
         goto bail;
 
     slot = methodToSlot(meth);
+    method_idx = dvmGetMethodIdx(meth);
 
     JValue unused;
     dvmCallMethod(dvmThreadSelf(), gDvm.methJavaLangReflectMethod_init,
         methObj, &unused, meth->clazz, params, exceptions, returnType,
-        nameObj, slot);
+        nameObj, slot, method_idx);
     if (dvmCheckException(dvmThreadSelf())) {
         ALOGD("Method class init threw exception");
         goto bail;
