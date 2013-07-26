@@ -1610,8 +1610,10 @@ static int compareMethodStr(DexFile* pDexFile, u4 methodIdx,
  * out reasonably well because it's in sorted order, though we're still left
  * doing a fair number of string comparisons.
  */
-static u4 getMethodIdx(const Method* method)
+u4 dvmGetMethodIdx(const Method* method)
 {
+    if (method->clazz->pDvmDex == NULL) return 0;
+
     DexFile* pDexFile = method->clazz->pDvmDex->pDexFile;
     u4 hi = pDexFile->pHeader->methodIdsSize -1;
     u4 lo = 0;
@@ -1676,7 +1678,7 @@ static const DexAnnotationSetItem* findAnnotationSetForMethod(
              * find the method definition in the DEX file and perform string
              * comparisons on class name, method name, and signature.
              */
-            u4 methodIdx = getMethodIdx(method);
+            u4 methodIdx = dvmGetMethodIdx(method);
             u4 count = dexGetMethodAnnotationsSize(pDexFile, pAnnoDir);
             u4 idx;
 
@@ -1918,10 +1920,12 @@ static int compareFieldStr(DexFile* pDexFile, u4 idx, const Field* field)
 /*
  * Given a field, determine the field's index.
  *
- * This has the same tradeoffs as getMethodIdx.
+ * This has the same tradeoffs as dvmGetMethodIdx.
  */
-static u4 getFieldIdx(const Field* field)
+u4 dvmGetFieldIdx(const Field* field)
 {
+    if (field->clazz->pDvmDex == NULL) return 0;
+
     DexFile* pDexFile = field->clazz->pDvmDex->pDexFile;
     u4 hi = pDexFile->pHeader->fieldIdsSize -1;
     u4 lo = 0;
@@ -1987,7 +1991,7 @@ static const DexAnnotationSetItem* findAnnotationSetForField(const Field* field)
      * find the field definition in the DEX file and perform string
      * comparisons on class name, field name, and signature.
      */
-    u4 fieldIdx = getFieldIdx(field);
+    u4 fieldIdx = dvmGetFieldIdx(field);
     u4 count = dexGetFieldAnnotationsSize(pDexFile, pAnnoDir);
     u4 idx;
 
@@ -2169,7 +2173,7 @@ static const DexParameterAnnotationsItem* findAnnotationsItemForMethod(
      * find the method definition in the DEX file and perform string
      * comparisons on class name, method name, and signature.
      */
-    u4 methodIdx = getMethodIdx(method);
+    u4 methodIdx = dvmGetMethodIdx(method);
     u4 count = dexGetParameterAnnotationsSize(pDexFile, pAnnoDir);
     u4 idx;
 

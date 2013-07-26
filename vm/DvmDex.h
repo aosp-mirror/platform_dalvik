@@ -21,6 +21,7 @@
 #ifndef DALVIK_DVMDEX_H_
 #define DALVIK_DVMDEX_H_
 
+#include "jni.h"
 #include "libdex/DexFile.h"
 
 /* extern */
@@ -60,6 +61,8 @@ struct DvmDex {
     /* shared memory region with file contents */
     bool                isMappedReadOnly;
     MemMapping          memMap;
+
+    jobject dex_object;
 
     /* lock ensuring mutual exclusion during updates */
     pthread_mutex_t     modLock;
