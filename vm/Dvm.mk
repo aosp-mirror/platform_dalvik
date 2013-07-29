@@ -24,9 +24,14 @@
 #
 # Compiler defines.
 #
-LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps
+
+LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2
 LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
 LOCAL_CFLAGS += -DARCH_VARIANT=\"$(dvm_arch_variant)\"
+
+ifneq ($(strip $(LOCAL_CLANG)),true)
+LOCAL_CFLAGS += -fno-align-jumps
+endif
 
 #
 # Optional features.  These may impact the size or performance of the VM.
