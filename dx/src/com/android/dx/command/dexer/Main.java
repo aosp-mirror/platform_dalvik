@@ -17,11 +17,15 @@
 package com.android.dx.command.dexer;
 
 import com.android.dex.Dex;
+import com.android.dex.DexException;
 import com.android.dex.DexFormat;
 import com.android.dex.util.FileUtils;
 import com.android.dx.Version;
 import com.android.dx.cf.code.SimException;
 import com.android.dx.cf.direct.ClassPathOpener;
+import com.android.dx.cf.direct.ClassPathOpener.FileNameFilter;
+import com.android.dx.cf.direct.DirectClassFile;
+import com.android.dx.cf.direct.StdAttributeFactory;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.command.DxConsole;
 import com.android.dx.command.UsageException;
@@ -30,6 +34,7 @@ import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
 import com.android.dx.dex.cf.CodeStatistics;
 import com.android.dx.dex.code.PositionList;
+import com.android.dx.dex.file.AnnotationUtils;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedMethod;
@@ -40,18 +45,24 @@ import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,6 +76,23 @@ import java.util.jar.Manifest;
  * Main class for the class file translator.
  */
 public class Main {
+    /**
+     * {@code non-null;} Error message for too many method/field/type ids.
+     */
+    public static final String TO_MANY_ID_ERROR_MESSAGE =
+        "Dex limit exceeded. You may try option " + Arguments.MULTI_DEX_OPTION;
+
+    /**
+     * File extension of a {@code .dex} file.
+     */
+    private static final String DEX_EXTENSION = ".dex";
+
+    /**
+     * File name prefix of a {@code .dex} file automatically loaded in an
+     * archive.
+     */
+    private static final String DEX_PREFIX = "classes";
+
     /**
      * {@code non-null;} the lengthy message that tries to discourage
      * people from defining core classes in applications
@@ -153,6 +181,12 @@ public class Main {
     /** class files older than this must be defined in the target dex file. */
     private static long minimumFileAge = 0;
 
+    private static Set<String> classesInMainDex = null;
+
+    private static List<byte[]> dexOutputArrays = new ArrayList<byte[]>();
+
+    private static OutputStreamWriter humanOutWriter = null;
+
     /**
      * This class is uninstantiable.
      */
@@ -188,6 +222,25 @@ public class Main {
 
         args = arguments;
         args.makeOptionsObjects();
+
+        OutputStream humanOutRaw = null;
+        if (args.humanOutName != null) {
+            humanOutRaw = openOutput(args.humanOutName);
+            humanOutWriter = new OutputStreamWriter(humanOutRaw);
+        }
+
+        try {
+            if (args.multiDex) {
+                return runMultiDex();
+            } else {
+                return runMonoDex();
+            }
+        } finally {
+            closeOutput(humanOutRaw);
+        }
+    }
+
+    private static int runMonoDex() throws IOException {
 
         File incrementalOutFile = null;
         if (args.incremental) {
@@ -231,7 +284,10 @@ public class Main {
             // Effectively free up the (often massive) DexFile memory.
             outputDex = null;
 
-            if (!createJar(args.outName, outArray)) {
+            if (outArray != null) {
+                outputResources.put(DexFormat.DEX_IN_JAR_NAME, outArray);
+            }
+            if (!createJar(args.outName)) {
                 return 3;
             }
         } else if (outArray != null && args.outName != null) {
@@ -241,6 +297,87 @@ public class Main {
         }
 
         return 0;
+    }
+
+    private static int runMultiDex() throws IOException {
+
+        assert !args.incremental;
+        assert args.numThreads == 1;
+
+        if (args.mainDexListFile != null) {
+            classesInMainDex = loadMainDexListFile(args.mainDexListFile);
+        }
+
+        if (!processAllFiles()) {
+            return 1;
+        }
+
+        if (!libraryDexBuffers.isEmpty()) {
+            throw new DexException("Library dex files are not supported in multi-dex mode");
+        }
+
+        if (outputDex != null) {
+            // this array is null if no classes were defined
+            dexOutputArrays.add(writeDex());
+
+            // Effectively free up the (often massive) DexFile memory.
+            outputDex = null;
+        }
+
+        if (args.jarOutput) {
+
+            for (int i = 0; i < dexOutputArrays.size(); i++) {
+                outputResources.put(getDexFileName(i),
+                        dexOutputArrays.get(i));
+            }
+
+            if (!createJar(args.outName)) {
+                return 3;
+            }
+        } else if (args.outName != null) {
+            File outDir = new File(args.outName);
+            assert outDir.isDirectory();
+            for (int i = 0; i < dexOutputArrays.size(); i++) {
+                OutputStream out = new FileOutputStream(new File(outDir, getDexFileName(i)));
+                try {
+                    out.write(dexOutputArrays.get(i));
+                } finally {
+                    closeOutput(out);
+                }
+            }
+
+        }
+
+        return 0;
+    }
+
+    private static String getDexFileName(int i) {
+        if (i == 0) {
+            return DexFormat.DEX_IN_JAR_NAME;
+        } else {
+            return DEX_PREFIX + (i + 1) + DEX_EXTENSION;
+        }
+    }
+
+    private static Set<String> loadMainDexListFile(String mainDexListFile) throws IOException {
+        Set<String> mainDexList = new HashSet<String>();
+        BufferedReader bfr = null;
+        try {
+            FileReader fr = new FileReader(mainDexListFile);
+            bfr = new BufferedReader(fr);
+
+            String line;
+
+            while (null != (line = bfr.readLine())) {
+                mainDexList.add(fixPath(line));
+            }
+
+        } finally {
+            if (bfr != null) {
+                bfr.close();
+            }
+        }
+        return mainDexList;
     }
 
     /**
@@ -307,14 +444,10 @@ public class Main {
      * @return whether processing was successful
      */
     private static boolean processAllFiles() {
-        outputDex = new DexFile(args.dexOptions);
+        createDexFile();
 
         if (args.jarOutput) {
             outputResources = new TreeMap<String, byte[]>();
-        }
-
-        if (args.dumpWidth != 0) {
-            outputDex.setDumpWidth(args.dumpWidth);
         }
 
         anyFilesProcessed = false;
@@ -325,9 +458,40 @@ public class Main {
         }
 
         try {
-            for (int i = 0; i < fileNames.length; i++) {
-                if (processOne(fileNames[i])) {
-                    anyFilesProcessed = true;
+            if (args.mainDexListFile != null) {
+                // with --main-dex-list
+                FileNameFilter mainPassFilter = args.strictNameCheck ? new MainDexListFilter() :
+                    new BestEffortMainDexListFilter();
+
+                // forced in main dex
+                for (int i = 0; i < fileNames.length; i++) {
+                    if (processOne(fileNames[i], mainPassFilter)) {
+                        anyFilesProcessed = true;
+                    }
+                }
+
+                if (dexOutputArrays.size() > 1) {
+                    throw new DexException("Too many classes in " + Arguments.MAIN_DEX_LIST_OPTION
+                            + ", main dex capacity exceeded");
+                }
+
+                if (args.minimalMainDex) {
+                    // start second pass directly in a secondary dex file.
+                    createDexFile();
+                }
+
+                // remaining files
+                for (int i = 0; i < fileNames.length; i++) {
+                    if (processOne(fileNames[i], new NotFilter(mainPassFilter))) {
+                        anyFilesProcessed = true;
+                    }
+                }
+            } else {
+                // without --main-dex-list
+                for (int i = 0; i < fileNames.length; i++) {
+                    if (processOne(fileNames[i], ClassPathOpener.acceptAll)) {
+                        anyFilesProcessed = true;
+                    }
                 }
             }
         } catch (StopProcessing ex) {
@@ -368,18 +532,31 @@ public class Main {
         return true;
     }
 
+    private static void createDexFile() {
+        if (outputDex != null) {
+            dexOutputArrays.add(writeDex());
+        }
+
+        outputDex = new DexFile(args.dexOptions);
+
+        if (args.dumpWidth != 0) {
+            outputDex.setDumpWidth(args.dumpWidth);
+        }
+    }
+
     /**
      * Processes one pathname element.
      *
      * @param pathname {@code non-null;} the pathname to process. May
      * be the path of a class file, a jar file, or a directory
      * containing class files.
+     * @param filter {@code non-null;} A filter for excluding files.
      * @return whether any processing actually happened
      */
-    private static boolean processOne(String pathname) {
+    private static boolean processOne(String pathname, FileNameFilter filter) {
         ClassPathOpener opener;
 
-        opener = new ClassPathOpener(pathname, false,
+        opener = new ClassPathOpener(pathname, false, filter,
                 new ClassPathOpener.Consumer() {
             public boolean processFileBytes(String name, long lastModified, byte[] bytes) {
                 if (args.numThreads > 1) {
@@ -439,6 +616,7 @@ public class Main {
         String fixedName = fixPath(name);
 
         if (isClass) {
+
             if (keepResources && args.keepClassesInJar) {
                 synchronized (outputResources) {
                     outputResources.put(fixedName, bytes);
@@ -474,13 +652,34 @@ public class Main {
             checkClassName(name);
         }
 
+        DirectClassFile cf =
+            new DirectClassFile(bytes, name, args.cfOptions.strictNameCheck);
+
+        cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
+        cf.getMagic();
+
+        int numMethodIds = outputDex.getMethodIds().items().size();
+        int numFieldIds = outputDex.getFieldIds().items().size();
+        int numTypeIds = outputDex.getTypeIds().items().size();
+        int constantPoolSize = cf.getConstantPool().size();
+
+        if (args.multiDex && ((numMethodIds + constantPoolSize > args.maxNumberOfIdxPerDex) ||
+            (numFieldIds + constantPoolSize > args.maxNumberOfIdxPerDex) ||
+            (numTypeIds + constantPoolSize
+                    /* annotation added by dx are not counted in numTypeIds */
+                    + AnnotationUtils.DALVIK_ANNOTATION_NUMBER
+                    > args.maxNumberOfIdxPerDex))) {
+          createDexFile();
+        }
+
         try {
             ClassDefItem clazz =
-                CfTranslator.translate(name, bytes, args.cfOptions, args.dexOptions);
+                CfTranslator.translate(cf, bytes, args.cfOptions, args.dexOptions, outputDex);
             synchronized (outputDex) {
                 outputDex.add(clazz);
             }
             return true;
+
         } catch (ParseException ex) {
             DxConsole.err.println("\ntrouble processing:");
             if (args.debug) {
@@ -544,14 +743,7 @@ public class Main {
         byte[] outArray = null;
 
         try {
-            OutputStream humanOutRaw = null;
-            OutputStreamWriter humanOut = null;
             try {
-                if (args.humanOutName != null) {
-                    humanOutRaw = openOutput(args.humanOutName);
-                    humanOut = new OutputStreamWriter(humanOutRaw);
-                }
-
                 if (args.methodToDump != null) {
                     /*
                      * Simply dump the requested method. Note: The call
@@ -559,23 +751,22 @@ public class Main {
                      * structures ready.
                      */
                     outputDex.toDex(null, false);
-                    dumpMethod(outputDex, args.methodToDump, humanOut);
+                    dumpMethod(outputDex, args.methodToDump, humanOutWriter);
                 } else {
                     /*
                      * This is the usual case: Create an output .dex file,
                      * and write it, dump it, etc.
                      */
-                    outArray = outputDex.toDex(humanOut, args.verboseDump);
+                    outArray = outputDex.toDex(humanOutWriter, args.verboseDump);
                 }
 
                 if (args.statistics) {
                     DxConsole.out.println(outputDex.getStatistics().toHuman());
                 }
             } finally {
-                if (humanOut != null) {
-                    humanOut.flush();
+                if (humanOutWriter != null) {
+                    humanOutWriter.flush();
                 }
-                closeOutput(humanOutRaw);
             }
         } catch (Exception ex) {
             if (args.debug) {
@@ -592,14 +783,12 @@ public class Main {
     }
 
     /**
-     * Creates a jar file from the resources and given dex file array.
+     * Creates a jar file from the resources (including dex file arrays).
      *
      * @param fileName {@code non-null;} name of the file
-     * @param dexArray array containing the dex file to include, or null if the
-     *     output contains no class defs.
      * @return whether the creation was successful
      */
-    private static boolean createJar(String fileName, byte[] dexArray) {
+    private static boolean createJar(String fileName) {
         /*
          * Make or modify the manifest (as appropriate), put the dex
          * array into the resources map, and then process the entire
@@ -611,23 +800,19 @@ public class Main {
             OutputStream out = openOutput(fileName);
             JarOutputStream jarOut = new JarOutputStream(out, manifest);
 
-            if (dexArray != null) {
-                outputResources.put(DexFormat.DEX_IN_JAR_NAME, dexArray);
-            }
-
             try {
                 for (Map.Entry<String, byte[]> e :
                          outputResources.entrySet()) {
                     String name = e.getKey();
                     byte[] contents = e.getValue();
                     JarEntry entry = new JarEntry(name);
+                    int length = contents.length;
 
                     if (args.verbose) {
-                        DxConsole.out.println("writing " + name + "; size " +
-                                           contents.length + "...");
+                        DxConsole.out.println("writing " + name + "; size " + length + "...");
                     }
 
-                    entry.setSize(contents.length);
+                    entry.setSize(length);
                     jarOut.putNextEntry(entry);
                     jarOut.write(contents);
                     jarOut.closeEntry();
@@ -856,6 +1041,82 @@ public class Main {
         pw.flush();
     }
 
+    private static class NotFilter implements FileNameFilter {
+        private final FileNameFilter filter;
+
+        private NotFilter(FileNameFilter filter) {
+            this.filter = filter;
+        }
+
+        @Override
+        public boolean accept(String path) {
+            return !filter.accept(path);
+        }
+    }
+
+    /**
+     * A quick and accurate filter for when file path can be trusted.
+     */
+    private static class MainDexListFilter implements FileNameFilter {
+
+        @Override
+        public boolean accept(String fullPath) {
+            if (fullPath.endsWith(".class")) {
+                String path = fixPath(fullPath);
+                return classesInMainDex.contains(path);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    /**
+     * A best effort conservative filter for when file path can <b>not</b> be trusted.
+     */
+    private static class BestEffortMainDexListFilter implements FileNameFilter {
+
+       Map<String, List<String>> map = new HashMap<String, List<String>>();
+
+       public BestEffortMainDexListFilter() {
+           for (String pathOfClass : classesInMainDex) {
+               String normalized = fixPath(pathOfClass);
+               String simple = getSimpleName(normalized);
+               List<String> fullPath = map.get(simple);
+               if (fullPath == null) {
+                   fullPath = new ArrayList<String>(1);
+                   map.put(simple, fullPath);
+               }
+               fullPath.add(normalized);
+           }
+        }
+
+        @Override
+        public boolean accept(String path) {
+            if (path.endsWith(".class")) {
+                String normalized = fixPath(path);
+                String simple = getSimpleName(normalized);
+                List<String> fullPaths = map.get(simple);
+                if (fullPaths != null) {
+                    for (String fullPath : fullPaths) {
+                        if (normalized.endsWith(fullPath)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static String getSimpleName(String path) {
+            int index = path.lastIndexOf('/');
+            if (index >= 0) {
+                return path.substring(index + 1);
+            } else {
+                return path;
+            }
+        }
+    }
+
     /**
      * Exception class used to halt processing prematurely.
      */
@@ -867,6 +1128,17 @@ public class Main {
      * Command-line argument parser and access.
      */
     public static class Arguments {
+
+        private static final String MINIMAL_MAIN_DEX_OPTION = "--minimal-main-dex";
+
+        private static final String MAIN_DEX_LIST_OPTION = "--main-dex-list";
+
+        private static final String MULTI_DEX_OPTION = "--multi-dex";
+
+        private static final String NUM_THREADS_OPTION = "--num-threads";
+
+        private static final String INCREMENTAL_OPTION = "--incremental";
+
         /** whether to run in debug mode */
         public boolean debug = false;
 
@@ -951,6 +1223,19 @@ public class Main {
 
         /** number of threads to run with */
         public int numThreads = 1;
+
+        /** generation of multiple dex is allowed */
+        public boolean multiDex = false;
+
+        /** Optional file containing a list of class files containing classes to be forced in main
+         * dex */
+        public String mainDexListFile = null;
+
+        /** Produce the smallest possible main dex. Ignored unless multiDex is true and
+         * mainDexListFile is specified and non empty. */
+        public boolean minimalMainDex = false;
+
+        private int maxNumberOfIdxPerDex = DexFormat.MAX_MEMBER_IDX + 1;
 
         private static class ArgumentsParser {
 
@@ -1061,6 +1346,9 @@ public class Main {
         public void parse(String[] args) {
             ArgumentsParser parser = new ArgumentsParser(args);
 
+            boolean outputIsDirectory = false;
+            boolean outputIsDirectDex = false;
+
             while(parser.getNext()) {
                 if (parser.isArg("--debug")) {
                     debug = true;
@@ -1098,11 +1386,15 @@ public class Main {
                     keepClassesInJar = true;
                 } else if (parser.isArg("--output=")) {
                     outName = parser.getLastValue();
-                    if (FileUtils.hasArchiveSuffix(outName)) {
+                    if (new File(outName).isDirectory()) {
+                        jarOutput = false;
+                        outputIsDirectory = true;
+                    } else if (FileUtils.hasArchiveSuffix(outName)) {
                         jarOutput = true;
                     } else if (outName.endsWith(".dex") ||
                                outName.equals("-")) {
                         jarOutput = false;
+                        outputIsDirectDex = true;
                     } else {
                         System.err.println("unknown output extension: " +
                                            outName);
@@ -1130,13 +1422,21 @@ public class Main {
                     }
                 } else if (parser.isArg("--no-locals")) {
                     localInfo = false;
-                } else if (parser.isArg("--num-threads=")) {
+                } else if (parser.isArg(NUM_THREADS_OPTION + "=")) {
                     numThreads = Integer.parseInt(parser.getLastValue());
-                } else if (parser.isArg("--incremental")) {
+                } else if (parser.isArg(INCREMENTAL_OPTION)) {
                     incremental = true;
                 } else if (parser.isArg("--force-jumbo")) {
                     forceJumbo = true;
-                } else {
+                } else if (parser.isArg(MULTI_DEX_OPTION)) {
+                    multiDex = true;
+                } else if (parser.isArg(MAIN_DEX_LIST_OPTION + "=")) {
+                    mainDexListFile = parser.getLastValue();
+                } else if (parser.isArg(MINIMAL_MAIN_DEX_OPTION)) {
+                    minimalMainDex = true;
+                } else if (parser.isArg("--set-max-idx-number=")) { // undocumented test option
+                    maxNumberOfIdxPerDex = Integer.parseInt(parser.getLastValue());
+              } else {
                     System.err.println("unknown option: " + parser.getCurrent());
                     throw new UsageException();
                 }
@@ -1154,6 +1454,39 @@ public class Main {
 
             if ((humanOutName == null) && (methodToDump != null)) {
                 humanOutName = "-";
+            }
+
+            if (mainDexListFile != null && !multiDex) {
+                System.err.println(MAIN_DEX_LIST_OPTION + " is only supported in combination with "
+                    + MULTI_DEX_OPTION);
+                throw new UsageException();
+            }
+
+            if (minimalMainDex && (mainDexListFile == null || !multiDex)) {
+                System.err.println(MINIMAL_MAIN_DEX_OPTION + " is only supported in combination with "
+                    + MULTI_DEX_OPTION + " and " + MAIN_DEX_LIST_OPTION);
+                throw new UsageException();
+            }
+
+            if (multiDex && numThreads != 1) {
+                System.out.println(NUM_THREADS_OPTION + "is ignored when used with "
+                    + MULTI_DEX_OPTION);
+            }
+
+            if (multiDex && incremental) {
+                System.err.println(INCREMENTAL_OPTION + " is not supported with "
+                    + MULTI_DEX_OPTION);
+                throw new UsageException();
+            }
+
+            if (multiDex && outputIsDirectDex) {
+                System.err.println("Unsupported output \"" + outName +"\". " + MULTI_DEX_OPTION +
+                        " supports only archive or directory output");
+                throw new UsageException();
+            }
+
+            if (outputIsDirectory && !multiDex) {
+                outName = new File(outName, DexFormat.DEX_IN_JAR_NAME).getPath();
             }
 
             makeOptionsObjects();
