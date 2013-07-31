@@ -1627,6 +1627,20 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     // First set up JniConstants, which is used by libcore.
     JniConstants::init(pEnv);
 
+    // Set up our single JNI method.
+    // TODO: factor this out if we add more.
+    jclass c = pEnv->FindClass("java/lang/Class");
+    if (c == NULL) {
+        dvmAbort();
+    }
+    JNIEXPORT jobject JNICALL Java_java_lang_Class_getDex(JNIEnv* env, jclass javaClass);
+    const JNINativeMethod Java_java_lang_Class[] = {
+        { "getDex", "()Lcom/android/dex/Dex;", (void*) Java_java_lang_Class_getDex },
+    };
+    if (pEnv->RegisterNatives(c, Java_java_lang_Class, 1) != JNI_OK) {
+        dvmAbort();
+    }
+
     // Most JNI libraries can just use System.loadLibrary, but you can't
     // if you're the library that implements System.loadLibrary!
     loadJniLibrary("javacore");

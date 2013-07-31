@@ -785,7 +785,7 @@ JNIEXPORT jobject JNICALL Java_java_lang_Class_getDex(JNIEnv* env, jclass javaCl
 
     jmethodID com_android_dex_Dex_create =
             env->GetStaticMethodID(com_android_dex_Dex,
-                                   "<init>", "(Ljava/nio/ByteBuffer;)Lcom/android/dex/Dex;");
+                                   "create", "(Ljava/nio/ByteBuffer;)Lcom/android/dex/Dex;");
     if (com_android_dex_Dex_create == NULL) {
         return NULL;
     }
