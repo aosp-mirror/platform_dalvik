@@ -35,6 +35,13 @@ import java.util.ArrayList;
  * Utility class for dealing with annotations.
  */
 public final class AnnotationUtils {
+
+    /**
+     * Number of annotation types that dx may add in the dex file that were
+     * not defined in the translated class file.
+     */
+    public static final int DALVIK_ANNOTATION_NUMBER = 7;
+
     /** {@code non-null;} type for {@code AnnotationDefault} annotations */
     private static final CstType ANNOTATION_DEFAULT_TYPE =
         CstType.intern(Type.intern("Ldalvik/annotation/AnnotationDefault;"));

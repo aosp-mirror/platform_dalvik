@@ -45,6 +45,7 @@ public class ClassPathOpener {
      * package.
      */
     private final boolean sort;
+    private FileNameFilter filter;
 
     /**
      * Callback interface for {@code ClassOpener}.
@@ -82,6 +83,25 @@ public class ClassPathOpener {
     }
 
     /**
+     * Filter interface for {@code ClassOpener}.
+     */
+    public interface FileNameFilter {
+
+        boolean accept(String path);
+    }
+
+    /**
+     * An accept all filter.
+     */
+    public static final FileNameFilter acceptAll = new FileNameFilter() {
+
+        @Override
+        public boolean accept(String path) {
+            return true;
+        }
+    };
+
+    /**
      * Constructs an instance.
      *
      * @param pathname {@code non-null;} path element to process
@@ -91,9 +111,24 @@ public class ClassPathOpener {
      * @param consumer {@code non-null;} callback interface
      */
     public ClassPathOpener(String pathname, boolean sort, Consumer consumer) {
+        this(pathname, sort, acceptAll, consumer);
+    }
+
+    /**
+     * Constructs an instance.
+     *
+     * @param pathname {@code non-null;} path element to process
+     * @param sort if true, sort such that classes appear before their inner
+     * classes and "package-info" occurs before all other classes in that
+     * package.
+     * @param consumer {@code non-null;} callback interface
+     */
+    public ClassPathOpener(String pathname, boolean sort, FileNameFilter filter,
+            Consumer consumer) {
         this.pathname = pathname;
         this.sort = sort;
         this.consumer = consumer;
+        this.filter = filter;
     }
 
     /**
@@ -129,9 +164,12 @@ public class ClassPathOpener {
                     path.endsWith(".apk")) {
                 return processArchive(file);
             }
-
-            byte[] bytes = FileUtils.readFile(file);
-            return consumer.processFileBytes(path, file.lastModified(), bytes);
+            if (filter.accept(path)) {
+                byte[] bytes = FileUtils.readFile(file);
+                return consumer.processFileBytes(path, file.lastModified(), bytes);
+            } else {
+                return false;
+            }
         } catch (Exception ex) {
             consumer.onException(ex);
             return false;
