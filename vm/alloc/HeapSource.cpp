@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <cutils/ashmem.h>
 
 #define SIZE_MAX UINT_MAX  // TODO: get SIZE_MAX from stdint.h
 
@@ -384,6 +385,36 @@ static bool addInitialHeap(HeapSource *hs, mspace msp, size_t maximumSize)
 }
 
 /*
+ * A helper for addNewHeap(). Remap the new heap so that it will have
+ * a separate ashmem region with possibly a different name, etc. In
+ * practice, this is used to give the app heap a separate ashmem
+ * region from the zygote heap's.
+ */
+static bool remapNewHeap(HeapSource* hs, Heap* newHeap)
+{
+  char* newHeapBase = newHeap->base;
+  size_t rem_size = hs->heapBase + hs->heapLength - newHeapBase;
+  munmap(newHeapBase, rem_size);
+  int fd = ashmem_create_region("dalvik-heap", rem_size);
+  if (fd == -1) {
+    ALOGE("Unable to create an ashmem region for the new heap");
+    return false;
+  }
+  void* addr = mmap(newHeapBase, rem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+  int ret = close(fd);
+  if (addr == MAP_FAILED) {
+    ALOGE("Unable to map an ashmem region for the new heap");
+    return false;
+  }
+  if (ret == -1) {
+    ALOGE("Unable to close fd for the ashmem region for the new heap");
+    munmap(newHeapBase, rem_size);
+    return false;
+  }
+  return true;
+}
+
+/*
  * Adds an additional heap to the heap source.  Returns false if there
  * are too many heaps or insufficient free space to add another heap.
  */
@@ -421,6 +452,9 @@ static bool addNewHeap(HeapSource *hs)
     heap.base = base;
     heap.limit = heap.base + heap.maximumSize;
     heap.brk = heap.base + morecoreStart;
+    if (!remapNewHeap(hs, &heap)) {
+      return false;
+    }
     heap.msp = createMspace(base, morecoreStart, hs->minFree);
     if (heap.msp == NULL) {
         return false;
@@ -575,7 +609,7 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
      * among the heaps managed by the garbage collector.
      */
     length = ALIGN_UP_TO_PAGE_SIZE(maximumSize);
-    base = dvmAllocRegion(length, PROT_NONE, "dalvik-heap");
+    base = dvmAllocRegion(length, PROT_NONE, gDvm.zygote ? "dalvik-zygote" : "dalvik-heap");
     if (base == NULL) {
         return NULL;
     }
