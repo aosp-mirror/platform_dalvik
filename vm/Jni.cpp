@@ -693,6 +693,11 @@ static void dumpCandidateMethods(ClassObject* clazz, const char* methodName, con
     dumpMethods(clazz->directMethods, clazz->directMethodCount, methodName);
 }
 
+static void throwNoSuchMethodError(ClassObject* c, const char* name, const char* sig, const char* kind) {
+    std::string msg(StringPrintf("no %s method \"%s.%s%s\"", kind, c->descriptor, name, sig));
+    dvmThrowNoSuchMethodError(msg.c_str());
+}
+
 /*
  * Register a method that uses JNI calling conventions.
  */
@@ -718,11 +723,13 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     }
     if (method == NULL) {
         dumpCandidateMethods(clazz, methodName, signature);
+        throwNoSuchMethodError(clazz, methodName, signature, "static or non-static");
         return false;
     }
 
     if (!dvmIsNativeMethod(method)) {
         ALOGW("Unable to register: not native: %s.%s:%s", clazz->descriptor, methodName, signature);
+        throwNoSuchMethodError(clazz, methodName, signature, "native");
         return false;
     }
 
