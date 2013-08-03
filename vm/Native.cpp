@@ -411,7 +411,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
         if (verbose)
             ALOGD("Added shared lib %s %p", pathName, classLoader);
 
-        bool result = true;
+        bool result = false;
         void* vonLoad;
         int version;
 
@@ -453,7 +453,8 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
                  * newly-registered native method calls.  We could try to
                  * unregister them, but that doesn't seem worthwhile.
                  */
-                result = false;
+            } else {
+                result = true;
             }
             if (gDvm.verboseJni) {
                 ALOGI("[Returned %s from JNI_OnLoad for \"%s\"]",
