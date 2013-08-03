@@ -417,8 +417,8 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
 
         vonLoad = dlsym(handle, "JNI_OnLoad");
         if (vonLoad == NULL) {
-            ALOGD("No JNI_OnLoad found in %s %p, skipping init",
-                pathName, classLoader);
+            ALOGD("No JNI_OnLoad found in %s %p, skipping init", pathName, classLoader);
+            result = true;
         } else {
             /*
              * Call JNI_OnLoad.  We have to override the current class
