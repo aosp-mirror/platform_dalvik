@@ -29,6 +29,65 @@ INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
 
 endif # TARGET_BUILD_APPS
 
+# the mainDexClasses rules
+# ============================================================
+include $(CLEAR_VARS)
+LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE_CLASS := EXECUTABLES
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := mainDexClasses.rules
+
+include $(BUILD_SYSTEM)/base_rules.mk
+
+$(LOCAL_BUILT_MODULE): $(HOST_OUT_JAVA_LIBRARIES)/dx$(COMMON_JAVA_PACKAGE_SUFFIX)
+$(LOCAL_BUILT_MODULE): $(LOCAL_PATH)/etc/mainDexClasses.rules | $(ACP)
+	@echo "Copy: $(PRIVATE_MODULE) ($@)"
+	$(copy-file-to-new-target)
+
+INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
+
+installed_mainDexClasses.rules := $(LOCAL_INSTALLED_MODULE)
+
+# the shrinkedAndroid jar is a library used by the mainDexClasses script
+# ============================================================
+include $(CLEAR_VARS)
+LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := shrinkedAndroid
+LOCAL_BUILT_MODULE_STEM := shrinkedAndroid.jar
+LOCAL_MODULE_SUFFIX := $(COMMON_JAVA_PACKAGE_SUFFIX)
+
+include $(BUILD_SYSTEM)/base_rules.mk
+
+$(LOCAL_BUILT_MODULE): PRIVATE_PROGUARD_FLAGS:= \
+  -include $(addprefix $(LOCAL_PATH)/, shrinkedAndroid.proguard.flags)
+$(LOCAL_BUILT_MODULE): $(call java-lib-files,android_stubs_current)| $(PROGUARD)
+	$(call proguard-enabled-commands,)
+
+INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
+
+installed_shrinkedAndroid := $(LOCAL_INSTALLED_MODULE)
+
+# the mainDexClasses script
+# ============================================================
+include $(CLEAR_VARS)
+LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE_CLASS := EXECUTABLES
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := mainDexClasses
+
+include $(BUILD_SYSTEM)/base_rules.mk
+
+$(LOCAL_BUILT_MODULE): $(HOST_OUT_JAVA_LIBRARIES)/dx$(COMMON_JAVA_PACKAGE_SUFFIX)
+$(LOCAL_BUILT_MODULE): $(LOCAL_PATH)/etc/mainDexClasses | $(ACP)
+	@echo "Copy: $(PRIVATE_MODULE) ($@)"
+	$(copy-file-to-new-target)
+	$(hide) chmod 755 $@
+
+$(LOCAL_INSTALLED_MODULE): | $(installed_shrinkedAndroid) $(installed_mainDexClasses.rules)
+INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
+
 # the dexmerger script
 # ============================================================
 include $(CLEAR_VARS)
