@@ -1085,14 +1085,14 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 
     info->codeAddress = NULL;
     stream = (char*)gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
+    streamStart = stream; /* trace start before alignment */
 
     // TODO: compile into a temporary buffer and then copy into the code cache.
     // That would let us leave the code cache unprotected for a shorter time.
     size_t unprotected_code_cache_bytes =
-            gDvmJit.codeCacheSize - gDvmJit.codeCacheByteUsed - CODE_CACHE_PADDING;
-    UNPROTECT_CODE_CACHE(stream, unprotected_code_cache_bytes);
+            gDvmJit.codeCacheSize - gDvmJit.codeCacheByteUsed;
+    UNPROTECT_CODE_CACHE(streamStart, unprotected_code_cache_bytes);
 
-    streamStart = stream; /* trace start before alignment */
     stream += EXTRA_BYTES_FOR_CHAINING; /* This is needed for chaining. Add the bytes before the alignment */
     stream = (char*)(((unsigned int)stream + 0xF) & ~0xF); /* Align trace to 16-bytes */
     streamMethodStart = stream; /* code start */
@@ -1252,7 +1252,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit, JitTranslationInfo *info)
             if(cg_ret < 0) {
                 endOfTrace(true/*freeOnly*/);
                 cUnit->baseAddr = NULL;
-                PROTECT_CODE_CACHE(stream, unprotected_code_cache_bytes);
+                PROTECT_CODE_CACHE(streamStart, unprotected_code_cache_bytes);
                 return;
             }
         } else {
@@ -1293,7 +1293,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit, JitTranslationInfo *info)
                     gDvmJit.codeCacheFull = true;
                     cUnit->baseAddr = NULL;
                     endOfTrace(true/*freeOnly*/);
-                    PROTECT_CODE_CACHE(stream, unprotected_code_cache_bytes);
+                    PROTECT_CODE_CACHE(streamStart, unprotected_code_cache_bytes);
                     return;
                 }
             }
@@ -1387,7 +1387,7 @@ gen_fallthrough:
                 gDvmJit.codeCacheFull = true;
                 cUnit->baseAddr = NULL;
                 endOfTrace(true); /* need to free structures */
-                PROTECT_CODE_CACHE(stream, unprotected_code_cache_bytes);
+                PROTECT_CODE_CACHE(streamStart, unprotected_code_cache_bytes);
                 return;
             }
         }
@@ -1403,7 +1403,7 @@ gen_fallthrough:
          */
         ALOGI("JIT code cache full after endOfTrace (trace uses %uB)", (stream - streamStart));
         cUnit->baseAddr = NULL;
-        PROTECT_CODE_CACHE(stream, unprotected_code_cache_bytes);
+        PROTECT_CODE_CACHE(streamStart, unprotected_code_cache_bytes);
         return;
     }
 
@@ -1425,7 +1425,7 @@ gen_fallthrough:
         ALOGI("JIT code cache full after ChainingCellCounts (trace uses %uB)", (stream - streamStart));
         gDvmJit.codeCacheFull = true;
         cUnit->baseAddr = NULL;
-        PROTECT_CODE_CACHE(stream, unprotected_code_cache_bytes);
+        PROTECT_CODE_CACHE(streamStart, unprotected_code_cache_bytes);
         return;
     }
 
@@ -1434,7 +1434,7 @@ gen_fallthrough:
     *pOffset = streamCountStart - streamMethodStart; /* from codeAddr */
     pOffset[1] = streamChainingStart - streamMethodStart;
 
-    PROTECT_CODE_CACHE(stream, unprotected_code_cache_bytes);
+    PROTECT_CODE_CACHE(streamStart, unprotected_code_cache_bytes);
 
     gDvmJit.codeCacheByteUsed += (stream - streamStart);
     if (cUnit->printMe) {
