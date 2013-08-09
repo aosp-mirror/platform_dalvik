@@ -15,7 +15,7 @@
     leal    (rPC,%ecx,2),%ecx     # ecx<- PC + BBBBbbbb*2
     movl    %eax,OUT_ARG1(%esp)   # ARG1<- vAA
     movl    %ecx,OUT_ARG0(%esp)   # ARG0<- switchData
-    call    $func
+    call    $func@PLT
     movl    rSELF,%ecx
     ADVANCE_PC_INDEXED %eax
     movl    offThread_curHandlerTable(%ecx),rIBASE

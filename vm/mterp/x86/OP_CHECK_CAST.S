@@ -39,7 +39,7 @@
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call    dvmInstanceofNonTrivial    # eax<- boolean result
+    call    dvmInstanceofNonTrivial@PLT # eax<- boolean result
     UNSPILL(rIBASE)
     testl   %eax,%eax                  # failed?
     jne     .L${opcode}_okay           # no, success
@@ -50,7 +50,7 @@
     movl    %eax,OUT_ARG0(%esp)                 # arg0<- obj->clazz
     movl    sReg0,%ecx
     movl    %ecx,OUT_ARG1(%esp)                 # arg1<- desired class
-    call    dvmThrowClassCastException
+    call    dvmThrowClassCastException@PLT
     jmp     common_exceptionThrown
 
     /*
@@ -69,7 +69,7 @@
     movl    $$0,OUT_ARG2(%esp)         # arg2<- false
     movl    %ecx,OUT_ARG0(%esp)        # arg0<- method->clazz
     SPILL(rIBASE)
-    call    dvmResolveClass            # eax<- resolved ClassObject ptr
+    call    dvmResolveClass@PLT        # eax<- resolved ClassObject ptr
     UNSPILL(rIBASE)
     testl   %eax,%eax                  # got null?
     je      common_exceptionThrown     # yes, handle exception

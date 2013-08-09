@@ -27,7 +27,7 @@
     movzwl     2(rPC),%eax                         # eax<- BBBB
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
     movl       %eax,OUT_ARG1(%esp)                 # arg1<- BBBB
-    call       dvmFindInterfaceMethodInCache # eax<- call(class, ref, method, dex)
+    call       dvmFindInterfaceMethodInCache@PLT # eax<- call(class, ref, method, dex)
     testl      %eax,%eax
     je         common_exceptionThrown
     movl       TMP_SPILL1(%ebp), %ecx
