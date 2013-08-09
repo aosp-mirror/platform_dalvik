@@ -38,7 +38,7 @@ dvmJitToInterpPunt:
     GET_PC
 #if defined(WITH_JIT_TUNING)
     movl   rPC, OUT_ARG0(%esp)
-    call   dvmBumpPunt@PLT
+    call   dvmBumpPunt
 #endif
     movl   rSELF, %ecx
     movl   offThread_curHandlerTable(%ecx),rIBASE
@@ -57,7 +57,7 @@ dvmJitToInterpPunt:
  */
 dvmJitToInterpSingleStep:
 /* TODO */
-    call     dvmAbort@PLT
+    call     dvmAbort
 #if 0
     pop    %eax
     movl   rSELF, %ecx
@@ -78,14 +78,14 @@ dvmJitToInterpSingleStep:
 dvmJitToInterpNoChainNoProfile:
 #if defined(WITH_JIT_TUNING)
     SPILL_TMP1(%eax)
-    call   dvmBumpNoChain@PLT
+    call   dvmBumpNoChain
     UNSPILL_TMP1(%eax)
 #endif
     movl   %eax, rPC
     movl   rSELF, %eax
     movl   rPC,OUT_ARG0(%esp)
     movl   %eax,OUT_ARG1(%esp)
-    call   dvmJitGetTraceAddrThread@PLT  # (pc, self)
+    call   dvmJitGetTraceAddrThread  # (pc, self)
     movl   rSELF,%ecx                # ecx <- self
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
     cmpl   $$0, %eax
@@ -108,14 +108,14 @@ dvmJitToInterpNoChainNoProfile:
 dvmJitToInterpTraceSelectNoChain:
 #if defined(WITH_JIT_TUNING)
     movl   %edx, OUT_ARG0(%esp)
-    call   dvmBumpNoChain@PLT
+    call   dvmBumpNoChain
 #endif
     movl   %ebx, rPC
     lea    4(%esp), %esp #to recover the esp update due to function call
     movl   rSELF, %eax
     movl   rPC,OUT_ARG0(%esp)
     movl   %eax,OUT_ARG1(%esp)
-    call   dvmJitGetTraceAddrThread@PLT  # (pc, self)
+    call   dvmJitGetTraceAddrThread  # (pc, self)
     movl   rSELF,%ecx
     cmpl   $$0,%eax
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
@@ -158,7 +158,7 @@ dvmJitToInterpTraceSelect:
     movl   rSELF, %eax
     movl   rPC,OUT_ARG0(%esp)
     movl   %eax,OUT_ARG1(%esp)
-    call   dvmJitGetTraceAddrThread@PLT # (pc, self)
+    call   dvmJitGetTraceAddrThread # (pc, self)
     lea    4(%esp), %esp
     cmpl   $$0,%eax
     movl   rSELF, %ecx
@@ -166,7 +166,7 @@ dvmJitToInterpTraceSelect:
     jz     1b                 # no - ask for one
     movl   %eax,OUT_ARG0(%esp)
     movl   rINST,OUT_ARG1(%esp)
-    call   dvmJitChain@PLT    # Attempt dvmJitChain(codeAddr,chainAddr)
+    call   dvmJitChain        # Attempt dvmJitChain(codeAddr,chainAddr)
     cmpl   $$0,%eax           # Success?
     jz     toInterpreter      # didn't chain - interpret
     jmp    *%eax
@@ -201,7 +201,7 @@ dvmJitToInterpNormal:
     movl        rPC, OUT_ARG0(%esp)
     movl        rSELF, %ecx
     movl        %ecx, OUT_ARG1(%esp)
-    call        dvmJitGetTraceAddrThread@PLT
+    call        dvmJitGetTraceAddrThread
     ## Here is the change from using rGLUE to rSELF for accessing the
     ## JIT code cache flag
     movl        rSELF, %ecx
@@ -212,7 +212,7 @@ dvmJitToInterpNormal:
     #lea         -8(%esp), %esp
     movl        %ebx, OUT_ARG1(%esp)    # %ebx live thorugh dvmJitGetTraceAddrThread
     movl        %eax, OUT_ARG0(%esp)    # first argument
-    call        dvmJitChain@PLT
+    call        dvmJitChain
     #lea         8(%esp), %esp
     cmp         $$0, %eax
     je          toInterpreter
@@ -223,7 +223,7 @@ dvmJitToInterpNoChain:
 dvmJitToInterpNoChain: #rPC in eax
 #if defined(WITH_JIT_TUNING)
     SPILL_TMP1(%eax)
-    call   dvmBumpNoChain@PLT
+    call   dvmBumpNoChain
     UNSPILL_TMP1(%eax)
 #endif
     ## TODO, need to clean up stack manipulation ... this isn't signal safe and
@@ -232,7 +232,7 @@ dvmJitToInterpNoChain: #rPC in eax
     movl        rPC, OUT_ARG0(%esp)
     movl        rSELF, %ecx
     movl        %ecx, OUT_ARG1(%esp)
-    call        dvmJitGetTraceAddrThread@PLT
+    call        dvmJitGetTraceAddrThread
     ## Here is the change from using rGLUE to rSELF for accessing the
     ## JIT code cache flag
     movl        rSELF, %ecx
@@ -287,7 +287,7 @@ common_Profile:
     movl   rSELF, %eax
     movl   rPC,OUT_ARG0(%esp)
     movl   rIBASE,OUT_ARG1(%esp)
-    call   dvmJitGetTraceAddrThread@PLT  # (pc, self)
+    call   dvmJitGetTraceAddrThread  # (pc, self)
     UNSPILL(rIBASE)
     movl   %eax,offThread_inJitCodeCache(rINST)   # set the inJitCodeCache flag
     UNSPILL_TMP1(rINST)
@@ -316,7 +316,7 @@ common_selectTrace:
 
    EXPORT_PC
    SAVE_PC_FP_TO_SELF %ecx
-   call dvmJitCheckTraceRequest@PLT
+   call dvmJitCheckTraceRequest
 3:
    mov          EBX_SPILL(%ebp), %ebx
    FETCH_INST
@@ -345,7 +345,7 @@ common_selectTrace2:
 
    EXPORT_PC
    SAVE_PC_FP_TO_SELF %ecx
-   call dvmJitCheckTraceRequest@PLT
+   call dvmJitCheckTraceRequest
 3:
    FETCH_INST
    movl rSELF, %ecx
@@ -571,7 +571,7 @@ common_invokeMethodNoRange:
     movl        rPC, offThread_pc(%ecx) # update interpSave.pc
     movl        %ecx, OUT_ARG0(%esp)
     movl        %eax, OUT_ARG1(%esp)
-    call        dvmReportInvoke@PLT    # (self, method)
+    call        dvmReportInvoke        # (self, method)
     UNSPILL_TMP1(%eax)
     UNSPILL_TMP2(%edx)
     movl        rSELF,%ecx             # restore rSELF
@@ -619,7 +619,7 @@ common_invokeMethodNoRange:
     movl        %ecx, OUT_ARG1(%esp)
     movl        %eax, OUT_ARG0(%esp)
     movl        rFP, OUT_ARG2(%esp)
-    call        dvmReportPreNativeInvoke@PLT # (methodToCall, self, fp)
+    call        dvmReportPreNativeInvoke # (methodToCall, self, fp)
     UNSPILL_TMP1(%eax)                  # restore methodToCall
     movl        rSELF,%ecx              # restore self
 
@@ -636,14 +636,14 @@ common_invokeMethodNoRange:
     movl        %ecx, OUT_ARG1(%esp)
     movl        %eax, OUT_ARG0(%esp)
     movl        rFP, OUT_ARG2(%esp)
-    call        dvmReportPostNativeInvoke@PLT # (methodToCall, self, fp)
+    call        dvmReportPostNativeInvoke # (methodToCall, self, fp)
     jmp         7b                      # rejoin
 
 .LstackOverflow:    # eax=methodToCall
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
     movl        rSELF,%eax              # %eax<- self
     movl        %eax, OUT_ARG0(%esp)    # push parameter self
-    call        dvmHandleStackOverflow@PLT  # call: (Thread* self, Method* meth)
+    call        dvmHandleStackOverflow  # call: (Thread* self, Method* meth)
     jmp         common_exceptionThrown  # handle exception
 
 
@@ -711,7 +711,7 @@ common_returnFromMethod:
     movl     rPC, offThread_pc(%ecx)          # update interpSave.pc
     movl     %ebx, offThread_curFrame(%ecx)    # update interpSave.curFrame
     movl     %ecx, OUT_ARG0(%esp)             # parameter self
-    call     dvmReportReturn@PLT              # (self)
+    call     dvmReportReturn                  # (self)
     UNSPILL_TMP1(%ebx)
     movl     rSELF, %ecx                      # restore self
     SAVEAREA_FROM_FP %eax                     # restore saveArea
@@ -733,7 +733,7 @@ common_gotoBail:
     movl   rFP,offThread_curFrame(%ecx)
     movl   %ecx,OUT_ARG0(%esp)      # self in arg0
     movl   rINST,OUT_ARG1(%esp)     # changeInterp in arg1
-    call   dvmMterpStdBail@PLT      # bail out....
+    call   dvmMterpStdBail          # bail out....
 
 /*
  * The JIT's invoke method needs to remember the callsite class and
@@ -791,7 +791,7 @@ common_verifyField:
     lea      -8(%esp), %esp
     movl     %ecx, OUT_ARG0(%esp)
     movl     rPC, OUT_ARG1(%esp)
-    call     dvmJitEndTraceSelect@PLT
+    call     dvmJitEndTraceSelect
     lea      8(%esp), %esp
     UNSPILL_TMP2(%edx)
     UNSPILL_TMP1(%eax)
@@ -817,7 +817,7 @@ common_errDivideByZero:
     EXPORT_PC
     movl    $$.LstrDivideByZero,%eax
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowArithmeticException@PLT
+    call    dvmThrowArithmeticException
     jmp     common_exceptionThrown
 
 /*
@@ -827,7 +827,7 @@ common_errDivideByZero:
 common_errNegativeArraySize:
     EXPORT_PC
     movl    %eax,OUT_ARG0(%esp)                  # arg0<- len
-    call    dvmThrowNegativeArraySizeException@PLT   # (len)
+    call    dvmThrowNegativeArraySizeException   # (len)
     jmp     common_exceptionThrown
 
 /*
@@ -837,7 +837,7 @@ common_errNegativeArraySize:
 common_errNoSuchMethod:
     EXPORT_PC
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowNoSuchMethodError@PLT
+    call    dvmThrowNoSuchMethodError
     jmp     common_exceptionThrown
 
 /*
@@ -848,7 +848,7 @@ common_errNullObject:
     EXPORT_PC
     xorl    %eax,%eax
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowNullPointerException@PLT
+    call    dvmThrowNullPointerException
     jmp     common_exceptionThrown
 
 /*
@@ -862,7 +862,7 @@ common_errArrayIndex:
     movl    offArrayObject_length(%eax), %eax
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
-    call    dvmThrowArrayIndexOutOfBoundsException@PLT   # args (length, index)
+    call    dvmThrowArrayIndexOutOfBoundsException   # args (length, index)
     jmp     common_exceptionThrown
 
 /*
@@ -882,14 +882,14 @@ common_exceptionThrown:
     EXPORT_PC
     movl       rSELF, %ecx
     movl       %ecx, OUT_ARG0(%esp)
-    call       dvmCheckSuspendPending@PLT
+    call       dvmCheckSuspendPending
 
     movl       rSELF, %ecx
     movl       offThread_exception(%ecx), %edx   # %edx <- self->exception
     movl       %edx, OUT_ARG0(%esp)
     movl       %ecx, OUT_ARG1(%esp)
     SPILL_TMP1(%edx)
-    call       dvmAddTrackedAlloc@PLT  # don't let the exception be GCed
+    call       dvmAddTrackedAlloc      # don't let the exception be GCed
     UNSPILL_TMP1(%edx)
     movl       rSELF, %ecx
     movl       offThread_subMode(%ecx), %eax    # get subMode flags
@@ -905,7 +905,7 @@ common_exceptionThrown:
     movl       %ecx, OUT_ARG0(%esp)
     movl       %edx, OUT_ARG1(%esp)
     SPILL_TMP1(%edx)
-    call       dvmReportExceptionThrow@PLT # (self, exception)
+    call       dvmReportExceptionThrow # (self, exception)
     UNSPILL_TMP1(%edx)
     movl       rSELF, %ecx
 
@@ -931,7 +931,7 @@ common_exceptionThrown:
 
     /* call, %eax gets catchRelPc (a code-unit offset) */
     SPILL_TMP1(%edx)                   # save exception
-    call       dvmFindCatchBlock@PLT   # call(self, relPc, exc, scan?, &fp)
+    call       dvmFindCatchBlock       # call(self, relPc, exc, scan?, &fp)
     UNSPILL_TMP1(%edx)                 # restore exception
 
     /* fix earlier stack overflow if necessary; may trash rFP */
@@ -942,7 +942,7 @@ common_exceptionThrown:
     movl       %ecx, OUT_ARG0(%esp)       # Arg 0 = self
     movl       %edx, OUT_ARG1(%esp)       # Arg 1 = exception
     SPILL_TMP1(%edx)
-    call       dvmCleanupStackOverflow@PLT    # call(self, exception)
+    call       dvmCleanupStackOverflow    # call(self, exception)
     UNSPILL_TMP1(%edx)
     movl       rFP, %eax                  # restore result
     movl       rSELF, %ecx
@@ -968,7 +968,7 @@ common_exceptionThrown:
     movl       %edx, OUT_ARG0(%esp)       # Arg 0 = exception
     movl       rINST, OUT_ARG1(%esp)      # Arg 1 = self
     SPILL_TMP1(%edx)
-    call       dvmReleaseTrackedAlloc@PLT # release the exception
+    call       dvmReleaseTrackedAlloc     # release the exception
     UNSPILL_TMP1(%edx)
 
     /* restore the exception if the handler wants it */
@@ -991,7 +991,7 @@ common_exceptionThrown:
     movl       %ecx, OUT_ARG0(%esp)
     movl       %edx, OUT_ARG1(%esp)
     SPILL_TMP1(%edx)
-    call       dvmCleanupStackOverflow@PLT
+    call       dvmCleanupStackOverflow
     UNSPILL_TMP1(%edx)
 
 1:
@@ -999,7 +999,7 @@ common_exceptionThrown:
     movl       %edx, offThread_exception(%ecx) #restore exception
     movl       %edx, OUT_ARG0(%esp)
     movl       %ecx, OUT_ARG1(%esp)
-    call       dvmReleaseTrackedAlloc@PLT # release the exception
+    call       dvmReleaseTrackedAlloc     # release the exception
     movl       rSELF, %ecx
     jmp        common_gotoBail            # bail out
 

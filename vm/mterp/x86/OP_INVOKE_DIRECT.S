@@ -46,7 +46,7 @@
      movl     $$METHOD_DIRECT,OUT_ARG2(%esp)
      movl     %eax,OUT_ARG1(%esp)
      movl     %ecx,OUT_ARG0(%esp)
-     call     dvmResolveMethod@PLT # eax<- call(clazz, ref, flags)
+     call     dvmResolveMethod # eax<- call(clazz, ref, flags)
      UNSPILL_TMP1(%ecx)
      testl    %eax,%eax
      jne      .L${opcode}_finish

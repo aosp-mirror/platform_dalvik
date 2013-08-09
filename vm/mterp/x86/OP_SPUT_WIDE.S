@@ -42,7 +42,7 @@
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
