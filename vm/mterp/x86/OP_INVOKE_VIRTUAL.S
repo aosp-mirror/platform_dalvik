@@ -24,7 +24,7 @@
     movl      offMethod_clazz(%eax),%eax  # ecx<- method->clazz
     movl      %eax,OUT_ARG0(%esp)         # arg0<- clazz
     movl      $$METHOD_VIRTUAL,OUT_ARG2(%esp) # arg2<- flags
-    call      dvmResolveMethod@PLT        # eax<- call(clazz, ref, flags)
+    call      dvmResolveMethod            # eax<- call(clazz, ref, flags)
     testl     %eax,%eax                   # got null?
     jne       .L${opcode}_continue        # no, continue
     jmp       common_exceptionThrown      # yes, handle exception

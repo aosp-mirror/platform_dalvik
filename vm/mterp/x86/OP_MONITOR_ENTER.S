@@ -13,7 +13,7 @@
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
     SPILL(rIBASE)
-    call    dvmLockObject@PLT           # dvmLockObject(self,object)
+    call    dvmLockObject               # dvmLockObject(self,object)
     UNSPILL(rIBASE)
     FETCH_INST_OPCODE 1 %ecx
     ADVANCE_PC 1

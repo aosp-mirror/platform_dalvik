@@ -24,7 +24,7 @@
     movl    offThread_method(%eax),%eax         # eax<- self->method
     movl    offMethod_clazz(%eax),%eax        # eax<- method->clazz
     movl    %eax,OUT_ARG0(%esp)               # arg0<- clazz
-    call    dvmResolveClass@PLT               # eax<- call(clazz,ref,flag)
+    call    dvmResolveClass                   # eax<- call(clazz,ref,flag)
     testl   %eax,%eax                         # null?
     je      common_exceptionThrown            # yes, handle it
 
@@ -55,7 +55,7 @@
     sarl    $$4,rINST
     .endif
     movl    rINST,OUT_ARG1(%esp)                  # arg1<- A or AA (length)
-    call    dvmAllocArrayByClass@PLT     # eax<- call(arrayClass, length, flags)
+    call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
     movl    rSELF,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
@@ -125,5 +125,5 @@
 .L${opcode}_notimpl:
     movl    $$.LstrFilledNewArrayNotImplA,%eax
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowInternalError@PLT
+    call    dvmThrowInternalError
     jmp     common_exceptionThrown
