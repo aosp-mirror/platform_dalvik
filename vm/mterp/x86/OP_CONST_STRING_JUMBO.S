@@ -26,7 +26,7 @@
     movl     %ecx,OUT_ARG1(%esp)
     movl     %eax,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveString          # go resolve
+    call     dvmResolveString@PLT      # go resolve
     UNSPILL(rIBASE)
     testl    %eax,%eax                 # failed?
     je       common_exceptionThrown

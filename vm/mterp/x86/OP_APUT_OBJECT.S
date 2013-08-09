@@ -33,7 +33,7 @@
     movl      %ecx,sReg0                     # store the two classes for later
     movl      %eax,sReg1
     SPILL(rIBASE)
-    call      dvmCanPutArrayElement          # test object type vs. array type
+    call      dvmCanPutArrayElement@PLT      # test object type vs. array type
     UNSPILL(rIBASE)
     UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
@@ -46,7 +46,7 @@
     movl      %eax,OUT_ARG0(%esp)
     movl      sReg1,%ecx
     movl      %ecx,OUT_ARG1(%esp)
-    call      dvmThrowArrayStoreExceptionIncompatibleElement # ...and throw
+    call      dvmThrowArrayStoreExceptionIncompatibleElement@PLT # ...and throw
     jmp       common_exceptionThrown
 
 .L${opcode}_types_okay:

@@ -17,7 +17,7 @@
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call    dvmUnlockObject             # unlock(self,obj)
+    call    dvmUnlockObject@PLT         # unlock(self,obj)
     UNSPILL(rIBASE)
     FETCH_INST_OPCODE 1 %ecx
     testl   %eax,%eax                   # success?
