@@ -76,7 +76,7 @@
 .L${opcode}_debugprofile:
     movl      %eax,OUT_ARG0(%esp)       # arg0<- BBBB
     SPILL_TMP1(%eax)                    # save opIndex
-    call      dvmResolveInlineNative    # dvmResolveInlineNative(opIndex)
+    call      dvmResolveInlineNative@PLT  # dvmResolveInlineNative(opIndex)
     movl      rSELF,%ecx                # restore self
     testl     %eax,%eax                 # method resolved?
     movl      %eax,%edx                 # save possibly resolved method in edx
@@ -85,7 +85,7 @@
     SPILL_TMP2(%edx)                    # save method
     movl      %edx,OUT_ARG0(%esp)       # arg0<- method
     movl      %ecx,OUT_ARG1(%esp)       # arg1<- self
-    call      dvmFastMethodTraceEnter   # dvmFastMethodTraceEnter(method,self)
+    call      dvmFastMethodTraceEnter@PLT  # dvmFastMethodTraceEnter(method,self)
     movl      rSELF,%ecx                # restore self
     UNSPILL_TMP1(%eax)                  # restore opIndex
     leal      offThread_retval(%ecx),%ecx # ecx<- &self->retval
@@ -96,7 +96,7 @@
     movl      rSELF,%ecx                # restore self
     movl      %eax,OUT_ARG0(%esp)       # arg0<- method
     movl      %ecx,OUT_ARG1(%esp)       # arg1<- self
-    call      dvmFastNativeMethodTraceExit # dvmFastNativeMethodTraceExit(method,self)
+    call      dvmFastNativeMethodTraceExit@PLT  # dvmFastNativeMethodTraceExit(method,self)
     UNSPILL(rIBASE)                     # restore rIBASE
     UNSPILL_TMP1(%eax)                  # restore result of inline
     testl     %eax,%eax                 # successful?

@@ -37,7 +37,7 @@
      */
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
-    call    dvmInstanceofNonTrivial     # eax<- boolean result
+    call    dvmInstanceofNonTrivial@PLT # eax<- boolean result
     # fall through to ${opcode}_store
 
     /*
@@ -79,7 +79,7 @@
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     EXPORT_PC
     movl    %ecx,OUT_ARG0(%esp)         # arg0<- method->clazz
-    call    dvmResolveClass             # eax<- resolved ClassObject ptr
+    call    dvmResolveClass@PLT         # eax<- resolved ClassObject ptr
     testl   %eax,%eax                   # success?
     je      common_exceptionThrown      # no, handle exception
 /* Now, we need to sync up with fast path.  We need eax to

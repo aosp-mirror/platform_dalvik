@@ -7,7 +7,7 @@
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
     SPILL(rIBASE)
-    call    dvmInterpHandleFillArrayData
+    call    dvmInterpHandleFillArrayData@PLT
     UNSPILL(rIBASE)
     FETCH_INST_OPCODE 3 %ecx
     testl   %eax,%eax                   # exception thrown?

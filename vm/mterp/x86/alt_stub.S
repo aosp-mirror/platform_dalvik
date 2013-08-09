@@ -15,7 +15,7 @@
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore                    # (dPC, dFP, self)
+    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
