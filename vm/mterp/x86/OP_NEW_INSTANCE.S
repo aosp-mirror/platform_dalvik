@@ -29,7 +29,7 @@
 .L${opcode}_initialized:  # on entry, ecx<- class
     movl      $$ALLOC_DONT_TRACK,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
-    call     dvmAllocObject@PLT         # eax<- new object
+    call     dvmAllocObject             # eax<- new object
     testl    %eax,%eax                  # success?
     je       common_exceptionThrown     # no, bail out
 #if defined(WITH_JIT)
@@ -62,7 +62,7 @@
     movl    rSELF, %ecx
     movl    %ecx, OUT_ARG0(%esp)
     movl    rPC, OUT_ARG1(%esp)
-    call    dvmJitEndTraceSelect@PLT     # (self, pc)
+    call    dvmJitEndTraceSelect         # (self, pc)
     UNSPILL_TMP1(%eax)
     UNSPILL_TMP2(%ebx)
     SET_VREG %eax rINST                  # vAA <- new object
@@ -80,7 +80,7 @@
 .L${opcode}_needinit:
     SPILL_TMP1(%ecx)                    # save object
     movl    %ecx,OUT_ARG0(%esp)
-    call    dvmInitClass@PLT            # initialize class
+    call    dvmInitClass                # initialize class
     UNSPILL_TMP1(%ecx)                  # restore object
     testl   %eax,%eax                   # success?
     jne     .L${opcode}_initialized     # success, continue
@@ -98,7 +98,7 @@
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     movl    $$0,OUT_ARG2(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    call    dvmResolveClass@PLT         # call(clazz,off,flags)
+    call    dvmResolveClass             # call(clazz,off,flags)
     movl    %eax,%ecx                   # ecx<- resolved ClassObject ptr
     testl   %ecx,%ecx                   # success?
     jne     .L${opcode}_resolved        # good to go

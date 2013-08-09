@@ -29,7 +29,7 @@
 .L${opcode}_setFinal:
     EXPORT_PC                           # can throw
     movl       %ecx, OUT_ARG0(%esp)     # arg1<- obj
-    call       dvmSetFinalizable@PLT    # call dvmSetFinalizable(obj)
+    call       dvmSetFinalizable        # call dvmSetFinalizable(obj)
     movl       rSELF, %ecx
     movl       offThread_exception(%ecx), %eax # eax<- self->exception
     cmpl       $$0, %eax                # exception pending?

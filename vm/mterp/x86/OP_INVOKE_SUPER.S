@@ -53,7 +53,7 @@
     movzwl  2(rPC),%ecx                 # ecx<- BBBB
     movl    $$METHOD_VIRTUAL,OUT_ARG2(%esp)  # arg2<- resolver method type
     movl    %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    call    dvmResolveMethod@PLT        # eax<- call(clazz, ref, flags)
+    call    dvmResolveMethod            # eax<- call(clazz, ref, flags)
     testl   %eax,%eax                   # got null?
     movl    %eax,%ecx                   # ecx<- resolved base method
     UNSPILL_TMP2(%eax)                  # restore method->clazz
