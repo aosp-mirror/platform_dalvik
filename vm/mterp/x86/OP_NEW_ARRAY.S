@@ -37,7 +37,7 @@
     movl    %eax,OUT_ARG1(%esp)
     movl    $$0,OUT_ARG2(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    call    dvmResolveClass@PLT        # eax<- call(clazz,ref,flag)
+    call    dvmResolveClass            # eax<- call(clazz,ref,flag)
     movl    %eax,%ecx
     UNSPILL_TMP1(%eax)
     testl   %ecx,%ecx                  # successful resolution?
@@ -54,7 +54,7 @@
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
     movl    $$ALLOC_DONT_TRACK,OUT_ARG2(%esp)
-    call    dvmAllocArrayByClass@PLT   # eax<- call(clazz,length,flags)
+    call    dvmAllocArrayByClass    # eax<- call(clazz,length,flags)
     FETCH_INST_OPCODE 2 %ecx
     UNSPILL(rIBASE)
     testl   %eax,%eax               # failed?

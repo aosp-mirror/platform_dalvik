@@ -33,7 +33,7 @@
     movl      $$METHOD_STATIC,%eax
     movl      %eax,OUT_ARG2(%esp)       # arg2<- flags
     SPILL(rIBASE)
-    call      dvmResolveMethod@PLT      # call(clazz,ref,flags)
+    call      dvmResolveMethod          # call(clazz,ref,flags)
     UNSPILL(rIBASE)
     testl     %eax,%eax                 # got null?
 #if defined(WITH_JIT)
@@ -54,7 +54,7 @@
     movl      %eax, TMP_SPILL2(%ebp)
     movl      %ecx, TMP_SPILL3(%ebp)
     SPILL(rIBASE)
-    call      dvmJitEndTraceSelect@PLT
+    call      dvmJitEndTraceSelect
     UNSPILL(rIBASE)
     movl      TMP_SPILL1(%ebp), %edx
     movl      TMP_SPILL2(%ebp), %eax

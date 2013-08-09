@@ -10,7 +10,7 @@
      */
     SPILL(rIBASE)
     movl    rPC,OUT_ARG0(%esp)
-    call    dvmGetOriginalOpcode@PLT
+    call    dvmGetOriginalOpcode
     UNSPILL(rIBASE)
     movl    rSELF,%ecx
     movzbl  1(rPC),rINST

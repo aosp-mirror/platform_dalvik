@@ -696,7 +696,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %ecx,OUT_ARG1(%esp)
     movl     %eax,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveString@PLT      # go resolve
+    call     dvmResolveString          # go resolve
     UNSPILL(rIBASE)
     testl    %eax,%eax                 # failed?
     je       common_exceptionThrown
@@ -733,7 +733,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %ecx,OUT_ARG1(%esp)
     movl     %eax,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveString@PLT      # go resolve
+    call     dvmResolveString          # go resolve
     UNSPILL(rIBASE)
     testl    %eax,%eax                 # failed?
     je       common_exceptionThrown
@@ -771,7 +771,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %ecx,OUT_ARG1(%esp)
     movl     %eax,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveClass@PLT       # go resolve
+    call     dvmResolveClass           # go resolve
     UNSPILL(rIBASE)
     testl    %eax,%eax                 # failed?
     je       common_exceptionThrown
@@ -796,7 +796,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
     SPILL(rIBASE)
-    call    dvmLockObject@PLT           # dvmLockObject(self,object)
+    call    dvmLockObject               # dvmLockObject(self,object)
     UNSPILL(rIBASE)
     FETCH_INST_OPCODE 1 %ecx
     ADVANCE_PC 1
@@ -821,7 +821,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call    dvmUnlockObject@PLT         # unlock(self,obj)
+    call    dvmUnlockObject             # unlock(self,obj)
     UNSPILL(rIBASE)
     FETCH_INST_OPCODE 1 %ecx
     testl   %eax,%eax                   # success?
@@ -869,7 +869,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call    dvmInstanceofNonTrivial@PLT # eax<- boolean result
+    call    dvmInstanceofNonTrivial    # eax<- boolean result
     UNSPILL(rIBASE)
     testl   %eax,%eax                  # failed?
     jne     .LOP_CHECK_CAST_okay           # no, success
@@ -880,7 +880,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    %eax,OUT_ARG0(%esp)                 # arg0<- obj->clazz
     movl    sReg0,%ecx
     movl    %ecx,OUT_ARG1(%esp)                 # arg1<- desired class
-    call    dvmThrowClassCastException@PLT
+    call    dvmThrowClassCastException
     jmp     common_exceptionThrown
 
     /*
@@ -899,7 +899,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    $0,OUT_ARG2(%esp)         # arg2<- false
     movl    %ecx,OUT_ARG0(%esp)        # arg0<- method->clazz
     SPILL(rIBASE)
-    call    dvmResolveClass@PLT        # eax<- resolved ClassObject ptr
+    call    dvmResolveClass            # eax<- resolved ClassObject ptr
     UNSPILL(rIBASE)
     testl   %eax,%eax                  # got null?
     je      common_exceptionThrown     # yes, handle exception
@@ -941,7 +941,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      */
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
-    call    dvmInstanceofNonTrivial@PLT # eax<- boolean result
+    call    dvmInstanceofNonTrivial     # eax<- boolean result
     # fall through to OP_INSTANCE_OF_store
 
     /*
@@ -983,7 +983,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     EXPORT_PC
     movl    %ecx,OUT_ARG0(%esp)         # arg0<- method->clazz
-    call    dvmResolveClass@PLT         # eax<- resolved ClassObject ptr
+    call    dvmResolveClass             # eax<- resolved ClassObject ptr
     testl   %eax,%eax                   # success?
     je      common_exceptionThrown      # no, handle exception
 /* Now, we need to sync up with fast path.  We need eax to
@@ -1040,7 +1040,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 .LOP_NEW_INSTANCE_initialized:  # on entry, ecx<- class
     movl      $ALLOC_DONT_TRACK,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
-    call     dvmAllocObject@PLT         # eax<- new object
+    call     dvmAllocObject             # eax<- new object
     testl    %eax,%eax                  # success?
     je       common_exceptionThrown     # no, bail out
 #if defined(WITH_JIT)
@@ -1073,7 +1073,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    rSELF, %ecx
     movl    %ecx, OUT_ARG0(%esp)
     movl    rPC, OUT_ARG1(%esp)
-    call    dvmJitEndTraceSelect@PLT     # (self, pc)
+    call    dvmJitEndTraceSelect         # (self, pc)
     UNSPILL_TMP1(%eax)
     UNSPILL_TMP2(%ebx)
     SET_VREG %eax rINST                  # vAA <- new object
@@ -1091,7 +1091,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 .LOP_NEW_INSTANCE_needinit:
     SPILL_TMP1(%ecx)                    # save object
     movl    %ecx,OUT_ARG0(%esp)
-    call    dvmInitClass@PLT            # initialize class
+    call    dvmInitClass                # initialize class
     UNSPILL_TMP1(%ecx)                  # restore object
     testl   %eax,%eax                   # success?
     jne     .LOP_NEW_INSTANCE_initialized     # success, continue
@@ -1109,7 +1109,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     movl    $0,OUT_ARG2(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    call    dvmResolveClass@PLT         # call(clazz,off,flags)
+    call    dvmResolveClass             # call(clazz,off,flags)
     movl    %eax,%ecx                   # ecx<- resolved ClassObject ptr
     testl   %ecx,%ecx                   # success?
     jne     .LOP_NEW_INSTANCE_resolved        # good to go
@@ -1154,7 +1154,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    %eax,OUT_ARG1(%esp)
     movl    $0,OUT_ARG2(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    call    dvmResolveClass@PLT        # eax<- call(clazz,ref,flag)
+    call    dvmResolveClass            # eax<- call(clazz,ref,flag)
     movl    %eax,%ecx
     UNSPILL_TMP1(%eax)
     testl   %ecx,%ecx                  # successful resolution?
@@ -1171,7 +1171,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)
-    call    dvmAllocArrayByClass@PLT   # eax<- call(clazz,length,flags)
+    call    dvmAllocArrayByClass    # eax<- call(clazz,length,flags)
     FETCH_INST_OPCODE 2 %ecx
     UNSPILL(rIBASE)
     testl   %eax,%eax               # failed?
@@ -1206,7 +1206,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offThread_method(%eax),%eax         # eax<- self->method
     movl    offMethod_clazz(%eax),%eax        # eax<- method->clazz
     movl    %eax,OUT_ARG0(%esp)               # arg0<- clazz
-    call    dvmResolveClass@PLT               # eax<- call(clazz,ref,flag)
+    call    dvmResolveClass                   # eax<- call(clazz,ref,flag)
     testl   %eax,%eax                         # null?
     je      common_exceptionThrown            # yes, handle it
 
@@ -1237,7 +1237,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     sarl    $4,rINST
     .endif
     movl    rINST,OUT_ARG1(%esp)                  # arg1<- A or AA (length)
-    call    dvmAllocArrayByClass@PLT     # eax<- call(arrayClass, length, flags)
+    call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
     movl    rSELF,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
@@ -1307,7 +1307,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 .LOP_FILLED_NEW_ARRAY_notimpl:
     movl    $.LstrFilledNewArrayNotImplA,%eax
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowInternalError@PLT
+    call    dvmThrowInternalError
     jmp     common_exceptionThrown
 
 /* ------------------------------ */
@@ -1337,7 +1337,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offThread_method(%eax),%eax         # eax<- self->method
     movl    offMethod_clazz(%eax),%eax        # eax<- method->clazz
     movl    %eax,OUT_ARG0(%esp)               # arg0<- clazz
-    call    dvmResolveClass@PLT               # eax<- call(clazz,ref,flag)
+    call    dvmResolveClass                   # eax<- call(clazz,ref,flag)
     testl   %eax,%eax                         # null?
     je      common_exceptionThrown            # yes, handle it
 
@@ -1368,7 +1368,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     sarl    $4,rINST
     .endif
     movl    rINST,OUT_ARG1(%esp)                  # arg1<- A or AA (length)
-    call    dvmAllocArrayByClass@PLT     # eax<- call(arrayClass, length, flags)
+    call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
     movl    rSELF,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
@@ -1438,7 +1438,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 .LOP_FILLED_NEW_ARRAY_RANGE_notimpl:
     movl    $.LstrFilledNewArrayNotImplA,%eax
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowInternalError@PLT
+    call    dvmThrowInternalError
     jmp     common_exceptionThrown
 
 
@@ -1453,7 +1453,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
     SPILL(rIBASE)
-    call    dvmInterpHandleFillArrayData@PLT
+    call    dvmInterpHandleFillArrayData
     UNSPILL(rIBASE)
     FETCH_INST_OPCODE 3 %ecx
     testl   %eax,%eax                   # exception thrown?
@@ -1558,7 +1558,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     leal    (rPC,%ecx,2),%ecx     # ecx<- PC + BBBBbbbb*2
     movl    %eax,OUT_ARG1(%esp)   # ARG1<- vAA
     movl    %ecx,OUT_ARG0(%esp)   # ARG0<- switchData
-    call    dvmInterpHandlePackedSwitch@PLT
+    call    dvmInterpHandlePackedSwitch
     movl    rSELF,%ecx
     ADVANCE_PC_INDEXED %eax
     movl    offThread_curHandlerTable(%ecx),rIBASE
@@ -1589,7 +1589,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     leal    (rPC,%ecx,2),%ecx     # ecx<- PC + BBBBbbbb*2
     movl    %eax,OUT_ARG1(%esp)   # ARG1<- vAA
     movl    %ecx,OUT_ARG0(%esp)   # ARG0<- switchData
-    call    dvmInterpHandleSparseSwitch@PLT
+    call    dvmInterpHandleSparseSwitch
     movl    rSELF,%ecx
     ADVANCE_PC_INDEXED %eax
     movl    offThread_curHandlerTable(%ecx),rIBASE
@@ -2476,7 +2476,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      %ecx,sReg0                     # store the two classes for later
     movl      %eax,sReg1
     SPILL(rIBASE)
-    call      dvmCanPutArrayElement@PLT      # test object type vs. array type
+    call      dvmCanPutArrayElement          # test object type vs. array type
     UNSPILL(rIBASE)
     UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
@@ -2489,7 +2489,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      %eax,OUT_ARG0(%esp)
     movl      sReg1,%ecx
     movl      %ecx,OUT_ARG1(%esp)
-    call      dvmThrowArrayStoreExceptionIncompatibleElement@PLT # ...and throw
+    call      dvmThrowArrayStoreExceptionIncompatibleElement # ...and throw
     jmp       common_exceptionThrown
 
 .LOP_APUT_OBJECT_types_okay:
@@ -2652,7 +2652,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_finish
@@ -2702,7 +2702,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save objpointer across call
     movl    rPC,OUT_ARG0(%esp)                  # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IGET_WIDE_finish
@@ -2757,7 +2757,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_OBJECT_finish
@@ -2810,7 +2810,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_BOOLEAN_finish
@@ -2863,7 +2863,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_BYTE_finish
@@ -2916,7 +2916,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_CHAR_finish
@@ -2969,7 +2969,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_SHORT_finish
@@ -3022,7 +3022,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_finish
@@ -3072,7 +3072,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  ... which returns InstrField ptr
     jne     .LOP_IPUT_WIDE_finish
@@ -3127,7 +3127,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_OBJECT_finish
@@ -3188,7 +3188,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_BOOLEAN_finish
@@ -3242,7 +3242,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_BYTE_finish
@@ -3296,7 +3296,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_CHAR_finish
@@ -3350,7 +3350,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_SHORT_finish
@@ -3415,7 +3415,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3469,7 +3469,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3523,7 +3523,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3578,7 +3578,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3633,7 +3633,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3688,7 +3688,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3743,7 +3743,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3797,7 +3797,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3808,7 +3808,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SPUT_finish                 # success, continue
-
 /* ------------------------------ */
 .L_OP_SPUT_WIDE: /* 0x68 */
 /* File: x86/OP_SPUT_WIDE.S */
@@ -3852,7 +3851,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3909,7 +3908,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3963,7 +3962,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -3974,7 +3973,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SPUT_BOOLEAN_finish                 # success, continue
-
 
 /* ------------------------------ */
 .L_OP_SPUT_BYTE: /* 0x6b */
@@ -4018,7 +4016,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -4029,7 +4027,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SPUT_BYTE_finish                 # success, continue
-
 
 /* ------------------------------ */
 .L_OP_SPUT_CHAR: /* 0x6c */
@@ -4073,7 +4070,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -4084,7 +4081,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SPUT_CHAR_finish                 # success, continue
-
 
 /* ------------------------------ */
 .L_OP_SPUT_SHORT: /* 0x6d */
@@ -4128,7 +4124,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -4139,7 +4135,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SPUT_SHORT_finish                 # success, continue
-
 
 /* ------------------------------ */
 .L_OP_INVOKE_VIRTUAL: /* 0x6e */
@@ -4166,7 +4161,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      offMethod_clazz(%eax),%eax  # ecx<- method->clazz
     movl      %eax,OUT_ARG0(%esp)         # arg0<- clazz
     movl      $METHOD_VIRTUAL,OUT_ARG2(%esp) # arg2<- flags
-    call      dvmResolveMethod@PLT        # eax<- call(clazz, ref, flags)
+    call      dvmResolveMethod            # eax<- call(clazz, ref, flags)
     testl     %eax,%eax                   # got null?
     jne       .LOP_INVOKE_VIRTUAL_continue        # no, continue
     jmp       common_exceptionThrown      # yes, handle exception
@@ -4244,7 +4239,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movzwl  2(rPC),%ecx                 # ecx<- BBBB
     movl    $METHOD_VIRTUAL,OUT_ARG2(%esp)  # arg2<- resolver method type
     movl    %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    call    dvmResolveMethod@PLT        # eax<- call(clazz, ref, flags)
+    call    dvmResolveMethod            # eax<- call(clazz, ref, flags)
     testl   %eax,%eax                   # got null?
     movl    %eax,%ecx                   # ecx<- resolved base method
     UNSPILL_TMP2(%eax)                  # restore method->clazz
@@ -4307,7 +4302,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      movl     $METHOD_DIRECT,OUT_ARG2(%esp)
      movl     %eax,OUT_ARG1(%esp)
      movl     %ecx,OUT_ARG0(%esp)
-     call     dvmResolveMethod@PLT # eax<- call(clazz, ref, flags)
+     call     dvmResolveMethod # eax<- call(clazz, ref, flags)
      UNSPILL_TMP1(%ecx)
      testl    %eax,%eax
      jne      .LOP_INVOKE_DIRECT_finish
@@ -4348,7 +4343,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      $METHOD_STATIC,%eax
     movl      %eax,OUT_ARG2(%esp)       # arg2<- flags
     SPILL(rIBASE)
-    call      dvmResolveMethod@PLT      # call(clazz,ref,flags)
+    call      dvmResolveMethod          # call(clazz,ref,flags)
     UNSPILL(rIBASE)
     testl     %eax,%eax                 # got null?
 #if defined(WITH_JIT)
@@ -4369,7 +4364,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      %eax, TMP_SPILL2(%ebp)
     movl      %ecx, TMP_SPILL3(%ebp)
     SPILL(rIBASE)
-    call      dvmJitEndTraceSelect@PLT
+    call      dvmJitEndTraceSelect
     UNSPILL(rIBASE)
     movl      TMP_SPILL1(%ebp), %edx
     movl      TMP_SPILL2(%ebp), %eax
@@ -4410,7 +4405,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movzwl     2(rPC),%eax                         # eax<- BBBB
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
     movl       %eax,OUT_ARG1(%esp)                 # arg1<- BBBB
-    call       dvmFindInterfaceMethodInCache@PLT # eax<- call(class, ref, method, dex)
+    call       dvmFindInterfaceMethodInCache # eax<- call(class, ref, method, dex)
     testl      %eax,%eax
     je         common_exceptionThrown
     movl       TMP_SPILL1(%ebp), %ecx
@@ -4449,7 +4444,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      offMethod_clazz(%eax),%eax  # ecx<- method->clazz
     movl      %eax,OUT_ARG0(%esp)         # arg0<- clazz
     movl      $METHOD_VIRTUAL,OUT_ARG2(%esp) # arg2<- flags
-    call      dvmResolveMethod@PLT        # eax<- call(clazz, ref, flags)
+    call      dvmResolveMethod            # eax<- call(clazz, ref, flags)
     testl     %eax,%eax                   # got null?
     jne       .LOP_INVOKE_VIRTUAL_RANGE_continue        # no, continue
     jmp       common_exceptionThrown      # yes, handle exception
@@ -4529,7 +4524,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movzwl  2(rPC),%ecx                 # ecx<- BBBB
     movl    $METHOD_VIRTUAL,OUT_ARG2(%esp)  # arg2<- resolver method type
     movl    %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    call    dvmResolveMethod@PLT        # eax<- call(clazz, ref, flags)
+    call    dvmResolveMethod            # eax<- call(clazz, ref, flags)
     testl   %eax,%eax                   # got null?
     movl    %eax,%ecx                   # ecx<- resolved base method
     UNSPILL_TMP2(%eax)                  # restore method->clazz
@@ -4594,7 +4589,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      movl     $METHOD_DIRECT,OUT_ARG2(%esp)
      movl     %eax,OUT_ARG1(%esp)
      movl     %ecx,OUT_ARG0(%esp)
-     call     dvmResolveMethod@PLT # eax<- call(clazz, ref, flags)
+     call     dvmResolveMethod # eax<- call(clazz, ref, flags)
      UNSPILL_TMP1(%ecx)
      testl    %eax,%eax
      jne      .LOP_INVOKE_DIRECT_RANGE_finish
@@ -4637,7 +4632,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      $METHOD_STATIC,%eax
     movl      %eax,OUT_ARG2(%esp)       # arg2<- flags
     SPILL(rIBASE)
-    call      dvmResolveMethod@PLT      # call(clazz,ref,flags)
+    call      dvmResolveMethod          # call(clazz,ref,flags)
     UNSPILL(rIBASE)
     testl     %eax,%eax                 # got null?
 #if defined(WITH_JIT)
@@ -4658,7 +4653,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      %eax, TMP_SPILL2(%ebp)
     movl      %ecx, TMP_SPILL3(%ebp)
     SPILL(rIBASE)
-    call      dvmJitEndTraceSelect@PLT
+    call      dvmJitEndTraceSelect
     UNSPILL(rIBASE)
     movl      TMP_SPILL1(%ebp), %edx
     movl      TMP_SPILL2(%ebp), %eax
@@ -4701,7 +4696,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movzwl     2(rPC),%eax                         # eax<- BBBB
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
     movl       %eax,OUT_ARG1(%esp)                 # arg1<- BBBB
-    call       dvmFindInterfaceMethodInCache@PLT # eax<- call(class, ref, method, dex)
+    call       dvmFindInterfaceMethodInCache # eax<- call(class, ref, method, dex)
     testl      %eax,%eax
     je         common_exceptionThrown
     movl       TMP_SPILL1(%ebp), %ecx
@@ -5688,7 +5683,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG3(%esp)
     movl     rIBASE,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
-    call     __divdi3@PLT
+    call     __divdi3
 .LOP_DIV_LONG_finish:
     SET_VREG_WORD rIBASE rINST 1
     UNSPILL(rIBASE)                 # restore rIBASE/%edx
@@ -5737,7 +5732,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG3(%esp)
     movl     rIBASE,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
-    call     __moddi3@PLT
+    call     __moddi3
 .LOP_REM_LONG_finish:
     SET_VREG_WORD rIBASE rINST 1
     UNSPILL(rIBASE)                 # restore rIBASE/%edx
@@ -6514,7 +6509,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG3(%esp)
     movl     rIBASE,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
-    call     __divdi3@PLT
+    call     __divdi3
 .LOP_DIV_LONG_2ADDR_finish:
     SET_VREG_WORD rIBASE rINST 1
     UNSPILL(rIBASE)                    # restore rIBASE/%edx
@@ -6564,7 +6559,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG3(%esp)
     movl     rIBASE,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
-    call     __moddi3@PLT
+    call     __moddi3
 .LOP_REM_LONG_2ADDR_finish:
     SET_VREG_WORD rIBASE rINST 1
     UNSPILL(rIBASE)                    # restore rIBASE/%edx
@@ -7496,7 +7491,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_VOLATILE_finish
@@ -7550,7 +7545,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_VOLATILE_finish
@@ -7616,7 +7611,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -7671,7 +7666,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -7682,7 +7677,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SPUT_VOLATILE_finish                 # success, continue
-
 
 /* ------------------------------ */
 .L_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
@@ -7713,7 +7707,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_OBJECT_VOLATILE_finish
@@ -7742,7 +7736,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     /* (stub) */
     SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
     movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_IGET_WIDE_VOLATILE@PLT # do the real work
+    call      dvmMterp_OP_IGET_WIDE_VOLATILE     # do the real work
     movl      rSELF,%ecx
     LOAD_PC_FP_FROM_SELF             # retrieve updated values
     movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
@@ -7753,7 +7747,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     /* (stub) */
     SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
     movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_IPUT_WIDE_VOLATILE@PLT # do the real work
+    call      dvmMterp_OP_IPUT_WIDE_VOLATILE     # do the real work
     movl      rSELF,%ecx
     LOAD_PC_FP_FROM_SELF             # retrieve updated values
     movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
@@ -7764,7 +7758,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     /* (stub) */
     SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
     movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_SGET_WIDE_VOLATILE@PLT # do the real work
+    call      dvmMterp_OP_SGET_WIDE_VOLATILE     # do the real work
     movl      rSELF,%ecx
     LOAD_PC_FP_FROM_SELF             # retrieve updated values
     movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
@@ -7775,7 +7769,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     /* (stub) */
     SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
     movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_SPUT_WIDE_VOLATILE@PLT # do the real work
+    call      dvmMterp_OP_SPUT_WIDE_VOLATILE     # do the real work
     movl      rSELF,%ecx
     LOAD_PC_FP_FROM_SELF             # retrieve updated values
     movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
@@ -7795,7 +7789,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      */
     SPILL(rIBASE)
     movl    rPC,OUT_ARG0(%esp)
-    call    dvmGetOriginalOpcode@PLT
+    call    dvmGetOriginalOpcode
     UNSPILL(rIBASE)
     movl    rSELF,%ecx
     movzbl  1(rPC),rINST
@@ -7819,7 +7813,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG2(%esp)             # arg2<- BBBB
     movl     rINST,OUT_ARG1(%esp)            # arg1<- AA
     movl     %ecx,OUT_ARG0(%esp)             # arg0<- method
-    call     dvmThrowVerificationError@PLT   # call(method, kind, ref)
+    call     dvmThrowVerificationError       # call(method, kind, ref)
     jmp      common_exceptionThrown          # handle exception
 
 /* ------------------------------ */
@@ -7901,7 +7895,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 .LOP_EXECUTE_INLINE_debugprofile:
     movl      %eax,OUT_ARG0(%esp)       # arg0<- BBBB
     SPILL_TMP1(%eax)                    # save opIndex
-    call      dvmResolveInlineNative@PLT  # dvmResolveInlineNative(opIndex)
+    call      dvmResolveInlineNative    # dvmResolveInlineNative(opIndex)
     movl      rSELF,%ecx                # restore self
     testl     %eax,%eax                 # method resolved?
     movl      %eax,%edx                 # save possibly resolved method in edx
@@ -7910,7 +7904,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     SPILL_TMP2(%edx)                    # save method
     movl      %edx,OUT_ARG0(%esp)       # arg0<- method
     movl      %ecx,OUT_ARG1(%esp)       # arg1<- self
-    call      dvmFastMethodTraceEnter@PLT  # dvmFastMethodTraceEnter(method,self)
+    call      dvmFastMethodTraceEnter   # dvmFastMethodTraceEnter(method,self)
     movl      rSELF,%ecx                # restore self
     UNSPILL_TMP1(%eax)                  # restore opIndex
     leal      offThread_retval(%ecx),%ecx # ecx<- &self->retval
@@ -7921,7 +7915,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      rSELF,%ecx                # restore self
     movl      %eax,OUT_ARG0(%esp)       # arg0<- method
     movl      %ecx,OUT_ARG1(%esp)       # arg1<- self
-    call      dvmFastNativeMethodTraceExit@PLT  # dvmFastNativeMethodTraceExit(method,self)
+    call      dvmFastNativeMethodTraceExit # dvmFastNativeMethodTraceExit(method,self)
     UNSPILL(rIBASE)                     # restore rIBASE
     UNSPILL_TMP1(%eax)                  # restore result of inline
     testl     %eax,%eax                 # successful?
@@ -7935,7 +7929,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     /* (stub) */
     SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
     movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_EXECUTE_INLINE_RANGE@PLT # do the real work
+    call      dvmMterp_OP_EXECUTE_INLINE_RANGE     # do the real work
     movl      rSELF,%ecx
     LOAD_PC_FP_FROM_SELF             # retrieve updated values
     movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
@@ -7946,7 +7940,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     /* (stub) */
     SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
     movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_INVOKE_OBJECT_INIT_RANGE@PLT # do the real work
+    call      dvmMterp_OP_INVOKE_OBJECT_INIT_RANGE     # do the real work
     movl      rSELF,%ecx
     LOAD_PC_FP_FROM_SELF             # retrieve updated values
     movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
@@ -7957,7 +7951,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     /* (stub) */
     SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
     movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_RETURN_VOID_BARRIER@PLT # do the real work
+    call      dvmMterp_OP_RETURN_VOID_BARRIER     # do the real work
     movl      rSELF,%ecx
     LOAD_PC_FP_FROM_SELF             # retrieve updated values
     movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
@@ -8225,7 +8219,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    rIBASE,OUT_ARG0(%esp)               # pass in method->clazz
-    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_OBJECT_VOLATILE_finish
@@ -8299,7 +8293,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -8358,7 +8352,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     SPILL(rIBASE)
-    call     dvmResolveStaticField@PLT          # eax<- resolved StaticField ptr
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
     UNSPILL(rIBASE)
     testl    %eax,%eax
     je      common_exceptionThrown             # no, handle exception
@@ -8407,7 +8401,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8433,7 +8427,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8459,7 +8453,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8485,7 +8479,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8511,7 +8505,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8537,7 +8531,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8563,7 +8557,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8589,7 +8583,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8615,7 +8609,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8641,7 +8635,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8667,7 +8661,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8693,7 +8687,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8719,7 +8713,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8745,7 +8739,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8771,7 +8765,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8797,7 +8791,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8823,7 +8817,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8849,7 +8843,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8875,7 +8869,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8901,7 +8895,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8927,7 +8921,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8953,7 +8947,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -8979,7 +8973,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9005,7 +8999,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9031,7 +9025,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9057,7 +9051,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9083,7 +9077,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9109,7 +9103,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9135,7 +9129,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9161,7 +9155,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9187,7 +9181,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9213,7 +9207,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9239,7 +9233,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9265,7 +9259,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9291,7 +9285,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9317,7 +9311,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9343,7 +9337,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9369,7 +9363,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9395,7 +9389,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9421,7 +9415,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9447,7 +9441,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9473,7 +9467,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9499,7 +9493,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9525,7 +9519,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9551,7 +9545,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9577,7 +9571,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9603,7 +9597,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9629,7 +9623,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9655,7 +9649,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9681,7 +9675,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9707,7 +9701,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9733,7 +9727,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9759,7 +9753,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9785,7 +9779,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9811,7 +9805,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9837,7 +9831,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9863,7 +9857,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9889,7 +9883,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9915,7 +9909,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9941,7 +9935,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9967,7 +9961,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -9993,7 +9987,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10019,7 +10013,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10045,7 +10039,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10071,7 +10065,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10097,7 +10091,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10123,7 +10117,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10149,7 +10143,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10175,7 +10169,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10201,7 +10195,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10227,7 +10221,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10253,7 +10247,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10279,7 +10273,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10305,7 +10299,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10331,7 +10325,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10357,7 +10351,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10383,7 +10377,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10409,7 +10403,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10435,7 +10429,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10461,7 +10455,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10487,7 +10481,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10513,7 +10507,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10539,7 +10533,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10565,7 +10559,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10591,7 +10585,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10617,7 +10611,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10643,7 +10637,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10669,7 +10663,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10695,7 +10689,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10721,7 +10715,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10747,7 +10741,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10773,7 +10767,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10799,7 +10793,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10825,7 +10819,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10851,7 +10845,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10877,7 +10871,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10903,7 +10897,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10929,7 +10923,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10955,7 +10949,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -10981,7 +10975,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11007,7 +11001,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11033,7 +11027,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11059,7 +11053,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11085,7 +11079,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11111,7 +11105,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11137,7 +11131,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11163,7 +11157,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11189,7 +11183,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11215,7 +11209,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11241,7 +11235,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11267,7 +11261,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11293,7 +11287,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11319,7 +11313,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11345,7 +11339,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11371,7 +11365,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11397,7 +11391,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11423,7 +11417,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11449,7 +11443,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11475,7 +11469,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11501,7 +11495,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11527,7 +11521,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11553,7 +11547,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11579,7 +11573,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11605,7 +11599,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11631,7 +11625,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11657,7 +11651,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11683,7 +11677,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11709,7 +11703,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11735,7 +11729,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11761,7 +11755,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11787,7 +11781,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11813,7 +11807,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11839,7 +11833,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11865,7 +11859,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11891,7 +11885,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11917,7 +11911,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11943,7 +11937,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11969,7 +11963,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -11995,7 +11989,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12021,7 +12015,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12047,7 +12041,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12073,7 +12067,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12099,7 +12093,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12125,7 +12119,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12151,7 +12145,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12177,7 +12171,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12203,7 +12197,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12229,7 +12223,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12255,7 +12249,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12281,7 +12275,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12307,7 +12301,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12333,7 +12327,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12359,7 +12353,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12385,7 +12379,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12411,7 +12405,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12437,7 +12431,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12463,7 +12457,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12489,7 +12483,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12515,7 +12509,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12541,7 +12535,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12567,7 +12561,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12593,7 +12587,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12619,7 +12613,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12645,7 +12639,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12671,7 +12665,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12697,7 +12691,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12723,7 +12717,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12749,7 +12743,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12775,7 +12769,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12801,7 +12795,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12827,7 +12821,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12853,7 +12847,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12879,7 +12873,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12905,7 +12899,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12931,7 +12925,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12957,7 +12951,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -12983,7 +12977,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13009,7 +13003,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13035,7 +13029,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13061,7 +13055,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13087,7 +13081,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13113,7 +13107,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13139,7 +13133,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13165,7 +13159,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13191,7 +13185,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13217,7 +13211,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13243,7 +13237,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13269,7 +13263,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13295,7 +13289,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13321,7 +13315,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13347,7 +13341,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13373,7 +13367,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13399,7 +13393,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13425,7 +13419,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13451,7 +13445,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13477,7 +13471,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13503,7 +13497,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13529,7 +13523,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13555,7 +13549,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13581,7 +13575,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13607,7 +13601,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13633,7 +13627,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13659,7 +13653,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13685,7 +13679,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13711,7 +13705,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13737,7 +13731,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13763,7 +13757,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13789,7 +13783,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13815,7 +13809,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13841,7 +13835,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13867,7 +13861,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13893,7 +13887,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13919,7 +13913,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13945,7 +13939,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13971,7 +13965,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -13997,7 +13991,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14023,7 +14017,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14049,7 +14043,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14075,7 +14069,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14101,7 +14095,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14127,7 +14121,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14153,7 +14147,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14179,7 +14173,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14205,7 +14199,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14231,7 +14225,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14257,7 +14251,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14283,7 +14277,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14309,7 +14303,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14335,7 +14329,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14361,7 +14355,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14387,7 +14381,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14413,7 +14407,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14439,7 +14433,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14465,7 +14459,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14491,7 +14485,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14517,7 +14511,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14543,7 +14537,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14569,7 +14563,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14595,7 +14589,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14621,7 +14615,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14647,7 +14641,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14673,7 +14667,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14699,7 +14693,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14725,7 +14719,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14751,7 +14745,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14777,7 +14771,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14803,7 +14797,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14829,7 +14823,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14855,7 +14849,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14881,7 +14875,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14907,7 +14901,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14933,7 +14927,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14959,7 +14953,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -14985,7 +14979,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -15011,7 +15005,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -15037,7 +15031,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rFP, OUT_ARG1(%esp)
     je     1f                                # reload rIBASE & resume if not
     movl   %eax, OUT_ARG2(%esp)
-    call   dvmCheckBefore@PLT                # (dPC, dFP, self)
+    call   dvmCheckBefore                    # (dPC, dFP, self)
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
@@ -15721,7 +15715,7 @@ dvmJitToInterpPunt:
     GET_PC
 #if defined(WITH_JIT_TUNING)
     movl   rPC, OUT_ARG0(%esp)
-    call   dvmBumpPunt@PLT
+    call   dvmBumpPunt
 #endif
     movl   rSELF, %ecx
     movl   offThread_curHandlerTable(%ecx),rIBASE
@@ -15740,7 +15734,7 @@ dvmJitToInterpPunt:
  */
 dvmJitToInterpSingleStep:
 /* TODO */
-    call     dvmAbort@PLT
+    call     dvmAbort
 #if 0
     pop    %eax
     movl   rSELF, %ecx
@@ -15761,14 +15755,14 @@ dvmJitToInterpSingleStep:
 dvmJitToInterpNoChainNoProfile:
 #if defined(WITH_JIT_TUNING)
     SPILL_TMP1(%eax)
-    call   dvmBumpNoChain@PLT
+    call   dvmBumpNoChain
     UNSPILL_TMP1(%eax)
 #endif
     movl   %eax, rPC
     movl   rSELF, %eax
     movl   rPC,OUT_ARG0(%esp)
     movl   %eax,OUT_ARG1(%esp)
-    call   dvmJitGetTraceAddrThread@PLT  # (pc, self)
+    call   dvmJitGetTraceAddrThread  # (pc, self)
     movl   rSELF,%ecx                # ecx <- self
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
     cmpl   $0, %eax
@@ -15791,14 +15785,14 @@ dvmJitToInterpNoChainNoProfile:
 dvmJitToInterpTraceSelectNoChain:
 #if defined(WITH_JIT_TUNING)
     movl   %edx, OUT_ARG0(%esp)
-    call   dvmBumpNoChain@PLT
+    call   dvmBumpNoChain
 #endif
     movl   %ebx, rPC
     lea    4(%esp), %esp #to recover the esp update due to function call
     movl   rSELF, %eax
     movl   rPC,OUT_ARG0(%esp)
     movl   %eax,OUT_ARG1(%esp)
-    call   dvmJitGetTraceAddrThread@PLT  # (pc, self)
+    call   dvmJitGetTraceAddrThread  # (pc, self)
     movl   rSELF,%ecx
     cmpl   $0,%eax
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
@@ -15841,7 +15835,7 @@ dvmJitToInterpTraceSelect:
     movl   rSELF, %eax
     movl   rPC,OUT_ARG0(%esp)
     movl   %eax,OUT_ARG1(%esp)
-    call   dvmJitGetTraceAddrThread@PLT # (pc, self)
+    call   dvmJitGetTraceAddrThread # (pc, self)
     lea    4(%esp), %esp
     cmpl   $0,%eax
     movl   rSELF, %ecx
@@ -15849,7 +15843,7 @@ dvmJitToInterpTraceSelect:
     jz     1b                 # no - ask for one
     movl   %eax,OUT_ARG0(%esp)
     movl   rINST,OUT_ARG1(%esp)
-    call   dvmJitChain@PLT    # Attempt dvmJitChain(codeAddr,chainAddr)
+    call   dvmJitChain        # Attempt dvmJitChain(codeAddr,chainAddr)
     cmpl   $0,%eax           # Success?
     jz     toInterpreter      # didn't chain - interpret
     jmp    *%eax
@@ -15884,7 +15878,7 @@ dvmJitToInterpNormal:
     movl        rPC, OUT_ARG0(%esp)
     movl        rSELF, %ecx
     movl        %ecx, OUT_ARG1(%esp)
-    call        dvmJitGetTraceAddrThread@PLT
+    call        dvmJitGetTraceAddrThread
     ## Here is the change from using rGLUE to rSELF for accessing the
     ## JIT code cache flag
     movl        rSELF, %ecx
@@ -15895,7 +15889,7 @@ dvmJitToInterpNormal:
     #lea         -8(%esp), %esp
     movl        %ebx, OUT_ARG1(%esp)    # %ebx live thorugh dvmJitGetTraceAddrThread
     movl        %eax, OUT_ARG0(%esp)    # first argument
-    call        dvmJitChain@PLT
+    call        dvmJitChain
     #lea         8(%esp), %esp
     cmp         $0, %eax
     je          toInterpreter
@@ -15906,7 +15900,7 @@ dvmJitToInterpNoChain:
 dvmJitToInterpNoChain: #rPC in eax
 #if defined(WITH_JIT_TUNING)
     SPILL_TMP1(%eax)
-    call   dvmBumpNoChain@PLT
+    call   dvmBumpNoChain
     UNSPILL_TMP1(%eax)
 #endif
     ## TODO, need to clean up stack manipulation ... this isn't signal safe and
@@ -15915,7 +15909,7 @@ dvmJitToInterpNoChain: #rPC in eax
     movl        rPC, OUT_ARG0(%esp)
     movl        rSELF, %ecx
     movl        %ecx, OUT_ARG1(%esp)
-    call        dvmJitGetTraceAddrThread@PLT
+    call        dvmJitGetTraceAddrThread
     ## Here is the change from using rGLUE to rSELF for accessing the
     ## JIT code cache flag
     movl        rSELF, %ecx
@@ -15970,7 +15964,7 @@ common_Profile:
     movl   rSELF, %eax
     movl   rPC,OUT_ARG0(%esp)
     movl   rIBASE,OUT_ARG1(%esp)
-    call   dvmJitGetTraceAddrThread@PLT  # (pc, self)
+    call   dvmJitGetTraceAddrThread  # (pc, self)
     UNSPILL(rIBASE)
     movl   %eax,offThread_inJitCodeCache(rINST)   # set the inJitCodeCache flag
     UNSPILL_TMP1(rINST)
@@ -15999,7 +15993,7 @@ common_selectTrace:
 
    EXPORT_PC
    SAVE_PC_FP_TO_SELF %ecx
-   call dvmJitCheckTraceRequest@PLT
+   call dvmJitCheckTraceRequest
 3:
    mov          EBX_SPILL(%ebp), %ebx
    FETCH_INST
@@ -16028,7 +16022,7 @@ common_selectTrace2:
 
    EXPORT_PC
    SAVE_PC_FP_TO_SELF %ecx
-   call dvmJitCheckTraceRequest@PLT
+   call dvmJitCheckTraceRequest
 3:
    FETCH_INST
    movl rSELF, %ecx
@@ -16254,7 +16248,7 @@ common_invokeMethodNoRange:
     movl        rPC, offThread_pc(%ecx) # update interpSave.pc
     movl        %ecx, OUT_ARG0(%esp)
     movl        %eax, OUT_ARG1(%esp)
-    call        dvmReportInvoke@PLT    # (self, method)
+    call        dvmReportInvoke        # (self, method)
     UNSPILL_TMP1(%eax)
     UNSPILL_TMP2(%edx)
     movl        rSELF,%ecx             # restore rSELF
@@ -16302,7 +16296,7 @@ common_invokeMethodNoRange:
     movl        %ecx, OUT_ARG1(%esp)
     movl        %eax, OUT_ARG0(%esp)
     movl        rFP, OUT_ARG2(%esp)
-    call        dvmReportPreNativeInvoke@PLT # (methodToCall, self, fp)
+    call        dvmReportPreNativeInvoke # (methodToCall, self, fp)
     UNSPILL_TMP1(%eax)                  # restore methodToCall
     movl        rSELF,%ecx              # restore self
 
@@ -16319,14 +16313,14 @@ common_invokeMethodNoRange:
     movl        %ecx, OUT_ARG1(%esp)
     movl        %eax, OUT_ARG0(%esp)
     movl        rFP, OUT_ARG2(%esp)
-    call        dvmReportPostNativeInvoke@PLT # (methodToCall, self, fp)
+    call        dvmReportPostNativeInvoke # (methodToCall, self, fp)
     jmp         7b                      # rejoin
 
 .LstackOverflow:    # eax=methodToCall
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
     movl        rSELF,%eax              # %eax<- self
     movl        %eax, OUT_ARG0(%esp)    # push parameter self
-    call        dvmHandleStackOverflow@PLT  # call: (Thread* self, Method* meth)
+    call        dvmHandleStackOverflow  # call: (Thread* self, Method* meth)
     jmp         common_exceptionThrown  # handle exception
 
 
@@ -16394,7 +16388,7 @@ common_returnFromMethod:
     movl     rPC, offThread_pc(%ecx)          # update interpSave.pc
     movl     %ebx, offThread_curFrame(%ecx)    # update interpSave.curFrame
     movl     %ecx, OUT_ARG0(%esp)             # parameter self
-    call     dvmReportReturn@PLT              # (self)
+    call     dvmReportReturn                  # (self)
     UNSPILL_TMP1(%ebx)
     movl     rSELF, %ecx                      # restore self
     SAVEAREA_FROM_FP %eax                     # restore saveArea
@@ -16416,7 +16410,7 @@ common_gotoBail:
     movl   rFP,offThread_curFrame(%ecx)
     movl   %ecx,OUT_ARG0(%esp)      # self in arg0
     movl   rINST,OUT_ARG1(%esp)     # changeInterp in arg1
-    call   dvmMterpStdBail@PLT      # bail out....
+    call   dvmMterpStdBail          # bail out....
 
 /*
  * The JIT's invoke method needs to remember the callsite class and
@@ -16474,7 +16468,7 @@ common_verifyField:
     lea      -8(%esp), %esp
     movl     %ecx, OUT_ARG0(%esp)
     movl     rPC, OUT_ARG1(%esp)
-    call     dvmJitEndTraceSelect@PLT
+    call     dvmJitEndTraceSelect
     lea      8(%esp), %esp
     UNSPILL_TMP2(%edx)
     UNSPILL_TMP1(%eax)
@@ -16500,7 +16494,7 @@ common_errDivideByZero:
     EXPORT_PC
     movl    $.LstrDivideByZero,%eax
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowArithmeticException@PLT
+    call    dvmThrowArithmeticException
     jmp     common_exceptionThrown
 
 /*
@@ -16510,7 +16504,7 @@ common_errDivideByZero:
 common_errNegativeArraySize:
     EXPORT_PC
     movl    %eax,OUT_ARG0(%esp)                  # arg0<- len
-    call    dvmThrowNegativeArraySizeException@PLT   # (len)
+    call    dvmThrowNegativeArraySizeException   # (len)
     jmp     common_exceptionThrown
 
 /*
@@ -16520,7 +16514,7 @@ common_errNegativeArraySize:
 common_errNoSuchMethod:
     EXPORT_PC
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowNoSuchMethodError@PLT
+    call    dvmThrowNoSuchMethodError
     jmp     common_exceptionThrown
 
 /*
@@ -16531,7 +16525,7 @@ common_errNullObject:
     EXPORT_PC
     xorl    %eax,%eax
     movl    %eax,OUT_ARG0(%esp)
-    call    dvmThrowNullPointerException@PLT
+    call    dvmThrowNullPointerException
     jmp     common_exceptionThrown
 
 /*
@@ -16545,7 +16539,7 @@ common_errArrayIndex:
     movl    offArrayObject_length(%eax), %eax
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
-    call    dvmThrowArrayIndexOutOfBoundsException@PLT   # args (length, index)
+    call    dvmThrowArrayIndexOutOfBoundsException   # args (length, index)
     jmp     common_exceptionThrown
 
 /*
@@ -16565,14 +16559,14 @@ common_exceptionThrown:
     EXPORT_PC
     movl       rSELF, %ecx
     movl       %ecx, OUT_ARG0(%esp)
-    call       dvmCheckSuspendPending@PLT
+    call       dvmCheckSuspendPending
 
     movl       rSELF, %ecx
     movl       offThread_exception(%ecx), %edx   # %edx <- self->exception
     movl       %edx, OUT_ARG0(%esp)
     movl       %ecx, OUT_ARG1(%esp)
     SPILL_TMP1(%edx)
-    call       dvmAddTrackedAlloc@PLT  # don't let the exception be GCed
+    call       dvmAddTrackedAlloc      # don't let the exception be GCed
     UNSPILL_TMP1(%edx)
     movl       rSELF, %ecx
     movl       offThread_subMode(%ecx), %eax    # get subMode flags
@@ -16588,7 +16582,7 @@ common_exceptionThrown:
     movl       %ecx, OUT_ARG0(%esp)
     movl       %edx, OUT_ARG1(%esp)
     SPILL_TMP1(%edx)
-    call       dvmReportExceptionThrow@PLT # (self, exception)
+    call       dvmReportExceptionThrow # (self, exception)
     UNSPILL_TMP1(%edx)
     movl       rSELF, %ecx
 
@@ -16614,7 +16608,7 @@ common_exceptionThrown:
 
     /* call, %eax gets catchRelPc (a code-unit offset) */
     SPILL_TMP1(%edx)                   # save exception
-    call       dvmFindCatchBlock@PLT   # call(self, relPc, exc, scan?, &fp)
+    call       dvmFindCatchBlock       # call(self, relPc, exc, scan?, &fp)
     UNSPILL_TMP1(%edx)                 # restore exception
 
     /* fix earlier stack overflow if necessary; may trash rFP */
@@ -16625,7 +16619,7 @@ common_exceptionThrown:
     movl       %ecx, OUT_ARG0(%esp)       # Arg 0 = self
     movl       %edx, OUT_ARG1(%esp)       # Arg 1 = exception
     SPILL_TMP1(%edx)
-    call       dvmCleanupStackOverflow@PLT    # call(self, exception)
+    call       dvmCleanupStackOverflow    # call(self, exception)
     UNSPILL_TMP1(%edx)
     movl       rFP, %eax                  # restore result
     movl       rSELF, %ecx
@@ -16651,7 +16645,7 @@ common_exceptionThrown:
     movl       %edx, OUT_ARG0(%esp)       # Arg 0 = exception
     movl       rINST, OUT_ARG1(%esp)      # Arg 1 = self
     SPILL_TMP1(%edx)
-    call       dvmReleaseTrackedAlloc@PLT # release the exception
+    call       dvmReleaseTrackedAlloc     # release the exception
     UNSPILL_TMP1(%edx)
 
     /* restore the exception if the handler wants it */
@@ -16674,7 +16668,7 @@ common_exceptionThrown:
     movl       %ecx, OUT_ARG0(%esp)
     movl       %edx, OUT_ARG1(%esp)
     SPILL_TMP1(%edx)
-    call       dvmCleanupStackOverflow@PLT
+    call       dvmCleanupStackOverflow
     UNSPILL_TMP1(%edx)
 
 1:
@@ -16682,7 +16676,7 @@ common_exceptionThrown:
     movl       %edx, offThread_exception(%ecx) #restore exception
     movl       %edx, OUT_ARG0(%esp)
     movl       %ecx, OUT_ARG1(%esp)
-    call       dvmReleaseTrackedAlloc@PLT # release the exception
+    call       dvmReleaseTrackedAlloc     # release the exception
     movl       rSELF, %ecx
     jmp        common_gotoBail            # bail out
 
