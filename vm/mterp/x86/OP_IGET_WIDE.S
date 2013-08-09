@@ -27,7 +27,7 @@
     movl    offMethod_clazz(rIBASE),rIBASE      # rIBASE<- method->clazz
     SPILL_TMP1(%ecx)                            # save objpointer across call
     movl    rPC,OUT_ARG0(%esp)                  # pass in method->clazz
-    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    call    dvmResolveInstField@PLT             #  ... to dvmResolveInstField
     UNSPILL_TMP1(%ecx)
     testl   %eax,%eax                           # returns InstrField ptr
     jne     .L${opcode}_finish

@@ -19,7 +19,7 @@
     movl     %eax,OUT_ARG3(%esp)
     movl     rIBASE,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
-    call     $routine
+    call     $routine@PLT
 .L${opcode}_finish:
     SET_VREG_WORD rIBASE rINST 1
     UNSPILL(rIBASE)                    # restore rIBASE/%edx

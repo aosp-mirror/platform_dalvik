@@ -97,7 +97,7 @@ dvmPlatformInvoke:
 /* For 386 ABI, argInfo hints should always be valid.  Abort if not. */
     movl     16(%ebp),%ebx
     testl    %ebx,%ebx
-    js       dvmAbort
+    js       dvmAbort@PLT
 /*
  * Get the size of the variable region, add two more slots for the first
  * two arguments and grow (preserving alignment)

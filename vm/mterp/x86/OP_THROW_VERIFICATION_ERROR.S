@@ -12,5 +12,5 @@
     movl     %eax,OUT_ARG2(%esp)             # arg2<- BBBB
     movl     rINST,OUT_ARG1(%esp)            # arg1<- AA
     movl     %ecx,OUT_ARG0(%esp)             # arg0<- method
-    call     dvmThrowVerificationError       # call(method, kind, ref)
+    call     dvmThrowVerificationError@PLT   # call(method, kind, ref)
     jmp      common_exceptionThrown          # handle exception
