@@ -130,7 +130,7 @@ static void addToDexFileTable(DexOrJar* pDexOrJar) {
 }
 
 /*
- * private static int openDexFile(String sourceName, String outputName,
+ * private static int openDexFileNative(String sourceName, String outputName,
  *     int flags) throws IOException
  *
  * Open a DEX file, returning a pointer to our internal data structure.
@@ -148,7 +148,7 @@ static void addToDexFileTable(DexOrJar* pDexOrJar) {
  *
  * TODO: should be using "long" for a pointer.
  */
-static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
+static void Dalvik_dalvik_system_DexFile_openDexFileNative(const u4* args,
     JValue* pResult)
 {
     StringObject* sourceNameObj = (StringObject*) args[0];
@@ -333,7 +333,7 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
 }
 
 /*
- * private static Class defineClass(String name, ClassLoader loader,
+ * private static Class defineClassNative(String name, ClassLoader loader,
  *      int cookie)
  *
  * Load a class from a DEX file.  This is roughly equivalent to defineClass()
@@ -346,7 +346,7 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
  * Returns a null pointer with no exception if the class was not found.
  * Throws an exception on other failures.
  */
-static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
+static void Dalvik_dalvik_system_DexFile_defineClassNative(const u4* args,
     JValue* pResult)
 {
     StringObject* nameObj = (StringObject*) args[0];
@@ -517,14 +517,14 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
 }
 
 const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
-    { "openDexFile",        "(Ljava/lang/String;Ljava/lang/String;I)I",
-        Dalvik_dalvik_system_DexFile_openDexFile },
+    { "openDexFileNative",  "(Ljava/lang/String;Ljava/lang/String;I)I",
+        Dalvik_dalvik_system_DexFile_openDexFileNative },
     { "openDexFile",        "([B)I",
         Dalvik_dalvik_system_DexFile_openDexFile_bytearray },
     { "closeDexFile",       "(I)V",
         Dalvik_dalvik_system_DexFile_closeDexFile },
-    { "defineClass",        "(Ljava/lang/String;Ljava/lang/ClassLoader;I)Ljava/lang/Class;",
-        Dalvik_dalvik_system_DexFile_defineClass },
+    { "defineClassNative",  "(Ljava/lang/String;Ljava/lang/ClassLoader;I)Ljava/lang/Class;",
+        Dalvik_dalvik_system_DexFile_defineClassNative },
     { "getClassNameList",   "(I)[Ljava/lang/String;",
         Dalvik_dalvik_system_DexFile_getClassNameList },
     { "isDexOptNeeded",     "(Ljava/lang/String;)Z",
