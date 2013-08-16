@@ -284,6 +284,10 @@ ifeq ($(dvm_arch),mips)
 		compiler/codegen/mips/GlobalOptimizations.cpp \
 		compiler/template/out/CompilerTemplateAsm-$(dvm_arch_variant).S
   endif
+
+  ifeq ($(strip $(ARCH_HAVE_ALIGNED_DOUBLES)),true)
+    LOCAL_CFLAGS += -DARCH_HAVE_ALIGNED_DOUBLES
+  endif
 endif
 
 ifeq ($(dvm_arch),x86)
