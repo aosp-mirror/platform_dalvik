@@ -63,6 +63,7 @@ enum ExecutionSubModes {
     kSubModeCallbackPending   = 0x0020,
     kSubModeCountedStep       = 0x0040,
     kSubModeCheckAlways       = 0x0080,
+    kSubModeSampleTrace       = 0x0100,
     kSubModeJitTraceBuild     = 0x4000,
     kSubModeJitSV             = 0x8000,
     kSubModeDebugProfile   = (kSubModeMethodTrace |
