@@ -229,6 +229,15 @@ public class DirectClassFile implements ClassFile {
     }
 
     /**
+     * Gets the path where this class file is located.
+     *
+     * @return {@code non-null;} the filePath
+     */
+    public String getFilePath() {
+      return filePath;
+    }
+
+    /**
      * Gets the {@link ByteArray} that this instance's data comes from.
      *
      * @return {@code non-null;} the bytes

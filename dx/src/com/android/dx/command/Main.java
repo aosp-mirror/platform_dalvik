@@ -34,12 +34,24 @@ public class Main {
         "  [--dump-method=<name>[*]] [--verbose-dump] [--no-files] " +
         "[--core-library]\n" +
         "  [--num-threads=<n>] [--incremental] [--force-jumbo]\n" +
+        "  [--multi-dex [--main-dex-list=<file> [--minimal-main-dex]]\n" +
         "  [<file>.class | <file>.{zip,jar,apk} | <directory>] ...\n" +
         "    Convert a set of classfiles into a dex file, optionally " +
         "embedded in a\n" +
         "    jar/zip. Output name must end with one of: .dex .jar " +
-        ".zip .apk. Positions\n" +
-        "    options: none, important, lines.\n" +
+        ".zip .apk or be a directory.\n" +
+        "    Positions options: none, important, lines.\n" +
+        "    --multi-dex: allows to generate several dex files if needed. " +
+        "This option is \n" +
+        "    exclusive with --incremental, causes --num-threads to be ignored " +
+        "and only\n" +
+        "    supports folder or archive output.\n" +
+        "    --main-dex-list=<file>: <file> is a list of class file names, " +
+        "classes defined by\n" +
+        "    those class files are put in classes.dex.\n" +
+        "    --minimal-main-dex: only classes selected by --main-dex-list are " +
+        "to be put in\n" +
+        "    the main dex.\n" +
         "  dx --annotool --annotation=<class> [--element=<element types>]\n" +
         "  [--print=<print types>]\n" +
         "  dx --dump [--debug] [--strict] [--bytes] [--optimize]\n" +
