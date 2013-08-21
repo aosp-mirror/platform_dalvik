@@ -1661,7 +1661,11 @@ void dvmInitializeInterpBreak(Thread* thread)
         dvmEnableSubMode(thread, kSubModeInstCounting);
     }
     if (dvmIsMethodTraceActive()) {
-        dvmEnableSubMode(thread, kSubModeMethodTrace);
+        if (gDvm.methodTrace.samplingEnabled) {
+            dvmEnableSubMode(thread, kSubModeSampleTrace);
+        } else {
+            dvmEnableSubMode(thread, kSubModeMethodTrace);
+        }
     }
     if (gDvm.emulatorTraceEnableCount > 0) {
         dvmEnableSubMode(thread, kSubModeEmulatorTrace);
