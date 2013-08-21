@@ -997,6 +997,7 @@ static void freeThread(Thread* thread)
 #if defined(WITH_SELF_VERIFICATION)
     dvmSelfVerificationShadowSpaceFree(thread);
 #endif
+    free(thread->stackTraceSample);
     free(thread);
 }
 
