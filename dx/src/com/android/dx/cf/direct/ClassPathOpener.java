@@ -17,6 +17,7 @@
 package com.android.dx.cf.direct;
 
 import com.android.dex.util.FileUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -264,22 +265,24 @@ public class ClassPathOpener {
             }
 
             String path = one.getName();
-            InputStream in = zip.getInputStream(one);
+            if (filter.accept(path)) {
+                InputStream in = zip.getInputStream(one);
 
-            baos.reset();
-            for (;;) {
-                int amt = in.read(buf);
-                if (amt < 0) {
-                    break;
+                baos.reset();
+                for (;;) {
+                    int amt = in.read(buf);
+                    if (amt < 0) {
+                        break;
+                    }
+
+                    baos.write(buf, 0, amt);
                 }
 
-                baos.write(buf, 0, amt);
+                in.close();
+
+                byte[] bytes = baos.toByteArray();
+                any |= consumer.processFileBytes(path, one.getTime(), bytes);
             }
-
-            in.close();
-
-            byte[] bytes = baos.toByteArray();
-            any |= consumer.processFileBytes(path, one.getTime(), bytes);
         }
 
         zip.close();

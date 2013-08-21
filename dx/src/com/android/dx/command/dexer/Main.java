@@ -1103,8 +1103,10 @@ public class Main {
                         }
                     }
                 }
+                return false;
+            } else {
+                return true;
             }
-            return false;
         }
 
         private static String getSimpleName(String path) {
