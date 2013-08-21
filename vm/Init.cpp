@@ -1339,7 +1339,7 @@ static void blockSignals()
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
     sigaddset(&mask, SIGUSR2);      // used to investigate JIT internals
 #endif
-    //sigaddset(&mask, SIGPIPE);
+    sigaddset(&mask, SIGPIPE);
     cc = sigprocmask(SIG_BLOCK, &mask, NULL);
     assert(cc == 0);
 
