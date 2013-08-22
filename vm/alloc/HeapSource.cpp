@@ -29,6 +29,7 @@
 #include "alloc/HeapBitmap.h"
 #include "alloc/HeapBitmapInlines.h"
 
+static void dvmHeapSourceUpdateMaxNativeFootprint();
 static void snapIdealFootprint();
 static void setIdealFootprint(size_t max);
 static size_t getMaximumSize(const HeapSource *hs);
@@ -183,6 +184,7 @@ struct HeapSource {
     int32_t nativeBytesAllocated;
     size_t nativeFootprintGCWatermark;
     size_t nativeFootprintLimit;
+    bool nativeNeedToRunFinalization;
 
     /*
      * State for the GC daemon.
@@ -648,6 +650,7 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
     hs->nativeBytesAllocated = 0;
     hs->nativeFootprintGCWatermark = startSize;
     hs->nativeFootprintLimit = startSize * 2;
+    hs->nativeNeedToRunFinalization = false;
     hs->hasGcThread = false;
     hs->heapBase = (char *)base;
     hs->heapLength = length;
@@ -1408,6 +1411,11 @@ void dvmHeapSourceGrowForUtilization()
     } else {
         heap->concurrentStartBytes = freeBytes - CONCURRENT_START;
     }
+
+    /* Mark that we need to run finalizers and update the native watermarks
+     * next time we attempt to register a native allocation.
+     */
+    gHs->nativeNeedToRunFinalization = true;
 }
 
 /*
@@ -1523,6 +1531,15 @@ static void dvmHeapSourceUpdateMaxNativeFootprint()
 
 void dvmHeapSourceRegisterNativeAllocation(int bytes)
 {
+    /* If we have just done a GC, ensure that the finalizers are done and update
+     * the native watermarks.
+     */
+    if (gHs->nativeNeedToRunFinalization) {
+        dvmRunFinalization();
+        dvmHeapSourceUpdateMaxNativeFootprint();
+        gHs->nativeNeedToRunFinalization = false;
+    }
+
     android_atomic_add(bytes, &gHs->nativeBytesAllocated);
 
     if ((size_t)gHs->nativeBytesAllocated > gHs->nativeFootprintGCWatermark) {
@@ -1532,19 +1549,17 @@ void dvmHeapSourceRegisterNativeAllocation(int bytes)
          */
         if ((size_t)gHs->nativeBytesAllocated > gHs->nativeFootprintLimit) {
             Thread* self = dvmThreadSelf();
-
             dvmRunFinalization();
-            if (!dvmCheckException(self)) {
+            if (dvmCheckException(self)) {
                 return;
             }
-
             dvmLockHeap();
             bool waited = dvmWaitForConcurrentGcToComplete();
             dvmUnlockHeap();
             if (waited) {
                 // Just finished a GC, attempt to run finalizers.
                 dvmRunFinalization();
-                if (!dvmCheckException(self)) {
+                if (dvmCheckException(self)) {
                     return;
                 }
             }
@@ -1556,8 +1571,8 @@ void dvmHeapSourceRegisterNativeAllocation(int bytes)
                 dvmCollectGarbageInternal(GC_FOR_MALLOC);
                 dvmUnlockHeap();
                 dvmRunFinalization();
-
-                if (!dvmCheckException(self)) {
+                gHs->nativeNeedToRunFinalization = false;
+                if (dvmCheckException(self)) {
                     return;
                 }
             }

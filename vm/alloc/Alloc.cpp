@@ -315,6 +315,7 @@ void dvmRunFinalization() {
   Thread *self = dvmThreadSelf();
   assert(self != NULL);
   JValue unusedResult;
+  assert(gDvm.methJavaLangSystem_runFinalization != NULL);
   dvmCallMethod(self, gDvm.methJavaLangSystem_runFinalization, NULL, &unusedResult);
 }
 
