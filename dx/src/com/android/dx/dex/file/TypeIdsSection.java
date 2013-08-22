@@ -85,7 +85,9 @@ public final class TypeIdsSection extends UniformItemSection {
         int offset = (sz == 0) ? 0 : getFileOffset();
 
         if (sz > DexFormat.MAX_TYPE_IDX + 1) {
-            throw new DexException(Main.TO_MANY_ID_ERROR_MESSAGE);
+            throw new DexException("Too many type references: " + sz +
+                    "; max is " + (DexFormat.MAX_TYPE_IDX + 1) + ".\n" +
+                    Main.getTooManyIdsErrorMessage());
         }
 
         if (out.annotates()) {

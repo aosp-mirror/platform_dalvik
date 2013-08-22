@@ -77,12 +77,6 @@ import java.util.jar.Manifest;
  */
 public class Main {
     /**
-     * {@code non-null;} Error message for too many method/field/type ids.
-     */
-    public static final String TO_MANY_ID_ERROR_MESSAGE =
-        "Dex limit exceeded. You may try option " + Arguments.MULTI_DEX_OPTION;
-
-    /**
      * File extension of a {@code .dex} file.
      */
     private static final String DEX_EXTENSION = ".dex";
@@ -237,6 +231,18 @@ public class Main {
             }
         } finally {
             closeOutput(humanOutRaw);
+        }
+    }
+
+    /**
+     * {@code non-null;} Error message for too many method/field/type ids.
+     */
+    public static String getTooManyIdsErrorMessage() {
+        if (args.multiDex) {
+            return "The list of classes given in " + Arguments.MAIN_DEX_LIST_OPTION +
+                   " is too big and does not fit in the main dex.";
+        } else {
+            return "You may try using " + Arguments.MULTI_DEX_OPTION + " option.";
         }
     }
 
