@@ -62,7 +62,7 @@ dare_static_libraries := \
 ##
 ##
 include $(CLEAR_VARS)
-LOCAL_MODULE := dare-1.0.2
+LOCAL_MODULE := dare-1.1.0
 LOCAL_SRC_FILES := $(dare_src_files)
 LOCAL_C_INCLUDES := $(dare_c_includes)
 LOCAL_SHARED_LIBRARIES := $(dare_shared_libraries) 

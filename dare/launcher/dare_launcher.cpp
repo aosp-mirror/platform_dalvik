@@ -52,7 +52,7 @@ using std::set;
 using std::string;
 
 
-/*static*/ const char* DedLauncher::kVersion = "1.0.2";
+/*static*/ const char* DedLauncher::kVersion = "1.1.0";
 /*static*/ pid_t DedLauncher::ch_pid_;
 
 
@@ -68,7 +68,7 @@ void DedLauncher::Process(int argc, char** argv) {
   char* class_list = NULL;
 
   while (1) {
-    ic = getopt(argc, argv, "d:s:a:ocj:m:p:evr:b");
+    ic = getopt(argc, argv, "d:s:a:ocj:m:p:evr:bx:k");
     if (ic < 0)
       break;
 
@@ -108,6 +108,12 @@ void DedLauncher::Process(int argc, char** argv) {
       break;
     case 'b':
       generate_stubs_ = true;
+      break;
+    case 'x':
+      vm_options_.push_back(optarg);
+      break;
+    case 'k':
+      keep_jasmin_files_ = true;
       break;
     default:
       want_usage = true;
@@ -155,6 +161,9 @@ void DedLauncher::Usage() const {
   fprintf(stderr, " -e : prevent exception table splitting\n");
   fprintf(stderr, " -v : version number\n");
   fprintf(stderr, " -b : generate stubs\n");
+  fprintf(stderr, " -x <VM option>: set a VM option to run Soot (use option "
+      "several times to set multiple VM options)\n");
+  fprintf(stderr, " -k : keep Jasmin files (they are deleted by default).\n");
   fprintf(stderr, "\n");
 }
 
@@ -221,7 +230,7 @@ char** DedLauncher::GetCmd(string cmd) const {
  * @return The amount of time the child process ran.
  */
 int DedLauncher::StartProcess(const string& cmd, int max_time,
-    const char* filename /*= NULL*/) const {
+    const char* filename /*= NULL*/, int* stat /*= NULL*/) const {
   pid_t pid;
 //  printf("Command: %s\n", cmd.c_str());
 
@@ -250,7 +259,7 @@ int DedLauncher::StartProcess(const string& cmd, int max_time,
       signal(SIGALRM, Handler);
       alarm(max_time);
       gettimeofday(&time1, NULL);
-      waitpid(ch_pid_, NULL, 0);
+      waitpid(ch_pid_, stat, 0);
       gettimeofday(&time2, NULL);
       signal(SIGALRM, SIG_IGN);
 
@@ -266,14 +275,14 @@ int DedLauncher::StartProcess(const string& cmd, int max_time,
  * @param options Extra options.
  * @return The time taken by retargeting.
  */
-int DedLauncher::ExecuteDare(const string& options) const {
+int DedLauncher::ExecuteDare(const string& options, int* dare_status) const {
   struct timeval time1;
   struct timeval time2;
   string cmd = dare_;
   cmd += " -d " + dclass_ + "/ " + options +
       (no_split_tables_ ? " -e " : " ") + i_file_name_;
 
-  return StartProcess(cmd, 3000);
+  return StartProcess(cmd, 3000, NULL, dare_status);
 }
 
 /**
@@ -293,6 +302,19 @@ int DedLauncher::ExecuteJasmin(const std::vector<std::string>& class_list,
       + class_list_concat;
 
   return StartProcess(cmd, 10 * class_list.size());
+}
+
+/**
+ * Remove Jasmin files.
+ * 
+ * @param class_list The list of classes which should be removed.
+ * @param directory The directory where the Jasmin file are located.
+ */
+void DedLauncher::RemoveJasminFiles(const std::vector<std::string>& class_list, 
+    const std::string& directory) const {
+  if (!keep_jasmin_files_)
+    for (int i = 0; i < (int) class_list.size(); ++i)
+      remove((directory + "/" + class_list[i] + ".jasmin").c_str());
 }
 
 /**
@@ -482,7 +504,14 @@ void DedLauncher::GetClassList(const string& list_file,
 string DedLauncher::MakeSootCommand(const string& in_dir,
     const string& in_file, const string& out_dir, const string& library,
     const string& options) const {
-  string soot = "java -jar ";
+  string soot = "java ";
+  
+  for (int i = 0; i < (int) vm_options_.size(); ++i) {
+    soot += vm_options_[i];
+    soot += " ";
+  }
+  
+  soot += "-jar ";
   soot += soot_;
 //  const string soot_main = " soot.Main ";
   const string extra_options = " -pp -allow-phantom-refs -p bb.lso sll:false"
@@ -604,22 +633,26 @@ void DedLauncher::ProcessClasses() {
   }
 
   string stubs_string = (generate_stubs_ ? " -s " + stubs_dir : "");
-  int dare_time = ExecuteDare(stubs_string + preverify);
-  GetClassList(dclass_ + "/classes.txt", original_class_names_);
-  if (generate_stubs_)
-    GetClassList(stubs_dir + "/stubs.txt", stubs_);
   int jasmin_time = 0;
-
-  if (jasmin_ != NULL) {
-    jasmin_time = ExecuteJasmin(original_class_names_, dclass_);
-    if (generate_stubs_)
-      ExecuteJasmin(stubs_, stubs_dir);
-  }
-
   int opt_classes = 0;
   int dec_classes = 0;
   int opt_time = 0;
   int dec_time = 0;
+  int dare_status;
+  int dare_time = ExecuteDare(stubs_string + preverify, &dare_status);
+  if (dare_status != 0) goto bail;
+  GetClassList(dclass_ + "/classes.txt", original_class_names_);
+  if (generate_stubs_)
+    GetClassList(stubs_dir + "/stubs.txt", stubs_);
+
+  if (jasmin_ != NULL) {
+    jasmin_time = ExecuteJasmin(original_class_names_, dclass_);
+    RemoveJasminFiles(original_class_names_, dclass_);
+    if (generate_stubs_) {
+      ExecuteJasmin(stubs_, stubs_dir);
+      RemoveJasminFiles(stubs_, stubs_dir);
+    }
+  }
 
   if (maxine_ != NULL) {
     string classpath = dclass_ + ":" + libraries_ + ":" + stubs_dir;
@@ -676,15 +709,27 @@ void DedLauncher::ProcessClasses() {
   // Figure out how many classes got decompiled.
   dec_classes = MakePipe("ls -1R " + dojava_ + " | grep .*.java$ | wc -l");
 
+bail:
   // Write statistics to file.
   ofstream stats((output_dir_ + "/stats.csv").c_str(), ofstream::app);
-  stats << i_file_name_ << " " << original_class_names_.size() << " "
-      << bad_input_code_locations_ << " " << bad_input_methods_ << " "
-      << bad_input_classes_ << " " << opt_classes << " "
-      << dec_classes << " "
-      << method_count_ << " " << method_verify_stats_ << " "
-      << class_verify_stats_ << " "
-      << verif_time << " " << dare_time << " " << jasmin_time << " "
-      << opt_time << " " << dec_time << "\n";
+  if (dare_status == 0) {
+    stats << i_file_name_ << " " << original_class_names_.size() << " "
+        << bad_input_code_locations_ << " " << bad_input_methods_ << " "
+        << bad_input_classes_ << " " << opt_classes << " "
+        << dec_classes << " "
+        << method_count_ << " " << method_verify_stats_ << " "
+        << class_verify_stats_ << " "
+        << verif_time << " " << dare_time << " " << jasmin_time << " "
+        << opt_time << " " << dec_time << "\n";
+  } else {
+    stats << i_file_name_ << " " << -1 << " "
+        << -1 << " " << -1 << " "
+        << -1 << " " << -1 << " "
+        << -1 << " "
+        << -1 << " " << -1 << " "
+        << -1 << " "
+        << -1 << " " << dare_time << " " << -1 << " "
+        << -1 << " " << -1 << "\n";
+  }
   stats.close();
 }

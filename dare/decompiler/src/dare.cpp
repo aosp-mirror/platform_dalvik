@@ -40,7 +40,7 @@
 using std::string;
 
 
-/*static*/ const char* Dare::kVersion = "1.0.2";
+/*static*/ const char* Dare::kVersion = "1.1.0";
 /*static*/ bool Dare::split_exception_tables_ = true;
 ///*static*/ std::set<std::string> Dare::conflicted_classes_;
 
@@ -136,7 +136,7 @@ int Dare::Process(const char* file) {
   DexFile* dex_file = NULL;
   MemMapping map;
   bool mapped = false;
-  int result = -1;
+  int result = 1;
   ClassFile* classFile;
   string file_name(output_dir_);
   int counter = 0;

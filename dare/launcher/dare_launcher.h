@@ -53,7 +53,8 @@ class DedLauncher {
         bad_input_methods_(0),
         bad_input_classes_(0),
         dare_(std::string("./dare-") + kVersion),
-        generate_stubs_(false) {}
+        generate_stubs_(false),
+        keep_jasmin_files_(false) {}
 
   /**
    * Process a dex or apk file.
@@ -104,14 +105,14 @@ class DedLauncher {
    * @return The amount of time the child process ran.
    */
   int StartProcess(const std::string& cmd, int max_time,
-      const char* filename = NULL) const;
+      const char* filename = NULL, int* status = NULL) const;
   /**
    * Execute the Dalvik retargeting process.
    *
    * @param options Extra options.
    * @return The time taken by retargeting.
    */
-  int ExecuteDare(const std::string& options) const;
+  int ExecuteDare(const std::string& options, int* dare_status) const;
   /**
    * Execute Jasmin for bytecode assembly.
    *
@@ -120,6 +121,14 @@ class DedLauncher {
    * @return The time taken by bytecode assembly.
    */
   int ExecuteJasmin(const std::vector<std::string>& class_list,
+      const std::string& directory) const;
+  /**
+   * Remove Jasmin files.
+   *
+   * @param class_list The list of classes which should be deleted.
+   * @param directory The directory where the Jasmin files are located.
+   */
+  void RemoveJasminFiles(const std::vector<std::string>& class_list,
       const std::string& directory) const;
   /**
    * Execute Maxine for Java bytecode verification.
@@ -246,6 +255,8 @@ class DedLauncher {
   int bad_input_classes_;
   std::string dare_;
   bool generate_stubs_;
+  std::vector<std::string> vm_options_;
+  bool keep_jasmin_files_;
 };
 
 #endif /* DARE_LAUNCHER_H_ */

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #Copyright (C) 2011 The Pennsylvania State University
 #Systems and Internet Infrastructure Security Laboratory
@@ -21,6 +21,11 @@
 #Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, 
 #USA.
 
+if ! which java > /dev/null 2>&1 ; then
+    echo "Please install a Java Runtime Environment before running Dare." 1>&2
+    exit 1
+fi
+
 script=$0
 cd `dirname $script`
 script=`basename $script`
@@ -34,23 +39,25 @@ done
 
 DED_DIR=`pwd -P`
 
-DED=$DED_DIR/dare-launcher-1.0.2
+DED=$DED_DIR/dare-launcher-1.1.0
 SOOT_DIR="$DED_DIR/../../../../dalvik/dare/soot/lib"
 JASMIN_DIR="$DED_DIR/../../../../dalvik/dare/jasmin/lib"
 ANDROID_LIBS="$DED_DIR/../../../../dalvik/dare/libs/class"
 PREVERIFY_SCRIPT="$DED_DIR/../../../../dalvik/tools/dex-preopt"
 PREVERIFY=""
 
-while getopts ed:ocpb p
+while getopts "ed:ocpbx:k" p
 do
 	case "$p" in
-	p)	PREVERIFY="-p $PREVERIFY_SCRIPT";;
-	[?])	echo "Usage: $0 [-d <output directory] [-o] [-c] <dex/apk file>"
+	p)	PREVERIFY=" -p $PREVERIFY_SCRIPT";;
+	\?)	echo "Usage: $0 [-d <output directory] [-o] [-c] [-p] [-e] [-b] [-x <VM option>] [-k] <dex/apk file>"
 		echo "  -o : optimize .class files with Soot"
 		echo "  -c : optimize and decompile .class files with Soot"
 		echo "  -p : preverify classes using the Dalvik verifier and rewrite unverifiable classes"
 		echo "  -e : do not split exception tables"
 		echo "  -b : generate stubs for some missing classes"
+                echo "  -x : set VM options to run Soot (use option several times to set several VM options)"
+		echo "  -k : keep Jasmin files"
 		exit 1;;
 	esac
 done
@@ -59,6 +66,13 @@ SOOT=$SOOT_DIR/soot-2.5.0.jar
 JASMIN=$JASMIN_DIR/jasminclasses-2.5.0.jar
 LIBS="`find $ANDROID_LIBS -type f -name '*.jar' | tr '\n' ':'`$CLASSPATH"
 
-ARGS=`echo " $@" | sed 's/ -p/ /g'`
-$DED -s $SOOT -a $LIBS -j $JASMIN -r $DED_DIR/dare-1.0.2 $PREVERIFY $ARGS
+ARGS=()
+for arg in "$@"
+do
+	if [ "$arg" != "-p" ]; then
+		ARGS+=("$arg")
+	fi
+done
+
+${DED} -s ${SOOT} -a ${LIBS} -j ${JASMIN} -r ${DED_DIR}/dare-1.1.0${PREVERIFY} ${ARGS[@]}
 

@@ -39,7 +39,7 @@ launcher_static_libraries :=
 ##
 ##
 include $(CLEAR_VARS)
-LOCAL_MODULE := dare-launcher-1.0.2
+LOCAL_MODULE := dare-launcher-1.1.0
 LOCAL_SRC_FILES := $(launcher_src_files)
 LOCAL_C_INCLUDES := $(launcher_c_includes)
 LOCAL_SHARED_LIBRARIES := $(launcher_shared_libraries) 
