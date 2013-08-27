@@ -54,7 +54,6 @@ struct MethodTraceState {
     size_t  recordSize;
 
     bool    samplingEnabled;
-    int     samplingIntervalUs;
     pthread_t       samplingThreadHandle;
 };
 
@@ -87,7 +86,7 @@ struct AllocProfState {
  * Start/stop method tracing.
  */
 void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
-        int flags, bool directToDdms);
+        int flags, bool directToDdms, bool samplingEnabled, int intervalUs);
 bool dvmIsMethodTraceActive(void);
 void dvmMethodTraceStop(void);
 

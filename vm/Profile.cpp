@@ -276,10 +276,12 @@ static void getSample(Thread* thread)
 }
 
 /*
- * Entry point for sampling thread.
+ * Entry point for sampling thread. The sampling interval in microseconds is
+ * passed in as an argument.
  */
 static void* runSamplingThread(void* arg)
 {
+    int intervalUs = (int) arg;
     while (gDvm.methodTrace.traceEnabled) {
         dvmSuspendAllThreads(SUSPEND_FOR_SAMPLING);
 
@@ -291,7 +293,7 @@ static void* runSamplingThread(void* arg)
 
         dvmResumeAllThreads(SUSPEND_FOR_SAMPLING);
 
-        usleep(gDvm.methodTrace.samplingIntervalUs);
+        usleep(intervalUs);
     }
     return NULL;
 }
@@ -500,7 +502,7 @@ static void dumpMethodList(FILE* fp)
  * On failure, we throw an exception and return.
  */
 void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
-    int flags, bool directToDdms)
+    int flags, bool directToDdms, bool samplingEnabled, int intervalUs)
 {
     MethodTraceState* state = &gDvm.methodTrace;
 
@@ -569,9 +571,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
         state->recordSize = TRACE_REC_SIZE_SINGLE_CLOCK;
     }
 
-    /* TODO: Control sampling through gui. */
-    state->samplingEnabled = false;
-    state->samplingIntervalUs = 1000;
+    state->samplingEnabled = samplingEnabled;
 
     /*
      * Output the header.
@@ -597,11 +597,11 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
      * following to take a Thread* argument, and set the appropriate
      * interpBreak flags only on the target thread.
      */
-    if (state->samplingEnabled) {
+    if (samplingEnabled) {
         updateActiveProfilers(kSubModeSampleTrace, true);
         /* Start the sampling thread. */
         if (!dvmCreateInternalThread(&state->samplingThreadHandle,
-                "Sampling Thread", &runSamplingThread, NULL)) {
+                "Sampling Thread", &runSamplingThread, (void*) intervalUs)) {
             dvmThrowInternalError("failed to create sampling thread");
             goto fail;
         }
@@ -706,6 +706,7 @@ bool dvmIsMethodTraceActive()
 void dvmMethodTraceStop()
 {
     MethodTraceState* state = &gDvm.methodTrace;
+    bool samplingEnabled = state->samplingEnabled;
     u8 elapsed;
 
     /*
@@ -720,7 +721,7 @@ void dvmMethodTraceStop()
         dvmUnlockMutex(&state->startStopLock);
         return;
     } else {
-        if (state->samplingEnabled) {
+        if (samplingEnabled) {
             updateActiveProfilers(kSubModeSampleTrace, false);
         } else {
             updateActiveProfilers(kSubModeMethodTrace, false);
@@ -879,7 +880,7 @@ void dvmMethodTraceStop()
     state->traceFile = NULL;
 
     /* free and clear sampling traces held by all threads */
-    if (state->samplingEnabled) {
+    if (samplingEnabled) {
         freeThreadStackTraceSamples();
     }
 
@@ -888,7 +889,7 @@ void dvmMethodTraceStop()
     dvmUnlockMutex(&state->startStopLock);
 
     /* make sure the sampling thread has stopped */
-    if (state->samplingEnabled &&
+    if (samplingEnabled &&
         pthread_join(state->samplingThreadHandle, NULL) != 0) {
         ALOGW("Sampling thread join failed");
     }
