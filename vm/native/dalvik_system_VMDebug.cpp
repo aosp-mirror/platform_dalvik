@@ -55,6 +55,7 @@ static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args, JValue
     std::vector<std::string> features;
     features.push_back("method-trace-profiling");
     features.push_back("method-trace-profiling-streaming");
+    features.push_back("method-sample-profiling");
     features.push_back("hprof-heap-dump");
     features.push_back("hprof-heap-dump-streaming");
 
@@ -223,16 +224,30 @@ static void Dalvik_dalvik_system_VMDebug_resetAllocCount(const u4* args,
 }
 
 /*
- * static void startMethodTracingNative(String traceFileName,
- *     FileDescriptor fd, int bufferSize, int flags)
+ * static void startMethodTracingDdmsImpl(int bufferSize, int flags,
+ *     boolean samplingEnabled, int intervalUs)
  *
- * Start method trace profiling.
- *
- * If both "traceFileName" and "fd" are null, the result will be sent
- * directly to DDMS.  (The non-DDMS versions of the calls are expected
- * to enforce non-NULL filenames.)
+ * Start method trace profiling, sending results directly to DDMS.
  */
-static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_startMethodTracingDdmsImpl(const u4* args,
+    JValue* pResult)
+{
+    int bufferSize = args[0];
+    int flags = args[1];
+    bool samplingEnabled = args[2];
+    int intervalUs = args[3];
+    dvmMethodTraceStart("[DDMS]", -1, bufferSize, flags, true, samplingEnabled,
+        intervalUs);
+    RETURN_VOID();
+}
+
+/*
+ * static void startMethodTracingFd(String traceFileName, FileDescriptor fd,
+ *     int bufferSize, int flags)
+ *
+ * Start method trace profiling, sending results to a file descriptor.
+ */
+static void Dalvik_dalvik_system_VMDebug_startMethodTracingFd(const u4* args,
     JValue* pResult)
 {
     StringObject* traceFileStr = (StringObject*) args[0];
@@ -240,36 +255,46 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args
     int bufferSize = args[2];
     int flags = args[3];
 
-    if (bufferSize == 0) {
-        // Default to 8MB per the documentation.
-        bufferSize = 8 * 1024 * 1024;
-    }
+    int origFd = getFileDescriptor(traceFd);
+    if (origFd < 0)
+        RETURN_VOID();
 
-    if (bufferSize < 1024) {
-        dvmThrowIllegalArgumentException(NULL);
+    int fd = dup(origFd);
+    if (fd < 0) {
+        dvmThrowExceptionFmt(gDvm.exRuntimeException,
+            "dup(%d) failed: %s", origFd, strerror(errno));
         RETURN_VOID();
     }
 
-    char* traceFileName = NULL;
-    if (traceFileStr != NULL)
-        traceFileName = dvmCreateCstrFromString(traceFileStr);
-
-    int fd = -1;
-    if (traceFd != NULL) {
-        int origFd = getFileDescriptor(traceFd);
-        if (origFd < 0)
-            RETURN_VOID();
-
-        fd = dup(origFd);
-        if (fd < 0) {
-            dvmThrowExceptionFmt(gDvm.exRuntimeException,
-                "dup(%d) failed: %s", origFd, strerror(errno));
-            RETURN_VOID();
-        }
+    char* traceFileName = dvmCreateCstrFromString(traceFileStr);
+    if (traceFileName == NULL) {
+        RETURN_VOID();
     }
 
-    dvmMethodTraceStart(traceFileName != NULL ? traceFileName : "[DDMS]",
-        fd, bufferSize, flags, (traceFileName == NULL && fd == -1));
+    dvmMethodTraceStart(traceFileName, fd, bufferSize, flags, false, false, 0);
+    free(traceFileName);
+    RETURN_VOID();
+}
+
+/*
+ * static void startMethodTracingFilename(String traceFileName, int bufferSize,
+ *     int flags)
+ *
+ * Start method trace profiling, sending results to a file.
+ */
+static void Dalvik_dalvik_system_VMDebug_startMethodTracingFilename(const u4* args,
+    JValue* pResult)
+{
+    StringObject* traceFileStr = (StringObject*) args[0];
+    int bufferSize = args[1];
+    int flags = args[2];
+
+    char* traceFileName = dvmCreateCstrFromString(traceFileStr);
+    if (traceFileName == NULL) {
+        RETURN_VOID();
+    }
+
+    dvmMethodTraceStart(traceFileName, -1, bufferSize, flags, false, false, 0);
     free(traceFileName);
     RETURN_VOID();
 }
@@ -756,8 +781,12 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_startAllocCounting },
     { "stopAllocCounting",          "()V",
         Dalvik_dalvik_system_VMDebug_stopAllocCounting },
-    { "startMethodTracingNative",   "(Ljava/lang/String;Ljava/io/FileDescriptor;II)V",
-        Dalvik_dalvik_system_VMDebug_startMethodTracingNative },
+    { "startMethodTracingDdmsImpl", "(IIZI)V",
+        Dalvik_dalvik_system_VMDebug_startMethodTracingDdmsImpl },
+    { "startMethodTracingFd",       "(Ljava/lang/String;Ljava/io/FileDescriptor;II)V",
+        Dalvik_dalvik_system_VMDebug_startMethodTracingFd },
+    { "startMethodTracingFilename", "(Ljava/lang/String;II)V",
+        Dalvik_dalvik_system_VMDebug_startMethodTracingFilename },
     { "isMethodTracingActive",      "()Z",
         Dalvik_dalvik_system_VMDebug_isMethodTracingActive },
     { "stopMethodTracing",          "()V",
