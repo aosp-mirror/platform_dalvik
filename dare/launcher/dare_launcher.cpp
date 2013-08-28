@@ -294,14 +294,25 @@ int DedLauncher::ExecuteDare(const string& options, int* dare_status) const {
  */
 int DedLauncher::ExecuteJasmin(const std::vector<std::string>& class_list,
     const std::string& directory) const {
-  string class_list_concat;
-  for (int i = 0; i < (int) class_list.size(); ++i)
-    class_list_concat += " " + directory + "/" + class_list[i] + ".jasmin";
+  int jasmin_time = 0;
+  // We divide ARG_MAX by 2 to give a largely sufficient margin for envp.
+  // This is not very precise, but it is good enough for most cases.
+  int arg_max = sysconf(_SC_ARG_MAX) / 2;
+  int class_count = class_list.size();
+  int i = 0;
+  int current_limit = 0;
+  while (i < class_count) {
+    string class_list_concat;
+    while (i < class_count && (int) class_list_concat.size() < arg_max)
+      class_list_concat += " " + directory + "/" + class_list[i++] + ".jasmin";
 
-  string cmd = string("java -jar ") + jasmin_ + " -d " + directory
-      + class_list_concat;
+    string cmd = string("java -jar ") + jasmin_ + " -d " + directory
+        + class_list_concat;
 
-  return StartProcess(cmd, 10 * class_list.size());
+    jasmin_time += StartProcess(cmd, 10 * class_list.size());
+  }
+
+  return jasmin_time;
 }
 
 /**
@@ -646,6 +657,7 @@ void DedLauncher::ProcessClasses() {
     GetClassList(stubs_dir + "/stubs.txt", stubs_);
 
   if (jasmin_ != NULL) {
+    printf("Assembling classes\n");
     jasmin_time = ExecuteJasmin(original_class_names_, dclass_);
     RemoveJasminFiles(original_class_names_, dclass_);
     if (generate_stubs_) {
@@ -657,17 +669,6 @@ void DedLauncher::ProcessClasses() {
   if (maxine_ != NULL) {
     string classpath = dclass_ + ":" + libraries_ + ":" + stubs_dir;
     ExecuteMaxineGlobal(original_class_names_, classpath);
-
-//    int throw_analysis = 0;
-//    while (throw_analysis < kThrowModeCount
-//        && class_verify_stats_[throw_analysis] != 0) {
-//      ++throw_analysis;
-//      ostringstream o;
-//      o << throw_analysis;
-//      ExecuteDed(" -e " + o.str());
-//      classpath = dclass_ + ":" + libraries_[0] + ":" + stubs_dir;
-//      ExecuteMaxine(original_class_names_, classpath, throw_analysis);
-//    }
   }
 
   if (optimize_ && soot_ != NULL) {
