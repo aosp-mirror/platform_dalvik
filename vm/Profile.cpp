@@ -691,12 +691,18 @@ static u4 getClockOverhead()
 }
 
 /*
- * Returns "true" if method tracing is currently active.
+ * Indicates if method tracing is active and what kind of tracing is active.
  */
-bool dvmIsMethodTraceActive()
+TracingMode dvmGetMethodTracingMode()
 {
     const MethodTraceState* state = &gDvm.methodTrace;
-    return state->traceEnabled;
+    if (!state->traceEnabled) {
+        return TRACING_INACTIVE;
+    } else if (state->samplingEnabled) {
+        return SAMPLE_PROFILING_ACTIVE;
+    } else {
+        return METHOD_TRACING_ACTIVE;
+    }
 }
 
 /*
