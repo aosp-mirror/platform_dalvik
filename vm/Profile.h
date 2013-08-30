@@ -87,8 +87,17 @@ struct AllocProfState {
  */
 void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
         int flags, bool directToDdms, bool samplingEnabled, int intervalUs);
-bool dvmIsMethodTraceActive(void);
 void dvmMethodTraceStop(void);
+
+/*
+ * Returns current method tracing mode.
+ */
+enum TracingMode {
+    TRACING_INACTIVE,
+    METHOD_TRACING_ACTIVE,
+    SAMPLE_PROFILING_ACTIVE,
+};
+TracingMode dvmGetMethodTracingMode(void);
 
 /*
  * Start/stop emulator tracing.

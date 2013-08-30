@@ -301,16 +301,16 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracingFilename(const u4* ar
 }
 
 /*
- * static boolean isMethodTracingActive()
+ * static int getMethodTracingMode()
  *
- * Determine whether method tracing is currently active.
+ * Determine whether method tracing is currently active and what type is active.
  */
-static void Dalvik_dalvik_system_VMDebug_isMethodTracingActive(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_getMethodTracingMode(const u4* args,
     JValue* pResult)
 {
     UNUSED_PARAMETER(args);
 
-    RETURN_BOOLEAN(dvmIsMethodTraceActive());
+    RETURN_INT(dvmGetMethodTracingMode());
 }
 
 /*
@@ -827,8 +827,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_startMethodTracingFd },
     { "startMethodTracingFilename", "(Ljava/lang/String;II)V",
         Dalvik_dalvik_system_VMDebug_startMethodTracingFilename },
-    { "isMethodTracingActive",      "()Z",
-        Dalvik_dalvik_system_VMDebug_isMethodTracingActive },
+    { "getMethodTracingMode",       "()I",
+        Dalvik_dalvik_system_VMDebug_getMethodTracingMode },
     { "stopMethodTracing",          "()V",
         Dalvik_dalvik_system_VMDebug_stopMethodTracing },
     { "startEmulatorTracing",       "()V",
