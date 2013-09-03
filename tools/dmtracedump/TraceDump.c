@@ -159,7 +159,7 @@ typedef struct UniqueMethodEntry {
  * Entry from the method list.
  */
 typedef struct MethodEntry {
-    unsigned int methodId;
+    int64_t methodId;
     const char* className;
     const char* methodName;
     const char* signature;
@@ -297,7 +297,7 @@ char *htmlEscape(const char *src, char *dest, int len)
 
 /* Initializes a MethodEntry
  */
-void initMethodEntry(MethodEntry *method, unsigned int methodId,
+void initMethodEntry(MethodEntry *method, int64_t methodId,
                      const char *className, const char *methodName,
                      const char *signature, const char* fileName,
                      const char* lineNumStr)
@@ -345,8 +345,8 @@ int compareElapsedExclusive(const void *a, const void *b) {
     result = strcmp(methodA->className, methodB->className);
     if (result == 0) {
         if (methodA->methodName == NULL || methodB->methodName == NULL) {
-            unsigned int idA = methodA->methodId;
-            unsigned int idB = methodB->methodId;
+            int64_t idA = methodA->methodId;
+            int64_t idB = methodB->methodId;
             if (idA < idB)
                 return -1;
             if (idA > idB)
@@ -384,8 +384,8 @@ int compareElapsedInclusive(const void *a, const void *b) {
     result = strcmp(methodA->className, methodB->className);
     if (result == 0) {
         if (methodA->methodName == NULL || methodB->methodName == NULL) {
-            unsigned int idA = methodA->methodId;
-            unsigned int idB = methodB->methodId;
+            int64_t idA = methodA->methodId;
+            int64_t idB = methodB->methodId;
             if (idA < idB)
                 return -1;
             if (idA > idB)
@@ -425,8 +425,8 @@ int compareTimedMethod(const void *a, const void *b) {
     result = strcmp(methodA->className, methodB->className);
     if (result == 0) {
         if (methodA->methodName == NULL || methodB->methodName == NULL) {
-            unsigned int idA = methodA->methodId;
-            unsigned int idB = methodB->methodId;
+            int64_t idA = methodA->methodId;
+            int64_t idB = methodB->methodId;
             if (idA < idB)
                 return -1;
             if (idA > idB)
@@ -451,8 +451,8 @@ int compareClassNames(const void *a, const void *b) {
     const MethodEntry *methodB = *(const MethodEntry**)b;
     result = strcmp(methodA->className, methodB->className);
     if (result == 0) {
-        unsigned int idA = methodA->methodId;
-        unsigned int idB = methodB->methodId;
+        int64_t idA = methodA->methodId;
+        int64_t idB = methodB->methodId;
         if (idA < idB)
             return -1;
         if (idA > idB)
@@ -487,8 +487,8 @@ int compareClassExclusive(const void *a, const void *b) {
         /* Break ties with the first method id.  This is probably not
          * needed.
          */
-        unsigned int idA = classA->methods[0]->methodId;
-        unsigned int idB = classB->methods[0]->methodId;
+        int64_t idA = classA->methods[0]->methodId;
+        int64_t idB = classB->methods[0]->methodId;
         if (idA < idB)
             return -1;
         if (idA > idB)
@@ -515,8 +515,8 @@ int compareMethodNames(const void *a, const void *b) {
     if (result == 0) {
         result = strcmp(methodA->className, methodB->className);
         if (result == 0) {
-            unsigned int idA = methodA->methodId;
-            unsigned int idB = methodB->methodId;
+            int64_t idA = methodA->methodId;
+            int64_t idB = methodB->methodId;
             if (idA < idB)
                 return -1;
             if (idA > idB)
@@ -550,8 +550,8 @@ int compareUniqueExclusive(const void *a, const void *b) {
     result = strcmp(uniqueA->methods[0]->className,
                     uniqueB->methods[0]->className);
     if (result == 0) {
-        unsigned int idA = uniqueA->methods[0]->methodId;
-        unsigned int idB = uniqueB->methods[0]->methodId;
+        int64_t idA = uniqueA->methods[0]->methodId;
+        int64_t idB = uniqueB->methods[0]->methodId;
         if (idA < idB)
             return -1;
         if (idA > idB)
@@ -794,9 +794,9 @@ long parseMethods(DataKeys* pKeys, long offset)
     pKeys->methods = (MethodEntry*) malloc(sizeof(MethodEntry) * count);
     if (pKeys->methods == NULL)
         return -1;
-    initMethodEntry(&pKeys->methods[TOPLEVEL_INDEX], 0, "(toplevel)",
+    initMethodEntry(&pKeys->methods[TOPLEVEL_INDEX], -2, "(toplevel)",
         NULL, NULL, NULL, NULL);
-    initMethodEntry(&pKeys->methods[UNKNOWN_INDEX], 0, "(unknown)",
+    initMethodEntry(&pKeys->methods[UNKNOWN_INDEX], -1, "(unknown)",
         NULL, NULL, NULL, NULL);
 
     /*
@@ -804,7 +804,7 @@ long parseMethods(DataKeys* pKeys, long offset)
      */
     for (i = UNKNOWN_INDEX + 1; i < count; i++) {
         int tab1, tab2, tab3, tab4, tab5;
-        unsigned int id;
+        int64_t id;
         char* endptr;
 
         next = findNextChar(data, dataEnd - data, '\n');
@@ -912,7 +912,7 @@ void sortThreadList(DataKeys* pKeys)
  */
 static int compareMethods(const void* meth1, const void* meth2)
 {
-    unsigned int id1, id2;
+    int64_t id1, id2;
 
     id1 = ((const MethodEntry*) meth1)->methodId;
     id2 = ((const MethodEntry*) meth2)->methodId;
@@ -1099,10 +1099,10 @@ int parseDataHeader(FILE *fp, DataHeader* pHeader)
  *
  * Returns NULL if no matching method was found.
  */
-MethodEntry* lookupMethod(DataKeys* pKeys, unsigned int methodId)
+MethodEntry* lookupMethod(DataKeys* pKeys, int64_t methodId)
 {
     int hi, lo, mid;
-    unsigned int id;
+    int64_t id;
 
     lo = 0;
     hi = pKeys->numMethods - 1;
@@ -1186,7 +1186,7 @@ void dumpTrace()
     for (i = 0; i < MAX_THREADS; i++)
         traceData.depth[i] = 2;       // adjust for return from start function
 
-    dataFp = fopen(gOptions.traceFileName, "r");
+    dataFp = fopen(gOptions.traceFileName, "rb");
     if (dataFp == NULL)
         goto bail;
 
@@ -1204,7 +1204,7 @@ void dumpTrace()
         unsigned int methodVal;
         uint64_t elapsedTime;
         int action, printDepth;
-        unsigned int methodId, lastEnter = 0;
+        int64_t methodId, lastEnter = 0;
         int mismatch = 0;
         char depthNote;
 
@@ -1242,7 +1242,7 @@ void dumpTrace()
         method = lookupMethod(pKeys, methodId);
         if (method == NULL) {
             method = &bogusMethod;
-            sprintf(bogusBuf, "methodId: %#x", methodId);
+            sprintf(bogusBuf, "methodId: %#" PRIx64 "", methodId);
             method->signature = bogusBuf;
         }
 
@@ -1664,7 +1664,7 @@ void createInclusiveProfileGraphNew(DataKeys* dataKeys)
     if (gOptions.keepDotFile) {
         snprintf(path, FILENAME_MAX, "%s.dot", gOptions.graphFileName);
     } else {
-        snprintf(path, FILENAME_MAX, "/tmp/dot-%d-%d.dot", (int)time(NULL), rand());
+        snprintf(path, FILENAME_MAX, "dot-%d-%d.dot", (int)time(NULL), rand());
     }
 
     FILE* file = fopen(path, "w+");
@@ -1679,7 +1679,7 @@ void createInclusiveProfileGraphNew(DataKeys* dataKeys)
 
     // now that we have the dot file generate the image
     char command[1024];
-    snprintf(command, 1024, "dot -Tpng -o '%s' '%s'", gOptions.graphFileName, path);
+    snprintf(command, 1024, "dot -Tpng -o \"%s\" \"%s\"", gOptions.graphFileName, path);
 
     system(command);
 
@@ -2301,7 +2301,7 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName, uint64_
     uint64_t currentTime;
     MethodEntry* caller;
 
-    dataFp = fopen(traceFileName, "r");
+    dataFp = fopen(traceFileName, "rb");
     if (dataFp == NULL)
         goto bail;
 
@@ -2318,7 +2318,7 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName, uint64_
         int threadId;
         unsigned int methodVal;
         int action;
-        unsigned int methodId;
+        int64_t methodId;
         CallStack *pStack;
         /*
          * Extract values from file.
