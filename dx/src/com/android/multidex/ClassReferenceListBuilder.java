@@ -206,13 +206,13 @@ public class ClassReferenceListBuilder {
             toKeep.add(classBinaryName);
             CstType superClass = classFile.getSuperclass();
             if (superClass != null) {
-                addClassWithHierachy(superClass.getClassType().getDescriptor());
+                addClassWithHierachy(superClass.getClassType().getClassName());
             }
 
             TypeList interfaceList = classFile.getInterfaces();
             int interfaceNumber = interfaceList.size();
             for (int i = 0; i < interfaceNumber; i++) {
-                addClassWithHierachy(interfaceList.getType(i).getDescriptor());
+                addClassWithHierachy(interfaceList.getType(i).getClassName());
             }
         } catch (FileNotFoundException e) {
             // Ignore: The referenced type is not in the path it must be part of the libraries.
