@@ -2904,7 +2904,9 @@ static jint DetachCurrentThread(JavaVM* vm) {
 static jint GetEnv(JavaVM* vm, void** env, jint version) {
     Thread* self = dvmThreadSelf();
 
-    if (dvmIsBadJniVersion(version)) {
+    // GetEnv also accepts JNI_VERSION_1_1, but always returns a JNIEnv*
+    // corresponding to the most current supported JNI version.
+    if (dvmIsBadJniVersion(version) && version != JNI_VERSION_1_1) {
         ALOGE("Bad JNI version passed to GetEnv: %d", version);
         return JNI_EVERSION;
     }
