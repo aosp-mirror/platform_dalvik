@@ -271,18 +271,14 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
 
         // Prepare source paths
         char source_user[PATH_MAX];
-        char source_obb[PATH_MAX];
         char target_user[PATH_MAX];
 
         // /mnt/shell/emulated/0
         snprintf(source_user, PATH_MAX, "%s/%d", source, userid);
-        // /mnt/shell/emulated/obb
-        snprintf(source_obb, PATH_MAX, "%s/obb", source);
         // /storage/emulated/0
         snprintf(target_user, PATH_MAX, "%s/%d", target, userid);
 
         if (fs_prepare_dir(source_user, 0000, 0, 0) == -1
-                || fs_prepare_dir(source_obb, 0000, 0, 0) == -1
                 || fs_prepare_dir(target_user, 0000, 0, 0) == -1) {
             return -1;
         }
@@ -301,23 +297,7 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
             }
         }
 
-        // Now that user is mounted, prepare and mount OBB storage
-        // into place for current user
-        char target_android[PATH_MAX];
-        char target_obb[PATH_MAX];
-
-        // /storage/emulated/0/Android
-        snprintf(target_android, PATH_MAX, "%s/%d/Android", target, userid);
-        // /storage/emulated/0/Android/obb
-        snprintf(target_obb, PATH_MAX, "%s/%d/Android/obb", target, userid);
-
-        if (fs_prepare_dir(target_android, 0000, 0, 0) == -1
-                || fs_prepare_dir(target_obb, 0000, 0, 0) == -1
-                || fs_prepare_dir(legacy, 0000, 0, 0) == -1) {
-            return -1;
-        }
-        if (mount(source_obb, target_obb, NULL, MS_BIND, NULL) == -1) {
-            ALOGE("Failed to mount %s to %s: %s", source_obb, target_obb, strerror(errno));
+        if (fs_prepare_dir(legacy, 0000, 0, 0) == -1) {
             return -1;
         }
 
