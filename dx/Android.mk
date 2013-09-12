@@ -27,8 +27,6 @@ $(LOCAL_BUILT_MODULE): $(LOCAL_PATH)/etc/dx | $(ACP)
 
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
 
-endif # TARGET_BUILD_APPS
-
 # the mainDexClasses rules
 # ============================================================
 include $(CLEAR_VARS)
@@ -87,6 +85,8 @@ $(LOCAL_BUILT_MODULE): $(LOCAL_PATH)/etc/mainDexClasses | $(ACP)
 
 $(LOCAL_INSTALLED_MODULE): | $(installed_shrinkedAndroid) $(installed_mainDexClasses.rules)
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
+
+endif # TARGET_BUILD_APPS
 
 # the dexmerger script
 # ============================================================
