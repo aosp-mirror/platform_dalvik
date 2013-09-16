@@ -1579,16 +1579,23 @@ static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
         dvmCompilerCodegenDump(cUnit);
     }
 
-    /*
-     * If this trace uses class objects as constants,
-     * dvmJitInstallClassObjectPointers will switch the thread state
-     * to running and look up the class pointers using the descriptor/loader
-     * tuple stored in the callsite info structure. We need to make this window
-     * as short as possible since it is blocking GC.
-     */
-    if (cUnit->hasClassLiterals && info->codeAddress) {
-        dvmJitInstallClassObjectPointers(cUnit, (char *) info->codeAddress);
+    dvmLockMutex(&gDvmJit.compilerLock);
+    if (info->cacheVersion == gDvmJit.cacheVersion) {
+        /*
+         * If this trace uses class objects as constants,
+         * dvmJitInstallClassObjectPointers will switch the thread state
+         * to running and look up the class pointers using the descriptor/loader
+         * tuple stored in the callsite info structure. We need to make this window
+         * as short as possible since it is blocking GC.
+         */
+        if (cUnit->hasClassLiterals && info->codeAddress) {
+           dvmJitInstallClassObjectPointers(cUnit, (char *) info->codeAddress);
+        }
+    } else {
+        ALOGD("JIT CC reset. New version: %d / trace version: %d",
+              gDvmJit.cacheVersion, info->cacheVersion);
     }
+    dvmUnlockMutex(&gDvmJit.compilerLock);
 
     /*
      * Since callsiteinfo is allocated from the arena, delay the reset until
@@ -2151,16 +2158,23 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                                optHints);
     }
 
-    /*
-     * If this trace uses class objects as constants,
-     * dvmJitInstallClassObjectPointers will switch the thread state
-     * to running and look up the class pointers using the descriptor/loader
-     * tuple stored in the callsite info structure. We need to make this window
-     * as short as possible since it is blocking GC.
-     */
-    if (cUnit.hasClassLiterals && info->codeAddress) {
-        dvmJitInstallClassObjectPointers(&cUnit, (char *) info->codeAddress);
+    dvmLockMutex(&gDvmJit.compilerLock);
+    if (info->cacheVersion == gDvmJit.cacheVersion) {
+        /*
+         * If this trace uses class objects as constants,
+         * dvmJitInstallClassObjectPointers will switch the thread state
+         * to running and look up the class pointers using the descriptor/loader
+         * tuple stored in the callsite info structure. We need to make this window
+         * as short as possible since it is blocking GC.
+         */
+        if (cUnit.hasClassLiterals && info->codeAddress) {
+            dvmJitInstallClassObjectPointers(&cUnit, (char *) info->codeAddress);
+        }
+    } else {
+        ALOGD("JIT CC reset. New version: %d / trace version: %d",
+              gDvmJit.cacheVersion, info->cacheVersion);
     }
+    dvmUnlockMutex(&gDvmJit.compilerLock);
 
     /*
      * Since callsiteinfo is allocated from the arena, delay the reset until
