@@ -1708,7 +1708,7 @@ static bool initZygote()
     const char* target_base = getenv("EMULATED_STORAGE_TARGET");
     if (target_base != NULL) {
         if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
-                "uid=0,gid=1028,mode=0050") == -1) {
+                "uid=0,gid=1028,mode=0751") == -1) {
             SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
             return -1;
         }
