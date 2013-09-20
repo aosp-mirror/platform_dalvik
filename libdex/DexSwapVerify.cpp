@@ -912,8 +912,9 @@ static void* swapClassDefItem(const CheckState* state, void* ptr) {
     SWAP_OFFSET4(item->classDataOff);
 
     if ((item->accessFlags & ~ACC_CLASS_MASK) != 0) {
-        ALOGE("Bogus class access flags %x", item->accessFlags);
-        return NULL;
+        // The VM specification says that unknown flags should be ignored.
+        ALOGV("Bogus class access flags %x", item->accessFlags);
+        item->accessFlags &= ACC_CLASS_MASK;
     }
 
     return item + 1;
@@ -1457,8 +1458,9 @@ static bool verifyFields(const CheckState* state, u4 size,
         }
 
         if ((accessFlags & ~ACC_FIELD_MASK) != 0) {
-            ALOGE("Bogus field access flags %x @ %d", accessFlags, i);
-            return false;
+            // The VM specification says that unknown flags should be ignored.
+            ALOGV("Bogus field access flags %x @ %d", accessFlags, i);
+            field->accessFlags &= ACC_FIELD_MASK;
         }
     }
 
@@ -1487,10 +1489,15 @@ static bool verifyMethods(const CheckState* state, u4 size,
             return false;
         }
 
-        if (((accessFlags & ~ACC_METHOD_MASK) != 0)
-                || (isSynchronized && !allowSynchronized)) {
-            ALOGE("Bogus method access flags %x @ %d", accessFlags, i);
+        if (isSynchronized && !allowSynchronized) {
+            ALOGE("Bogus method access flags (synchronization) %x @ %d", accessFlags, i);
             return false;
+        }
+
+        if ((accessFlags & ~ACC_METHOD_MASK) != 0) {
+            // The VM specification says that unknown flags should be ignored.
+            ALOGV("Bogus method access flags %x @ %d", accessFlags, i);
+            method->accessFlags &= ACC_METHOD_MASK;
         }
 
         if (expectCode) {
