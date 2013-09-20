@@ -28,6 +28,7 @@
 #include <errno.h>
 
 #include <JNIHelp.h>        // TEMP_FAILURE_RETRY may or may not be in unistd
+#include <utils/Compat.h>   // For off64_t and lseek64 on Mac
 
 #ifndef O_BINARY
 #define O_BINARY 0
