@@ -798,7 +798,7 @@ JNIEXPORT jobject JNICALL Java_java_lang_Class_getDex(JNIEnv* env, jclass javaCl
     // Check another thread didn't cache an object, if we've won install the object.
     ScopedPthreadMutexLock lock(&dvm_dex->modLock);
 
-    if (dvm_dex->dex_object != NULL) {
+    if (dvm_dex->dex_object == NULL) {
         dvm_dex->dex_object = env->NewGlobalRef(local_ref);
     }
     return dvm_dex->dex_object;
