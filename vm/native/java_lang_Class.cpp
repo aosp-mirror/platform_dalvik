@@ -765,14 +765,10 @@ JNIEXPORT jobject JNICALL Java_java_lang_Class_getDex(JNIEnv* env, jclass javaCl
     if (dvm_dex == NULL) {
         return NULL;
     }
-
-    ScopedPthreadMutexLock lock(&dvm_dex->modLock);
-
     // Already cached?
     if (dvm_dex->dex_object != NULL) {
         return dvm_dex->dex_object;
     }
-
     jobject byte_buffer = env->NewDirectByteBuffer(dvm_dex->memMap.addr, dvm_dex->memMap.length);
     if (byte_buffer == NULL) {
         return NULL;
@@ -799,7 +795,12 @@ JNIEXPORT jobject JNICALL Java_java_lang_Class_getDex(JNIEnv* env, jclass javaCl
         return NULL;
     }
 
-    dvm_dex->dex_object = env->NewGlobalRef(local_ref);
+    // Check another thread didn't cache an object, if we've won install the object.
+    ScopedPthreadMutexLock lock(&dvm_dex->modLock);
+
+    if (dvm_dex->dex_object != NULL) {
+        dvm_dex->dex_object = env->NewGlobalRef(local_ref);
+    }
     return dvm_dex->dex_object;
 }
 
