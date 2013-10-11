@@ -61,9 +61,12 @@
   width = valueArg + 1;       /* assume, correct later */
 
   switch (valueType & kDexAnnotationValueTypeMask) {
+    case kDexAnnotationChar:
+      constant = (ConstantPoolInfo*) cp.AddIntCst((s4) ReadUnsignedInt(ptr,
+          valueArg, false));
+      break;
     case kDexAnnotationByte:
     case kDexAnnotationShort:
-    case kDexAnnotationChar:
     case kDexAnnotationInt:
       constant = (ConstantPoolInfo*) cp.AddIntCst(ReadSignedInt(ptr,
           valueArg));
