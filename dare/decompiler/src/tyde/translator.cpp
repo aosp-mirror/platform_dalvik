@@ -414,7 +414,7 @@ void Translator::AddTaoOpcodeAndRef(const TydeInstruction* ins) {
       || opcode == OP_CONST || opcode == OP_CONST_HIGH16) {
     if (ins->destination().type.IsIntSubtype()) {
       s4 constant = (s4) ins->constant();
-      if (CanInlineIntegerLiteral(constant)) {
+      if (opcode != OP_CONST_HIGH16 && CanInlineIntegerLiteral(constant)) {
         AddIconst((s2) constant);
       } else {
         out_ << LDC;
