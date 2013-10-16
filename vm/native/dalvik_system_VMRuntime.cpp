@@ -353,7 +353,7 @@ static void preloadDexCachesResolveMethod(DvmDex* pDvmDex,
     }
     // Skip static methods for uninitialized classes because a filled
     // cache entry implies the class is initialized.
-    if ((methodType != METHOD_STATIC) && !dvmIsClassInitialized(clazz)) {
+    if ((methodType == METHOD_STATIC) && !dvmIsClassInitialized(clazz)) {
         return;
     }
     const char* methodName = dexStringById(pDexFile, pMethodId->nameIdx);
@@ -459,16 +459,18 @@ static void Dalvik_dalvik_system_VMRuntime_preloadDexCaches(const u4* args, JVal
 
     // We use a std::map to avoid heap allocating StringObjects to lookup in gDvm.literalStrings
     StringTable strings;
-    dvmLockMutex(&gDvm.internLock);
-    dvmHashTableLock(gDvm.literalStrings);
-    for (int i = 0; i < gDvm.literalStrings->tableSize; ++i) {
-        HashEntry *entry = &gDvm.literalStrings->pEntries[i];
-        if (entry->data != NULL && entry->data != HASH_TOMBSTONE) {
-            preloadDexCachesStringsVisitor(&entry->data, 0, ROOT_INTERNED_STRING, &strings);
+    if (kPreloadDexCachesStrings) {
+        dvmLockMutex(&gDvm.internLock);
+        dvmHashTableLock(gDvm.literalStrings);
+        for (int i = 0; i < gDvm.literalStrings->tableSize; ++i) {
+            HashEntry *entry = &gDvm.literalStrings->pEntries[i];
+            if (entry->data != NULL && entry->data != HASH_TOMBSTONE) {
+                preloadDexCachesStringsVisitor(&entry->data, 0, ROOT_INTERNED_STRING, &strings);
+            }
         }
+        dvmHashTableUnlock(gDvm.literalStrings);
+        dvmUnlockMutex(&gDvm.internLock);
     }
-    dvmHashTableUnlock(gDvm.literalStrings);
-    dvmUnlockMutex(&gDvm.internLock);
 
     for (ClassPathEntry* cpe = gDvm.bootClassPath; cpe->kind != kCpeLastEntry; cpe++) {
         DvmDex* pDvmDex = getDvmDexFromClassPathEntry(cpe);
