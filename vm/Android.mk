@@ -71,6 +71,9 @@ LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
 # TODO: split out the asflags.
 LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
 LOCAL_MODULE := libdvm_assert
+ifeq ($(TARGET_ARCH),x86)
+LOCAL_LDFLAGS += -Wl,--no-fatal-warnings
+endif
 include $(BUILD_SHARED_LIBRARY)
 
 ifneq ($(dvm_arch),mips)    # MIPS support for self-verification is incomplete
@@ -83,6 +86,9 @@ ifneq ($(dvm_arch),mips)    # MIPS support for self-verification is incomplete
     # TODO: split out the asflags.
     LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
     LOCAL_MODULE := libdvm_sv
+    ifeq ($(TARGET_ARCH),x86)
+    LOCAL_LDFLAGS += -Wl,--no-fatal-warnings
+    endif
     include $(BUILD_SHARED_LIBRARY)
 
 endif # dvm_arch!=mips
@@ -95,6 +101,9 @@ LOCAL_CFLAGS += $(target_smp_flag)
 # TODO: split out the asflags.
 LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
 LOCAL_MODULE := libdvm_interp
+ifeq ($(TARGET_ARCH),x86)
+LOCAL_LDFLAGS += -Wl,--no-fatal-warnings
+endif
 include $(BUILD_SHARED_LIBRARY)
 
 
