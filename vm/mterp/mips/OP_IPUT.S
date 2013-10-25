@@ -41,10 +41,10 @@
     # check object for null
     beqz      rOBJ, common_errNullObject   #  object was null
     FETCH_ADVANCE_INST(2)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     addu      rOBJ, rOBJ, a3               #  form address
     $prebarrier                            #  releasing store
     $store a0, (rOBJ)                      #  obj.field (8/16/32 bits) <- a0
     $postbarrier
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction
 

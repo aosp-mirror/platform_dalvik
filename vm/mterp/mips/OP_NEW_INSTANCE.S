@@ -52,8 +52,8 @@
 
 .L${opcode}_continue:
     FETCH_ADVANCE_INST(2)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     SET_VREG(v0, a3)                       #  vAA <- v0
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 #if defined(WITH_JIT)
@@ -72,8 +72,8 @@
     move      a1, rPC
     JAL(dvmJitEndTraceSelect)              #  (self, pc)
     FETCH_ADVANCE_INST(2)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     SET_VREG(rOBJ, rBIX)                   #  vAA <- new object
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction
 #endif
 

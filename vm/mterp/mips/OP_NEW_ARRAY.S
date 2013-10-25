@@ -34,8 +34,8 @@
     # failed?
     beqz      v0, common_exceptionThrown   #  yes, handle the exception
     FETCH_ADVANCE_INST(2)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     SET_VREG(v0, a2)                       #  vA <- v0
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction
 %break
 

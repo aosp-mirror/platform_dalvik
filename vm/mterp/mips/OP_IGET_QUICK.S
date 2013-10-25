@@ -11,7 +11,7 @@
     addu      t0, a3, a1 #
     lw        a0, 0(t0)                    #  a0 <- obj.field (always 32 bits)
     FETCH_ADVANCE_INST(2)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     SET_VREG(a0, a2)                       #  fp[A] <- a0
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction
 

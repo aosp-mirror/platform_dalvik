@@ -43,7 +43,7 @@
     $barrier                               #  acquiring load
     GET_OPA4(a2)                           #  a2 <- A+
     FETCH_ADVANCE_INST(2)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     SET_VREG(a0, a2)                       #  fp[A] <- a0
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
