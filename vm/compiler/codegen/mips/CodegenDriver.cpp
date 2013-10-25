@@ -428,7 +428,7 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
                  size, rlObj.sRegLow);
     HEAP_ACCESS_SHADOW(false);
     if (isVolatile) {
-        dvmCompilerGenMemBarrier(cUnit, 0);
+        dvmCompilerGenMemBarrier(cUnit, kSY);
     }
 
     storeValue(cUnit, rlDest, rlResult);
@@ -450,13 +450,13 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                  NULL);/* null object? */
 
     if (isVolatile) {
-        dvmCompilerGenMemBarrier(cUnit, 0);
+        dvmCompilerGenMemBarrier(cUnit, kSY);
     }
     HEAP_ACCESS_SHADOW(true);
     storeBaseDisp(cUnit, rlObj.lowReg, fieldOffset, rlSrc.lowReg, size);
     HEAP_ACCESS_SHADOW(false);
     if (isVolatile) {
-        dvmCompilerGenMemBarrier(cUnit, 0);
+        dvmCompilerGenMemBarrier(cUnit, kSY);
     }
     if (isObject) {
         /* NOTE: marking card based on object head */
@@ -1558,7 +1558,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
     }
     switch (dalvikOpcode) {
         case OP_RETURN_VOID_BARRIER:
-            dvmCompilerGenMemBarrier(cUnit, 0);
+            dvmCompilerGenMemBarrier(cUnit, kSY);
             // Intentional fallthrough
         case OP_RETURN_VOID:
             genReturnCommon(cUnit,mir);
@@ -1732,7 +1732,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
 
             if (isVolatile) {
-                dvmCompilerGenMemBarrier(cUnit, 0);
+                dvmCompilerGenMemBarrier(cUnit, kSY);
             }
             HEAP_ACCESS_SHADOW(true);
             loadWordDisp(cUnit, tReg, 0, rlResult.lowReg);
@@ -1810,14 +1810,14 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
                 loadWordDisp(cUnit, tReg, OFFSETOF_MEMBER(Field, clazz), objHead);
             }
             if (isVolatile) {
-                dvmCompilerGenMemBarrier(cUnit, 0);
+                dvmCompilerGenMemBarrier(cUnit, kSY);
             }
             HEAP_ACCESS_SHADOW(true);
             storeWordDisp(cUnit, tReg, valOffset ,rlSrc.lowReg);
             dvmCompilerFreeTemp(cUnit, tReg);
             HEAP_ACCESS_SHADOW(false);
             if (isVolatile) {
-                dvmCompilerGenMemBarrier(cUnit, 0);
+                dvmCompilerGenMemBarrier(cUnit, kSY);
             }
             if (isSputObject) {
                 /* NOTE: marking card based sfield->clazz */
