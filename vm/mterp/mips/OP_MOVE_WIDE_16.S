@@ -7,7 +7,7 @@
     EAS2(a2, rFP, a2)                      #  a2 <- &fp[AAAA]
     LOAD64(a0, a1, a3)                     #  a0/a1 <- fp[BBBB]
     FETCH_ADVANCE_INST(3)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     STORE64(a0, a1, a2)                    #  fp[AAAA] <- a0/a1
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
