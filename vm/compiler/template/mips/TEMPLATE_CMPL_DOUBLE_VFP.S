@@ -48,15 +48,15 @@
     li      rTEMP, 1                    # vAA<- 1
     bgtz    v0, ${opcode}_finish
 #else
-    LOAD64_F(fs0, fs0f, a0)             # fs0<- vBB
-    LOAD64_F(fs1, fs1f, a1)             # fs1<- vCC
-    c.olt.d     fcc0, fs0, fs1          # Is fs0 < fs1
+    LOAD64_F(ft0, ft0f, a0)             # ft0<- vBB
+    LOAD64_F(ft1, ft1f, a1)             # ft1<- vCC
+    c.olt.d     fcc0, ft0, ft1          # Is ft0 < ft1
     li          rTEMP, -1
     bc1t        fcc0, ${opcode}_finish
-    c.olt.d     fcc0, fs1, fs0
+    c.olt.d     fcc0, ft1, ft0
     li          rTEMP, 1
     bc1t        fcc0, ${opcode}_finish
-    c.eq.d      fcc0, fs0, fs1
+    c.eq.d      fcc0, ft0, ft1
     li          rTEMP, 0
     bc1t        fcc0, ${opcode}_finish
 #endif

@@ -48,15 +48,15 @@
     li      rTEMP, 1                    # vAA<- 1
     bgtz    v0, ${opcode}_finish
 #else
-    LOAD_F(fs0, a0)                     # fs0<- vBB
-    LOAD_F(fs1, a1)                     # fs1<- vCC
-    c.olt.s     fcc0, fs0, fs1          #Is fs0 < fs1
+    LOAD_F(ft0, a0)                     # ft0<- vBB
+    LOAD_F(ft1, a1)                     # ft1<- vCC
+    c.olt.s     fcc0, ft0, ft1          #Is ft0 < ft1
     li          rTEMP, -1
     bc1t        fcc0, ${opcode}_finish
-    c.olt.s     fcc0, fs1, fs0
+    c.olt.s     fcc0, ft1, ft0
     li          rTEMP, 1
     bc1t        fcc0, ${opcode}_finish
-    c.eq.s      fcc0, fs0, fs1
+    c.eq.s      fcc0, ft0, ft1
     li          rTEMP, 0
     bc1t        fcc0, ${opcode}_finish
 #endif
