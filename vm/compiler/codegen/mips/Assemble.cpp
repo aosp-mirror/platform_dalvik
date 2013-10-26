@@ -73,6 +73,7 @@
  *     n -> complimented Thumb2 modified immediate
  *     M -> Thumb2 16-bit zero-extended immediate
  *     b -> 4-digit binary
+ *     B -> sync option string (SY, WMB, MB, ACQUIRE, RELEASE, RMB)
  *
  *  [!] escape.  To insert "!", use "!!"
  */
@@ -294,6 +295,10 @@ MipsEncodingMap EncodingMap[kMipsLast] = {
                  kFmtBitBlt, 20, 16, kFmtBitBlt, 15, 0, kFmtBitBlt, 25, 21,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_USE02 | IS_STORE,
                  "sw", "!0r,!1d(!2r)", 2),
+    ENCODING_MAP(kMipsSync, 0x0000000F,
+                 kFmtBitBlt, 10, 6, kFmtUnused, -1, -1, kFmtUnused, -1, -1,
+                 kFmtUnused, -1, -1, IS_UNARY_OP,
+                 "sync", "!0B", 2),
     ENCODING_MAP(kMipsXor, 0x00000026,
                  kFmtBitBlt, 15, 11, kFmtBitBlt, 25, 21, kFmtBitBlt, 20, 16,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE12,
