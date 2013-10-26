@@ -27,8 +27,8 @@
     bnez      rBIX, .L${opcode}_checks     #  yes, skip type checks
 .L${opcode}_finish:
     FETCH_ADVANCE_INST(2)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     sw        rBIX, offArrayObject_contents(rOBJ) #  vBB[vCC] <- vAA
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     GOTO_OPCODE(t0)                        #  jump to next instruction
 
 %break

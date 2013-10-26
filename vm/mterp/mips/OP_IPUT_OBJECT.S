@@ -42,11 +42,11 @@
     # check object for null
     beqz      rOBJ, common_errNullObject   #  object was null
     FETCH_ADVANCE_INST(2)                  #  advance rPC, load rINST
-    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     addu      t2, rOBJ, a3                 #  form address
     $prebarrier                            #  releasing store
     $store a0, (t2)                        #  obj.field (32 bits) <- a0
     $postbarrier
+    GET_INST_OPCODE(t0)                    #  extract opcode from rINST
     beqz      a0, 1f                       #  stored a null reference?
     srl       t1, rOBJ, GC_CARD_SHIFT
     addu      t2, a2, t1
