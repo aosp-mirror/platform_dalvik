@@ -457,6 +457,7 @@ typedef enum MipsOpCode {
     kMipsSrlv,    /* srlv d,t,s [000000] s[25..21] t[20..16] d[15..11] [00000000110] */
     kMipsSubu,    /* subu d,s,t [000000] s[25..21] t[20..16] d[15..11] [00000100011] */
     kMipsSw,      /* sw t,o(b) [101011] b[25..21] t[20..16] o[15..0] */
+    kMipsSync,    /* sync hint [000000000000000000000] hint[10..6] [001111] */
     kMipsXor,     /* xor d,s,t [000000] s[25..21] t[20..16] d[15..11] [00000100110] */
     kMipsXori,    /* xori t,s,imm16 [001110] s[25..21] t[20..16] imm16[15..0] */
 #ifdef __mips_hard_float
@@ -486,6 +487,24 @@ typedef enum MipsOpCode {
     kMipsUndefined,  /* undefined [011001xxxxxxxxxxxxxxxx] */
     kMipsLast
 } MipsOpCode;
+
+/* Sync option encodings */
+typedef enum MipsSyncOptions {
+    /*
+     * sync guarantees ordering of Load/Store operations wrt itself
+     *
+     * Older: instruction classes that must be ordered before the sync instruction completes
+     * Younger: instruction classes that must be ordered after the sync instruction completes
+     * Global: instruction classes that must be performed globally when the sync completes
+     */
+                                /* Older        Younger         Global          */
+    kSY = 0x00,                 /* Load,Store   Load,Store      Load,Store      */
+    kWMB = 0x04,                /* Store        Store                           */
+    kMB = 0x10,                 /* Load,Store   Load,Store                      */
+    kACQUIRE = 0x11,            /* Load         Load,Store                      */
+    kRELEASE = 0x12,            /* Load,Store   Store                           */
+    kRMB = 0x13                 /* Load         Load                            */
+} MipsSyncOptions;
 
 /* Bit flags describing the behavior of each native opcode */
 typedef enum MipsOpFeatureFlags {

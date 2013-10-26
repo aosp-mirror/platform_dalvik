@@ -38,6 +38,7 @@ static void buildInsnString(const char *fmt, MipsLIR *lir, char* buf,
     char *bufEnd = &buf[size-1];
     const char *fmtEnd = &fmt[strlen(fmt)];
     char tbuf[256];
+    const char *name;
     char nc;
     while (fmt < fmtEnd) {
         int operand;
@@ -141,6 +142,32 @@ static void buildInsnString(const char *fmt, MipsLIR *lir, char* buf,
                    case 'r':
                        assert(operand >= 0 && operand < MIPS_REG_COUNT);
                        strcpy(tbuf, mipsRegName[operand]);
+                       break;
+                   case 'B':
+                       switch (operand) {
+                           case kSY:
+                               name = "0/sy";
+                               break;
+                           case kWMB:
+                               name = "4/wmb";
+                               break;
+                           case kMB:
+                               name = "16/mb";
+                               break;
+                           case kACQUIRE:
+                               name = "17/acquire";
+                               break;
+                           case kRELEASE:
+                               name = "18/release";
+                               break;
+                           case kRMB:
+                               name = "19/rmb";
+                               break;
+                           default:
+                               name = "DecodeError";
+                               break;
+                       }
+                       strcpy(tbuf, name);
                        break;
                    default:
                        strcpy(tbuf,"DecodeError");
