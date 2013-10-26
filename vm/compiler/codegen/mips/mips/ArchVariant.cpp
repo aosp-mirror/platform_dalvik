@@ -109,5 +109,8 @@ int dvmCompilerTargetOptHint(int key)
 
 void dvmCompilerGenMemBarrier(CompilationUnit *cUnit, int barrierKind)
 {
-    __asm__ __volatile__ ("" : : : "memory");
+#if ANDROID_SMP != 0
+    MipsLIR *sync = newLIR1(cUnit, kMipsSync, barrierKind);
+    sync->defMask = ENCODE_ALL;
+#endif
 }
