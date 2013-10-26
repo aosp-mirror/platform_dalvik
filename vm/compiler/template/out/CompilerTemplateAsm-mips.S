@@ -1780,15 +1780,15 @@ dvmCompiler_TEMPLATE_CMPG_DOUBLE_VFP:
     li      rTEMP, 1                    # vAA<- 1
     bgtz    v0, TEMPLATE_CMPG_DOUBLE_VFP_finish
 #else
-    LOAD64_F(fs0, fs0f, a0)             # fs0<- vBB
-    LOAD64_F(fs1, fs1f, a1)             # fs1<- vCC
-    c.olt.d     fcc0, fs0, fs1          # Is fs0 < fs1
+    LOAD64_F(ft0, ft0f, a0)             # ft0<- vBB
+    LOAD64_F(ft1, ft1f, a1)             # ft1<- vCC
+    c.olt.d     fcc0, ft0, ft1          # Is ft0 < ft1
     li          rTEMP, -1
     bc1t        fcc0, TEMPLATE_CMPG_DOUBLE_VFP_finish
-    c.olt.d     fcc0, fs1, fs0
+    c.olt.d     fcc0, ft1, ft0
     li          rTEMP, 1
     bc1t        fcc0, TEMPLATE_CMPG_DOUBLE_VFP_finish
-    c.eq.d      fcc0, fs0, fs1
+    c.eq.d      fcc0, ft0, ft1
     li          rTEMP, 0
     bc1t        fcc0, TEMPLATE_CMPG_DOUBLE_VFP_finish
 #endif
@@ -1850,15 +1850,15 @@ dvmCompiler_TEMPLATE_CMPL_DOUBLE_VFP:
     li      rTEMP, 1                    # vAA<- 1
     bgtz    v0, TEMPLATE_CMPL_DOUBLE_VFP_finish
 #else
-    LOAD64_F(fs0, fs0f, a0)             # fs0<- vBB
-    LOAD64_F(fs1, fs1f, a1)             # fs1<- vCC
-    c.olt.d     fcc0, fs0, fs1          # Is fs0 < fs1
+    LOAD64_F(ft0, ft0f, a0)             # ft0<- vBB
+    LOAD64_F(ft1, ft1f, a1)             # ft1<- vCC
+    c.olt.d     fcc0, ft0, ft1          # Is ft0 < ft1
     li          rTEMP, -1
     bc1t        fcc0, TEMPLATE_CMPL_DOUBLE_VFP_finish
-    c.olt.d     fcc0, fs1, fs0
+    c.olt.d     fcc0, ft1, ft0
     li          rTEMP, 1
     bc1t        fcc0, TEMPLATE_CMPL_DOUBLE_VFP_finish
-    c.eq.d      fcc0, fs0, fs1
+    c.eq.d      fcc0, ft0, ft1
     li          rTEMP, 0
     bc1t        fcc0, TEMPLATE_CMPL_DOUBLE_VFP_finish
 #endif
@@ -1920,15 +1920,15 @@ dvmCompiler_TEMPLATE_CMPG_FLOAT_VFP:
     li      rTEMP, 1                    # vAA<- 1
     bgtz    v0, TEMPLATE_CMPG_FLOAT_VFP_finish
 #else
-    LOAD_F(fs0, a0)                     # fs0<- vBB
-    LOAD_F(fs1, a1)                     # fs1<- vCC
-    c.olt.s     fcc0, fs0, fs1          #Is fs0 < fs1
+    LOAD_F(ft0, a0)                     # ft0<- vBB
+    LOAD_F(ft1, a1)                     # ft1<- vCC
+    c.olt.s     fcc0, ft0, ft1          #Is ft0 < ft1
     li          rTEMP, -1
     bc1t        fcc0, TEMPLATE_CMPG_FLOAT_VFP_finish
-    c.olt.s     fcc0, fs1, fs0
+    c.olt.s     fcc0, ft1, ft0
     li          rTEMP, 1
     bc1t        fcc0, TEMPLATE_CMPG_FLOAT_VFP_finish
-    c.eq.s      fcc0, fs0, fs1
+    c.eq.s      fcc0, ft0, ft1
     li          rTEMP, 0
     bc1t        fcc0, TEMPLATE_CMPG_FLOAT_VFP_finish
 #endif
@@ -1990,15 +1990,15 @@ dvmCompiler_TEMPLATE_CMPL_FLOAT_VFP:
     li      rTEMP, 1                    # vAA<- 1
     bgtz    v0, TEMPLATE_CMPL_FLOAT_VFP_finish
 #else
-    LOAD_F(fs0, a0)                     # fs0<- vBB
-    LOAD_F(fs1, a1)                     # fs1<- vCC
-    c.olt.s     fcc0, fs0, fs1          #Is fs0 < fs1
+    LOAD_F(ft0, a0)                     # ft0<- vBB
+    LOAD_F(ft1, a1)                     # ft1<- vCC
+    c.olt.s     fcc0, ft0, ft1          #Is ft0 < ft1
     li          rTEMP, -1
     bc1t        fcc0, TEMPLATE_CMPL_FLOAT_VFP_finish
-    c.olt.s     fcc0, fs1, fs0
+    c.olt.s     fcc0, ft1, ft0
     li          rTEMP, 1
     bc1t        fcc0, TEMPLATE_CMPL_FLOAT_VFP_finish
-    c.eq.s      fcc0, fs0, fs1
+    c.eq.s      fcc0, ft0, ft1
     li          rTEMP, 0
     bc1t        fcc0, TEMPLATE_CMPL_FLOAT_VFP_finish
 #endif
