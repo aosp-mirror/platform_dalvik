@@ -1,1 +1,0 @@
-Exercise some locale-specific classes.

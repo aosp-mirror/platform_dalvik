@@ -1,4 +1,0 @@
-Assignment was allowed
-Got expected IncompatibleClassChangeError
-In compareTo
-Done

@@ -1,3 +1,0 @@
-str1 matches: true
-str2 matches: false
-str3 matches: true
