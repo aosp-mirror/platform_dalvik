@@ -549,8 +549,8 @@ static void freeMarkStack(GcMarkStack *stack)
 GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
                              size_t growthLimit)
 {
-    GcHeap *gcHeap;
-    HeapSource *hs;
+    GcHeap *gcHeap = NULL;
+    HeapSource *hs = NULL;
     mspace msp;
     size_t length;
     void *base;
@@ -570,7 +570,7 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
     length = ALIGN_UP_TO_PAGE_SIZE(maximumSize);
     base = dvmAllocRegion(length, PROT_NONE, "dalvik-heap");
     if (base == NULL) {
-        return NULL;
+        dvmAbort();
     }
 
     /* Create an unlocked dlmalloc mspace to use as
@@ -578,20 +578,19 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
      */
     msp = createMspace(base, kInitialMorecoreStart, startSize);
     if (msp == NULL) {
-        goto fail;
+        dvmAbort();
     }
 
     gcHeap = (GcHeap *)calloc(1, sizeof(*gcHeap));
     if (gcHeap == NULL) {
         LOGE_HEAP("Can't allocate heap descriptor");
-        goto fail;
+        dvmAbort();
     }
 
     hs = (HeapSource *)calloc(1, sizeof(*hs));
     if (hs == NULL) {
         LOGE_HEAP("Can't allocate heap source");
-        free(gcHeap);
-        goto fail;
+        dvmAbort();
     }
 
     hs->targetUtilization = gDvm.heapTargetUtilization * HEAP_UTILIZATION_MAX;
@@ -619,32 +618,28 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
 
     if (!addInitialHeap(hs, msp, growthLimit)) {
         LOGE_HEAP("Can't add initial heap");
-        goto fail;
+        dvmAbort();
     }
     if (!dvmHeapBitmapInit(&hs->liveBits, base, length, "dalvik-bitmap-1")) {
         LOGE_HEAP("Can't create liveBits");
-        goto fail;
+        dvmAbort();
     }
     if (!dvmHeapBitmapInit(&hs->markBits, base, length, "dalvik-bitmap-2")) {
         LOGE_HEAP("Can't create markBits");
         dvmHeapBitmapDelete(&hs->liveBits);
-        goto fail;
+        dvmAbort();
     }
     if (!allocMarkStack(&gcHeap->markContext.stack, hs->maximumSize)) {
         ALOGE("Can't create markStack");
         dvmHeapBitmapDelete(&hs->markBits);
         dvmHeapBitmapDelete(&hs->liveBits);
-        goto fail;
+        dvmAbort();
     }
     gcHeap->markContext.bitmap = &hs->markBits;
     gcHeap->heapSource = hs;
 
     gHs = hs;
     return gcHeap;
-
-fail:
-    munmap(base, length);
-    return NULL;
 }
 
 bool dvmHeapSourceStartupAfterZygote()
