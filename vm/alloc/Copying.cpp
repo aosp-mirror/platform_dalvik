@@ -461,7 +461,7 @@ GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     heapSource->allocBlocks = 0;
     heapSource->totalBlocks = (heapSource->limitBlock - heapSource->baseBlock);
 
-    assert(heapSource->totalBlocks = heapSource->maximumSize / BLOCK_SIZE);
+    assert(heapSource->totalBlocks == heapSource->maximumSize / BLOCK_SIZE);
 
     {
         size_t size = sizeof(heapSource->blockQueue[0]);
