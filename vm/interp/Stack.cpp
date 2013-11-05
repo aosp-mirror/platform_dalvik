@@ -1390,7 +1390,7 @@ void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
 void dvmDumpNativeStack(const DebugOutputTarget* target, pid_t tid)
 {
 #ifdef HAVE_ANDROID_OS
-    UniquePtr<Backtrace> backtrace(Backtrace::Create(-1, tid));
+    UniquePtr<Backtrace> backtrace(Backtrace::Create(BACKTRACE_CURRENT_PROCESS, tid));
     if (!backtrace->Unwind(0) || backtrace->NumFrames() == 0) {
         dvmPrintDebugMessage(target, "  (native backtrace unavailable)\n");
     } else {
