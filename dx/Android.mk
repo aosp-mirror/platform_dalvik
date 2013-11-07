@@ -60,8 +60,9 @@ include $(BUILD_SYSTEM)/base_rules.mk
 
 $(LOCAL_BUILT_MODULE): PRIVATE_PROGUARD_FLAGS:= \
   -include $(addprefix $(LOCAL_PATH)/, shrinkedAndroid.proguard.flags)
-$(LOCAL_BUILT_MODULE): $(call java-lib-files,android_stubs_current)| $(PROGUARD)
-	$(call transform-jar-to-proguard)
+$(LOCAL_BUILT_MODULE): $(call java-lib-files,android_stubs_current) | $(PROGUARD)
+	@echo Proguard: $@
+	$(hide) $(PROGUARD) -injars "$<(**/*.class)" -outjars $@ $(PRIVATE_PROGUARD_FLAGS)
 
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
 
