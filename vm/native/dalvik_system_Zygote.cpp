@@ -428,21 +428,22 @@ static void enableDebugFeatures(u4 debugFlags)
 static int setCapabilities(int64_t permitted, int64_t effective)
 {
 #ifdef HAVE_ANDROID_OS
-    struct __user_cap_header_struct capheader;
-    struct __user_cap_data_struct capdata;
-
+    __user_cap_header_struct capheader;
     memset(&capheader, 0, sizeof(capheader));
-    memset(&capdata, 0, sizeof(capdata));
-
     capheader.version = _LINUX_CAPABILITY_VERSION;
     capheader.pid = 0;
 
-    capdata.effective = effective;
-    capdata.permitted = permitted;
+    __user_cap_data_struct capdata[2];
+    memset(&capdata, 0, sizeof(capdata));
+    capdata[0].effective = effective;
+    capdata[1].effective = effective >> 32;
+    capdata[0].permitted = permitted;
+    capdata[1].permitted = permitted >> 32;
 
-    ALOGV("CAPSET perm=%llx eff=%llx", permitted, effective);
-    if (capset(&capheader, &capdata) != 0)
+    if (capset(&capheader, &capdata[0]) == -1) {
+        ALOGE("capset(perm=%llx, eff=%llx) failed: %s", permitted, effective, strerror(errno));
         return errno;
+    }
 #endif /*HAVE_ANDROID_OS*/
 
     return 0;
