@@ -18,6 +18,7 @@
  * dalvik.system.Zygote
  */
 #include "Dalvik.h"
+#include "Thread.h"
 #include "native/InternalNativePriv.h"
 
 #include <selinux/android.h>
@@ -670,6 +671,13 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
         if (err < 0) {
             ALOGE("cannot set SELinux context: %s\n", strerror(errno));
             dvmAbort();
+        }
+
+        // Set the comm to a nicer name.
+        if (isSystemServer && niceName == NULL) {
+            dvmSetThreadName("system_server");
+        } else {
+            dvmSetThreadName(niceName);
         }
         // These free(3) calls are safe because we know we're only ever forking
         // a single-threaded process, so we know no other thread held the heap
