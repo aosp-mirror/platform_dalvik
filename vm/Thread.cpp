@@ -1179,11 +1179,17 @@ static bool createFakeRunFrame(Thread* thread)
 /*
  * Helper function to set the name of the current thread
  */
-static void setThreadName(const char *threadName)
+void dvmSetThreadName(const char *threadName)
 {
     int hasAt = 0;
     int hasDot = 0;
     const char *s = threadName;
+
+    if (s == NULL) {
+        ALOGW("Unable to set the name of current thread to NULL");
+        return;
+    }
+
     while (*s) {
         if (*s == '.') hasDot = 1;
         else if (*s == '@') hasAt = 1;
@@ -1462,7 +1468,7 @@ static void* interpThreadStart(void* arg)
     Thread* self = (Thread*) arg;
 
     std::string threadName(dvmGetThreadName(self));
-    setThreadName(threadName.c_str());
+    dvmSetThreadName(threadName.c_str());
 
     /*
      * Finish initializing the Thread struct.
@@ -1724,7 +1730,7 @@ static void* internalThreadStart(void* arg)
     jniArgs.name = pArgs->name;
     jniArgs.group = reinterpret_cast<jobject>(pArgs->group);
 
-    setThreadName(pArgs->name);
+    dvmSetThreadName(pArgs->name);
 
     /* use local jniArgs as stack top */
     if (dvmAttachCurrentThread(&jniArgs, pArgs->isDaemon)) {
