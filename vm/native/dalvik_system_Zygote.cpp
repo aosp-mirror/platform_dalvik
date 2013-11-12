@@ -430,7 +430,7 @@ static int setCapabilities(int64_t permitted, int64_t effective)
 #ifdef HAVE_ANDROID_OS
     __user_cap_header_struct capheader;
     memset(&capheader, 0, sizeof(capheader));
-    capheader.version = _LINUX_CAPABILITY_VERSION;
+    capheader.version = _LINUX_CAPABILITY_VERSION_3;
     capheader.pid = 0;
 
     __user_cap_data_struct capdata[2];
