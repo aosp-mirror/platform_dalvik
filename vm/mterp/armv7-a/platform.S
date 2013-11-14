@@ -13,7 +13,7 @@
  */
 .macro  SMP_DMB
 #if ANDROID_SMP != 0
-    dmb
+    dmb ish
 #else
     /* not SMP */
 #endif
@@ -24,7 +24,7 @@
  */
 .macro  SMP_DMB_ST
 #if ANDROID_SMP != 0
-    dmb     st
+    dmb ishst
 #else
     /* not SMP */
 #endif
