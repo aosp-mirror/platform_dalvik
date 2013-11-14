@@ -1,7 +1,5 @@
 #include "../common/asm-constants.h"
 #include "../common/mips-defines.h"
-#include <asm/regdef.h>
-#include <asm/fpregdef.h>
 
 #ifdef __mips_hard_float
 #define HARD_FLOAT
