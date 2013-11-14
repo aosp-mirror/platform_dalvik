@@ -23,8 +23,6 @@
 #include "../../../mterp/common/asm-constants.h"
 #include "../../../mterp/common/mips-defines.h"
 #include "../../../mterp/common/jit-config.h"
-#include <asm/regdef.h>
-#include <asm/fpregdef.h>
 
 #ifdef	__mips_hard_float
 #define		HARD_FLOAT
