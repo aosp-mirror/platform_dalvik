@@ -80,8 +80,9 @@ int gDvmICHitCount;
  *
  * We follow the tradition of unhyphenated compound words.
  */
-static void usage(const char* progName)
+static void usage()
 {
+    const char* progName = "dalvikvm";
     dvmFprintf(stderr, "%s: [options] class [argument ...]\n", progName);
     dvmFprintf(stderr, "%s: [options] -jar file.jar [argument ...]\n",progName);
     dvmFprintf(stderr, "\n");
@@ -804,7 +805,8 @@ static int processOptions(int argc, const char* const argv[],
     for (i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-help") == 0) {
             /* show usage and stop */
-            return -1;
+            usage();
+            exit(0);
 
         } else if (strcmp(argv[i], "-version") == 0) {
             /* show version and stop */
@@ -1399,7 +1401,7 @@ std::string dvmStartup(int argc, const char* const argv[],
     if (cc != 0) {
         if (cc < 0) {
             dvmFprintf(stderr, "\n");
-            usage("dalvikvm");
+            usage();
         }
         return "syntax error";
     }
