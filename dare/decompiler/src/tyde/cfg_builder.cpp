@@ -59,6 +59,7 @@
   AddSuccessors(code_attribute->tyde_body());
   AddExceptionSuccessors(code_attribute, cp);
   RemoveDeadTries(code_attribute->tyde_body());
+  CheckAndPatchOffsets(code_attribute->tyde_body());
 }
 
 
@@ -345,3 +346,80 @@
       s.push(instruction->exception_successors()[i]);
   }
 }
+
+/**
+ * Check offsets in branching instructions and patch potentially overflowing
+ * two-byte offsets.
+ *
+ * @param dcode A Tyde body.
+ */
+/*static*/ void CFGBuilder::CheckAndPatchOffsets(TydeBody& dcode) {
+  if ((int) dcode.size() < Dare::offset_limit() || Dare::offset_limit() <= 0) {
+    return;
+  }
+
+  for (int i = dcode.size() - 1; i >= 0; --i)
+    if (dcode[i]->op() >= OP_IF_EQ && dcode[i]->op() <= OP_IF_LEZ)
+      if (CheckOffsetAtInstruction(dcode, i))
+        dcode.RefreshIndicesAfter(i);
+}
+
+/**
+ * Check offset in a branching instruction and patch potentially overflowing
+ * two-byte offset if necessary.
+ *
+ * It is necessary that all instruction indices are up-to-date before calling
+ * this function (call dcode.RefreshIndicesAfter() if necessary).
+ *
+ * @param dcode A Tyde body.
+ * @param index The index of an instruction to be checked.
+ * @return True if the code was modified.
+ */
+/*static*/ bool CFGBuilder::CheckOffsetAtInstruction(TydeBody& dcode,
+      int index) {
+  TydeInstruction* branching_instruction = dcode[index];
+  TydeInstruction* original_target = branching_instruction->successors()[1];
+  s4 relative_offset = (s4) branching_instruction->constant();
+  int original_target_index = original_target->index();
+  int gap;
+
+  if (relative_offset > 0)
+    gap = original_target_index - index;
+  else
+    gap = index - original_target_index;
+
+  if (gap <= Dare::offset_limit())
+    return false;
+
+  // Make the next instruction.
+  DecodedInstruction decoded_instruction;
+  decoded_instruction.opcode = OP_GOTO;
+  TydeInstruction* next = new TydeInstruction(&decoded_instruction,
+      branching_instruction->original_offset());
+  TydeInstruction* normal_successor = branching_instruction->successors()[0];
+  normal_successor->ReplacePredecessor(branching_instruction, next);
+  normal_successor->set_label(label_++);
+  next->AddSuccessor(normal_successor);
+  next->AddPredecessor(branching_instruction);
+
+  // Make the new target instruction.
+  TydeInstruction* new_target = new TydeInstruction(&decoded_instruction,
+      branching_instruction->original_offset());
+  TydeInstruction* target_successor = branching_instruction->successors()[1];
+  target_successor->ReplacePredecessor(branching_instruction, new_target);
+  new_target->AddSuccessor(target_successor);
+  new_target->AddPredecessor(branching_instruction);
+  new_target->set_label(label_++);
+
+  // Patch successors and insert new instructions.
+  std::vector<TydeInstruction*> slice(2);
+  slice[0] = next;
+  slice[1] = new_target;
+
+  branching_instruction->set_successors(slice);
+
+  dcode.insert(index + 1, slice);
+
+  return true;
+}
+

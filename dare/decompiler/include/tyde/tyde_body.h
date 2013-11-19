@@ -66,6 +66,11 @@ public:
   const std::vector<TryItem>& tries() const { return tries_; }
   void set_tries(const std::vector<TryItem>& tries) { tries_ = tries; }
 
+  void RefreshIndicesAfter(int index) const {
+    for (int i = 0; i < (int) size(); ++i)
+      operator[](i)->set_index(i);
+  }
+
   void Dump(std::ostream& out) const {
     for (int i = 0; i < (int) size(); ++i)
       out << operator[](i)->ToString();

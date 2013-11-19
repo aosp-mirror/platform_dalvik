@@ -54,7 +54,8 @@ class DedLauncher {
         bad_input_classes_(0),
         dare_(std::string("./dare-") + kVersion),
         generate_stubs_(false),
-        keep_jasmin_files_(false) {}
+        keep_jasmin_files_(false),
+        offset_limit_("5000") {}
 
   /**
    * Process a dex or apk file.
@@ -257,6 +258,7 @@ class DedLauncher {
   bool generate_stubs_;
   std::vector<std::string> vm_options_;
   bool keep_jasmin_files_;
+  const char* offset_limit_;
 };
 
 #endif /* DARE_LAUNCHER_H_ */

@@ -44,6 +44,7 @@ class Dare {
         ignore_bad_checksum_(false) {}
 
   static bool split_exception_tables() { return split_exception_tables_; }
+  static int offset_limit() { return offset_limit_; }
 //  static void AddConflictedClass(std::string c) {
 //    conflicted_classes_.insert(c);
 //  }
@@ -86,6 +87,7 @@ class Dare {
   const char* stubs_dir_;
 
   static bool split_exception_tables_;
+  static int offset_limit_;
 
   bool ignore_bad_checksum_;
 //  static std::set<std::string> conflicted_classes_;

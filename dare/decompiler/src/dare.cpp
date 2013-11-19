@@ -28,6 +28,8 @@
 
 #include "dare.h"
 
+#include <stdlib.h>
+
 #include <fstream>
 
 #include "libdex/SysUtil.h"
@@ -42,6 +44,7 @@ using std::string;
 
 /*static*/ const char* Dare::kVersion = "1.1.0";
 /*static*/ bool Dare::split_exception_tables_ = true;
+/*static*/ int Dare::offset_limit_ = 5000;
 ///*static*/ std::set<std::string> Dare::conflicted_classes_;
 
 
@@ -59,7 +62,7 @@ int Dare::Start(int argc, char* const argv[]) {
   const char* verif = NULL;
 
   while (true) {
-    ic = getopt(argc, argv, "id:t:c:es:p:v");
+    ic = getopt(argc, argv, "id:t:c:es:p:vl:");
     if (ic < 0)
       break;
 
@@ -88,6 +91,9 @@ int Dare::Start(int argc, char* const argv[]) {
       case 'v':
         printf("dare version %s\n", Dare::version());
         return 0;
+      case 'l':
+        offset_limit_ = atoi(optarg);
+        break;
       default:
         wantUsage = true;
         break;
@@ -219,7 +225,7 @@ bail:
  * Display usage information.
  */
 void Dare::Usage() const {
-  fprintf(stderr, "Copyright (C) 2012 The Pennsylvania State University\n"
+  fprintf(stderr, "Copyright (C) 2012-2013 The Pennsylvania State University\n"
       "Systems and Internet Infrastructure Security Laboratory\n\n");
   fprintf(stderr,
     "Usage: dare-%s [-d <output dir>] [-i] [-t <tempfile>] [-c <class-list>]"

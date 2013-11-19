@@ -40,6 +40,7 @@
 #include "class_file/integer_info.h"
 #include "class_file/interface_method_ref_info.h"
 #include "class_file/method_ref_info.h"
+#include "dare.h"
 #include "timer.h"
 #include "tyde/java_opcode_jasmin.h"
 #include "tyde/tyde_instruction.h"
@@ -101,6 +102,8 @@ void Translator::Convert() {
       out_ << "Label" << code_attribute_->tyde_body()[i]->label() << ":" << "\n";
 
     TydeInstruction* instruction = code_attribute_->tyde_body()[i];
+    bool large_method = Dare::offset_limit() > 0
+          && (int) code_attribute_->tyde_body().size() > Dare::offset_limit();
 //      std::cout << instruction->ToString();
     switch (TydeInstrUtils::TydeGetFormatFromOpcode(instruction->op())) {
       case kFmtTuo:
@@ -110,7 +113,7 @@ void Translator::Convert() {
         TranslateFmtTao(instruction);
         break;
       case kFmtTub:
-        TranslateFmtTub(instruction);
+        TranslateFmtTub(instruction, large_method);
         break;
       case kFmtTab:
         TranslateFmtTab(instruction);
@@ -180,16 +183,24 @@ void Translator::TranslateFmtTao(const TydeInstruction* ins) {
  * Translate unambiguous branching instruction.
  *
  * @param ins A Tyde instruction.
+ * @param large_method True if the method is large and therefore requires the
+ *        use of goto_w instead of goto.
  */
-void Translator::TranslateFmtTub(const TydeInstruction* ins) {
+void Translator::TranslateFmtTub(const TydeInstruction* ins,
+      bool large_method) {
   TranslateSources(ins);
-  AddOpcode(ins->op());
   Opcode opcode = ins->op();
   int label = -1;
-  if (opcode == OP_GOTO || opcode == OP_GOTO_16 || opcode == OP_GOTO_32)
+  if (opcode == OP_GOTO || opcode == OP_GOTO_16 || opcode == OP_GOTO_32) {
+    if (large_method)
+      out_ << GOTO_W;
+    else
+      AddOpcode(opcode);
     label = ins->successors()[0]->label();
-  else
+  } else {
+    AddOpcode(ins->op());
     label = ins->successors()[1]->label();
+  }
   if (label == -1) {
     LOGE("Error: label does not exist\n");
     exit(1);

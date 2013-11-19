@@ -46,7 +46,7 @@ ANDROID_LIBS="$DED_DIR/../../../../dalvik/dare/libs/class"
 PREVERIFY_SCRIPT="$DED_DIR/../../../../dalvik/tools/dex-preopt"
 PREVERIFY=""
 
-while getopts "ed:ocpbx:k" p
+while getopts "ed:ocpbx:kl:" p
 do
 	case "$p" in
 	p)	PREVERIFY=" -p $PREVERIFY_SCRIPT";;

@@ -44,6 +44,10 @@ class Body {
   }
   void pop_front() { instructions_.erase(instructions_.begin()); }
   void pop_back() { instructions_.pop_back(); }
+  void insert(int index, const std::vector<T>& contents) {
+    instructions_.insert(instructions_.begin() + index, contents.begin(),
+        contents.end());
+  }
   size_t size() const { return instructions_.size(); }
 
  private:

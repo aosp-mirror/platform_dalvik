@@ -83,8 +83,10 @@ class Translator {
    * Translate unambiguous branching instruction.
    *
    * @param ins A Tyde instruction.
+   * @param large_method True if the method is large and therefore requires the
+   *        use of goto_w instead of goto.
    */
-  void TranslateFmtTub(const TydeInstruction* ins);
+  void TranslateFmtTub(const TydeInstruction* ins, bool large_method);
 
   /**
    * Translate ambiguous branching instruction.

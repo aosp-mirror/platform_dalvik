@@ -82,6 +82,13 @@ void TydeInstruction::AddExceptionSuccessor(TydeInstruction* ins) {
   ins->AddExceptionPredecessor(this);
 }
 
+void TydeInstruction::ReplacePredecessor(TydeInstruction* original,
+    TydeInstruction* replacement) {
+  for (int i = 0; i < (int) predecessors_.size(); ++i)
+    if (predecessors_[i] == original)
+      predecessors_[i] = replacement;
+}
+
 /**
  * Source source register type.
  *

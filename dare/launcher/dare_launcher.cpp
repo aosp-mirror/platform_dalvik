@@ -68,7 +68,7 @@ void DedLauncher::Process(int argc, char** argv) {
   char* class_list = NULL;
 
   while (1) {
-    ic = getopt(argc, argv, "d:s:a:ocj:m:p:evr:bx:k");
+    ic = getopt(argc, argv, "d:s:a:ocj:m:p:evr:bx:kl:");
     if (ic < 0)
       break;
 
@@ -115,6 +115,9 @@ void DedLauncher::Process(int argc, char** argv) {
     case 'k':
       keep_jasmin_files_ = true;
       break;
+    case 'l':
+      offset_limit_ = optarg;
+      break;
     default:
       want_usage = true;
       break;
@@ -140,12 +143,12 @@ void DedLauncher::Process(int argc, char** argv) {
  * Display usage information.
  */
 void DedLauncher::Usage() const {
-  fprintf(stderr, "Copyright (C) 2012 The Pennsylvania State University\n"
+  fprintf(stderr, "Copyright (C) 2012-2013 The Pennsylvania State University\n"
       "Systems and Internet Infrastructure Security Laboratory\n\n");
   fprintf(stderr,
     "Usage: dare-launcher-%s [-d <output dir>] [-s <Soot classes>] "
     "[-a <library classes>] [-o] [-c] [-j <jasmin jar>] [-m <maxine script>] "
-    "[-p] [-e] <dex or apk file>\n", DedLauncher::version());
+    "[-p <Dalvik verifier>] [-e] <dex or apk file>\n", DedLauncher::version());
   fprintf(stderr, " -d <output dir>: set output directory\n");
   fprintf(stderr, " -s <Soot classes> : define Soot/Polyglot/Jasmin class "
       " locations (separated by a : character)\n");
@@ -156,8 +159,8 @@ void DedLauncher::Usage() const {
   fprintf(stderr, " -j <jasmin jar> : set the path to the Jasmin jar\n");
   fprintf(stderr, " -m <maxine script> : set the path to the Maxine max or mx "
       "script\n");
-  fprintf(stderr, " -p : use Dalvik verifier annotations to make the code "
-      "verifiable\n");
+  fprintf(stderr, " -p <Dalvik verifier>: set the path to the Dalvik verifier, "
+      "if pre-verification is desired\n");
   fprintf(stderr, " -e : prevent exception table splitting\n");
   fprintf(stderr, " -v : version number\n");
   fprintf(stderr, " -b : generate stubs\n");
@@ -279,7 +282,7 @@ int DedLauncher::ExecuteDare(const string& options, int* dare_status) const {
   struct timeval time1;
   struct timeval time2;
   string cmd = dare_;
-  cmd += " -d " + dclass_ + "/ " + options +
+  cmd += " -d " + dclass_ + "/ -l " + offset_limit_ + options +
       (no_split_tables_ ? " -e " : " ") + i_file_name_;
 
   return StartProcess(cmd, 3000, NULL, dare_status);

@@ -117,6 +117,25 @@ class CFGBuilder {
    * @param dcode A Tyde body.
    */
   static void ComputeReachability(const TydeBody& dcode);
+  /**
+   * Check offsets in branching instructions and patch potentially overflowing
+   * two-byte offsets.
+   *
+   * @param dcode A Tyde body.
+   */
+  static void CheckAndPatchOffsets(TydeBody& dcode);
+  /**
+   * Check offset in a branching instruction and patch potentially overflowing
+   * two-byte offset if necessary.
+   *
+   * It is necessary that all instruction indices are up-to-date before calling
+   * this function (call dcode.RefreshIndicesAfter() if necessary).
+   *
+   * @param dcode A Tyde body.
+   * @param index The index of an instruction to be checked.
+   * @return True if the code was modified.
+   */
+  static bool CheckOffsetAtInstruction(TydeBody& dcode, int index);
 
   static int label_;
 };

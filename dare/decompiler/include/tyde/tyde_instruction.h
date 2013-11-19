@@ -72,6 +72,9 @@ class TydeInstruction {
   const std::vector<TydeInstruction*>& successors() const {
     return successors_;
   }
+  void set_successors(const std::vector<TydeInstruction*>& successors) {
+    successors_ = successors;
+  }
   const std::vector<TydeInstruction*>& exception_successors() const {
     return exception_successors_;
   }
@@ -125,6 +128,8 @@ class TydeInstruction {
   void AddPredecessor(TydeInstruction* ins) {
     predecessors_.push_back(ins);
   }
+  void ReplacePredecessor(TydeInstruction* original,
+      TydeInstruction* replacement);
   void AddExceptionPredecessor(TydeInstruction* ins) {
     exception_predecessors_.push_back(ins);
   }
