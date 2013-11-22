@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <cutils/ashmem.h>
 
 #define SIZE_MAX UINT_MAX  // TODO: get SIZE_MAX from stdint.h
 
@@ -28,6 +29,7 @@
 #include "alloc/HeapBitmap.h"
 #include "alloc/HeapBitmapInlines.h"
 
+static void dvmHeapSourceUpdateMaxNativeFootprint();
 static void snapIdealFootprint();
 static void setIdealFootprint(size_t max);
 static size_t getMaximumSize(const HeapSource *hs);
@@ -175,6 +177,14 @@ struct HeapSource {
      * The mark bitmap.
      */
     HeapBitmap markBits;
+
+    /*
+     * Native allocations.
+     */
+    int32_t nativeBytesAllocated;
+    size_t nativeFootprintGCWatermark;
+    size_t nativeFootprintLimit;
+    bool nativeNeedToRunFinalization;
 
     /*
      * State for the GC daemon.
@@ -377,6 +387,36 @@ static bool addInitialHeap(HeapSource *hs, mspace msp, size_t maximumSize)
 }
 
 /*
+ * A helper for addNewHeap(). Remap the new heap so that it will have
+ * a separate ashmem region with possibly a different name, etc. In
+ * practice, this is used to give the app heap a separate ashmem
+ * region from the zygote heap's.
+ */
+static bool remapNewHeap(HeapSource* hs, Heap* newHeap)
+{
+  char* newHeapBase = newHeap->base;
+  size_t rem_size = hs->heapBase + hs->heapLength - newHeapBase;
+  munmap(newHeapBase, rem_size);
+  int fd = ashmem_create_region("dalvik-heap", rem_size);
+  if (fd == -1) {
+    ALOGE("Unable to create an ashmem region for the new heap");
+    return false;
+  }
+  void* addr = mmap(newHeapBase, rem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+  int ret = close(fd);
+  if (addr == MAP_FAILED) {
+    ALOGE("Unable to map an ashmem region for the new heap");
+    return false;
+  }
+  if (ret == -1) {
+    ALOGE("Unable to close fd for the ashmem region for the new heap");
+    munmap(newHeapBase, rem_size);
+    return false;
+  }
+  return true;
+}
+
+/*
  * Adds an additional heap to the heap source.  Returns false if there
  * are too many heaps or insufficient free space to add another heap.
  */
@@ -414,6 +454,9 @@ static bool addNewHeap(HeapSource *hs)
     heap.base = base;
     heap.limit = heap.base + heap.maximumSize;
     heap.brk = heap.base + morecoreStart;
+    if (!remapNewHeap(hs, &heap)) {
+      return false;
+    }
     heap.msp = createMspace(base, morecoreStart, hs->minFree);
     if (heap.msp == NULL) {
         return false;
@@ -568,7 +611,7 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
      * among the heaps managed by the garbage collector.
      */
     length = ALIGN_UP_TO_PAGE_SIZE(maximumSize);
-    base = dvmAllocRegion(length, PROT_NONE, "dalvik-heap");
+    base = dvmAllocRegion(length, PROT_NONE, gDvm.zygote ? "dalvik-zygote" : "dalvik-heap");
     if (base == NULL) {
         dvmAbort();
     }
@@ -603,6 +646,10 @@ GcHeap* dvmHeapSourceStartup(size_t startSize, size_t maximumSize,
     hs->softLimit = SIZE_MAX;    // no soft limit at first
     hs->numHeaps = 0;
     hs->sawZygote = gDvm.zygote;
+    hs->nativeBytesAllocated = 0;
+    hs->nativeFootprintGCWatermark = startSize;
+    hs->nativeFootprintLimit = startSize * 2;
+    hs->nativeNeedToRunFinalization = false;
     hs->hasGcThread = false;
     hs->heapBase = (char *)base;
     hs->heapLength = length;
@@ -878,10 +925,45 @@ void* dvmHeapSourceAlloc(size_t n)
                   FRACTIONAL_MB(hs->softLimit), n);
         return NULL;
     }
-    void* ptr = mspace_calloc(heap->msp, 1, n);
-    if (ptr == NULL) {
-        return NULL;
+    void* ptr;
+    if (gDvm.lowMemoryMode) {
+        /* This is only necessary because mspace_calloc always memsets the
+         * allocated memory to 0. This is bad for memory usage since it leads
+         * to dirty zero pages. If low memory mode is enabled, we use
+         * mspace_malloc which doesn't memset the allocated memory and madvise
+         * the page aligned region back to the kernel.
+         */
+        ptr = mspace_malloc(heap->msp, n);
+        if (ptr == NULL) {
+            return NULL;
+        }
+        uintptr_t zero_begin = (uintptr_t)ptr;
+        uintptr_t zero_end = (uintptr_t)ptr + n;
+        /* Calculate the page aligned region.
+         */
+        uintptr_t begin = ALIGN_UP_TO_PAGE_SIZE(zero_begin);
+        uintptr_t end = zero_end & ~(uintptr_t)(SYSTEM_PAGE_SIZE - 1);
+        /* If our allocation spans more than one page, we attempt to madvise.
+         */
+        if (begin < end) {
+            /* madvise the page aligned region to kernel.
+             */
+            madvise((void*)begin, end - begin, MADV_DONTNEED);
+            /* Zero the region after the page aligned region.
+             */
+            memset((void*)end, 0, zero_end - end);
+            /* Zero out the region before the page aligned region.
+             */
+            zero_end = begin;
+        }
+        memset((void*)zero_begin, 0, zero_end - zero_begin);
+    } else {
+        ptr = mspace_calloc(heap->msp, 1, n);
+        if (ptr == NULL) {
+            return NULL;
+        }
     }
+
     countAllocation(heap, ptr);
     /*
      * Check to see if a concurrent GC should be initiated.
@@ -1324,6 +1406,11 @@ void dvmHeapSourceGrowForUtilization()
     } else {
         heap->concurrentStartBytes = freeBytes - CONCURRENT_START;
     }
+
+    /* Mark that we need to run finalizers and update the native watermarks
+     * next time we attempt to register a native allocation.
+     */
+    gHs->nativeNeedToRunFinalization = true;
 }
 
 /*
@@ -1417,4 +1504,96 @@ void *dvmHeapSourceGetImmuneLimit(bool isPartial)
     } else {
         return NULL;
     }
+}
+
+static void dvmHeapSourceUpdateMaxNativeFootprint()
+{
+    /* Use the current target utilization ratio to determine the new native GC
+     * watermarks.
+     */
+    size_t nativeSize = gHs->nativeBytesAllocated;
+    size_t targetSize =
+        (nativeSize / gHs->targetUtilization) * HEAP_UTILIZATION_MAX;
+
+    if (targetSize > nativeSize + gHs->maxFree) {
+        targetSize = nativeSize + gHs->maxFree;
+    } else if (targetSize < nativeSize + gHs->minFree) {
+        targetSize = nativeSize + gHs->minFree;
+    }
+    gHs->nativeFootprintGCWatermark = targetSize;
+    gHs->nativeFootprintLimit = 2 * targetSize - nativeSize;
+}
+
+void dvmHeapSourceRegisterNativeAllocation(int bytes)
+{
+    /* If we have just done a GC, ensure that the finalizers are done and update
+     * the native watermarks.
+     */
+    if (gHs->nativeNeedToRunFinalization) {
+        dvmRunFinalization();
+        dvmHeapSourceUpdateMaxNativeFootprint();
+        gHs->nativeNeedToRunFinalization = false;
+    }
+
+    android_atomic_add(bytes, &gHs->nativeBytesAllocated);
+
+    if ((size_t)gHs->nativeBytesAllocated > gHs->nativeFootprintGCWatermark) {
+        /* The second watermark is higher than the gc watermark. If you hit
+         * this it means you are allocating native objects faster than the GC
+         * can keep up with. If this occurs, we do a GC for alloc.
+         */
+        if ((size_t)gHs->nativeBytesAllocated > gHs->nativeFootprintLimit) {
+            Thread* self = dvmThreadSelf();
+            dvmRunFinalization();
+            if (dvmCheckException(self)) {
+                return;
+            }
+            dvmLockHeap();
+            bool waited = dvmWaitForConcurrentGcToComplete();
+            dvmUnlockHeap();
+            if (waited) {
+                // Just finished a GC, attempt to run finalizers.
+                dvmRunFinalization();
+                if (dvmCheckException(self)) {
+                    return;
+                }
+            }
+
+            // If we still are over the watermark, attempt a GC for alloc and run finalizers.
+            if ((size_t)gHs->nativeBytesAllocated > gHs->nativeFootprintLimit) {
+                dvmLockHeap();
+                dvmWaitForConcurrentGcToComplete();
+                dvmCollectGarbageInternal(GC_FOR_MALLOC);
+                dvmUnlockHeap();
+                dvmRunFinalization();
+                gHs->nativeNeedToRunFinalization = false;
+                if (dvmCheckException(self)) {
+                    return;
+                }
+            }
+            /* We have just run finalizers, update the native watermark since
+             * it is very likely that finalizers released native managed
+             * allocations.
+             */
+            dvmHeapSourceUpdateMaxNativeFootprint();
+        } else {
+            dvmSignalCond(&gHs->gcThreadCond);
+        }
+    }
+}
+
+/*
+ * Called from VMRuntime.registerNativeFree.
+ */
+void dvmHeapSourceRegisterNativeFree(int bytes)
+{
+    int expected_size, new_size;
+    do {
+        expected_size = gHs->nativeBytesAllocated;
+        new_size = expected_size - bytes;
+        if (new_size < 0) {
+            break;
+        }
+    } while (android_atomic_cas(expected_size, new_size,
+                                &gHs->nativeBytesAllocated));
 }

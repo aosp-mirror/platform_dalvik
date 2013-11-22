@@ -192,7 +192,7 @@ enum SelfVerificationState {
 /* Number of entries in the 2nd level JIT profiler filter cache */
 #define JIT_TRACE_THRESH_FILTER_SIZE 32
 /* Number of low dalvik pc address bits to include in 2nd level filter key */
-#define JIT_TRACE_THRESH_FILTER_PC_BITS 4
+#define JIT_TRACE_THRESH_FILTER_PC_BITS 16
 #define MAX_JIT_RUN_LEN 64
 
 enum JitHint {

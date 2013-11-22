@@ -90,6 +90,7 @@ struct DvmGlobals {
     size_t      heapStartingSize;
     size_t      heapMaximumSize;
     size_t      heapGrowthLimit;
+    bool        lowMemoryMode;
     double      heapTargetUtilization;
     size_t      heapMinFree;
     size_t      heapMaxFree;
@@ -267,6 +268,7 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectMethod;
     ClassObject* classJavaLangReflectMethodArray;
     ClassObject* classJavaLangReflectProxy;
+    ClassObject* classJavaLangSystem;
     ClassObject* classJavaNioDirectByteBuffer;
     ClassObject* classLibcoreReflectAnnotationFactory;
     ClassObject* classLibcoreReflectAnnotationMember;
@@ -405,6 +407,9 @@ struct DvmGlobals {
 
     /* field offsets - java.lang.reflect.Proxy */
     int         offJavaLangReflectProxy_h;
+
+    /* direct method pointer - java.lang.System.runFinalization */
+    Method*     methJavaLangSystem_runFinalization;
 
     /* field offsets - java.io.FileDescriptor */
     int         offJavaIoFileDescriptor_descriptor;
@@ -736,6 +741,8 @@ extern struct DvmGlobals gDvm;
 
 #if defined(WITH_JIT)
 
+#define DEFAULT_CODE_CACHE_SIZE 0xffffffff
+
 /* Trace profiling modes.  Ordering matters - off states before on states */
 enum TraceProfilingModes {
     kTraceProfilingDisabled = 0,      // Not profiling
@@ -800,7 +807,7 @@ struct DvmJitGlobals {
     /* How many entries in the JitEntryTable are in use */
     unsigned int jitTableEntriesUsed;
 
-    /* Bytes allocated for the code cache */
+    /* Max bytes allocated for the code cache.  Rough rule of thumb: 1K per 1M of system RAM */
     unsigned int codeCacheSize;
 
     /* Trigger for trace selection */

@@ -2153,6 +2153,8 @@ void dvmCompilerSortAndPrintTraceProfiles()
     }
 
     ALOGD("JIT: Average execution count -> %d",(int)(sum / numTraces));
+    // How efficiently are we using code cache memory?  Bigger is better.
+    ALOGD("JIT: CodeCache efficiency -> %.2f",(float)sum / (float)gDvmJit.codeCacheByteUsed);
 
     /* Dump the sorted entries. The count of each trace will be reset to 0. */
     for (i=0; i < gDvmJit.jitTableSize; i++) {

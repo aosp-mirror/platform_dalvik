@@ -125,6 +125,11 @@ void dvmSetTargetHeapUtilization(float newTarget);
 void dvmCollectGarbage(void);
 
 /*
+ * Calls System.runFinalization().
+ */
+void dvmRunFinalization();
+
+/*
  * Returns a count of the direct instances of a class.
  */
 size_t dvmCountInstancesOfClass(const ClassObject *clazz);

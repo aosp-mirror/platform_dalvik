@@ -140,6 +140,7 @@ static void usage()
                        "[,hexopvalue[-endvalue]]*\n");
     dvmFprintf(stderr, "  -Xincludeselectedmethod\n");
     dvmFprintf(stderr, "  -Xjitthreshold:decimalvalue\n");
+    dvmFprintf(stderr, "  -Xjitcodecachesize:decimalvalueofkbytes\n");
     dvmFprintf(stderr, "  -Xjitblocking\n");
     dvmFprintf(stderr, "  -Xjitmethod:signature[,signature]* "
                        "(eg Ljava/lang/String\\;replace)\n");
@@ -941,6 +942,8 @@ static int processOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Invalid -XX:HeapMaxFree option '%s'\n", argv[i]);
                 return -1;
             }
+        } else if (strcmp(argv[i], "-XX:LowMemoryMode") == 0) {
+          gDvm.lowMemoryMode = true;
         } else if (strncmp(argv[i], "-XX:HeapTargetUtilization=", 26) == 0) {
             const char* start = argv[i] + 26;
             const char* end = start;
@@ -1120,6 +1123,11 @@ static int processOptions(int argc, const char* const argv[],
           gDvmJit.blockingMode = true;
         } else if (strncmp(argv[i], "-Xjitthreshold:", 15) == 0) {
           gDvmJit.threshold = atoi(argv[i] + 15);
+        } else if (strncmp(argv[i], "-Xjitcodecachesize:", 19) == 0) {
+          gDvmJit.codeCacheSize = atoi(argv[i] + 19) * 1024;
+          if (gDvmJit.codeCacheSize == 0) {
+            gDvm.executionMode = kExecutionModeInterpFast;
+          }
         } else if (strncmp(argv[i], "-Xincludeselectedop", 19) == 0) {
           gDvmJit.includeSelectedOp = true;
         } else if (strncmp(argv[i], "-Xincludeselectedmethod", 23) == 0) {
@@ -1235,6 +1243,7 @@ static void setCommandLineDefaults()
     gDvm.heapStartingSize = 2 * 1024 * 1024;  // Spec says 16MB; too big for us.
     gDvm.heapMaximumSize = 16 * 1024 * 1024;  // Spec says 75% physical mem
     gDvm.heapGrowthLimit = 0;  // 0 means no growth limit
+    gDvm.lowMemoryMode = false;
     gDvm.stackSize = kDefaultStackSize;
     gDvm.mainThreadStackSize = kDefaultStackSize;
     // When the heap is less than the maximum or growth limited size,
@@ -1275,6 +1284,7 @@ static void setCommandLineDefaults()
     gDvmJit.includeSelectedOffset = false;
     gDvmJit.methodTable = NULL;
     gDvmJit.classTable = NULL;
+    gDvmJit.codeCacheSize = DEFAULT_CODE_CACHE_SIZE;
 
     gDvm.constInit = false;
     gDvm.commonInit = false;
@@ -1700,7 +1710,7 @@ static bool initZygote()
     const char* target_base = getenv("EMULATED_STORAGE_TARGET");
     if (target_base != NULL) {
         if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
-                "uid=0,gid=1028,mode=0050") == -1) {
+                "uid=0,gid=1028,mode=0751") == -1) {
             SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
             return -1;
         }
@@ -1728,13 +1738,10 @@ static bool initZygote()
 
 #ifdef HAVE_ANDROID_OS
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
-        if (errno == EINVAL) {
-            SLOGW("PR_SET_NO_NEW_PRIVS failed. "
-                  "Is your kernel compiled correctly?: %s", strerror(errno));
-            // Don't return -1 here, since it's expected that not all
-            // kernels will support this option.
-        } else {
-            SLOGW("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
+        // Older kernels don't understand PR_SET_NO_NEW_PRIVS and return
+        // EINVAL. Don't die on such kernels.
+        if (errno != EINVAL) {
+            SLOGE("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
             return -1;
         }
     }

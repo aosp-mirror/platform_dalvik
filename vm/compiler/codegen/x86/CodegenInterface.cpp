@@ -67,7 +67,11 @@ bool dvmCompilerArchInit() {
     if (gDvmJit.threshold == 0) {
         gDvmJit.threshold = 255;
     }
-    gDvmJit.codeCacheSize = 512*1024;
+    if (gDvmJit.codeCacheSize == DEFAULT_CODE_CACHE_SIZE) {
+      gDvmJit.codeCacheSize = 512 * 1024;
+    } else if ((gDvmJit.codeCacheSize == 0) && (gDvm.executionMode == kExecutionModeJit)) {
+      gDvm.executionMode = kExecutionModeInterpFast;
+    }
     gDvmJit.optLevel = kJitOptLevelO1;
 
     //Disable Method-JIT

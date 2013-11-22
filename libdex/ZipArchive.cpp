@@ -28,6 +28,7 @@
 #include <errno.h>
 
 #include <JNIHelp.h>        // TEMP_FAILURE_RETRY may or may not be in unistd
+#include <utils/Compat.h>   // For off64_t and lseek64 on Mac
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -36,37 +37,47 @@
 /*
  * Zip file constants.
  */
-#define kEOCDSignature      0x06054b50
-#define kEOCDLen            22
-#define kEOCDNumEntries     8               // offset to #of entries in file
-#define kEOCDSize           12              // size of the central directory
-#define kEOCDFileOffset     16              // offset to central directory
+#define kEOCDSignature       0x06054b50
+#define kEOCDLen             22
+#define kEOCDDiskNumber      4               // number of the current disk
+#define kEOCDDiskNumberForCD 6               // disk number with the Central Directory
+#define kEOCDNumEntries      8               // offset to #of entries in file
+#define kEOCDTotalNumEntries 10              // offset to total #of entries in spanned archives
+#define kEOCDSize            12              // size of the central directory
+#define kEOCDFileOffset      16              // offset to central directory
+#define kEOCDCommentSize     20              // offset to the length of the file comment
 
-#define kMaxCommentLen      65535           // longest possible in ushort
-#define kMaxEOCDSearch      (kMaxCommentLen + kEOCDLen)
+#define kMaxCommentLen       65535           // longest possible in ushort
+#define kMaxEOCDSearch       (kMaxCommentLen + kEOCDLen)
 
-#define kLFHSignature       0x04034b50
-#define kLFHLen             30              // excluding variable-len fields
-#define kLFHNameLen         26              // offset to filename length
-#define kLFHExtraLen        28              // offset to extra length
+#define kLFHSignature        0x04034b50
+#define kLFHLen              30              // excluding variable-len fields
+#define kLFHGPBFlags          6              // offset to GPB flags
+#define kLFHNameLen          26              // offset to filename length
+#define kLFHExtraLen         28              // offset to extra length
 
-#define kCDESignature       0x02014b50
-#define kCDELen             46              // excluding variable-len fields
-#define kCDEMethod          10              // offset to compression method
-#define kCDEModWhen         12              // offset to modification timestamp
-#define kCDECRC             16              // offset to entry CRC
-#define kCDECompLen         20              // offset to compressed length
-#define kCDEUncompLen       24              // offset to uncompressed length
-#define kCDENameLen         28              // offset to filename length
-#define kCDEExtraLen        30              // offset to extra length
-#define kCDECommentLen      32              // offset to comment length
-#define kCDELocalOffset     42              // offset to local hdr
+#define kCDESignature        0x02014b50
+#define kCDELen              46              // excluding variable-len fields
+#define kCDEGPBFlags          8              // offset to GPB flags
+#define kCDEMethod           10              // offset to compression method
+#define kCDEModWhen          12              // offset to modification timestamp
+#define kCDECRC              16              // offset to entry CRC
+#define kCDECompLen          20              // offset to compressed length
+#define kCDEUncompLen        24              // offset to uncompressed length
+#define kCDENameLen          28              // offset to filename length
+#define kCDEExtraLen         30              // offset to extra length
+#define kCDECommentLen       32              // offset to comment length
+#define kCDELocalOffset      42              // offset to local hdr
+
+/* General Purpose Bit Flag */
+#define kGPFEncryptedFlag    (1 << 0)
+#define kGPFUnsupportedMask  (kGPFEncryptedFlag)
 
 /*
- * The values we return for ZipEntry use 0 as an invalid value, so we
+ * The values we return for ZipEntryRO use 0 as an invalid value, so we
  * want to adjust the hash table index by a fixed amount.  Using a large
- * value helps insure that people don't mix & match arguments, e.g. with
- * entry indices.
+ * value helps insure that people don't mix & match arguments, e.g. to
+ * findEntryByIndex().
  */
 #define kZipEntryAdj        10000
 
@@ -142,19 +153,53 @@ static u4 get4LE(unsigned char const* pSrc)
 }
 
 static int mapCentralDirectory0(int fd, const char* debugFileName,
-        ZipArchive* pArchive, off_t fileLength, size_t readAmount, u1* scanBuf)
+        ZipArchive* pArchive, off64_t fileLength, size_t readAmount, u1* scanBuf)
 {
-    off_t searchStart = fileLength - readAmount;
+    /*
+     * Make sure this is a Zip archive.
+     */
+    if (lseek64(pArchive->mFd, 0, SEEK_SET) != 0) {
+        ALOGW("seek to start failed: %s", strerror(errno));
+        return false;
+    }
 
-    if (lseek(fd, searchStart, SEEK_SET) != searchStart) {
-        ALOGW("Zip: seek %ld failed: %s", (long) searchStart, strerror(errno));
-        return -1;
+    ssize_t actual = TEMP_FAILURE_RETRY(read(pArchive->mFd, scanBuf, sizeof(int32_t)));
+    if (actual != (ssize_t) sizeof(int32_t)) {
+        ALOGI("couldn't read first signature from zip archive: %s", strerror(errno));
+        return false;
     }
-    ssize_t actual = TEMP_FAILURE_RETRY(read(fd, scanBuf, readAmount));
+
+    unsigned int header = get4LE(scanBuf);
+    if (header != kLFHSignature) {
+        ALOGV("Not a Zip archive (found 0x%08x)\n", header);
+        return false;
+    }
+
+    /*
+     * Perform the traditional EOCD snipe hunt.
+     *
+     * We're searching for the End of Central Directory magic number,
+     * which appears at the start of the EOCD block.  It's followed by
+     * 18 bytes of EOCD stuff and up to 64KB of archive comment.  We
+     * need to read the last part of the file into a buffer, dig through
+     * it to find the magic number, parse some values out, and use those
+     * to determine the extent of the CD.
+     *
+     * We start by pulling in the last part of the file.
+     */
+    off64_t searchStart = fileLength - readAmount;
+
+    if (lseek64(pArchive->mFd, searchStart, SEEK_SET) != searchStart) {
+        ALOGW("seek %ld failed: %s\n",  (long) searchStart, strerror(errno));
+        return false;
+    }
+    actual = TEMP_FAILURE_RETRY(read(pArchive->mFd, scanBuf, readAmount));
     if (actual != (ssize_t) readAmount) {
-        ALOGW("Zip: read %zd failed: %s", readAmount, strerror(errno));
-        return -1;
+        ALOGW("Zip: read %zd, expected %zd. Failed: %s\n",
+            actual, readAmount, strerror(errno));
+        return false;
     }
+
 
     /*
      * Scan backward for the EOCD magic.  In an archive without a trailing
@@ -174,7 +219,7 @@ static int mapCentralDirectory0(int fd, const char* debugFileName,
         return -1;
     }
 
-    off_t eocdOffset = searchStart + i;
+    off64_t eocdOffset = searchStart + i;
     const u1* eocdPtr = scanBuf + i;
 
     assert(eocdOffset < fileLength);
@@ -183,28 +228,43 @@ static int mapCentralDirectory0(int fd, const char* debugFileName,
      * Grab the CD offset and size, and the number of entries in the
      * archive.  Verify that they look reasonable.
      */
+    u4 diskNumber = get2LE(eocdPtr + kEOCDDiskNumber);
+    u4 diskWithCentralDir = get2LE(eocdPtr + kEOCDDiskNumberForCD);
     u4 numEntries = get2LE(eocdPtr + kEOCDNumEntries);
-    u4 dirSize = get4LE(eocdPtr + kEOCDSize);
-    u4 dirOffset = get4LE(eocdPtr + kEOCDFileOffset);
+    u4 totalNumEntries = get2LE(eocdPtr + kEOCDTotalNumEntries);
+    u4 centralDirSize = get4LE(eocdPtr + kEOCDSize);
+    u4 centralDirOffset = get4LE(eocdPtr + kEOCDFileOffset);
+    u4 commentSize = get2LE(eocdPtr + kEOCDCommentSize);
 
-    if ((long long) dirOffset + (long long) dirSize > (long long) eocdOffset) {
-        ALOGW("Zip: bad offsets (dir %ld, size %u, eocd %ld)",
-            (long) dirOffset, dirSize, (long) eocdOffset);
-        return -1;
+    // Verify that they look reasonable.
+    if ((long long) centralDirOffset + (long long) centralDirSize > (long long) eocdOffset) {
+        ALOGW("bad offsets (dir %ld, size %u, eocd %ld)\n",
+            (long) centralDirOffset, centralDirSize, (long) eocdOffset);
+        return false;
     }
     if (numEntries == 0) {
-        ALOGW("Zip: empty archive?");
-        return -1;
+        ALOGW("empty archive?\n");
+        return false;
+    } else if (numEntries != totalNumEntries || diskNumber != 0 || diskWithCentralDir != 0) {
+        ALOGW("spanned archives not supported");
+        return false;
     }
 
-    ALOGV("+++ numEntries=%d dirSize=%d dirOffset=%d",
-        numEntries, dirSize, dirOffset);
+    // Check to see if comment is a sane size
+    if (((size_t) commentSize > (fileLength - kEOCDLen))
+            || (eocdOffset > (fileLength - kEOCDLen) - commentSize)) {
+        ALOGW("comment size runs off end of file");
+        return false;
+    }
+
+    ALOGV("+++ numEntries=%d dirSize=%d dirOffset=%d\n",
+        numEntries, centralDirSize, centralDirOffset);
 
     /*
      * It all looks good.  Create a mapping for the CD, and set the fields
      * in pArchive.
      */
-    if (sysMapFileSegmentInShmem(fd, dirOffset, dirSize,
+    if (sysMapFileSegmentInShmem(fd, centralDirOffset, centralDirSize,
             &pArchive->mDirectoryMap) != 0)
     {
         ALOGW("Zip: cd map failed");
@@ -212,7 +272,7 @@ static int mapCentralDirectory0(int fd, const char* debugFileName,
     }
 
     pArchive->mNumEntries = numEntries;
-    pArchive->mDirectoryOffset = dirOffset;
+    pArchive->mDirectoryOffset = centralDirOffset;
 
     return 0;
 }
@@ -231,7 +291,7 @@ static int mapCentralDirectory(int fd, const char* debugFileName,
     /*
      * Get and test file length.
      */
-    off_t fileLength = lseek(fd, 0, SEEK_END);
+    off64_t fileLength = lseek64(fd, 0, SEEK_END);
     if (fileLength < kEOCDLen) {
         ALOGV("Zip: length %ld is too small to be zip", (long) fileLength);
         return -1;
@@ -309,16 +369,31 @@ static int parseZipArchive(ZipArchive* pArchive)
             goto bail;
         }
 
-        unsigned int fileNameLen, extraLen, commentLen, hash;
-        fileNameLen = get2LE(ptr + kCDENameLen);
+        unsigned int gpbf = get2LE(ptr + kCDEGPBFlags);
+        if ((gpbf & kGPFUnsupportedMask) != 0) {
+            ALOGW("Invalid General Purpose Bit Flag: %d", gpbf);
+            goto bail;
+        }
+
+        unsigned int nameLen, extraLen, commentLen, hash;
+        nameLen = get2LE(ptr + kCDENameLen);
         extraLen = get2LE(ptr + kCDEExtraLen);
         commentLen = get2LE(ptr + kCDECommentLen);
 
-        /* add the CDE filename to the hash table */
-        hash = computeHash((const char*)ptr + kCDELen, fileNameLen);
-        addToHash(pArchive, (const char*)ptr + kCDELen, fileNameLen, hash);
+        const char *name = (const char *) ptr + kCDELen;
 
-        ptr += kCDELen + fileNameLen + extraLen + commentLen;
+        /* Check name for NULL characters */
+        if (memchr(name, 0, nameLen) != NULL) {
+            ALOGW("Filename contains NUL byte");
+            goto bail;
+        }
+
+        /* add the CDE filename to the hash table */
+        hash = computeHash(name, nameLen);
+        addToHash(pArchive, name, nameLen, hash);
+
+        /* We don't care about the comment or extra data. */
+        ptr += kCDELen + nameLen + extraLen + commentLen;
         if ((size_t)(ptr - cdPtr) > cdLength) {
             ALOGW("Zip: bad CD advance (%d vs %zd) at entry %d",
                 (int) (ptr - cdPtr), cdLength, i);
@@ -553,7 +628,13 @@ int dexZipGetEntryInfo(const ZipArchive* pArchive, ZipEntry entry,
             return -1;
         }
 
-        off_t dataOffset = localHdrOffset + kLFHLen
+        u4 gpbf = get2LE(lfhBuf + kLFHGPBFlags);
+        if ((gpbf & kGPFUnsupportedMask) != 0) {
+            ALOGW("Invalid General Purpose Bit Flag: %d", gpbf);
+            return -1;
+        }
+
+        off64_t dataOffset = localHdrOffset + kLFHLen
             + get2LE(lfhBuf + kLFHNameLen) + get2LE(lfhBuf + kLFHExtraLen);
         if (dataOffset >= cdOffset) {
             ALOGW("Zip: bad data offset %ld in zip", (long) dataOffset);

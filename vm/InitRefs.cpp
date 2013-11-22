@@ -127,6 +127,7 @@ static bool initClassReferences() {
         { &gDvm.classJavaLangReflectMethod,             "Ljava/lang/reflect/Method;" },
         { &gDvm.classJavaLangReflectMethodArray,        "[Ljava/lang/reflect/Method;"},
         { &gDvm.classJavaLangReflectProxy,              "Ljava/lang/reflect/Proxy;" },
+        { &gDvm.classJavaLangSystem,                    "Ljava/lang/System;" },
         { &gDvm.classJavaNioDirectByteBuffer,           "Ljava/nio/DirectByteBuffer;" },
         { &gDvm.classOrgApacheHarmonyDalvikDdmcChunk,   "Lorg/apache/harmony/dalvik/ddmc/Chunk;" },
         { &gDvm.classOrgApacheHarmonyDalvikDdmcDdmServer,
@@ -357,6 +358,9 @@ static bool initDirectMethodReferences() {
           "getSystemClassLoader", "()Ljava/lang/ClassLoader;" },
         { &gDvm.methJavaLangReflectProxy_constructorPrototype, "Ljava/lang/reflect/Proxy;",
           "constructorPrototype", "(Ljava/lang/reflect/InvocationHandler;)V" },
+        { &gDvm.methJavaLangSystem_runFinalization, "Ljava/lang/System;",
+          "runFinalization", "()V" },
+
         { &gDvm.methodTraceGcMethod, "Ldalvik/system/VMDebug;", "startGC", "()V" },
         { &gDvm.methodTraceClassPrepMethod, "Ldalvik/system/VMDebug;", "startClassPrep", "()V" },
         { &gDvm.methOrgApacheHarmonyLangAnnotationAnnotationFactory_createAnnotation,

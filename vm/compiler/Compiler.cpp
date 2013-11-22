@@ -182,7 +182,7 @@ bool dvmCompilerSetupCodeCache(void)
                              MAP_PRIVATE , fd, 0);
     close(fd);
     if (gDvmJit.codeCache == MAP_FAILED) {
-        ALOGE("Failed to mmap the JIT code cache: %s", strerror(errno));
+        ALOGE("Failed to mmap the JIT code cache of size %d: %s", gDvmJit.codeCacheSize, strerror(errno));
         return false;
     }
 

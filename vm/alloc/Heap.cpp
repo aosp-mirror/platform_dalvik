@@ -29,8 +29,9 @@
 #include "alloc/MarkSweep.h"
 #include "os/os.h"
 
-#include <sys/time.h>
+#include <sys/mman.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <limits.h>
 #include <errno.h>
 
