@@ -1,3 +1,0 @@
-Test behavior when an instance field is overlapped (through separate
-compilation) by a static field.  The VM is expected to detect the conflict
-and throw an IncompatibleClassChangeError when the field is accessed.

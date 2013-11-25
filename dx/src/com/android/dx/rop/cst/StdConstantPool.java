@@ -88,6 +88,15 @@ public final class StdConstantPool
     }
 
     /**
+     * Get all entries in this constant pool.
+     *
+     * @return the returned array may contain null entries.
+     */
+    public Constant[] getEntries() {
+        return entries;
+    }
+
+    /**
      * Sets the entry at the given index.
      *
      * @param n {@code >= 1, < size();} which entry

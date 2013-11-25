@@ -360,6 +360,41 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
 }
 
 /*
+ * public static void arraycopyCharUnchecked(char[] src, int srcPos, char[] dest,
+ *      int destPos, int length)
+ *
+ * This is a char[] specialized, native, unchecked version of
+ * arraycopy(). This assumes error checking has been done.
+ */
+static void Dalvik_java_lang_System_arraycopyCharUnchecked(const u4* args, JValue* pResult)
+{
+    ArrayObject* srcArray = (ArrayObject*) args[0];
+    int srcPos = args[1];
+    ArrayObject* dstArray = (ArrayObject*) args[2];
+    int dstPos = args[3];
+    int length = args[4];
+    assert(srcArray != NULL);
+    assert(dstArray != NULL);
+    assert(dvmIsArray(srcArray));
+    assert(dvmIsArray(dstArray));
+    assert(srcPos >= 0 && dstPos >= 0 && length >= 0 &&
+           srcPos + length <= (int) srcArray->length &&
+           dstPos + length <= (int) dstArray->length);
+#ifndef NDEBUG
+    ClassObject* srcClass = srcArray->clazz;
+    ClassObject* dstClass = dstArray->clazz;
+    char srcType = srcClass->descriptor[1];
+    char dstType = dstClass->descriptor[1];
+    assert(srcType == 'C' && dstType == 'C');
+#endif
+    /* 2 bytes per element */
+    move16((u1*) dstArray->contents + dstPos * 2,
+           (const u1*) srcArray->contents + srcPos * 2,
+           length * 2);
+    RETURN_VOID();
+}
+
+/*
  * static int identityHashCode(Object x)
  *
  * Returns that hash code that the default hashCode()
@@ -376,6 +411,8 @@ static void Dalvik_java_lang_System_identityHashCode(const u4* args,
 const DalvikNativeMethod dvm_java_lang_System[] = {
     { "arraycopy",          "(Ljava/lang/Object;ILjava/lang/Object;II)V",
         Dalvik_java_lang_System_arraycopy },
+    { "arraycopyCharUnchecked", "([CI[CII)V",
+        Dalvik_java_lang_System_arraycopyCharUnchecked },
     { "identityHashCode",  "(Ljava/lang/Object;)I",
         Dalvik_java_lang_System_identityHashCode },
     { NULL, NULL, NULL },

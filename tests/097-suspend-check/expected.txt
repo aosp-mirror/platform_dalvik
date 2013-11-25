@@ -1,7 +1,0 @@
-Running (5 seconds) ...
-.
-.
-.
-.
-.
-Done.

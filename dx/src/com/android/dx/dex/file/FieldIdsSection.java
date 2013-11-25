@@ -20,6 +20,7 @@ import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
+
 import java.util.Collection;
 import java.util.TreeMap;
 
@@ -94,7 +95,7 @@ public final class FieldIdsSection extends MemberIdsSection {
      * @param field {@code non-null;} the reference to intern
      * @return {@code non-null;} the interned reference
      */
-    public FieldIdItem intern(CstFieldRef field) {
+    public synchronized FieldIdItem intern(CstFieldRef field) {
         if (field == null) {
             throw new NullPointerException("field == null");
         }
