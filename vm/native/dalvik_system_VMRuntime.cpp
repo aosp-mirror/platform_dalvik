@@ -239,6 +239,13 @@ static void Dalvik_dalvik_system_VMRuntime_registerNativeFree(const u4* args,
   RETURN_VOID();
 }
 
+static void Dalvik_dalvik_system_VMRuntime_updateProcessState(const u4* args,
+                                                              JValue* pResult)
+{
+  RETURN_VOID();
+}
+
+
 static DvmDex* getDvmDexFromClassPathEntry(ClassPathEntry* cpe) {
     if (cpe->kind == kCpeDex) {
         return ((RawDexFile*) cpe->ptr)->pDvmDex;
@@ -581,6 +588,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_registerNativeAllocation },
     { "registerNativeFree", "(I)V",
         Dalvik_dalvik_system_VMRuntime_registerNativeFree },
+    { "updateProcessState", "(I)V",
+        Dalvik_dalvik_system_VMRuntime_updateProcessState },
     { "preloadDexCaches", "()V",
         Dalvik_dalvik_system_VMRuntime_preloadDexCaches },
     { NULL, NULL, NULL },
