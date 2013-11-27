@@ -28,6 +28,7 @@ import com.android.dex.ProtoId;
 import com.android.dex.SizeOf;
 import com.android.dex.TableOfContents;
 import com.android.dex.TypeList;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1049,7 +1050,12 @@ public final class DexMerger {
                     + contents.methodIds.size * SizeOf.MEMBER_ID_ITEM
                     + contents.classDefs.size * SizeOf.CLASS_DEF_ITEM;
             mapList = SizeOf.UINT + (contents.sections.length * SizeOf.MAP_ITEM);
-            typeList += contents.typeLists.byteCount;
+            typeList += fourByteAlign(contents.typeLists.byteCount); // We count each dex's
+            // typelists section as realigned on 4 bytes, because each typelist of each dex's
+            // typelists section is aligned on 4 bytes. If we didn't, there is a case where each
+            // size of both dex's typelists section is a multiple of 2 but not a multiple of 4,
+            // and the sum of both sizes is a multiple of 4 but would not be sufficient to write
+            // each typelist aligned on 4 bytes.
             stringData += contents.stringDatas.byteCount;
             annotationsDirectory += contents.annotationsDirectories.byteCount;
             annotationsSet += contents.annotationSets.byteCount;
