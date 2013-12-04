@@ -18,6 +18,7 @@ package com.android.dx.dex.file;
 
 import com.android.dex.DexException;
 import com.android.dex.DexFormat;
+import com.android.dex.DexIndexOverflowException;
 import com.android.dx.command.dexer.Main;
 
 import java.util.Formatter;
@@ -47,7 +48,7 @@ public abstract class MemberIdsSection extends UniformItemSection {
         int idx = 0;
 
         if (items().size() > DexFormat.MAX_MEMBER_IDX + 1) {
-            throw new DexException(getTooManyMembersMessage());
+            throw new DexIndexOverflowException(getTooManyMembersMessage());
         }
 
         for (Object i : items()) {
