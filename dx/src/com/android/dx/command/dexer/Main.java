@@ -1477,8 +1477,9 @@ public class Main {
             }
 
             if (multiDex && numThreads != 1) {
-                System.out.println(NUM_THREADS_OPTION + "is ignored when used with "
+                System.out.println(NUM_THREADS_OPTION + " is ignored when used with "
                     + MULTI_DEX_OPTION);
+                numThreads = 1;
             }
 
             if (multiDex && incremental) {
