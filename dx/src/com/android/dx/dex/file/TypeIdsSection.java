@@ -128,7 +128,7 @@ public final class TypeIdsSection extends UniformItemSection {
      * @param type {@code non-null;} the type to intern
      * @return {@code non-null;} the interned reference
      */
-    public TypeIdItem intern(CstType type) {
+    public synchronized TypeIdItem intern(CstType type) {
         if (type == null) {
             throw new NullPointerException("type == null");
         }
