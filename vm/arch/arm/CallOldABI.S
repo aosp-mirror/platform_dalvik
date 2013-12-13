@@ -144,13 +144,8 @@ dvmPlatformInvoke:
     @ address supplied by the caller.  The value for "pc" is offset by 8
     @ due to instruction prefetching.
     @
-#ifdef __ARM_HAVE_PC_INTERWORK
     mov     lr, pc
     ldr     pc, [r4, #8]
-#else
-    ldr     ip, [r4, #8]
-    blx     ip
-#endif
 
     @ We're back, result is in r0 or (for long/double) r0-r1.
     @
@@ -160,14 +155,9 @@ dvmPlatformInvoke:
     ldr     ip, [r4, #12]
     stmia   ip, {r0-r1}
 
-#ifdef __ARM_HAVE_PC_INTERWORK
     @ Restore the registers we saved and return.  Note this remaps stuff,
     @ so that "sp" comes from "ip", "pc" comes from "lr", and the "pc"
     @ we pushed on evaporates when we restore "sp".
     ldmfd   r5, {r4, r5, r6, fp, sp, pc}
-#else
-    ldmfd   r5, {r4, r5, r6, fp, sp, lr}
-    bx      lr
-#endif
 
 #endif /*__ARM_EABI__*/
