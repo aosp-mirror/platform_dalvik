@@ -254,12 +254,7 @@ DBG strcs   ip, [r8]                    @ DEBUG DEBUG
     ldmia   r9, {r2-r3}                 @ r2/r3<- argv[0]/argv[1]
 
     ldr     ip, [fp, #8+FP_ADJ]         @ ip<- func
-#ifdef __ARM_HAVE_BLX
     blx     ip                          @ call func
-#else
-    mov     lr, pc                      @ call func the old-fashioned way
-    bx      ip
-#endif
 
     @ We're back, result is in r0 or (for long/double) r0-r1.
     @
