@@ -40,7 +40,7 @@ UnzipToFileResult dexUnzipToFile(const char* zipFileName,
 {
     UnzipToFileResult result = kUTFRSuccess;
     static const char* kFileToExtract = "classes.dex";
-    ZipArchiveHandle archive;
+    ZipArchive archive;
     ZipEntry entry;
     bool unlinkOnFailure = false;
     int fd = -1;
@@ -64,7 +64,8 @@ UnzipToFileResult dexUnzipToFile(const char* zipFileName,
 
     unlinkOnFailure = true;
 
-    if (dexZipFindEntry(archive, kFileToExtract, &entry) != 0) {
+    entry = dexZipFindEntry(&archive, kFileToExtract);
+    if (entry == NULL) {
         if (!quiet) {
             fprintf(stderr, "Unable to find '%s' in '%s'\n",
                 kFileToExtract, zipFileName);
@@ -73,7 +74,7 @@ UnzipToFileResult dexUnzipToFile(const char* zipFileName,
         goto bail;
     }
 
-    if (dexZipExtractEntryToFile(archive, &entry, fd) != 0) {
+    if (dexZipExtractEntryToFile(&archive, entry, fd) != 0) {
         fprintf(stderr, "Extract of '%s' from '%s' failed\n",
             kFileToExtract, zipFileName);
         result = kUTFRBadZip;

@@ -26,8 +26,7 @@ dexdump_c_includes := \
 dexdump_shared_libraries :=
 
 dexdump_static_libraries := \
-		libdex \
-		libutils
+		libdex
 
 ##
 ##
