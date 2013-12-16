@@ -24,8 +24,7 @@ dexdump_c_includes := \
 		dalvik
 
 dexdump_static_libraries := \
-		libdex \
-		libutils
+		libdex
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := dexlist
