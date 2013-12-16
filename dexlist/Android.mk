@@ -26,7 +26,8 @@ dexdump_c_includes := \
 dexdump_shared_libraries :=
 
 dexdump_static_libraries := \
-		libdex
+		libdex \
+		libutils
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := dexlist
