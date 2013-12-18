@@ -32,7 +32,6 @@ dex_src_files := \
 	OptInvocation.cpp \
 	sha1.cpp \
 	SysUtil.cpp \
-	ZipArchive.cpp
 
 dex_include_files := \
 	dalvik \
@@ -51,6 +50,8 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(dex_src_files)
 LOCAL_C_INCLUDES += $(dex_include_files)
 LOCAL_STATIC_LIBRARIES := liblog
+LOCAL_WHOLE_STATIC_LIBRARIES := libziparchive
+LOCAL_SHARED_LIBRARIES := libutils
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdex
 include $(BUILD_STATIC_LIBRARY)
@@ -66,7 +67,8 @@ endif # !SDK_ONLY
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(dex_src_files)
 LOCAL_C_INCLUDES += $(dex_include_files)
-LOCAL_STATIC_LIBRARIES := liblog
+LOCAL_STATIC_LIBRARIES := liblog libutils
+LOCAL_WHOLE_STATIC_LIBRARIES := libziparchive-host
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdex
 include $(BUILD_HOST_STATIC_LIBRARY)
