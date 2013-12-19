@@ -4053,85 +4053,73 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_INT: /* 0x93 */
-/* File: armv5te/OP_DIV_INT.S */
-/* File: armv5te/binop.S */
+/* File: armv7-a/OP_DIV_INT.S */
     /*
-     * Generic 32-bit binary operation.  Provide an "instr" line that
-     * specifies an instruction that performs "result = r0 op r1".
-     * This could be an ARM instruction or a function call.  (If the result
-     * comes back in a register other than r0, you can override "result".)
+     * Specialized 32-bit binary operation
      *
-     * If "chkzero" is set to 1, we perform a divide-by-zero check on
-     * vCC (r1).  Useful for integer division and modulus.  Note that we
-     * *don't* check for (INT_MIN / -1) here, because the ARM math lib
-     * handles it correctly.
+     * Performs "r0 = r0 div r1". The selection between sdiv or the gcc helper
+     * depends on the compile time value of __ARM_ARCH_EXT_IDIV__ (defined for
+     * ARMv7 CPUs that have hardware division support).
      *
-     * For: add-int, sub-int, mul-int, div-int, rem-int, and-int, or-int,
-     *      xor-int, shl-int, shr-int, ushr-int, add-float, sub-float,
-     *      mul-float, div-float, rem-float
+     * div-int
+     *
      */
-    /* binop vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
     and     r2, r0, #255                @ r2<- BB
     GET_VREG(r1, r3)                    @ r1<- vCC
     GET_VREG(r0, r2)                    @ r0<- vBB
-    .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
-    .endif
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-                               @ optional op; may set condition codes
-    bl     __aeabi_idiv                              @ r0<- op, r0-r3 changed
+#ifdef __ARM_ARCH_EXT_IDIV__
+    sdiv    r0, r0, r1                  @ r0<- op
+#else
+    bl    __aeabi_idiv                  @ r0<- op, r0-r3 changed
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SET_VREG(r0, r9)               @ vAA<- r0
+    SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 11-14 instructions */
-
 
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_INT: /* 0x94 */
-/* File: armv5te/OP_REM_INT.S */
-/* idivmod returns quotient in r0 and remainder in r1 */
-/* File: armv5te/binop.S */
+/* File: armv7-a/OP_REM_INT.S */
     /*
-     * Generic 32-bit binary operation.  Provide an "instr" line that
-     * specifies an instruction that performs "result = r0 op r1".
-     * This could be an ARM instruction or a function call.  (If the result
-     * comes back in a register other than r0, you can override "result".)
+     * Specialized 32-bit binary operation
      *
-     * If "chkzero" is set to 1, we perform a divide-by-zero check on
-     * vCC (r1).  Useful for integer division and modulus.  Note that we
-     * *don't* check for (INT_MIN / -1) here, because the ARM math lib
-     * handles it correctly.
+     * Performs "r1 = r0 rem r1". The selection between sdiv block or the gcc helper
+     * depends on the compile time value of __ARM_ARCH_EXT_IDIV__ (defined for
+     * ARMv7 CPUs that have hardware division support).
      *
-     * For: add-int, sub-int, mul-int, div-int, rem-int, and-int, or-int,
-     *      xor-int, shl-int, shr-int, ushr-int, add-float, sub-float,
-     *      mul-float, div-float, rem-float
+     * NOTE: idivmod returns quotient in r0 and remainder in r1
+     *
+     * rem-int
+     *
      */
-    /* binop vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
     and     r2, r0, #255                @ r2<- BB
     GET_VREG(r1, r3)                    @ r1<- vCC
     GET_VREG(r0, r2)                    @ r0<- vBB
-    .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
-    .endif
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-                               @ optional op; may set condition codes
-    bl      __aeabi_idivmod                              @ r1<- op, r0-r3 changed
+#ifdef __ARM_ARCH_EXT_IDIV__
+    sdiv    r2, r0, r1
+    mls  r1, r1, r2, r0                 @ r1<- op, r0-r2 changed
+#else
+    bl   __aeabi_idivmod                @ r1<- op, r0-r3 changed
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SET_VREG(r1, r9)               @ vAA<- r1
+    SET_VREG(r1, r9)                    @ vAA<- r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 11-14 instructions */
-
 
 /* ------------------------------ */
     .balign 64
@@ -5259,37 +5247,32 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_INT_2ADDR: /* 0xb3 */
-/* File: armv6t2/OP_DIV_INT_2ADDR.S */
-/* File: armv6t2/binop2addr.S */
+/* File: armv7-a/OP_DIV_INT_2ADDR.S */
     /*
-     * Generic 32-bit "/2addr" binary operation.  Provide an "instr" line
-     * that specifies an instruction that performs "result = r0 op r1".
-     * This could be an ARM instruction or a function call.  (If the result
-     * comes back in a register other than r0, you can override "result".)
+     * Specialized 32-bit binary operation
      *
-     * If "chkzero" is set to 1, we perform a divide-by-zero check on
-     * vCC (r1).  Useful for integer division and modulus.
+     * Performs "r0 = r0 div r1". The selection between sdiv or the gcc helper
+     * depends on the compile time value of __ARM_ARCH_EXT_IDIV__ (defined for
+     * ARMv7 CPUs that have hardware division support).
      *
-     * For: add-int/2addr, sub-int/2addr, mul-int/2addr, div-int/2addr,
-     *      rem-int/2addr, and-int/2addr, or-int/2addr, xor-int/2addr,
-     *      shl-int/2addr, shr-int/2addr, ushr-int/2addr, add-float/2addr,
-     *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
+     * div-int/2addr
+     *
      */
-    /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
     ubfx    r9, rINST, #8, #4           @ r9<- A
     GET_VREG(r1, r3)                    @ r1<- vB
     GET_VREG(r0, r9)                    @ r0<- vA
-    .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
-    .endif
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
 
-                               @ optional op; may set condition codes
-    bl     __aeabi_idiv                              @ r0<- op, r0-r3 changed
+#ifdef __ARM_ARCH_EXT_IDIV__
+    sdiv    r0, r0, r1                  @ r0<- op
+#else
+    bl       __aeabi_idiv               @ r0<- op, r0-r3 changed
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SET_VREG(r0, r9)               @ vAA<- r0
+    SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
 
@@ -5297,38 +5280,35 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_INT_2ADDR: /* 0xb4 */
-/* File: armv6t2/OP_REM_INT_2ADDR.S */
-/* idivmod returns quotient in r0 and remainder in r1 */
-/* File: armv6t2/binop2addr.S */
+/* File: armv7-a/OP_REM_INT_2ADDR.S */
     /*
-     * Generic 32-bit "/2addr" binary operation.  Provide an "instr" line
-     * that specifies an instruction that performs "result = r0 op r1".
-     * This could be an ARM instruction or a function call.  (If the result
-     * comes back in a register other than r0, you can override "result".)
+     * Specialized 32-bit binary operation
      *
-     * If "chkzero" is set to 1, we perform a divide-by-zero check on
-     * vCC (r1).  Useful for integer division and modulus.
+     * Performs "r1 = r0 rem r1". The selection between sdiv block or the gcc helper
+     * depends on the compile time value of __ARM_ARCH_EXT_IDIV__ (defined for
+     * ARMv7 CPUs that have hardware division support).
      *
-     * For: add-int/2addr, sub-int/2addr, mul-int/2addr, div-int/2addr,
-     *      rem-int/2addr, and-int/2addr, or-int/2addr, xor-int/2addr,
-     *      shl-int/2addr, shr-int/2addr, ushr-int/2addr, add-float/2addr,
-     *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
+     * NOTE: idivmod returns quotient in r0 and remainder in r1
+     *
+     * rem-int/2addr
+     *
      */
-    /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
     ubfx    r9, rINST, #8, #4           @ r9<- A
     GET_VREG(r1, r3)                    @ r1<- vB
     GET_VREG(r0, r9)                    @ r0<- vA
-    .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
-    .endif
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
 
-                               @ optional op; may set condition codes
-    bl      __aeabi_idivmod                              @ r1<- op, r0-r3 changed
+#ifdef __ARM_ARCH_EXT_IDIV__
+    sdiv    r2, r0, r1
+    mls     r1, r1, r2, r0              @ r1<- op
+#else
+    bl      __aeabi_idivmod             @ r1<- op, r0-r3 changed
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SET_VREG(r1, r9)               @ vAA<- r1
+    SET_VREG(r1, r9)                    @ vAA<- r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
 
@@ -6364,73 +6344,69 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_INT_LIT16: /* 0xd3 */
-/* File: armv6t2/OP_DIV_INT_LIT16.S */
-/* File: armv6t2/binopLit16.S */
+/* File: armv7-a/OP_DIV_INT_LIT16.S */
     /*
-     * Generic 32-bit "lit16" binary operation.  Provide an "instr" line
-     * that specifies an instruction that performs "result = r0 op r1".
-     * This could be an ARM instruction or a function call.  (If the result
-     * comes back in a register other than r0, you can override "result".)
+     * Specialized 32-bit binary operation
      *
-     * If "chkzero" is set to 1, we perform a divide-by-zero check on
-     * vCC (r1).  Useful for integer division and modulus.
+     * Performs "r0 = r0 div r1". The selection between sdiv or the gcc helper
+     * depends on the compile time value of __ARM_ARCH_EXT_IDIV__ (defined for
+     * ARMv7 CPUs that have hardware division support).
      *
-     * For: add-int/lit16, rsub-int, mul-int/lit16, div-int/lit16,
-     *      rem-int/lit16, and-int/lit16, or-int/lit16, xor-int/lit16
+     * div-int/lit16
+     *
      */
-    /* binop/lit16 vA, vB, #+CCCC */
     FETCH_S(r1, 1)                      @ r1<- ssssCCCC (sign-extended)
     mov     r2, rINST, lsr #12          @ r2<- B
     ubfx    r9, rINST, #8, #4           @ r9<- A
     GET_VREG(r0, r2)                    @ r0<- vB
-    .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
-    .endif
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
 
-    bl     __aeabi_idiv                              @ r0<- op, r0-r3 changed
+#ifdef __ARM_ARCH_EXT_IDIV__
+    sdiv    r0, r0, r1                  @ r0<- op
+#else
+    bl       __aeabi_idiv               @ r0<- op, r0-r3 changed
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SET_VREG(r0, r9)               @ vAA<- r0
+    SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_INT_LIT16: /* 0xd4 */
-/* File: armv6t2/OP_REM_INT_LIT16.S */
-/* idivmod returns quotient in r0 and remainder in r1 */
-/* File: armv6t2/binopLit16.S */
+/* File: armv7-a/OP_REM_INT_LIT16.S */
     /*
-     * Generic 32-bit "lit16" binary operation.  Provide an "instr" line
-     * that specifies an instruction that performs "result = r0 op r1".
-     * This could be an ARM instruction or a function call.  (If the result
-     * comes back in a register other than r0, you can override "result".)
+     * Specialized 32-bit binary operation
      *
-     * If "chkzero" is set to 1, we perform a divide-by-zero check on
-     * vCC (r1).  Useful for integer division and modulus.
+     * Performs "r1 = r0 rem r1". The selection between sdiv block or the gcc helper
+     * depends on the compile time value of __ARM_ARCH_EXT_IDIV__ (defined for
+     * ARMv7 CPUs that have hardware division support).
      *
-     * For: add-int/lit16, rsub-int, mul-int/lit16, div-int/lit16,
-     *      rem-int/lit16, and-int/lit16, or-int/lit16, xor-int/lit16
+     * NOTE: idivmod returns quotient in r0 and remainder in r1
+     *
+     * rem-int/lit16
+     *
      */
-    /* binop/lit16 vA, vB, #+CCCC */
     FETCH_S(r1, 1)                      @ r1<- ssssCCCC (sign-extended)
     mov     r2, rINST, lsr #12          @ r2<- B
     ubfx    r9, rINST, #8, #4           @ r9<- A
     GET_VREG(r0, r2)                    @ r0<- vB
-    .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
-    .endif
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
 
-    bl      __aeabi_idivmod                              @ r1<- op, r0-r3 changed
+#ifdef __ARM_ARCH_EXT_IDIV__
+    sdiv    r2, r0, r1
+    mls     r1, r1, r2, r0              @ r1<- op
+#else
+    bl     __aeabi_idivmod              @ r1<- op, r0-r3 changed
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SET_VREG(r1, r9)               @ vAA<- r1
+    SET_VREG(r1, r9)                    @ vAA<- r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 /* ------------------------------ */
     .balign 64
@@ -6655,79 +6631,71 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_INT_LIT8: /* 0xdb */
-/* File: armv5te/OP_DIV_INT_LIT8.S */
-/* File: armv5te/binopLit8.S */
+/* File: armv7-a/OP_DIV_INT_LIT8.S */
     /*
-     * Generic 32-bit "lit8" binary operation.  Provide an "instr" line
-     * that specifies an instruction that performs "result = r0 op r1".
-     * This could be an ARM instruction or a function call.  (If the result
-     * comes back in a register other than r0, you can override "result".)
+     * Specialized 32-bit binary operation
      *
-     * If "chkzero" is set to 1, we perform a divide-by-zero check on
-     * vCC (r1).  Useful for integer division and modulus.
+     * Performs "r0 = r0 div r1". The selection between sdiv or the gcc helper
+     * depends on the compile time value of __ARM_ARCH_EXT_IDIV__ (defined for
+     * ARMv7 CPUs that have hardware division support).
      *
-     * For: add-int/lit8, rsub-int/lit8, mul-int/lit8, div-int/lit8,
-     *      rem-int/lit8, and-int/lit8, or-int/lit8, xor-int/lit8,
-     *      shl-int/lit8, shr-int/lit8, ushr-int/lit8
+     * div-int/lit8
+     *
      */
-    /* binop/lit8 vAA, vBB, #+CC */
     FETCH_S(r3, 1)                      @ r3<- ssssCCBB (sign-extended for CC)
     mov     r9, rINST, lsr #8           @ r9<- AA
     and     r2, r3, #255                @ r2<- BB
     GET_VREG(r0, r2)                    @ r0<- vBB
     movs    r1, r3, asr #8              @ r1<- ssssssCC (sign extended)
-    .if 1
-    @cmp     r1, #0                      @ is second operand zero?
+    @cmp     r1, #0                     @ is second operand zero?
     beq     common_errDivideByZero
-    .endif
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
 
-                               @ optional op; may set condition codes
-    bl     __aeabi_idiv                              @ r0<- op, r0-r3 changed
+#ifdef __ARM_ARCH_EXT_IDIV__
+    sdiv    r0, r0, r1                  @ r0<- op
+#else
+    bl   __aeabi_idiv                   @ r0<- op, r0-r3 changed
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SET_VREG(r0, r9)               @ vAA<- r0
+    SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-12 instructions */
-
 
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_INT_LIT8: /* 0xdc */
-/* File: armv5te/OP_REM_INT_LIT8.S */
-/* idivmod returns quotient in r0 and remainder in r1 */
-/* File: armv5te/binopLit8.S */
+/* File: armv7-a/OP_REM_INT_LIT8.S */
     /*
-     * Generic 32-bit "lit8" binary operation.  Provide an "instr" line
-     * that specifies an instruction that performs "result = r0 op r1".
-     * This could be an ARM instruction or a function call.  (If the result
-     * comes back in a register other than r0, you can override "result".)
+     * Specialized 32-bit binary operation
      *
-     * If "chkzero" is set to 1, we perform a divide-by-zero check on
-     * vCC (r1).  Useful for integer division and modulus.
+     * Performs "r1 = r0 rem r1". The selection between sdiv block or the gcc helper
+     * depends on the compile time value of __ARM_ARCH_EXT_IDIV__ (defined for
+     * ARMv7 CPUs that have hardware division support).
      *
-     * For: add-int/lit8, rsub-int/lit8, mul-int/lit8, div-int/lit8,
-     *      rem-int/lit8, and-int/lit8, or-int/lit8, xor-int/lit8,
-     *      shl-int/lit8, shr-int/lit8, ushr-int/lit8
+     * NOTE: idivmod returns quotient in r0 and remainder in r1
+     *
+     * rem-int/lit8
+     *
      */
-    /* binop/lit8 vAA, vBB, #+CC */
     FETCH_S(r3, 1)                      @ r3<- ssssCCBB (sign-extended for CC)
     mov     r9, rINST, lsr #8           @ r9<- AA
     and     r2, r3, #255                @ r2<- BB
     GET_VREG(r0, r2)                    @ r0<- vBB
     movs    r1, r3, asr #8              @ r1<- ssssssCC (sign extended)
-    .if 1
-    @cmp     r1, #0                      @ is second operand zero?
+    @cmp     r1, #0                     @ is second operand zero?
     beq     common_errDivideByZero
-    .endif
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
 
-                               @ optional op; may set condition codes
-    bl      __aeabi_idivmod                              @ r1<- op, r0-r3 changed
+#ifdef __ARM_ARCH_EXT_IDIV__
+    sdiv    r2, r0, r1
+    mls     r1, r1, r2, r0              @ r1<- op
+#else
+    bl       __aeabi_idivmod            @ r1<- op, r0-r3 changed
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SET_VREG(r1, r9)               @ vAA<- r1
+    SET_VREG(r1, r9)                    @ vAA<- r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-12 instructions */
-
 
 /* ------------------------------ */
     .balign 64

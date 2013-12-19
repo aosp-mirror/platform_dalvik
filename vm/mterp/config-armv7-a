@@ -61,8 +61,10 @@ op-start armv5te
     op OP_CONST_4 armv6t2
     op OP_DIV_DOUBLE_2ADDR armv6t2
     op OP_DIV_FLOAT_2ADDR armv6t2
-    op OP_DIV_INT_2ADDR armv6t2
-    op OP_DIV_INT_LIT16 armv6t2
+    op OP_DIV_INT armv7-a
+    op OP_DIV_INT_2ADDR armv7-a
+    op OP_DIV_INT_LIT16 armv7-a
+    op OP_DIV_INT_LIT8 armv7-a
     op OP_DIV_LONG_2ADDR armv6t2
     op OP_DOUBLE_TO_FLOAT armv6t2
     op OP_DOUBLE_TO_INT armv6t2
@@ -110,8 +112,10 @@ op-start armv5te
     op OP_OR_LONG_2ADDR armv6t2
     op OP_REM_DOUBLE_2ADDR armv6t2
     op OP_REM_FLOAT_2ADDR armv6t2
-    op OP_REM_INT_2ADDR armv6t2
-    op OP_REM_INT_LIT16 armv6t2
+    op OP_REM_INT armv7-a
+    op OP_REM_INT_2ADDR armv7-a
+    op OP_REM_INT_LIT16 armv7-a
+    op OP_REM_INT_LIT8 armv7-a
     op OP_REM_LONG_2ADDR armv6t2
     op OP_RSUB_INT armv6t2
     op OP_SHL_INT_2ADDR armv6t2
