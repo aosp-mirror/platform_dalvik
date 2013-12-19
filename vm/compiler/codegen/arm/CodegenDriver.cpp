@@ -783,6 +783,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
     int (*callTgt)(int, int);
     RegLocation rlResult;
     bool shiftOp = false;
+    bool remOp = false;
 
     switch (mir->dalvikInsn.opcode) {
         case OP_NEG_INT:
@@ -807,18 +808,27 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
             break;
         case OP_DIV_INT:
         case OP_DIV_INT_2ADDR:
+#ifdef __ARM_ARCH_EXT_IDIV__
+            op = kOpDiv;
+#else
             callOut = true;
-            checkZero = true;
             callTgt = __aeabi_idiv;
             retReg = r0;
+#endif
+            checkZero = true;
             break;
         /* NOTE: returns in r1 */
         case OP_REM_INT:
         case OP_REM_INT_2ADDR:
+#ifdef __ARM_ARCH_EXT_IDIV__
+            op = kOpRem;
+            remOp = true;
+#else
             callOut = true;
-            checkZero = true;
             callTgt = __aeabi_idivmod;
             retReg = r1;
+#endif
+            checkZero = true;
             break;
         case OP_AND_INT:
         case OP_AND_INT_2ADDR:
@@ -860,12 +870,25 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
                      rlSrc1.lowReg);
         } else {
             rlSrc2 = loadValue(cUnit, rlSrc2, kCoreReg);
+#ifdef __ARM_ARCH_EXT_IDIV__
+            if (checkZero) {
+                genNullCheck(cUnit, rlSrc2.sRegLow, r1, mir->offset, NULL);
+            }
+#endif
             if (shiftOp) {
                 int tReg = dvmCompilerAllocTemp(cUnit);
                 opRegRegImm(cUnit, kOpAnd, tReg, rlSrc2.lowReg, 31);
                 rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
                 opRegRegReg(cUnit, op, rlResult.lowReg,
                             rlSrc1.lowReg, tReg);
+                dvmCompilerFreeTemp(cUnit, tReg);
+            } else if(remOp) {
+                int tReg = dvmCompilerAllocTemp(cUnit);
+                opRegRegReg(cUnit, kOpDiv, tReg,
+                            rlSrc1.lowReg, rlSrc2.lowReg);
+                rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
+                opRegRegRegReg(cUnit, op, rlResult.lowReg,
+                               rlSrc2.lowReg, tReg, rlSrc1.lowReg);
                 dvmCompilerFreeTemp(cUnit, tReg);
             } else {
                 rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
@@ -2273,6 +2296,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
     OpKind op = (OpKind)0;      /* Make gcc happy */
     int shiftOp = false;
     bool isDiv = false;
+    bool isRem = false;
 
     switch (dalvikOpcode) {
         case OP_RSUB_INT_LIT8:
@@ -2342,6 +2366,17 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             if (handleEasyDivide(cUnit, dalvikOpcode, rlSrc, rlDest, lit)) {
                 return false;
             }
+#ifdef __ARM_ARCH_EXT_IDIV__
+            if ((dalvikOpcode == OP_DIV_INT_LIT8) ||
+                (dalvikOpcode == OP_DIV_INT_LIT16)) {
+                op = kOpDiv;
+            }
+            else {
+                isRem = true;
+                op = kOpRem;
+            }
+            break;
+#endif
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r0);
             dvmCompilerClobber(cUnit, r0);
@@ -2371,6 +2406,15 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
     // Avoid shifts by literal 0 - no support in Thumb.  Change to copy
     if (shiftOp && (lit == 0)) {
         genRegCopy(cUnit, rlResult.lowReg, rlSrc.lowReg);
+    } else if(isRem) {
+        int tReg1 = dvmCompilerAllocTemp(cUnit);
+        int tReg2 = dvmCompilerAllocTemp(cUnit);
+
+        loadConstant(cUnit, tReg2, lit);
+        opRegRegReg(cUnit, kOpDiv, tReg1, rlSrc.lowReg, tReg2);
+        opRegRegRegReg(cUnit, op, rlResult.lowReg, tReg2, tReg1, rlSrc.lowReg);
+        dvmCompilerFreeTemp(cUnit, tReg1);
+        dvmCompilerFreeTemp(cUnit, tReg2);
     } else {
         opRegRegImm(cUnit, op, rlResult.lowReg, rlSrc.lowReg, lit);
     }
