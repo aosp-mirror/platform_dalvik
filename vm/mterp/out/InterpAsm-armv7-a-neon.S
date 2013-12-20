@@ -3667,29 +3667,33 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_LONG_TO_DOUBLE: /* 0x86 */
-/* File: armv6t2/OP_LONG_TO_DOUBLE.S */
-/* File: armv6t2/unopWide.S */
+/* File: arm-vfp/OP_LONG_TO_DOUBLE.S */
     /*
-     * Generic 64-bit unary operation.  Provide an "instr" line that
-     * specifies an instruction that performs "result = op r0/r1".
-     * This could be an ARM instruction or a function call.
+     * Specialised 64-bit floating point operation.
      *
-     * For: neg-long, not-long, neg-double, long-to-double, double-to-long
+     * Note: The result will be returned in d2.
+     *
+     * For: long-to-double
      */
-    /* unop vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
     ubfx    r9, rINST, #8, #4           @ r9<- A
     add     r3, rFP, r3, lsl #2         @ r3<- &fp[B]
     add     r9, rFP, r9, lsl #2         @ r9<- &fp[A]
-    ldmia   r3, {r0-r1}                 @ r0/r1<- vAA
+    vldr    d0, [r3]                    @ d0<- vAA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
-                               @ optional op; may set condition codes
-    bl      __aeabi_l2d                              @ r0/r1<- op, r2-r3 changed
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    stmia   r9, {r0-r1}                 @ vAA<- r0/r1
-    GOTO_OPCODE(ip)                     @ jump to next instruction
-    /* 10-11 instructions */
 
+    vcvt.f64.s32    d1, s1              @ d1<- (double)(vAAh)
+    vcvt.f64.u32    d2, s0              @ d2<- (double)(vAAl)
+    vldr            d3, constvalOP_LONG_TO_DOUBLE
+    vmla.f64        d2, d1, d3          @ d2<- vAAh*2^32 + vAAl
+
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    vstr.64 d2, [r9]                    @ vAA<- d2
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+    /* literal pool helper */
+constvalOP_LONG_TO_DOUBLE:
+    .8byte          0x41f0000000000000
 
 /* ------------------------------ */
     .balign 64

@@ -92,7 +92,7 @@ op-start armv5te
     op OP_IPUT_QUICK armv6t2
     op OP_IPUT_WIDE armv6t2
     op OP_IPUT_WIDE_QUICK armv6t2
-    op OP_LONG_TO_DOUBLE armv6t2
+    op OP_LONG_TO_DOUBLE arm-vfp
     op OP_LONG_TO_FLOAT armv6t2
     op OP_MOVE armv6t2
     op OP_MOVE_WIDE armv6t2
