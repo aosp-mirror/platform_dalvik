@@ -355,3 +355,12 @@ ifeq ($(MTERP_ARCH_KNOWN),false)
   LOCAL_CFLAGS += -DdvmAsmInstructionStart=0 -DdvmAsmInstructionEnd=0 \
 	-DdvmAsmSisterStart=0 -DdvmAsmSisterEnd=0 -DDVM_NO_ASM_INTERP=1
 endif
+
+# Needed because getLongFromArray etc. are defined in
+# vm/mterp/c/header.cpp, but only used if some asm
+# implementations aren't available.
+# To fix this without generating unused functions,
+# gen-mterp.py would need to be a lot more intelligent
+# (picking just the parts of header.cpp that are
+# actually used in C code). Doesn't seem to be worth it.
+LOCAL_CFLAGS += -Wno-error=unused-function
