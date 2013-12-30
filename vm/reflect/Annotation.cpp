@@ -1288,7 +1288,7 @@ bool dvmIsClassAnnotationPresent(const ClassObject* clazz,
 {
     const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForClass(clazz);
     if (pAnnoSet == NULL) {
-        return NULL;
+        return false;
     }
     const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
             clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
@@ -1743,7 +1743,7 @@ bool dvmIsMethodAnnotationPresent(const ClassObject* clazz,
 {
     const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForMethod(method);
     if (pAnnoSet == NULL) {
-        return NULL;
+        return false;
     }
     const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
             clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
@@ -2053,7 +2053,7 @@ bool dvmIsFieldAnnotationPresent(const ClassObject* clazz,
 {
     const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForField(field);
     if (pAnnoSet == NULL) {
-        return NULL;
+        return false;
     }
     const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
             clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
