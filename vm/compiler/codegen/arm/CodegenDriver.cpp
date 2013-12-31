@@ -780,7 +780,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
     bool checkZero = false;
     bool unary = false;
     int retReg = r0;
-    int (*callTgt)(int, int);
+    int (*callTgt)(int, int) = NULL;
     RegLocation rlResult;
     bool shiftOp = false;
     bool remOp = false;
