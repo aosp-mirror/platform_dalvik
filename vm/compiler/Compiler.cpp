@@ -129,7 +129,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     newOrder->pc = pc;
     newOrder->kind = kind;
     newOrder->info = info;
-    newOrder->result.methodCompilationAborted = NULL;
+    newOrder->result.methodCompilationAborted = false;
     newOrder->result.codeAddress = NULL;
     newOrder->result.discardResult =
         (kind == kWorkOrderTraceDebug) ? true : false;
