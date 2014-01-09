@@ -402,7 +402,7 @@ static bool remapNewHeap(HeapSource* hs, Heap* newHeap)
     ALOGE("Unable to create an ashmem region for the new heap");
     return false;
   }
-  void* addr = mmap(newHeapBase, rem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+  void* addr = mmap(newHeapBase, rem_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FIXED, fd, 0);
   int ret = close(fd);
   if (addr == MAP_FAILED) {
     ALOGE("Unable to map an ashmem region for the new heap");
