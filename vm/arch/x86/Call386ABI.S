@@ -87,13 +87,17 @@ Float and double returned on top of FP stack.
  *
  */
 dvmPlatformInvoke:
-/* Establish the frame pointer, spill & align to 16b */
+/* Establish the frame pointer and spill. */
     pushl    %ebp
     movl     %esp,%ebp
     pushl    %edi
     pushl    %esi
     pushl    %ebx
-    subl     $12,%esp
+
+/* Align stack to 16b. */
+    subl     $15,%esp
+    andl     $0xfffffff0,%esp
+
 /* For 386 ABI, argInfo hints should always be valid.  Abort if not. */
     movl     16(%ebp),%ebx
     testl    %ebx,%ebx
