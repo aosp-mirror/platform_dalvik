@@ -67,6 +67,15 @@ public class ClassReferenceListBuilder {
     private Path path;
     private Set<String> toKeep = new HashSet<String>();
 
+    /**
+     *
+     * @param inputPath list of path to input jars or folders. Path elements must be separated by
+     * the system path separator: ':' on Unix, ';' on Windows.
+     */
+    public ClassReferenceListBuilder(String inputPath) throws IOException {
+        this(new Path(inputPath));
+    }
+
     private ClassReferenceListBuilder(Path path) {
         this.path = path;
     }
@@ -118,32 +127,11 @@ public class ClassReferenceListBuilder {
         }
     }
 
-    private static void printUsage() {
-        System.err.print(USAGE_MESSAGE);
-    }
-
-    private static ClassPathElement getClassPathElement(File file)
-            throws ZipException, IOException {
-        if (file.isDirectory()) {
-            return new FolderPathElement(file);
-        } else if (file.isFile()) {
-            return new ArchivePathElement(new ZipFile(file));
-        } else if (file.exists()) {
-            throw new IOException(file.getAbsolutePath() +
-                    " is not a directory neither a zip file");
-        } else {
-            throw new FileNotFoundException(file.getAbsolutePath());
-        }
-    }
-
-    private static void printList(Set<String> toKeep) {
-        for (String classDescriptor : toKeep) {
-            System.out.print(classDescriptor);
-            System.out.println(CLASS_EXTENSION);
-        }
-    }
-
-    private void addRoots(ZipFile jarOfRoots) throws IOException {
+    /**
+     * @param jarOfRoots Archive containing the class files resulting of the tracing, typically
+     * this is the result of running ProGuard.
+     */
+    public void addRoots(ZipFile jarOfRoots) throws IOException {
 
         // keep roots
         for (Enumeration<? extends ZipEntry> entries = jarOfRoots.entries();
@@ -174,8 +162,46 @@ public class ClassReferenceListBuilder {
         }
     }
 
+    /**
+     * Returns a suitable content for the argument file given to dx with --main-dex-list.
+     */
+    public String getMainDexList() {
+        String lineSeparator = System.getProperty("line.separator", "\n");
+        StringBuilder sb = new StringBuilder();
+        for (String classDescriptor : toKeep) {
+            sb.append(classDescriptor);
+            sb.append(CLASS_EXTENSION);
+            sb.append(lineSeparator);
+        }
+        return lineSeparator.toString();
+    }
+
+    private static void printUsage() {
+        System.err.print(USAGE_MESSAGE);
+    }
+
+    private static ClassPathElement getClassPathElement(File file)
+            throws ZipException, IOException {
+        if (file.isDirectory()) {
+            return new FolderPathElement(file);
+        } else if (file.isFile()) {
+            return new ArchivePathElement(new ZipFile(file));
+        } else if (file.exists()) {
+            throw new IOException(file.getAbsolutePath() +
+                    " is not a directory neither a zip file");
+        } else {
+            throw new FileNotFoundException(file.getAbsolutePath());
+        }
+    }
+
+    private static void printList(Set<String> toKeep) {
+        for (String classDescriptor : toKeep) {
+            System.out.print(classDescriptor);
+            System.out.println(CLASS_EXTENSION);
+        }
+    }
+
     private void addDependencies(ConstantPool pool) {
-        int entryCount = pool.size();
         for (Constant constant : pool.getEntries()) {
             if (constant instanceof CstType) {
                 Type type = ((CstType) constant).getClassType();
@@ -225,7 +251,7 @@ public class ClassReferenceListBuilder {
         private ByteArrayOutputStream baos = new ByteArrayOutputStream(40 * 1024);
         private byte[] readBuffer = new byte[20 * 1024];
 
-        public Path(String definition) throws IOException {
+        private Path(String definition) throws IOException {
             this.definition = definition;
             for (String filePath : definition.split(Pattern.quote(File.pathSeparator))) {
                 try {
