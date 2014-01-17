@@ -1225,7 +1225,7 @@ void dvmThrowArrayStoreExceptionNotArray(ClassObject* actual, const char* label)
 void dvmThrowArrayStoreExceptionIncompatibleArrays(ClassObject* source, ClassObject* destination)
 {
     throwTypeError(gDvm.exArrayStoreException,
-        "%s and %s are incompatible array types",
+        "Incompatible types: src=%s, dst=%s",
         source, destination);
 }
 
