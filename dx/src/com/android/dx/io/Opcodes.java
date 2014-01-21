@@ -327,23 +327,6 @@ public final class Opcodes {
     }
 
     /**
-     * Gets whether ({@code true}) or not ({@code false}) the given
-     * opcode value is an "extended" opcode (not counting the nop-like
-     * payload opcodes). Extended opcodes require a full 16-bit code
-     * unit to represent, without leaving space for an argument byte.
-     * 
-     * @param opcode the opcode value
-     * @return {@code true} iff the opcode is an "extended" opcode
-     */
-    public static boolean isExtended(int opcode) {
-        /*
-         * Note: Extended opcodes all have the form ((byteValue << 8)
-         * | 0xff).
-         */
-        return (opcode >= 0x00ff);
-    }
-
-    /**
      * Gets the opcode out of an opcode unit, the latter of which may also
      * include one or more argument values.
      *

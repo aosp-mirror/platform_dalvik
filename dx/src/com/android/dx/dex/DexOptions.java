@@ -34,12 +34,4 @@ public class DexOptions {
     public String getMagic() {
         return DexFormat.apiToMagic(targetApiLevel);
     }
-
-    /**
-     * Returns whether extended opcodes are allowed. This became
-     * allowed as of Ice Cream Sandwich.
-     */
-    public boolean canUseExtendedOpcodes() {
-        return targetApiLevel >= DexFormat.API_CURRENT;
-    }
 }
