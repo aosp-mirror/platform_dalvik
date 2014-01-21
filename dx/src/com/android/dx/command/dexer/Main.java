@@ -272,7 +272,7 @@ public class Main {
         // this array is null if no classes were defined
         byte[] outArray = null;
 
-        if (!outputDex.isEmpty()) {
+        if (!outputDex.isEmpty() || (args.humanOutName != null)) {
             outArray = writeDex();
 
             if (outArray == null) {
