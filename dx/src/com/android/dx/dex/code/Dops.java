@@ -1206,29 +1206,15 @@ public final class Dops {
      * the last in its chain
      */
     public static Dop getNextOrNull(Dop opcode, DexOptions options) {
-        boolean suppressExtendedOpcodes = !options.canUseExtendedOpcodes();
+      int nextOpcode = opcode.getNextOpcode();
 
-        for (;;) {
-            int nextOpcode = opcode.getNextOpcode();
+      if (nextOpcode == Opcodes.NO_NEXT) {
+        return null;
+      }
 
-            if (nextOpcode == Opcodes.NO_NEXT) {
-                return null;
-            }
+      opcode = get(nextOpcode);
 
-            opcode = get(nextOpcode);
-
-            if (suppressExtendedOpcodes && Opcodes.isExtended(nextOpcode)) {
-                /*
-                 * Continuing rather than just returning null here
-                 * protects against the possibility that an
-                 * instruction fitting chain might list non-extended
-                 * opcodes after extended ones.
-                 */
-                continue;
-            }
-
-            return opcode;
-        }
+      return opcode;
     }
 
     /**

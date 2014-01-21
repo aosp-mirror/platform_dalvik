@@ -1192,9 +1192,6 @@ public class Main {
          */
         public boolean keepClassesInJar = false;
 
-        /** what API level to target */
-        public int targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
-
         /** how much source position info to preserve */
         public int positionInfo = PositionList.LINES;
 
@@ -1517,7 +1514,6 @@ public class Main {
             cfOptions.warn = DxConsole.err;
 
             dexOptions = new DexOptions();
-            dexOptions.targetApiLevel = targetApiLevel;
             dexOptions.forceJumbo = forceJumbo;
         }
     }
