@@ -163,16 +163,15 @@ public class ClassReferenceListBuilder {
     }
 
     /**
-     * Returns a suitable content for the argument file given to dx with --main-dex-list.
+     * Returns a list of classes to keep. This can be passed to dx as a file with --main-dex-list.
      */
-    public String getMainDexList() {
-        StringBuilder sb = new StringBuilder();
+    public Set<String> getMainDexList() {
+        Set<String> resultSet = new HashSet<String>(toKeep.size());
         for (String classDescriptor : toKeep) {
-            sb.append(classDescriptor);
-            sb.append(CLASS_EXTENSION);
-            sb.append(EOL);
+            resultSet.add(classDescriptor + CLASS_EXTENSION);
         }
-        return sb.toString();
+
+        return resultSet;
     }
 
     private static void printUsage() {
