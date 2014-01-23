@@ -17,5 +17,3 @@
 }
 -keep public class * extends android.app.backup.BackupAgent {
 }
--keep class android.support.multidex.installer.** {
-}
