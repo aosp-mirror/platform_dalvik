@@ -53,7 +53,7 @@ endif
 # Define WITH_ADDRESS_SANITIZER to build an ASan-instrumented version of the
 # library in /system/lib/asan/libdvm.so.
 ifneq ($(strip $(WITH_ADDRESS_SANITIZER)),)
-    LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/asan
+    LOCAL_MODULE_RELATIVE_PATH := asan
     LOCAL_ADDRESS_SANITIZER := true
     LOCAL_CFLAGS := $(filter-out $(CLANG_CONFIG_UNKNOWN_CFLAGS),$(LOCAL_CFLAGS))
 endif
