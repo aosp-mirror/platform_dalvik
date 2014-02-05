@@ -145,8 +145,6 @@ static void addToDexFileTable(DexOrJar* pDexOrJar) {
  * To optimize this away we could search for existing entries in the hash
  * table and refCount them.  Requires atomic ops or adding "synchronized"
  * to the non-native code that calls here.
- *
- * TODO: should be using "long" for a pointer.
  */
 static void Dalvik_dalvik_system_DexFile_openDexFileNative(const u4* args,
     JValue* pResult)
@@ -233,7 +231,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFileNative(const u4* args,
     }
 
     free(outputName);
-    RETURN_PTR(pDexOrJar);
+    RETURN_LONG((uintptr_t) pDexOrJar);
 }
 
 /*
@@ -286,7 +284,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
     pDexOrJar->fileName = strdup("<memory>"); // Needs to be free()able.
     addToDexFileTable(pDexOrJar);
 
-    RETURN_PTR(pDexOrJar);
+    RETURN_LONG((uintptr_t) pDexOrJar);
 }
 
 /*
@@ -297,7 +295,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
 static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
     JValue* pResult)
 {
-    int cookie = args[0];
+    int cookie = dvmGetArgLong(args, 0);
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
 
     if (pDexOrJar == NULL)
@@ -351,7 +349,7 @@ static void Dalvik_dalvik_system_DexFile_defineClassNative(const u4* args,
 {
     StringObject* nameObj = (StringObject*) args[0];
     Object* loader = (Object*) args[1];
-    int cookie = args[2];
+    int cookie = dvmGetArgLong(args, 2);
     ClassObject* clazz = NULL;
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
     DvmDex* pDvmDex;
@@ -407,7 +405,7 @@ static void Dalvik_dalvik_system_DexFile_defineClassNative(const u4* args,
 static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
     JValue* pResult)
 {
-    int cookie = args[0];
+    int cookie = dvmGetArgLong(args, 0);
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
     Thread* self = dvmThreadSelf();
 
@@ -517,15 +515,15 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
 }
 
 const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
-    { "openDexFileNative",  "(Ljava/lang/String;Ljava/lang/String;I)I",
+    { "openDexFileNative",  "(Ljava/lang/String;Ljava/lang/String;I)J",
         Dalvik_dalvik_system_DexFile_openDexFileNative },
-    { "openDexFile",        "([B)I",
+    { "openDexFile",        "([B)J",
         Dalvik_dalvik_system_DexFile_openDexFile_bytearray },
-    { "closeDexFile",       "(I)V",
+    { "closeDexFile",       "(J)V",
         Dalvik_dalvik_system_DexFile_closeDexFile },
-    { "defineClassNative",  "(Ljava/lang/String;Ljava/lang/ClassLoader;I)Ljava/lang/Class;",
+    { "defineClassNative",  "(Ljava/lang/String;Ljava/lang/ClassLoader;J)Ljava/lang/Class;",
         Dalvik_dalvik_system_DexFile_defineClassNative },
-    { "getClassNameList",   "(I)[Ljava/lang/String;",
+    { "getClassNameList",   "(J)[Ljava/lang/String;",
         Dalvik_dalvik_system_DexFile_getClassNameList },
     { "isDexOptNeeded",     "(Ljava/lang/String;)Z",
         Dalvik_dalvik_system_DexFile_isDexOptNeeded },
