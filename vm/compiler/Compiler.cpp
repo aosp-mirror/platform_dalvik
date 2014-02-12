@@ -212,7 +212,7 @@ bool dvmCompilerSetupCodeCache(void)
 
     /* Only flush the part in the code cache that is being used now */
     dvmCompilerCacheFlush((intptr_t) gDvmJit.codeCache,
-                          (intptr_t) gDvmJit.codeCache + templateSize, 0);
+                          (intptr_t) gDvmJit.codeCache + templateSize);
 #else
     gDvmJit.codeCacheByteUsed = 0;
     stream = (char*)gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
@@ -332,8 +332,7 @@ static void resetCodeCache(void)
                           gDvmJit.codeCacheByteUsed - gDvmJit.templateSize);
 
     dvmCompilerCacheFlush((intptr_t) gDvmJit.codeCache,
-                          (intptr_t) gDvmJit.codeCache +
-                          gDvmJit.codeCacheByteUsed, 0);
+                          (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed);
 
     PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
 
