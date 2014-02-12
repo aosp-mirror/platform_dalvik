@@ -407,3 +407,7 @@ void dvmGetBlockName(BasicBlock *bb, char *name)
             break;
     }
 }
+
+void dvmCompilerCacheFlush(uintptr_t start, uintptr_t end) {
+    __builtin___clear_cache(reinterpret_cast<void*>(start), reinterpret_cast<void*>(end));
+}
