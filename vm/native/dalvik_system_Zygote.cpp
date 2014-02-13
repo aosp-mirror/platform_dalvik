@@ -753,27 +753,12 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer, bool l
  *     int[] gids, int debugFlags, int[][] rlimits, int mountExternal,
  *     String seInfo, String niceName, int[] fdsToClose);
  */
-static void Dalvik_dalvik_system_Zygote_forkAndSpecialize_new(const u4* args,
-    JValue* pResult)
-{
-    pid_t pid;
-
-    pid = forkAndSpecializeCommon(args, false, false);
-
-    RETURN_INT(pid);
-}
-
-/*
- * native public static int nativeForkAndSpecialize(int uid, int gid,
- *     int[] gids, int debugFlags, int[][] rlimits, int mountExternal,
- *     String seInfo, String niceName);
- */
 static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
     JValue* pResult)
 {
     pid_t pid;
 
-    pid = forkAndSpecializeCommon(args, false, true);
+    pid = forkAndSpecializeCommon(args, false, false);
 
     RETURN_INT(pid);
 }
@@ -811,8 +796,6 @@ const DalvikNativeMethod dvm_dalvik_system_Zygote[] = {
     { "nativeFork", "()I",
       Dalvik_dalvik_system_Zygote_fork },
     { "nativeForkAndSpecialize", "(II[II[[IILjava/lang/String;Ljava/lang/String;[I)I",
-      Dalvik_dalvik_system_Zygote_forkAndSpecialize_new },
-    { "nativeForkAndSpecialize", "(II[II[[IILjava/lang/String;Ljava/lang/String;)I",
       Dalvik_dalvik_system_Zygote_forkAndSpecialize },
     { "nativeForkSystemServer", "(II[II[[IJJ)I",
       Dalvik_dalvik_system_Zygote_forkSystemServer },
