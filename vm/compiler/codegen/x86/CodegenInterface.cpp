@@ -1538,8 +1538,4 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
     return isCompile;
 }
 
-void dvmCompilerCacheFlush(long start, long end, long flags) {
-  /* cacheflush is needed for ARM, but not for IA32 (coherent icache) */
-}
-
 //#endif
