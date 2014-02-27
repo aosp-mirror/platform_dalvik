@@ -3,6 +3,7 @@
   }
   -keep public class * extends android.app.Application {
     <init>();
+    void attachBaseContext(android.content.Context);
   }
   -keep public class * extends android.app.Activity {
     <init>();
@@ -18,7 +19,4 @@
   }
   -keep public class * extends android.app.backup.BackupAgent {
    <init>();
-  }
-  -keep class android.support.multidex.** {
-    *;
   }
