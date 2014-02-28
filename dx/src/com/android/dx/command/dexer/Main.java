@@ -483,7 +483,7 @@ public class Main {
                     processOne(fileNames[i], mainPassFilter);
                 }
 
-                if (dexOutputArrays.size() > 1) {
+                if (dexOutputArrays.size() > 0) {
                     throw new DexException("Too many classes in " + Arguments.MAIN_DEX_LIST_OPTION
                             + ", main dex capacity exceeded");
                 }
