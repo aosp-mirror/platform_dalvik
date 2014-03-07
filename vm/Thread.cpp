@@ -936,7 +936,14 @@ static bool prepareThread(Thread* thread)
 
     memset(&thread->jniMonitorRefTable, 0, sizeof(thread->jniMonitorRefTable));
 
+#if defined(__APPLE__)
     pthread_cond_init(&thread->waitCond, NULL);
+#else
+    pthread_condattr_t condAttr;
+    pthread_condattr_init(&condAttr);
+    pthread_condattr_setclock(&condAttr, CLOCK_MONOTONIC);
+    pthread_cond_init(&thread->waitCond, &condAttr);
+#endif
     dvmInitMutex(&thread->waitMutex);
 
     /* Initialize safepoint callback mechanism */
