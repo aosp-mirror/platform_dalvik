@@ -753,8 +753,16 @@ bool dvmCompilerStartup(void)
     dvmInitMutex(&gDvmJit.compilerICPatchLock);
     dvmInitMutex(&gDvmJit.codeCacheProtectionLock);
     dvmLockMutex(&gDvmJit.compilerLock);
+#if defined(__APPLE__)
     pthread_cond_init(&gDvmJit.compilerQueueActivity, NULL);
     pthread_cond_init(&gDvmJit.compilerQueueEmpty, NULL);
+#else
+    pthread_condattr_t condAttr;
+    pthread_condattr_init(&condAttr);
+    pthread_condattr_setclock(&condAttr, CLOCK_MONOTONIC);
+    pthread_cond_init(&gDvmJit.compilerQueueActivity, &condAttr);
+    pthread_cond_init(&gDvmJit.compilerQueueEmpty, &condAttr);
+#endif
 
     /* Reset the work queue */
     gDvmJit.compilerWorkEnqueueIndex = gDvmJit.compilerWorkDequeueIndex = 0;
