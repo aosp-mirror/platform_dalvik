@@ -118,6 +118,12 @@ class CFGBuilder {
    */
   static void ComputeReachability(const TydeBody& dcode);
   /**
+   * Remove dead code.
+   *
+   * @param dcode A Tyde body.
+   */
+  static void RemoveDeadCode(TydeBody& dcode);
+  /**
    * Check offsets in branching instructions and patch potentially overflowing
    * two-byte offsets.
    *

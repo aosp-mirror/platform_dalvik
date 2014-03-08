@@ -30,6 +30,7 @@
 
 #include "tyde/tyde_instruction.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -87,6 +88,14 @@ void TydeInstruction::ReplacePredecessor(TydeInstruction* original,
   for (int i = 0; i < (int) predecessors_.size(); ++i)
     if (predecessors_[i] == original)
       predecessors_[i] = replacement;
+}
+
+void TydeInstruction::RemovePredecessor(TydeInstruction* instruction) {
+  predecessors_.erase(std::remove(predecessors_.begin(), predecessors_.end(),
+      instruction), predecessors_.end());
+  exception_predecessors_.erase(std::remove(exception_predecessors_.begin(),
+      exception_predecessors_.end(), instruction),
+      exception_predecessors_.end());
 }
 
 /**

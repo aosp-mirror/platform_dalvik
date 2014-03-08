@@ -58,7 +58,9 @@
   label_ = 0;
   AddSuccessors(code_attribute->tyde_body());
   AddExceptionSuccessors(code_attribute, cp);
+  ComputeReachability(code_attribute->tyde_body());
   RemoveDeadTries(code_attribute->tyde_body());
+  RemoveDeadCode(code_attribute->tyde_body());
   CheckAndPatchOffsets(code_attribute->tyde_body());
 }
 
@@ -305,8 +307,6 @@
  * @param dcode A Tyde body.
  */
 /*static*/ void CFGBuilder::RemoveDeadTries(TydeBody& dcode) {
-  ComputeReachability(dcode);
-
   for (int i = dcode.tries().size() - 1; i >= 0; --i) {
     for (int j = dcode.tries()[i].handlers.handlers.size() - 1; j >= 0; --j) {
       if (!dcode.tries()[i].handlers.handlers[j].ptr->reachable()) {
@@ -344,6 +344,26 @@
       s.push(instruction->successors()[i]);
     for (int i = 0; i < (int) instruction->exception_successors().size(); ++i)
       s.push(instruction->exception_successors()[i]);
+  }
+}
+
+/**
+ * Remove dead code.
+ *
+ * @param dcode A Tyde body.
+ */
+/*static*/ void CFGBuilder::RemoveDeadCode(TydeBody& dcode) {
+  std::vector<int> for_removal;
+  for (int i = 0; i < (int) dcode.size(); ++i) {
+    if (!dcode[i]->reachable()) {
+      for_removal.push_back(i);
+      for (int j = 0; j < (int) dcode[i]->successors().size(); ++j) {
+        dcode[i]->successors()[j]->RemovePredecessor(dcode[i]);
+      }
+      for (int j = 0; j < (int) dcode[i]->exception_successors().size(); ++j) {
+        dcode[i]->exception_successors()[j]->RemovePredecessor(dcode[i]);
+      }
+    }
   }
 }
 

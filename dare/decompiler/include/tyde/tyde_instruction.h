@@ -134,6 +134,7 @@ class TydeInstruction {
     exception_predecessors_.push_back(ins);
   }
   void PopPredecessor() { predecessors_.pop_back(); }
+  void RemovePredecessor(TydeInstruction* instruction);
   void SetDestinationType(const Type& type) { destination_.type = type; }
   void SetSourceType(const int source_index, const Type& type) {
     sources_[source_index].type = type;

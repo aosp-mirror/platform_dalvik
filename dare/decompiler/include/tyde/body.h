@@ -50,6 +50,23 @@ class Body {
   }
   size_t size() const { return instructions_.size(); }
 
+  void RemoveInstructions(const std::vector<int>& for_removal) {
+    std::vector<T> new_instructions_;
+    int i = 0;
+    int j = 0;
+    while (j < for_removal.size()) {
+      int current_index_for_removal = for_removal[j];
+      while (i != current_index_for_removal) {
+        new_instructions_.push_back(instructions_[i++]);
+      }
+      // i == current_index_for_removal.
+      delete instructions_[i++];
+      ++j;
+    }
+
+    instructions_ = new_instructions_;
+  }
+
  private:
   std::vector<T> instructions_;
 };
