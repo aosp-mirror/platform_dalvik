@@ -3,7 +3,7 @@
 LOCAL_PATH := $(call my-dir)
 
 # This tool is prebuilt if we're doing an app-only build.
-ifeq ($(TARGET_BUILD_APPS),)
+ifeq ($(TARGET_BUILD_APPS)$(filter true,$(TARGET_BUILD_PDK)),)
 
 # dx java library
 # ============================================================
@@ -19,7 +19,7 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
 
-endif # TARGET_BUILD_APPS
+endif # No TARGET_BUILD_APPS or TARGET_BUILD_PDK
 
 # the documentation
 # ============================================================

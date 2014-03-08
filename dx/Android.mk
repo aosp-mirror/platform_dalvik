@@ -7,7 +7,7 @@ LOCAL_PATH := $(call my-dir)
 # .jar files they wrap.
 
 # This tool is prebuilt if we're doing an app-only build.
-ifeq ($(TARGET_BUILD_APPS),)
+ifeq ($(TARGET_BUILD_APPS)$(filter true,$(TARGET_BUILD_PDK)),)
 
 # the dx script
 # ============================================================
@@ -87,7 +87,7 @@ $(LOCAL_BUILT_MODULE): $(LOCAL_PATH)/etc/mainDexClasses | $(ACP)
 $(LOCAL_INSTALLED_MODULE): | $(installed_shrinkedAndroid) $(installed_mainDexClasses.rules)
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
 
-endif # TARGET_BUILD_APPS
+endif # No TARGET_BUILD_APPS or TARGET_BUILD_PDK
 
 # the dexmerger script
 # ============================================================
