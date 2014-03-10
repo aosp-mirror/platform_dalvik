@@ -514,6 +514,11 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
     }
 }
 
+static void Dalvik_dalvik_system_DexFile_isDexOptNeededInternal(const u4*args,
+    JValue* pResult) {
+    return Dalvik_dalvik_system_DexFile_isDexOptNeeded(args, pResult);
+}
+
 const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
     { "openDexFileNative",  "(Ljava/lang/String;Ljava/lang/String;I)J",
         Dalvik_dalvik_system_DexFile_openDexFileNative },
@@ -527,5 +532,7 @@ const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
         Dalvik_dalvik_system_DexFile_getClassNameList },
     { "isDexOptNeeded",     "(Ljava/lang/String;)Z",
         Dalvik_dalvik_system_DexFile_isDexOptNeeded },
+    { "isDexOptNeededInternal",     "(Ljava/lang/String;Ljava/lang/String;Z)Z",
+        Dalvik_dalvik_system_DexFile_isDexOptNeededInternal },
     { NULL, NULL, NULL },
 };
