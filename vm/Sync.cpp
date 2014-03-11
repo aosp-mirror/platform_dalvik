@@ -550,7 +550,7 @@ static void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
 {
     s8 endSec;
 
-#ifdef HAVE_TIMEDWAIT_MONOTONIC
+#ifdef HAVE_POSIX_CLOCKS
     clock_gettime(CLOCK_MONOTONIC, ts);
 #else
     {
@@ -578,14 +578,9 @@ static void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
 int dvmRelativeCondWait(pthread_cond_t* cond, pthread_mutex_t* mutex,
                         s8 msec, s4 nsec)
 {
-    int ret;
     struct timespec ts;
     absoluteTime(msec, nsec, &ts);
-#if defined(HAVE_TIMEDWAIT_MONOTONIC)
-    ret = pthread_cond_timedwait_monotonic(cond, mutex, &ts);
-#else
-    ret = pthread_cond_timedwait(cond, mutex, &ts);
-#endif
+    int ret = pthread_cond_timedwait(cond, mutex, &ts);
     assert(ret == 0 || ret == ETIMEDOUT);
     return ret;
 }
@@ -710,11 +705,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
         ret = pthread_cond_wait(&self->waitCond, &self->waitMutex);
         assert(ret == 0);
     } else {
-#ifdef HAVE_TIMEDWAIT_MONOTONIC
-        ret = pthread_cond_timedwait_monotonic(&self->waitCond, &self->waitMutex, &ts);
-#else
         ret = pthread_cond_timedwait(&self->waitCond, &self->waitMutex, &ts);
-#endif
         assert(ret == 0 || ret == ETIMEDOUT);
     }
     if (self->interrupted) {
