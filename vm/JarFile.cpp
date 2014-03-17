@@ -82,6 +82,8 @@ bail:
 /*
  * Checks the dependencies of the dex cache file corresponding
  * to the jar file at the absolute path "fileName".
+ *
+ * Note: This should parallel the logic of dvmJarFileOpen.
  */
 DexCacheStatus dvmDexCacheStatus(const char *fileName)
 {
@@ -99,71 +101,71 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
         return DEX_CACHE_OK;
     }
 
-    //TODO: match dvmJarFileOpen()'s logic.  Not super-important
-    //      (the odex-first logic is only necessary for dexpreopt)
-    //      but it would be nice to be consistent.
-
     /* Try to find the dex file inside of the archive.
      */
     if (dexZipOpenArchive(fileName, &archive) != 0) {
         return DEX_CACHE_BAD_ARCHIVE;
     }
-    entry = dexZipFindEntry(&archive, kDexInJarName);
-    if (entry != NULL) {
-        bool newFile = false;
 
-        /*
-         * See if there's an up-to-date copy of the optimized dex
-         * in the cache, but don't create one if there isn't.
-         */
-        ALOGV("dvmDexCacheStatus: Checking cache for %s", fileName);
-        cachedName = dexOptGenerateCacheFileName(fileName, kDexInJarName);
-        if (cachedName == NULL)
-            return DEX_CACHE_BAD_ARCHIVE;
-
-        fd = dvmOpenCachedDexFile(fileName, cachedName,
-                dexGetZipEntryModTime(&archive, entry),
-                dexGetZipEntryCrc32(&archive, entry),
-                /*isBootstrap=*/false, &newFile, /*createIfMissing=*/false);
-        ALOGV("dvmOpenCachedDexFile returned fd %d", fd);
-        if (fd < 0) {
-            result = DEX_CACHE_STALE;
-            goto bail;
+    /* First, look for a ".odex" alongside the jar file.  It will
+     * have the same name/path except for the extension.
+     */
+    fd = openAlternateSuffix(fileName, "odex", O_RDONLY, &cachedName);
+    if (fd >= 0) {
+        ALOGV("Using alternate file (odex) for %s ...", fileName);
+        if (!dvmCheckOptHeaderAndDependencies(fd, false, 0, 0, true, true)) {
+            ALOGE("%s odex has stale dependencies", fileName);
+            free(cachedName);
+            cachedName = NULL;
+            close(fd);
+            fd = -1;
+            goto tryArchive;
+        } else {
+            ALOGV("%s odex has good dependencies", fileName);
         }
-
-        /* dvmOpenCachedDexFile locks the file as a side-effect.
-         * Unlock and close it.
-         */
-        if (!dvmUnlockCachedDexFile(fd)) {
-            /* uh oh -- this process needs to exit or we'll wedge the system */
-            ALOGE("Unable to unlock DEX file");
-            goto bail;
-        }
-
-        /* When createIfMissing is false, dvmOpenCachedDexFile() only
-         * returns a valid fd if the cache file is up-to-date.
-         */
     } else {
+
+tryArchive:
         /*
-         * There's no dex file in the jar file.  See if there's an
-         * optimized dex file living alongside the jar.
+         * Pre-created .odex absent or stale.  Look inside the jar for a
+         * "classes.dex".
          */
-        fd = openAlternateSuffix(fileName, "odex", O_RDONLY, &cachedName);
-        if (fd < 0) {
+        entry = dexZipFindEntry(&archive, kDexInJarName);
+        if (entry != NULL) {
+            bool newFile = false;
+
+            /*
+             * See if there's an up-to-date copy of the optimized dex
+             * in the cache, but don't create one if there isn't.
+             */
+            ALOGV("dvmDexCacheStatus: Checking cache for %s", fileName);
+            cachedName = dexOptGenerateCacheFileName(fileName, kDexInJarName);
+            if (cachedName == NULL)
+                return DEX_CACHE_BAD_ARCHIVE;
+
+            fd = dvmOpenCachedDexFile(fileName, cachedName,
+                    dexGetZipEntryModTime(&archive, entry),
+                    dexGetZipEntryCrc32(&archive, entry),
+                    /*isBootstrap=*/false, &newFile, /*createIfMissing=*/false);
+            ALOGV("dvmOpenCachedDexFile returned fd %d", fd);
+            if (fd < 0) {
+                result = DEX_CACHE_STALE;
+                goto bail;
+            }
+
+            /* dvmOpenCachedDexFile locks the file as a side-effect.
+             * Unlock and close it.
+             */
+            if (!dvmUnlockCachedDexFile(fd)) {
+                /* uh oh -- this process needs to exit or we'll wedge the system */
+                ALOGE("Unable to unlock DEX file");
+                goto bail;
+            }
+        } else {
             ALOGI("Zip is good, but no %s inside, and no .odex "
                     "file in the same directory", kDexInJarName);
             result = DEX_CACHE_BAD_ARCHIVE;
             goto bail;
-        }
-
-        ALOGV("Using alternate file (odex) for %s ...", fileName);
-        if (!dvmCheckOptHeaderAndDependencies(fd, false, 0, 0, true, true)) {
-            ALOGE("%s odex has stale dependencies", fileName);
-            ALOGE("odex source not available -- failing");
-            result = DEX_CACHE_STALE_ODEX;
-            goto bail;
-        } else {
-            ALOGV("%s odex has good dependencies", fileName);
         }
     }
     result = DEX_CACHE_OK;
@@ -184,6 +186,8 @@ bail:
  *
  * If "isBootstrap" is not set, the optimizer/verifier regards this DEX as
  * being part of a different class loader.
+ *
+ * Note: This should parallel the logic of dvmDexCacheStatus.
  */
 int dvmJarFileOpen(const char* fileName, const char* odexOutputName,
     JarFile** ppJarFile, bool isBootstrap)
