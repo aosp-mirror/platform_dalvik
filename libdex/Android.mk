@@ -54,6 +54,7 @@ LOCAL_WHOLE_STATIC_LIBRARIES := libziparchive
 LOCAL_SHARED_LIBRARIES := libutils
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdex
+LOCAL_32_BIT_ONLY := true
 include $(BUILD_STATIC_LIBRARY)
 
 endif # !SDK_ONLY

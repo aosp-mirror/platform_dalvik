@@ -42,6 +42,7 @@ LOCAL_MODULE := dexopt
 LOCAL_C_INCLUDES += external/stlport/stlport bionic/ bionic/libstdc++/include
 LOCAL_SHARED_LIBRARIES += libstlport
 
+LOCAL_32_BIT_ONLY := true
 include $(BUILD_EXECUTABLE)
 
 ifeq ($(WITH_HOST_DALVIK),true)
