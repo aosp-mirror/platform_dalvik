@@ -16,8 +16,14 @@ include $(CLEAR_VARS)
 
 # Variables used in the included Dvm.mk.
 dvm_os := $(TARGET_OS)
+ifndef TARGET_2ND_ARCH
 dvm_arch := $(TARGET_ARCH)
 dvm_arch_variant := $(TARGET_ARCH_VARIANT)
+else
+# Dalvik doesn't support 64-bit architectures, fall back to the 32-bit 2nd arch
+dvm_arch := $(TARGET_2ND_ARCH)
+dvm_arch_variant := $(TARGET_2ND_ARCH_VARIANT)
+endif
 
 include $(LOCAL_PATH)/Dvm.mk
 

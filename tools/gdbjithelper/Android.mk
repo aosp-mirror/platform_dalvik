@@ -19,4 +19,5 @@ LOCAL_SRC_FILES := gdbjithelper.c
 LOCAL_CFLAGS += -O0 -g
 LOCAL_MODULE := gdbjithelper
 LOCAL_MODULE_TAGS := eng
+LOCAL_32_BIT_ONLY := true
 include $(BUILD_EXECUTABLE)

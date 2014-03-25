@@ -34,6 +34,7 @@ LOCAL_C_INCLUDES := $(dexdump_c_includes)
 LOCAL_SHARED_LIBRARIES := libcutils libz libutils
 LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries)
 LOCAL_LDLIBS +=
+LOCAL_32_BIT_ONLY := true
 #include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
