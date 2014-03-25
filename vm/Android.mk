@@ -84,7 +84,7 @@ LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
 LOCAL_MODULE := libdvm_sv
 LOCAL_LDFLAGS_x86 += -Wl,--no-fatal-warnings
 # MIPS support for self-verification is incomplete
-LOCAL_MODULE_UNSUPPORTED_ARCH := mips
+LOCAL_MODULE_UNSUPPORTED_TARGET_ARCH := mips
 LOCAL_32_BIT_ONLY := true
 include $(BUILD_SHARED_LIBRARY)
 
