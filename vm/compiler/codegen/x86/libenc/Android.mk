@@ -43,6 +43,7 @@ LOCAL_SRC_FILES := $(enc_src_files)
 LOCAL_C_INCLUDES += $(enc_include_files)
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libenc
+LOCAL_32_BIT_ONLY := true
 include $(BUILD_STATIC_LIBRARY)
 
 endif # !SDK_ONLY

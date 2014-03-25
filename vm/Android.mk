@@ -46,9 +46,7 @@ include $(LOCAL_PATH)/ReconfigureDvm.mk
 # Overwrite default settings
 LOCAL_MODULE := libdvm
 LOCAL_CFLAGS += $(target_smp_flag)
-ifeq ($(TARGET_ARCH),x86)
-LOCAL_LDFLAGS += -Wl,--no-fatal-warnings
-endif
+LOCAL_LDFLAGS_x86 += -Wl,--no-fatal-warnings
 
 # Define WITH_ADDRESS_SANITIZER to build an ASan-instrumented version of the
 # library in /system/lib/asan/libdvm.so.
@@ -61,6 +59,7 @@ endif
 # TODO: split out the asflags.
 LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
 
+LOCAL_32_BIT_ONLY := true
 include $(BUILD_SHARED_LIBRARY)
 
 # Derivation #1
@@ -71,27 +70,23 @@ LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
 # TODO: split out the asflags.
 LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
 LOCAL_MODULE := libdvm_assert
-ifeq ($(TARGET_ARCH),x86)
-LOCAL_LDFLAGS += -Wl,--no-fatal-warnings
-endif
+LOCAL_LDFLAGS_x86 += -Wl,--no-fatal-warnings
+LOCAL_32_BIT_ONLY := true
 include $(BUILD_SHARED_LIBRARY)
 
-ifneq ($(dvm_arch),mips)    # MIPS support for self-verification is incomplete
-
-    # Derivation #2
-    # Enable assertions and JIT self-verification
-    include $(LOCAL_PATH)/ReconfigureDvm.mk
-    LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
-                    -DWITH_SELF_VERIFICATION $(target_smp_flag)
-    # TODO: split out the asflags.
-    LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
-    LOCAL_MODULE := libdvm_sv
-    ifeq ($(TARGET_ARCH),x86)
-    LOCAL_LDFLAGS += -Wl,--no-fatal-warnings
-    endif
-    include $(BUILD_SHARED_LIBRARY)
-
-endif # dvm_arch!=mips
+# Derivation #2
+# Enable assertions and JIT self-verification
+include $(LOCAL_PATH)/ReconfigureDvm.mk
+LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
+                -DWITH_SELF_VERIFICATION $(target_smp_flag)
+# TODO: split out the asflags.
+LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
+LOCAL_MODULE := libdvm_sv
+LOCAL_LDFLAGS_x86 += -Wl,--no-fatal-warnings
+# MIPS support for self-verification is incomplete
+LOCAL_MODULE_UNSUPPORTED_ARCH := mips
+LOCAL_32_BIT_ONLY := true
+include $(BUILD_SHARED_LIBRARY)
 
 # Derivation #3
 # Compile out the JIT
@@ -101,9 +96,8 @@ LOCAL_CFLAGS += $(target_smp_flag)
 # TODO: split out the asflags.
 LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
 LOCAL_MODULE := libdvm_interp
-ifeq ($(TARGET_ARCH),x86)
-LOCAL_LDFLAGS += -Wl,--no-fatal-warnings
-endif
+LOCAL_LDFLAGS_x86 += -Wl,--no-fatal-warnings
+LOCAL_32_BIT_ONLY := true
 include $(BUILD_SHARED_LIBRARY)
 
 
