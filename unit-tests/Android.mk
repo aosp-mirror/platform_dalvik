@@ -33,6 +33,7 @@ LOCAL_C_INCLUDES += $(test_c_includes)
 LOCAL_MODULE := $(test_module)
 LOCAL_SRC_FILES := $(test_src_files)
 LOCAL_SHARED_LIBRARIES += libcutils libdvm
+LOCAL_32_BIT_ONLY := true
 include $(BUILD_NATIVE_TEST)
 
 # Build for the host.
