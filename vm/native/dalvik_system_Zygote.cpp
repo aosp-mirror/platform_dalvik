@@ -322,39 +322,6 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
     return 0;
 }
 
-/* native public static int fork(); */
-static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
-{
-    pid_t pid;
-
-    if (!gDvm.zygote) {
-        dvmThrowIllegalStateException(
-            "VM instance not started with -Xzygote");
-
-        RETURN_VOID();
-    }
-
-    if (!dvmGcPreZygoteFork()) {
-        ALOGE("pre-fork heap failed");
-        dvmAbort();
-    }
-
-    setSignalHandler();
-
-    dvmDumpLoaderStats("zygote");
-    pid = fork();
-
-#ifdef HAVE_ANDROID_OS
-    if (pid == 0) {
-        /* child process */
-        extern int gMallocLeakZygoteChild;
-        gMallocLeakZygoteChild = 1;
-    }
-#endif
-
-    RETURN_INT(pid);
-}
-
 /*
  * Enable/disable debug features requested by the caller.
  *
@@ -793,8 +760,6 @@ static void Dalvik_dalvik_system_Zygote_forkSystemServer(
 }
 
 const DalvikNativeMethod dvm_dalvik_system_Zygote[] = {
-    { "nativeFork", "()I",
-      Dalvik_dalvik_system_Zygote_fork },
     { "nativeForkAndSpecialize", "(II[II[[IILjava/lang/String;Ljava/lang/String;[I)I",
       Dalvik_dalvik_system_Zygote_forkAndSpecialize },
     { "nativeForkSystemServer", "(II[II[[IJJ)I",
