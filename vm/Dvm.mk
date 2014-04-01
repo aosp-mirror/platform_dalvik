@@ -154,7 +154,7 @@ LOCAL_SRC_FILES := \
 	native/dalvik_system_VMDebug.cpp \
 	native/dalvik_system_VMRuntime.cpp \
 	native/dalvik_system_VMStack.cpp \
-	native/dalvik_system_Zygote.cpp \
+	native/dalvik_system_ZygoteHooks.cpp \
 	native/java_lang_Class.cpp \
 	native/java_lang_Double.cpp \
 	native/java_lang_Float.cpp \
