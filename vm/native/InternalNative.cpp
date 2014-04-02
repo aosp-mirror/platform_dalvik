@@ -51,7 +51,7 @@ static DalvikNativeClass gDvmNativeMethodSet[] = {
     { "Ldalvik/system/VMDebug;",          dvm_dalvik_system_VMDebug, 0 },
     { "Ldalvik/system/DexFile;",          dvm_dalvik_system_DexFile, 0 },
     { "Ldalvik/system/VMRuntime;",        dvm_dalvik_system_VMRuntime, 0 },
-    { "Ldalvik/system/Zygote;",           dvm_dalvik_system_Zygote, 0 },
+    { "Ldalvik/system/ZygoteHooks;",      dvm_dalvik_system_ZygoteHooks, 0 },
     { "Ldalvik/system/VMStack;",          dvm_dalvik_system_VMStack, 0 },
     { "Lorg/apache/harmony/dalvik/ddmc/DdmServer;",
             dvm_org_apache_harmony_dalvik_ddmc_DdmServer, 0 },
