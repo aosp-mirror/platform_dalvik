@@ -105,7 +105,7 @@ extern const DalvikNativeMethod dvm_dalvik_system_SamplingProfiler[];
 extern const DalvikNativeMethod dvm_dalvik_system_VMDebug[];
 extern const DalvikNativeMethod dvm_dalvik_system_DexFile[];
 extern const DalvikNativeMethod dvm_dalvik_system_VMRuntime[];
-extern const DalvikNativeMethod dvm_dalvik_system_Zygote[];
+extern const DalvikNativeMethod dvm_dalvik_system_ZygoteHooks[];
 extern const DalvikNativeMethod dvm_dalvik_system_VMStack[];
 extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmServer[];
 extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmVmInternal[];
