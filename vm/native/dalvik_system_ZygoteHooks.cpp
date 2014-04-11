@@ -59,8 +59,6 @@ enum {
  */
 static void enableDebugFeatures(u4 debugFlags)
 {
-    ALOGV("debugFlags is 0x%02x", debugFlags);
-
     gDvm.jdwpAllowed = ((debugFlags & DEBUG_ENABLE_DEBUGGER) != 0);
 
     if ((debugFlags & DEBUG_ENABLE_CHECKJNI) != 0) {
@@ -145,7 +143,7 @@ static void Dalvik_dalvik_system_ZygoteHooks_postForkChild(
     thread->systemTid = dvmGetSysThreadId();
 
     /* configure additional debug options */
-    enableDebugFeatures(args[1]);
+    enableDebugFeatures(args[2]);
 
     gDvm.zygote = false;
     if (!dvmInitAfterZygote()) {
