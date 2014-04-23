@@ -17,3 +17,6 @@
 }
 -keep public class * extends android.app.backup.BackupAgent {
 }
+-keep public class java.lang.annotation.Annotation {
+}
+
