@@ -35,12 +35,16 @@
 static const char* kCacheDirectoryName = "dalvik-cache";
 static const char* kClassesDex = "classes.dex";
 
-#if defined(__arm__)
-static const char kInstructionSet[] = "arm";
+#if defined(__aarch64__)
+static const char* kInstructionSet = "arm64";
+#elif defined(__arm__)
+static const char* kInstructionSet = "arm";
 #elif defined(__i386__)
-static const char kInstructionSet[] = "x86";
+static const char* kInstructionSet = "x86";
 #elif defined(__mips__)
-static const char kInstructionSet[] = "mips";
+static const char* kInstructionSet = "mips";
+#elif defined(__x86_64__)
+static const char* kInstructionSet = "x86_64";
 #else
 #error Unsupported instruction set.
 #endif
