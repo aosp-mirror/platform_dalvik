@@ -35,6 +35,17 @@
 static const char* kCacheDirectoryName = "dalvik-cache";
 static const char* kClassesDex = "classes.dex";
 
+#if defined(__arm__)
+static const char kInstructionSet[] = "arm";
+#elif defined(__i386__)
+static const char kInstructionSet[] = "x86";
+#elif defined(__mips__)
+static const char kInstructionSet[] = "mips";
+#else
+#error Unsupported instruction set.
+#endif
+
+
 /*
  * Given the filename of a .jar or .dex file, construct the DEX file cache
  * name.
@@ -96,7 +107,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
     dataRoot = getenv("ANDROID_DATA");
     if (dataRoot == NULL)
         dataRoot = "/data";
-    snprintf(nameBuf, kBufLen, "%s/%s", dataRoot, kCacheDirectoryName);
+    snprintf(nameBuf, kBufLen, "%s/%s/%s", dataRoot, kCacheDirectoryName, kInstructionSet);
 
     /* Tack on the file name for the actual cache file path.
      */
