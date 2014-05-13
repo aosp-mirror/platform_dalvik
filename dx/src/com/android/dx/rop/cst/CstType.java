@@ -17,6 +17,7 @@
 package com.android.dx.rop.cst;
 
 import com.android.dx.rop.type.Type;
+
 import java.util.HashMap;
 
 /**
@@ -144,7 +145,7 @@ public final class CstType extends TypedConstant {
             throw new NullPointerException("type == null");
         }
 
-        if (type == type.KNOWN_NULL) {
+        if (type == Type.KNOWN_NULL) {
             throw new UnsupportedOperationException(
                     "KNOWN_NULL is not representable");
         }

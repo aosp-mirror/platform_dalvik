@@ -22,6 +22,7 @@ import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 import com.android.dx.util.ToHuman;
+
 import java.util.ArrayList;
 
 /**
@@ -43,9 +44,10 @@ public final class ParameterAnnotationStruct
      *
      * @param method {@code non-null;} the method in question
      * @param annotationsList {@code non-null;} the associated annotations list
+     * @param dexFile {@code non-null;} dex output
      */
     public ParameterAnnotationStruct(CstMethodRef method,
-            AnnotationsList annotationsList) {
+            AnnotationsList annotationsList, DexFile dexFile) {
         if (method == null) {
             throw new NullPointerException("method == null");
         }
@@ -68,7 +70,7 @@ public final class ParameterAnnotationStruct
 
         for (int i = 0; i < size; i++) {
             Annotations annotations = annotationsList.get(i);
-            AnnotationSetItem item = new AnnotationSetItem(annotations);
+            AnnotationSetItem item = new AnnotationSetItem(annotations, dexFile);
             arrayList.add(new AnnotationSetRefItem(item));
         }
 

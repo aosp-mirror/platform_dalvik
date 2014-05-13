@@ -34,7 +34,6 @@ import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
 import com.android.dx.dex.cf.CodeStatistics;
 import com.android.dx.dex.code.PositionList;
-import com.android.dx.dex.file.AnnotationUtils;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedMethod;
@@ -76,6 +75,7 @@ import java.util.jar.Manifest;
  * Main class for the class file translator.
  */
 public class Main {
+
     /**
      * File extension of a {@code .dex} file.
      */
@@ -147,6 +147,13 @@ public class Main {
         "print", "rmi", "security", "sip", "sound", "sql", "swing",
         "transaction", "xml"
     };
+
+    /* Array.newInstance may be added by RopperMachine,
+     * ArrayIndexOutOfBoundsException.<init> may be added by EscapeAnalysis */
+    private static final int MAX_METHOD_ADDED_DURING_DEX_CREATION = 2;
+
+    /* <primitive types box class>.TYPE */
+    private static final int MAX_FIELD_ADDED_DURING_DEX_CREATION = 9;
 
     /** number of errors during processing */
     private static int errors = 0;
@@ -666,16 +673,21 @@ public class Main {
 
         int numMethodIds = outputDex.getMethodIds().items().size();
         int numFieldIds = outputDex.getFieldIds().items().size();
-        int numTypeIds = outputDex.getTypeIds().items().size();
         int constantPoolSize = cf.getConstantPool().size();
 
-        if (args.multiDex && ((numMethodIds + constantPoolSize > args.maxNumberOfIdxPerDex) ||
-            (numFieldIds + constantPoolSize > args.maxNumberOfIdxPerDex) ||
-            (numTypeIds + constantPoolSize
-                    /* annotation added by dx are not counted in numTypeIds */
-                    + AnnotationUtils.DALVIK_ANNOTATION_NUMBER
-                    > args.maxNumberOfIdxPerDex))) {
-          createDexFile();
+        int maxMethodIdsInDex = numMethodIds + constantPoolSize + cf.getMethods().size() +
+                MAX_METHOD_ADDED_DURING_DEX_CREATION;
+        int maxFieldIdsInDex = numFieldIds + constantPoolSize + cf.getFields().size() +
+                MAX_FIELD_ADDED_DURING_DEX_CREATION;
+
+        if (args.multiDex && ((maxMethodIdsInDex > args.maxNumberOfIdxPerDex) ||
+                (maxFieldIdsInDex > args.maxNumberOfIdxPerDex))) {
+            DexFile completeDex = outputDex;
+            createDexFile();
+            assert  (completeDex.getMethodIds().items().size() <= numMethodIds +
+                    MAX_METHOD_ADDED_DURING_DEX_CREATION) &&
+                    (completeDex.getFieldIds().items().size() <= numFieldIds +
+                    MAX_FIELD_ADDED_DURING_DEX_CREATION);
         }
 
         try {
