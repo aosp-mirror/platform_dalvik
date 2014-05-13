@@ -23,6 +23,7 @@ import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
+
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -95,8 +96,9 @@ public final class AnnotationItem extends OffsettedItem {
      * Constructs an instance.
      *
      * @param annotation {@code non-null;} annotation to represent
+     * @param dexFile {@code non-null;} dex output
      */
-    public AnnotationItem(Annotation annotation) {
+    public AnnotationItem(Annotation annotation, DexFile dexFile) {
         /*
          * The write size isn't known up-front because (the variable-lengthed)
          * leb128 type is used to represent some things.
@@ -110,6 +112,7 @@ public final class AnnotationItem extends OffsettedItem {
         this.annotation = annotation;
         this.type = null;
         this.encodedForm = null;
+        addContents(dexFile);
     }
 
     /** {@inheritDoc} */
