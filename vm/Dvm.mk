@@ -186,7 +186,6 @@ LOCAL_SRC_FILES := \
 	reflect/Annotation.cpp \
 	reflect/Proxy.cpp \
 	reflect/Reflect.cpp \
-	test/AtomicTest.cpp.arm \
 	test/TestHash.cpp \
 	test/TestIndirectRefTable.cpp
 
