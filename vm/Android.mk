@@ -111,9 +111,9 @@ ifeq ($(WITH_HOST_DALVIK),true)
 
     # Variables used in the included Dvm.mk.
     dvm_os := $(HOST_OS)
-    dvm_arch := $(HOST_ARCH)
+    dvm_arch := x86
     # Note: HOST_ARCH_VARIANT isn't defined.
-    dvm_arch_variant := $(HOST_ARCH)
+    dvm_arch_variant := x86
     WITH_JIT := true
     include $(LOCAL_PATH)/Dvm.mk
 
@@ -146,6 +146,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
     LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
     LOCAL_MODULE_TAGS := optional
     LOCAL_MODULE := libdvm
+    LOCAL_32_BIT_ONLY := true
 
     include $(BUILD_HOST_SHARED_LIBRARY)
 
