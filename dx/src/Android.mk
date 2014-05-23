@@ -15,6 +15,10 @@ LOCAL_JAR_MANIFEST := ../etc/manifest.txt
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE:= dx
 
+# Force java 6 target because we want java 6 runtimes to run dx, at least as long as the android SDK
+# requirement JDK 6.
+LOCAL_JAVACFLAGS:= -source 6 -target 6
+
 include $(BUILD_HOST_JAVA_LIBRARY)
 
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
