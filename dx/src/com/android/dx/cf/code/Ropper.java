@@ -42,9 +42,12 @@ import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.Bits;
 import com.android.dx.util.Hex;
 import com.android.dx.util.IntList;
+
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Utility that converts a basic block list into a list of register-oriented
@@ -117,9 +120,9 @@ public final class Ropper {
 
     /**
      * {@code non-null;} for each block (by label) that is used as an exception
-     * handler, the type of exception it catches
+     * handler in the input, the exception handling info in Rop.
      */
-    private final Type[] catchTypes;
+    private final CatchInfo[] catchInfos;
 
     /**
      * whether an exception-handler block for a synchronized method was
@@ -134,6 +137,83 @@ public final class Ropper {
 
     /** true if {@code subroutines} is non-empty */
     private boolean hasSubroutines;
+
+    /** Allocates labels of exception handler setup blocks. */
+    private final ExceptionSetupLabelAllocator exceptionSetupLabelAllocator;
+
+    /**
+     * Keeps mapping of an input exception handler target code and how it is generated/targeted in
+     * Rop.
+     */
+    private class CatchInfo {
+        /**
+         * {@code non-null;} map of ExceptionHandlerSetup by the type they handle */
+        private final Map<Type, ExceptionHandlerSetup> setups =
+                new HashMap<Type, ExceptionHandlerSetup>();
+
+        /**
+         * Get the {@link ExceptionHandlerSetup} corresponding to the given type. The
+         * ExceptionHandlerSetup is created if this the first request for the given type.
+         *
+         * @param caughtType {@code non-null;}  the type catch by the requested setup
+         * @return {@code non-null;} the handler setup block info for the given type
+         */
+        ExceptionHandlerSetup getSetup(Type caughtType) {
+            ExceptionHandlerSetup handler = setups.get(caughtType);
+            if (handler == null) {
+                int handlerSetupLabel = exceptionSetupLabelAllocator.getNextLabel();
+                handler = new ExceptionHandlerSetup(caughtType, handlerSetupLabel);
+                setups.put(caughtType, handler);
+            }
+            return handler;
+        }
+
+        /**
+         * Get all {@link ExceptionHandlerSetup} of this handler.
+         *
+         * @return {@code non-null;}
+         */
+       Collection<ExceptionHandlerSetup> getSetups() {
+            return setups.values();
+        }
+    }
+
+    /**
+     * Keeps track of an exception handler setup.
+     */
+    private static class ExceptionHandlerSetup {
+        /**
+         * {@code non-null;} The caught type. */
+        private Type caughtType;
+        /**
+         * {@code >= 0;} The label of the exception setup block. */
+        private int label;
+
+        /**
+         * Constructs instance.
+         *
+         * @param caughtType {@code non-null;} the caught type
+         * @param label {@code >= 0;} the label
+         */
+        ExceptionHandlerSetup(Type caughtType, int label) {
+            this.caughtType = caughtType;
+            this.label = label;
+        }
+
+        /**
+         * @return {@code non-null;} the caught type
+         */
+        Type getCaughtType() {
+            return caughtType;
+        }
+
+        /**
+         * @return {@code >= 0;} the label
+         */
+        public int getLabel() {
+            return label;
+        }
+    }
 
     /**
      * Keeps track of subroutines that exist in java form and are inlined in
@@ -312,7 +392,7 @@ public final class Ropper {
         this.resultSubroutines =
             new ArrayList<IntList>(blocks.size() * 2 + 10);
 
-        this.catchTypes = new Type[maxLabel];
+        this.catchInfos = new CatchInfo[maxLabel];
         this.synchNeedsExceptionHandler = false;
 
         /*
@@ -320,6 +400,7 @@ public final class Ropper {
          * empty here (to be filled in outside of the constructor).
          */
         startFrames[0] = new Frame(maxLocals, method.getMaxStack());
+        exceptionSetupLabelAllocator = new ExceptionSetupLabelAllocator();
     }
 
     /**
@@ -342,17 +423,6 @@ public final class Ropper {
     }
 
     /**
-     * Gets the label for the exception handler setup block corresponding
-     * to the given label.
-     *
-     * @param label {@code >= 0;} the original label
-     * @return {@code >= 0;} the corresponding exception handler setup label
-     */
-    private int getExceptionSetupLabel(int label) {
-        return maxLabel + label;
-    }
-
-    /**
      * Gets the label for the given special-purpose block. The given label
      * should be one of the static constants defined by this class.
      *
@@ -364,12 +434,11 @@ public final class Ropper {
          * The label is bitwise-complemented so that mistakes where
          * LABEL is used instead of getSpecialLabel(LABEL) cause a
          * failure at block construction time, since negative labels
-         * are illegal. We multiply maxLabel by 2 since 0..maxLabel
-         * (exclusive) are the original blocks and
-         * maxLabel..(maxLabel*2) are reserved for exception handler
-         * setup blocks (see getExceptionSetupLabel(), above).
+         * are illegal. 0..maxLabel (exclusive) are the original blocks and
+         * maxLabel..(maxLabel + method.getCatches().size()) are reserved for exception handler
+         * setup blocks (see getAvailableLabel(), exceptionSetupLabelAllocator).
          */
-        return (maxLabel * 2) + ~label;
+        return maxLabel + method.getCatches().size() + ~label;
     }
 
     /**
@@ -379,17 +448,32 @@ public final class Ropper {
      */
     private int getMinimumUnreservedLabel() {
         /*
-         * The labels below ((maxLabel * 2) + SPECIAL_LABEL_COUNT) are
+         * The labels below (maxLabel + method.getCatches().size() + SPECIAL_LABEL_COUNT) are
          * reserved for particular uses.
          */
 
-        return (maxLabel * 2) + SPECIAL_LABEL_COUNT;
+        return maxLabel + method.getCatches().size() + SPECIAL_LABEL_COUNT;
     }
 
     /**
-     * Gets an arbitrary unreserved and available label.
+     * Gets an unreserved and available label.
+     * Labels are distributed this way:
+     * <ul>
+     * <li>[0, maxLabel[ are the labels of the blocks directly
+     * corresponding to the input bytecode.</li>
+     * <li>[maxLabel, maxLabel + method.getCatches().size()[ are reserved for exception setup
+     * blocks.</li>
+     * <li>[maxLabel + method.getCatches().size(),
+     * maxLabel + method.getCatches().size() + SPECIAL_LABEL_COUNT[ are reserved for special blocks,
+     * ie param assignement, return and synch blocks.</li>
+     * <li>[maxLabel method.getCatches().size() + SPECIAL_LABEL_COUNT, getAvailableLabel()[ assigned
+     *  labels. Note that some
+     * of the assigned labels may not be used any more if they were assigned to a block that was
+     * deleted since.</li>
+     * </ul>
      *
-     * @return {@code >= 0;} the label
+     * @return {@code >= 0;} an available label with the guaranty that all greater labels are
+     * also available.
      */
     private int getAvailableLabel() {
         int candidate = getMinimumUnreservedLabel();
@@ -841,22 +925,19 @@ public final class Ropper {
                 }
 
                 /*
-                 * Set up the exception handler type, by setting it if
-                 * the given handler has yet to be encountered, or by
-                 * conservatively unioning if it has.
+                 * Set up the exception handler type.
                  */
-                Type already = catchTypes[targ];
-                if (already == null) {
-                    catchTypes[targ] = exceptionClass.getClassType();
-                } else if (already != exceptionClass.getClassType()) {
-                    catchTypes[targ] = Type.OBJECT;
+                CatchInfo handlers = catchInfos[targ];
+                if (handlers == null) {
+                    handlers = new CatchInfo();
+                    catchInfos[targ] = handlers;
                 }
+                ExceptionHandlerSetup handler = handlers.getSetup(exceptionClass.getClassType());
 
                 /*
-                 * The synthesized exception setup block will have the
-                 * label getExceptionSetupLabel(targ).
+                 * The synthesized exception setup block will have the label given by handler.
                  */
-                newSucc.add(getExceptionSetupLabel(targ));
+                newSucc.add(handler.getLabel());
             }
 
             if (synch && !catchesAny) {
@@ -1210,30 +1291,32 @@ public final class Ropper {
      */
     private void addExceptionSetupBlocks() {
 
-        int len = catchTypes.length;
+        int len = catchInfos.length;
         for (int i = 0; i < len; i++) {
-            Type one = catchTypes[i];
-            if (one != null) {
-                Insn proto = labelToBlock(i).getFirstInsn();
-                SourcePosition pos = proto.getPosition();
-                InsnList il = new InsnList(2);
+            CatchInfo catches = catchInfos[i];
+            if (catches != null) {
+                for (ExceptionHandlerSetup one : catches.getSetups()) {
+                    Insn proto = labelToBlock(i).getFirstInsn();
+                    SourcePosition pos = proto.getPosition();
+                    InsnList il = new InsnList(2);
 
-                Insn insn = new PlainInsn(Rops.opMoveException(one),
-                                          pos,
-                                          RegisterSpec.make(maxLocals, one),
-                                          RegisterSpecList.EMPTY);
-                il.set(0, insn);
+                    Insn insn = new PlainInsn(Rops.opMoveException(one.getCaughtType()),
+                            pos,
+                            RegisterSpec.make(maxLocals, one.getCaughtType()),
+                            RegisterSpecList.EMPTY);
+                    il.set(0, insn);
 
-                insn = new PlainInsn(Rops.GOTO, pos, null,
-                                     RegisterSpecList.EMPTY);
-                il.set(1, insn);
-                il.setImmutable();
+                    insn = new PlainInsn(Rops.GOTO, pos, null,
+                            RegisterSpecList.EMPTY);
+                    il.set(1, insn);
+                    il.setImmutable();
 
-                BasicBlock bb = new BasicBlock(getExceptionSetupLabel(i),
-                                               il,
-                                               IntList.makeImmutable(i),
-                                               i);
-                addBlock(bb, startFrames[i].getSubroutines());
+                    BasicBlock bb = new BasicBlock(one.getLabel(),
+                            il,
+                            IntList.makeImmutable(i),
+                            i);
+                    addBlock(bb, startFrames[i].getSubroutines());
+                }
             }
         }
     }
@@ -1360,6 +1443,26 @@ public final class Ropper {
          */
         int getNextLabel() {
             return nextAvailableLabel++;
+        }
+    }
+
+    /**
+     * Allocates labels for exception setup blocks.
+     */
+    private class ExceptionSetupLabelAllocator extends LabelAllocator {
+        int maxSetupLabel;
+
+        ExceptionSetupLabelAllocator() {
+            super(maxLabel);
+            maxSetupLabel = maxLabel + method.getCatches().size();
+        }
+
+        @Override
+        int getNextLabel() {
+            if (nextAvailableLabel >= maxSetupLabel) {
+                throw new IndexOutOfBoundsException();
+            }
+            return nextAvailableLabel ++;
         }
     }
 
