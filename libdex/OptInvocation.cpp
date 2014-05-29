@@ -111,7 +111,22 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
     dataRoot = getenv("ANDROID_DATA");
     if (dataRoot == NULL)
         dataRoot = "/data";
+    snprintf(nameBuf, kBufLen, "%s/%s", dataRoot, kCacheDirectoryName);
+    if (strcmp(dataRoot, "/data") != 0) {
+        int result = mkdir(nameBuf, 0700);
+        if (result != 0 && errno != EEXIST) {
+            ALOGE("Failed to create dalvik-cache directory %s: %s", nameBuf, strerror(errno));
+            return NULL;
+        }
+    }
     snprintf(nameBuf, kBufLen, "%s/%s/%s", dataRoot, kCacheDirectoryName, kInstructionSet);
+    if (strcmp(dataRoot, "/data") != 0) {
+        int result = mkdir(nameBuf, 0700);
+        if (result != 0 && errno != EEXIST) {
+            ALOGE("Failed to create dalvik-cache directory %s: %s", nameBuf, strerror(errno));
+            return NULL;
+        }
+    }
 
     /* Tack on the file name for the actual cache file path.
      */
