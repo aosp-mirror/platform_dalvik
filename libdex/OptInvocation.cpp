@@ -49,6 +49,14 @@ static const char* kInstructionSet = "x86_64";
 #error Unsupported instruction set.
 #endif
 
+static int dexOptMkdir(const char*  path, int mode)
+{
+#ifdef _WIN32
+    return mkdir(path);
+#else
+    return mkdir(path, mode);
+#endif
+}
 
 /*
  * Given the filename of a .jar or .dex file, construct the DEX file cache
@@ -113,7 +121,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
         dataRoot = "/data";
     snprintf(nameBuf, kBufLen, "%s/%s", dataRoot, kCacheDirectoryName);
     if (strcmp(dataRoot, "/data") != 0) {
-        int result = mkdir(nameBuf, 0700);
+        int result = dexOptMkdir(nameBuf, 0700);
         if (result != 0 && errno != EEXIST) {
             ALOGE("Failed to create dalvik-cache directory %s: %s", nameBuf, strerror(errno));
             return NULL;
@@ -121,7 +129,7 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
     }
     snprintf(nameBuf, kBufLen, "%s/%s/%s", dataRoot, kCacheDirectoryName, kInstructionSet);
     if (strcmp(dataRoot, "/data") != 0) {
-        int result = mkdir(nameBuf, 0700);
+        int result = dexOptMkdir(nameBuf, 0700);
         if (result != 0 && errno != EEXIST) {
             ALOGE("Failed to create dalvik-cache directory %s: %s", nameBuf, strerror(errno));
             return NULL;
