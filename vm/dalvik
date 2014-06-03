@@ -35,6 +35,7 @@ ANDROID_DATA=$ANDROID_DATA \
 ANDROID_ROOT=$ANDROID_BUILD_TOP/out/host/linux-x86 \
 LD_LIBRARY_PATH=$ANDROID_BUILD_TOP/out/host/linux-x86/lib \
 $ANDROID_BUILD_TOP/out/host/linux-x86/bin/dalvikvm \
+-XXlib:libdvm.so \
 -Xbootclasspath\
 :$ANDROID_BUILD_TOP/out/host/linux-x86/framework/core-hostdex.jar\
 :$ANDROID_BUILD_TOP/out/host/linux-x86/framework/conscrypt-hostdex.jar\
