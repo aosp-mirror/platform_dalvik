@@ -825,6 +825,7 @@ DEX_INLINE const DexAnnotationSetItem* dexGetClassAnnotationSet(
 DEX_INLINE const DexFieldAnnotationsItem* dexGetFieldAnnotations(
     const DexFile* pDexFile, const DexAnnotationsDirectoryItem* pAnnoDir)
 {
+    (void) pDexFile;
     if (pAnnoDir->fieldsSize == 0)
         return NULL;
 
@@ -836,6 +837,7 @@ DEX_INLINE const DexFieldAnnotationsItem* dexGetFieldAnnotations(
 DEX_INLINE int dexGetFieldAnnotationsSize(const DexFile* pDexFile,
     const DexAnnotationsDirectoryItem* pAnnoDir)
 {
+    (void) pDexFile;
     return pAnnoDir->fieldsSize;
 }
 
@@ -850,6 +852,7 @@ DEX_INLINE const DexAnnotationSetItem* dexGetFieldAnnotationSetItem(
 DEX_INLINE const DexMethodAnnotationsItem* dexGetMethodAnnotations(
     const DexFile* pDexFile, const DexAnnotationsDirectoryItem* pAnnoDir)
 {
+    (void) pDexFile;
     if (pAnnoDir->methodsSize == 0)
         return NULL;
 
@@ -866,6 +869,7 @@ DEX_INLINE const DexMethodAnnotationsItem* dexGetMethodAnnotations(
 DEX_INLINE int dexGetMethodAnnotationsSize(const DexFile* pDexFile,
     const DexAnnotationsDirectoryItem* pAnnoDir)
 {
+    (void) pDexFile;
     return pAnnoDir->methodsSize;
 }
 
@@ -880,6 +884,7 @@ DEX_INLINE const DexAnnotationSetItem* dexGetMethodAnnotationSetItem(
 DEX_INLINE const DexParameterAnnotationsItem* dexGetParameterAnnotations(
     const DexFile* pDexFile, const DexAnnotationsDirectoryItem* pAnnoDir)
 {
+    (void) pDexFile;
     if (pAnnoDir->parametersSize == 0)
         return NULL;
 
@@ -897,6 +902,7 @@ DEX_INLINE const DexParameterAnnotationsItem* dexGetParameterAnnotations(
 DEX_INLINE int dexGetParameterAnnotationsSize(const DexFile* pDexFile,
     const DexAnnotationsDirectoryItem* pAnnoDir)
 {
+    (void) pDexFile;
     return pAnnoDir->parametersSize;
 }
 
