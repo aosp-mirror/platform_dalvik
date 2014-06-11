@@ -22,14 +22,6 @@
 
 #include <math.h>
 
-#ifdef HAVE__MEMCMP16
-/* hand-coded assembly implementation, available on some platforms */
-//#warning "trying memcmp16"
-//#define CHECK_MEMCMP16
-/* "count" is in 16-bit units */
-extern "C" u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
-#endif
-
 /*
  * Some notes on "inline" functions.
  *
@@ -241,35 +233,6 @@ bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     thisChars = ((const u2*)(void*)thisArray->contents) + thisOffset;
     compChars = ((const u2*)(void*)compArray->contents) + compOffset;
 
-#ifdef HAVE__MEMCMP16
-    /*
-     * Use assembly version, which returns the difference between the
-     * characters.  The annoying part here is that 0x00e9 - 0xffff != 0x00ea,
-     * because the interpreter converts the characters to 32-bit integers
-     * *without* sign extension before it subtracts them (which makes some
-     * sense since "char" is unsigned).  So what we get is the result of
-     * 0x000000e9 - 0x0000ffff, which is 0xffff00ea.
-     */
-    int otherRes = __memcmp16(thisChars, compChars, minCount);
-# ifdef CHECK_MEMCMP16
-    int i;
-    for (i = 0; i < minCount; i++) {
-        if (thisChars[i] != compChars[i]) {
-            pResult->i = (s4) thisChars[i] - (s4) compChars[i];
-            if (pResult->i != otherRes) {
-                badMatch((StringObject*) arg0, (StringObject*) arg1,
-                    pResult->i, otherRes, "compareTo");
-            }
-            return true;
-        }
-    }
-# endif
-    if (otherRes != 0) {
-        pResult->i = otherRes;
-        return true;
-    }
-
-#else
     /*
      * Straightforward implementation, examining 16 bits at a time.  Compare
      * the characters that overlap, and if they're all the same then return
@@ -282,7 +245,6 @@ bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
             return true;
         }
     }
-#endif
 
     pResult->i = countDiff;
     return true;
@@ -362,16 +324,6 @@ bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     thisChars = ((const u2*)(void*)thisArray->contents) + thisOffset;
     compChars = ((const u2*)(void*)compArray->contents) + compOffset;
 
-#ifdef HAVE__MEMCMP16
-    pResult->i = (__memcmp16(thisChars, compChars, thisCount) == 0);
-# ifdef CHECK_MEMCMP16
-    int otherRes = (memcmp(thisChars, compChars, thisCount * 2) == 0);
-    if (pResult->i != otherRes) {
-        badMatch((StringObject*) arg0, (StringObject*) arg1,
-            otherRes, pResult->i, "equals-1");
-    }
-# endif
-#else
     /*
      * Straightforward implementation, examining 16 bits at a time.  The
      * direction of the loop doesn't matter, and starting at the end may
@@ -392,7 +344,6 @@ bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         }
     }
     pResult->i = true;
-#endif
 
     return true;
 }
