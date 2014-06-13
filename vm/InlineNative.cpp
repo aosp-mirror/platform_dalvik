@@ -143,48 +143,6 @@ bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     }
 }
 
-#ifdef CHECK_MEMCMP16
-/*
- * Utility function when we're evaluating alternative implementations.
- */
-static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
-    int expectResult, int newResult, const char* compareType)
-{
-    ArrayObject* thisArray;
-    ArrayObject* compArray;
-    const char* thisStr;
-    const char* compStr;
-    int thisOffset, compOffset, thisCount, compCount;
-
-    thisCount =
-        dvmGetFieldInt((Object*) thisStrObj, STRING_FIELDOFF_COUNT);
-    compCount =
-        dvmGetFieldInt((Object*) compStrObj, STRING_FIELDOFF_COUNT);
-    thisOffset =
-        dvmGetFieldInt((Object*) thisStrObj, STRING_FIELDOFF_OFFSET);
-    compOffset =
-        dvmGetFieldInt((Object*) compStrObj, STRING_FIELDOFF_OFFSET);
-    thisArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) thisStrObj, STRING_FIELDOFF_VALUE);
-    compArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) compStrObj, STRING_FIELDOFF_VALUE);
-
-    thisStr = dvmCreateCstrFromString(thisStrObj);
-    compStr = dvmCreateCstrFromString(compStrObj);
-
-    ALOGE("%s expected %d got %d", compareType, expectResult, newResult);
-    ALOGE(" this (o=%d l=%d) '%s'", thisOffset, thisCount, thisStr);
-    ALOGE(" comp (o=%d l=%d) '%s'", compOffset, compCount, compStr);
-    dvmPrintHexDumpEx(ANDROID_LOG_INFO, LOG_TAG,
-        ((const u2*) thisArray->contents) + thisOffset, thisCount*2,
-        kHexDumpLocal);
-    dvmPrintHexDumpEx(ANDROID_LOG_INFO, LOG_TAG,
-        ((const u2*) compArray->contents) + compOffset, compCount*2,
-        kHexDumpLocal);
-    dvmAbort();
-}
-#endif
-
 /*
  * public int compareTo(String s)
  */
@@ -346,6 +304,17 @@ bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     pResult->i = true;
 
     return true;
+}
+
+extern "C" int __memcmp16(const unsigned short* lhs, const unsigned short* rhs, size_t n) {
+    for (size_t i = 0; i < n; i++) {
+        if (*lhs != *rhs) {
+            return *lhs - *rhs;
+        }
+        lhs++;
+        rhs++;
+    }
+    return 0;
 }
 
 /*
