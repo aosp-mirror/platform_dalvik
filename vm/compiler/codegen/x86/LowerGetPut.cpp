@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2013 Intel Corporation
+ * Copyright (C) 2010-2011 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,14 @@ int aget_common_nohelper(ArrayAccess flag, u2 vA, u2 vref, u2 vindex, int mirOpt
 
 //!
 int aget_common(int flag, u2 vA, u2 vref, u2 vindex) {
-    return aget_common_nohelper(flag, vA, vref, vindex);
+#ifdef INC_NCG_O0
+    if(gDvm.helper_switch[7]) {
+        return aget_common_helper(flag, vA, vref, vindex);
+    } else
+#endif
+    {
+        return aget_common_nohelper(flag, vA, vref, vindex);
+    }
 }
 #endif
 #undef P_GPR_1
@@ -285,7 +292,14 @@ int aput_common_nohelper(ArrayAccess flag, u2 vA, u2 vref, u2 vindex, int mirOpt
 
 //!
 int aput_common(int flag, u2 vA, u2 vref, u2 vindex) {
-    return aput_common_nohelper(flag, vA, vref, vindex);
+#ifdef INC_NCG_O0
+    if(gDvm.helper_switch[18]) {
+        return aput_common_helper(flag, vA, vref, vindex);
+    } else
+#endif
+    {
+        return aput_common_nohelper(flag, vA, vref, vindex);
+    }
 }
 #endif
 #undef P_GPR_1
@@ -450,41 +464,39 @@ int op_aput_object(const MIR * mir) { //type checking
             updateRefCount2(2, LowOpndRegType_gp, false); //update reference count for tmp2
         }
 
-    get_virtual_reg(vA, OpndSize_32, 4, false);
-    compare_imm_reg(OpndSize_32, 0, 4, false);
-    conditional_jump(Condition_E, ".aput_object_skip_check", true);
-    rememberState(1);
-    move_mem_to_reg(OpndSize_32, offObject_clazz, 4, false, 5, false);
-    load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
-    move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
-    move_mem_to_reg(OpndSize_32, offObject_clazz, 1, false, 6, false);
-    move_reg_to_mem(OpndSize_32, 6, false, 4, PhysicalReg_ESP, true);
+        get_virtual_reg(vA, OpndSize_32, 4, false);
+        compare_imm_reg(OpndSize_32, 0, 4, false);
+        conditional_jump(Condition_E, ".aput_object_skip_check", true);
+        rememberState(1);
+        move_mem_to_reg(OpndSize_32, offObject_clazz, 4, false, 5, false);
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        move_mem_to_reg(OpndSize_32, offObject_clazz, 1, false, 6, false);
+        move_reg_to_mem(OpndSize_32, 6, false, 4, PhysicalReg_ESP, true);
 
-    scratchRegs[0] = PhysicalReg_SCRATCH_1;
-    call_dvmCanPutArrayElement(); //scratch??
-    load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
-    compare_imm_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
-    conditional_jump_global_API(Condition_E, "common_errArrayStore", false);
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        call_dvmCanPutArrayElement(); //scratch??
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        compare_imm_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
+        conditional_jump_global_API(Condition_E, "common_errArrayStore", false);
 
-    //NOTE: "2, false" is live through function call
-    move_reg_to_mem_disp_scale(OpndSize_32, 4, false, 1, false, offArrayObject_contents, 2, false, 4);
-    markCard_notNull(1, 11, false);
-    rememberState(2);
-    ////TODO NCG O1 + code cache
-    unconditional_jump(".aput_object_after_check", true);
+        //NOTE: "2, false" is live through function call
+        move_reg_to_mem_disp_scale(OpndSize_32, 4, false, 1, false, offArrayObject_contents, 2, false, 4);
+        markCard_notNull(1, 11, false);
+        rememberState(2);
+        ////TODO NCG O1 + code cache
+        unconditional_jump(".aput_object_after_check", true);
 
-    if (insertLabel(".aput_object_skip_check", true) == -1)
-        return -1;
-    goToState(1);
-    //NOTE: "2, false" is live through function call
-    move_reg_to_mem_disp_scale(OpndSize_32, 4, false, 1, false, offArrayObject_contents, 2, false, 4);
+        insertLabel(".aput_object_skip_check", true);
+        goToState(1);
+        //NOTE: "2, false" is live through function call
+        move_reg_to_mem_disp_scale(OpndSize_32, 4, false, 1, false, offArrayObject_contents, 2, false, 4);
 
-    transferToState(2);
-    if (insertLabel(".aput_object_after_check", true) == -1)
-        return -1;
-    ///////////////////////////////
-  }
-  return 0;
+        transferToState(2);
+        insertLabel(".aput_object_after_check", true);
+        ///////////////////////////////
+    }
+    return 0;
 }
 #undef P_GPR_1
 #undef P_GPR_2
@@ -516,9 +528,7 @@ void markCard(int valReg, int tgtAddrReg, bool targetPhysical, int scratchReg, b
    conditional_jump(Condition_E, ".markCard_skip", true);
    alu_binary_imm_reg(OpndSize_32, shr_opc, GC_CARD_SHIFT, tgtAddrReg, targetPhysical);
    move_reg_to_mem_disp_scale(OpndSize_8, scratchReg, isPhysical, scratchReg, isPhysical, 0, tgtAddrReg, targetPhysical, 1);
-   if (insertLabel(".markCard_skip", true) == -1) {
-       return;
-   }
+   insertLabel(".markCard_skip", true);
 }
 
 void markCard_notNull(int tgtAddrReg, int scratchReg, bool isPhysical) {
@@ -566,8 +576,7 @@ int iget_iput_common_nohelper(u2 referenceIndex, InstanceAccess flag, u2 vA,
     move_imm_to_reg(OpndSize_32, referenceIndex, PhysicalReg_EAX, true);
     call_helper_API(".inst_field_resolve");
     transferToState(1);
-    if (insertLabel(".iget_iput_resolved", true) == -1)
-        return -1;
+    insertLabel(".iget_iput_resolved", true);
 #else
 #ifdef WITH_JIT_INLINING
     const Method *method =
@@ -670,7 +679,15 @@ int iget_iput_common_nohelper(u2 referenceIndex, InstanceAccess flag, u2 vA,
 
 //!
 int iget_iput_common(int tmp, int flag, u2 vA, u2 vB, int isObj, bool isVolatile) {
-    return iget_iput_common_nohelper(tmp, flag, vA, vB, isObj, isVolatile);
+#ifdef INC_NCG_O0
+    if(gDvm.helper_switch[9]) {
+        return iget_iput_common_helper(tmp, flag, vA, vB);
+    }
+    else
+#endif
+    {
+        return iget_iput_common_nohelper(tmp, flag, vA, vB, isObj, isVolatile);
+    }
 }
 #endif
 #undef P_GPR_1
@@ -910,8 +927,7 @@ int sget_sput_common(StaticAccess flag, u2 vA, u2 referenceIndex, bool isObj,
         export_pc(); //use %edx
         call_helper_API(".static_field_resolve");
         transferToState(1);
-        if (insertLabel(".sget_sput_resolved", true) == -1)
-            return -1;
+        insertLabel(".sget_sput_resolved", true);
 #else
 #ifdef WITH_JIT_INLINING
         const Method *method =
@@ -930,63 +946,60 @@ int sget_sput_common(StaticAccess flag, u2 vA, u2 referenceIndex, bool isObj,
          * by exhaustTrace. Sending a -1 here will terminate the loop formation
          * and fall back to normal trace, which will not have this opcode.
          */
-        if (!fieldPtr) {
-            ALOGE("JIT_ERROR: Unresolved fieldPtr at sget_sput_common");
-            SET_JIT_ERROR(kJitErrorUnresolvedField);
+        if (!fieldPtr)
             return -1;
-        }
 
-    move_imm_to_reg(OpndSize_32, (int)fieldPtr, PhysicalReg_EAX, true);
+        move_imm_to_reg(OpndSize_32, (int)fieldPtr, PhysicalReg_EAX, true);
 #endif
-    if(flag == SGET) {
-        move_mem_to_reg(OpndSize_32, offStaticField_value, PhysicalReg_EAX, true, 7, false); //access field
-        set_virtual_reg(vA, OpndSize_32, 7, false);
-    } else if(flag == SGET_WIDE) {
-        if(isVolatile) {
-            /* call dvmQuasiAtomicRead64(addr) */
-            load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 9, false);
-            move_reg_to_mem(OpndSize_32, 9, false, -4, PhysicalReg_ESP, true); //1st argument
-            load_effective_addr(-4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
-            nextVersionOfHardReg(PhysicalReg_EAX, 2);
-            nextVersionOfHardReg(PhysicalReg_EDX, 2);
-            scratchRegs[0] = PhysicalReg_SCRATCH_3;
-            call_dvmQuasiAtomicRead64();
-            load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
-            //memory content in %edx, %eax
-            set_virtual_reg(vA, OpndSize_32, PhysicalReg_EAX, true);
-            set_virtual_reg(vA+1, OpndSize_32, PhysicalReg_EDX, true);
+        if(flag == SGET) {
+            move_mem_to_reg(OpndSize_32, offStaticField_value, PhysicalReg_EAX, true, 7, false); //access field
+            set_virtual_reg(vA, OpndSize_32, 7, false);
+        } else if(flag == SGET_WIDE) {
+            if(isVolatile) {
+                /* call dvmQuasiAtomicRead64(addr) */
+                load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 9, false);
+                move_reg_to_mem(OpndSize_32, 9, false, -4, PhysicalReg_ESP, true); //1st argument
+                load_effective_addr(-4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+                nextVersionOfHardReg(PhysicalReg_EAX, 2);
+                nextVersionOfHardReg(PhysicalReg_EDX, 2);
+                scratchRegs[0] = PhysicalReg_SCRATCH_3;
+                call_dvmQuasiAtomicRead64();
+                load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+                //memory content in %edx, %eax
+                set_virtual_reg(vA, OpndSize_32, PhysicalReg_EAX, true);
+                set_virtual_reg(vA+1, OpndSize_32, PhysicalReg_EDX, true);
+            }
+            else {
+                move_mem_to_reg(OpndSize_64, offStaticField_value, PhysicalReg_EAX, true, 1, false); //access field
+                set_virtual_reg(vA, OpndSize_64, 1, false);
+            }
+        } else if(flag == SPUT) {
+            get_virtual_reg(vA, OpndSize_32, 7, false);
+            move_reg_to_mem(OpndSize_32, 7, false, offStaticField_value, PhysicalReg_EAX, true); //access field
+            if(isObj) {
+                /* get clazz object, then use clazz object to mark card */
+                move_mem_to_reg(OpndSize_32, offField_clazz, PhysicalReg_EAX, true, 12, false);
+                markCard(7/*valReg*/, 12, false, 11, false);
+            }
+        } else if(flag == SPUT_WIDE) {
+            get_virtual_reg(vA, OpndSize_64, 1, false);
+            if(isVolatile) {
+                /* call dvmQuasiAtomicSwap64(val, addr) */
+                load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 9, false);
+                move_reg_to_mem(OpndSize_32, 9, false, -4, PhysicalReg_ESP, true); //2nd argument
+                move_reg_to_mem(OpndSize_64, 1, false, -12, PhysicalReg_ESP, true); //1st argument
+                load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+                scratchRegs[0] = PhysicalReg_SCRATCH_3;
+                call_dvmQuasiAtomicSwap64();
+                load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            }
+            else {
+                move_reg_to_mem(OpndSize_64, 1, false, offStaticField_value, PhysicalReg_EAX, true); //access field
+            }
         }
-        else {
-            move_mem_to_reg(OpndSize_64, offStaticField_value, PhysicalReg_EAX, true, 1, false); //access field
-            set_virtual_reg(vA, OpndSize_64, 1, false);
-        }
-    } else if(flag == SPUT) {
-        get_virtual_reg(vA, OpndSize_32, 7, false);
-        move_reg_to_mem(OpndSize_32, 7, false, offStaticField_value, PhysicalReg_EAX, true); //access field
-        if(isObj) {
-            /* get clazz object, then use clazz object to mark card */
-            move_mem_to_reg(OpndSize_32, offField_clazz, PhysicalReg_EAX, true, 12, false);
-            markCard(7/*valReg*/, 12, false, 11, false);
-        }
-    } else if(flag == SPUT_WIDE) {
-        get_virtual_reg(vA, OpndSize_64, 1, false);
-        if(isVolatile) {
-            /* call dvmQuasiAtomicSwap64(val, addr) */
-            load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 9, false);
-            move_reg_to_mem(OpndSize_32, 9, false, -4, PhysicalReg_ESP, true); //2nd argument
-            move_reg_to_mem(OpndSize_64, 1, false, -12, PhysicalReg_ESP, true); //1st argument
-            load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
-            scratchRegs[0] = PhysicalReg_SCRATCH_3;
-            call_dvmQuasiAtomicSwap64();
-            load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
-        }
-        else {
-            move_reg_to_mem(OpndSize_64, 1, false, offStaticField_value, PhysicalReg_EAX, true); //access field
-        }
+        //////////////////////////////////////////////
     }
-    //////////////////////////////////////////////
-  }
-  return 0;
+    return 0;
 }
 #undef P_GPR_1
 #undef P_GPR_2
@@ -994,7 +1007,7 @@ int sget_sput_common(StaticAccess flag, u2 vA, u2 referenceIndex, bool isObj,
 
 /**
  * @brief Generate native code for bytecodes sget, sget-boolean,
- * sget-byte, sget-char, sget-object, sget-short, sget/volatile and sget-object/volatile
+ * sget-byte, sget-char, sget-object, sget-short, and sget/volatile
  * @param mir bytecode representation
  * @return value >= 0 when handled
  */
@@ -1005,8 +1018,7 @@ int op_sget(const MIR * mir) {
             || mir->dalvikInsn.opcode == OP_SGET_CHAR
             || mir->dalvikInsn.opcode == OP_SGET_OBJECT
             || mir->dalvikInsn.opcode == OP_SGET_SHORT
-            || mir->dalvikInsn.opcode == OP_SGET_VOLATILE
-            || mir->dalvikInsn.opcode == OP_SGET_OBJECT_VOLATILE);
+            || mir->dalvikInsn.opcode == OP_SGET_VOLATILE);
     u2 vA = mir->dalvikInsn.vA;
     u2 referenceIndex = mir->dalvikInsn.vB;
     int retval = sget_sput_common(SGET, vA, referenceIndex, false, false, mir);
@@ -1083,7 +1095,7 @@ int op_sget_short(const MIR * mir) {
 
 /**
  * @brief Generate native code for bytecodes sput, sput-boolean,
- * sput-byte, sput-char, sput-object, sput-short, sput/volatile and sput-object/volatile
+ * sput-byte, sput-char, sput-object, sput-short, and sput/volatile
  * @param mir bytecode representation
  * @return value >= 0 when handled
  */
@@ -1094,8 +1106,7 @@ int op_sput(const MIR * mir, bool isObj) {
             || mir->dalvikInsn.opcode == OP_SPUT_CHAR
             || mir->dalvikInsn.opcode == OP_SPUT_OBJECT
             || mir->dalvikInsn.opcode == OP_SPUT_SHORT
-            || mir->dalvikInsn.opcode == OP_SPUT_VOLATILE
-            || mir->dalvikInsn.opcode == OP_SPUT_OBJECT_VOLATILE);
+            || mir->dalvikInsn.opcode == OP_SPUT_VOLATILE);
     u2 vA = mir->dalvikInsn.vA;
     u2 referenceIndex = mir->dalvikInsn.vB;
     int retval = sget_sput_common(SPUT, vA, referenceIndex, isObj, false, mir);

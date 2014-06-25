@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2013 Intel Corporation
+ * Copyright (C) 2010-2011 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,17 @@
 #ifndef _DALVIK_LOWER
 #define _DALVIK_LOWER
 
+#if defined(WITH_JIT)
 #define CODE_CACHE_PADDING 1024 //code space for a single bytecode
 // comment out for phase 1 porting
 #define PREDICTED_CHAINING
 #define JIT_CHAIN
 #define WITH_JIT_INLINING
+#endif
 
 #define NCG_O1
 //compilaton flags used by NCG O1
+#ifdef NCG_O1
 #define DUMP_EXCEPTION //to measure performance, required to have correct exception handling
 /*! multiple versions for hardcoded registers */
 #define HARDREG_OPT
@@ -51,12 +54,16 @@
 #define NATIVE_FIX
 #define INVOKE_FIX //optimization
 #define GETVR_FIX //optimization
+#endif
 
-#include "CodegenErrors.h"
 #include "Dalvik.h"
 #include "enc_wrapper.h"
+#ifdef NCG_O1
 #include "AnalysisO1.h"
+#endif
+#if defined(WITH_JIT)
 #include "compiler/CompilerIR.h"
+#endif
 
 //compilation flags for debugging
 //#define DEBUG_INFO
@@ -73,6 +80,10 @@
 #define HARDCODE_REG_CALL
 #define HARDCODE_REG_SHARE
 #define HARDCODE_REG_HELPER
+#ifndef NCG_O1
+/*! registers for NCG O0 are hardcoded */
+  #define HARDCODE_REG
+#endif
 
 #define PhysicalReg_FP PhysicalReg_EDI
 #define PhysicalReg_Glue PhysicalReg_EBP
@@ -136,8 +147,12 @@
 #define offMethod_registersSize 10
 #define offMethod_outsSize 12
 #define offGlue_interpStackEnd 32
+#if defined(WITH_JIT)
 #define offThread_inJitCodeCache 124
 #define offThread_jniLocal_nextEntry 168
+#else
+#define offThread_jniLocal_nextEntry 100 // same as offThread_jniLocal_topCookie
+#endif
 #define offMethod_insns 32
 #ifdef ENABLE_TRACING
 #define offMethod_insns_bytecode 44
@@ -157,17 +172,26 @@
 #define offGlue_pDebuggerActive 44
 #define offGlue_pActiveProfilers 48
 #define offGlue_entryPoint 52
+#if defined(WITH_JIT)
 #define offGlue_icRechainCount 84
 #define offGlue_espEntry 88
 #define offGlue_spillRegion 92
+#else
+#define offGlue_espEntry 60
+#define offGlue_spillRegion 64
+#endif
 #define offDvmDex_pResStrings 8
 #define offDvmDex_pResClasses 12
 #define offDvmDex_pResMethods 16
 #define offDvmDex_pResFields  20
 #define offMethod_clazz       0
 
-// Definitions must be consistent with vm/mterp/x86/header.S
+// Definitions must be consistent with vm/mterp/x86-atom/header.S
+#if defined(WITH_JIT)
 #define FRAME_SIZE     124
+#else
+#define FRAME_SIZE     76
+#endif
 
 typedef enum ArgsDoneType {
     ArgsDone_Normal = 0,
@@ -275,20 +299,15 @@ enum MemoryAccessType {
 //! \enum UseDefEntryType
 //! \brief Defines types of resources on which there can be a dependency.
 enum UseDefEntryType {
-    //! \brief Control flags, EFLAGS register
+    //! \brief Control flags
     UseDefType_Ctrl,
     //! \brief Floating-point stack
-    //! \details This is a very generic resource for x87 operations and
-    //! doesn't break down different possible resources like control word,
-    //! status word, FPU flags, etc. All of x87 resources fall into this
-    //! type of resource.
     UseDefType_Float,
     //! \brief Dalvik virtual register. Corresponds to MemoryAccess_VR
     UseDefType_MemVR,
     //! \brief Spill region. Corresponds to MemoryAccess_SPILL
     UseDefType_MemSpill,
     //! \brief Unclassified memory access. Corresponds to MemoryAccess_Unknown
-    //! \details No memory disambiguation will be done with unknown accesses
     UseDefType_MemUnknown,
     //! \brief Register
     UseDefType_Reg
@@ -305,35 +324,17 @@ enum DependencyType {
     Dependency_WAR,
 };
 
-//! \enum LatencyBetweenNativeInstructions
-//! \brief Defines reasons for what causes pipeline stalls
-//! between two instructions.
-//! \warning Make sure that if adding new reasons here,
-//! the scheduler needs updated with the actual latency value.
-//! \see mapLatencyReasonToValue
-enum LatencyBetweenNativeInstructions {
-    //! \brief No latency between the two instructions
-    Latency_None = 0,
-    //! \brief Stall in address generation phase of pipeline
-    //! when register is not available.
-    Latency_Agen_stall,
-    //! \brief Stall when a memory load is blocked by a store
-    //! and there is no store forwarding.
-    Latency_Load_blocked_by_store,
-    //! \brief Stall due to cache miss during load from memory
-    Latency_Memory_Load,
-};
-
 //! \brief Defines a relationship between a resource and its producer.
 struct UseDefProducerEntry {
     //! \brief Resource type on which there is a dependency.
     UseDefEntryType type;
-    //! \brief Virtual or physical register this resource is
+    //! \brief Logical or physical register this resource is
     //! associated with.
     //! \details When physical, this is of enum type PhysicalReg.
-    //! When VR, this is the virtual register number.
+    //! When logical, this is the index of the logical register.
     //! When there is no register related dependency, this is
     //! negative.
+    //! \todo Is this correct? What about VRs?
     int regNum;
     //! \brief Corresponds to LowOp::slotId to keep track of producer.
     unsigned int producerSlot;
@@ -343,12 +344,13 @@ struct UseDefProducerEntry {
 struct UseDefUserEntry {
     //! \brief Resource type on which there is a dependency.
     UseDefEntryType type;
-    //! \brief Virtual or physical register this resource is
+    //! \brief Logical or physical register this resource is
     //! associated with.
     //! \details When physical, this is of enum type PhysicalReg.
-    //! When VR, this is the virtual register number.
+    //! When logical, this is the index of the logical register.
     //! When there is no register related dependency, this is
     //! negative.
+    //! \todo Is this correct? What about VRs?
     int regNum;
     //! \brief A list of LowOp::slotId to keep track of all users
     //! of this resource.
@@ -362,13 +364,10 @@ struct DependencyInformation {
     //! \brief Holds the LowOp::slotId of the LIR that causes this
     //! data dependence.
     unsigned int lowopSlotId;
-    //! \brief Description for what causes the edge latency
-    //! \see LatencyBetweenNativeInstructions
-    LatencyBetweenNativeInstructions causeOfEdgeLatency;
     //! \brief Holds latency information for edges in the
     //! dependency graph, not execute to execute latency for the
     //! instructions.
-    int edgeLatency;
+    int latency;
 };
 
 //! \brief Holds general information about an operand.
@@ -431,7 +430,8 @@ struct LowOpndMem {
     bool hasScale;
     //! \brief Defines type of memory access.
     MemoryAccessType mType;
-    //! \brief If positive, this represents the VR number
+    //! \brief
+    //! \todo What is this used for?
     int index;
 };
 
@@ -465,7 +465,7 @@ struct LowOp {
     //! \brief Logical time for when the LIR is ready.
     //! \details This field is used only for scheduling.
     int readyTime;
-    //! \brief Cycle in which LIR is scheduled for issue.
+    //! \brief Logical time for when the LIR is scheduled.
     //! \details This field is used only for scheduling.
     int scheduledTime;
     //! \brief Execute to execute time for this instruction.
@@ -476,6 +476,22 @@ struct LowOp {
     //! \details This field is used only for scheduling.
     //! \see MachineModelEntry::issuePortType
     int portType;
+    //! \brief Holds information about LowOps on which current LowOp
+    //! depends on (predecessors).
+    //! \details For example, if a LowOp with slotId of 3 depends on
+    //! LowOp with slotId of 2 because of a RAW, then the LowOp with
+    //! slotId of 3 will have an entry in the predecessorDependencies
+    //! with a Dependency_RAW and slotId of 2. This field is used
+    //! only for scheduling.
+    std::vector<DependencyInformation> predecessorDependencies;
+    //! \brief Holds information about LowOps that depend on current
+    //! LowOp (successors).
+    //! \details For example, if a LowOp with slotId of 3 depends on
+    //! LowOp with slotId of 2 because of a RAW, then the LowOp with
+    //! slotId of 2 will have an entry in the successorDependencies
+    //! with a Dependency_RAW and slotId of 3. This field is used
+    //! only for scheduling.
+    std::vector<DependencyInformation> successorDependencies;
     //! \brief Weight of longest path in dependency graph from
     //! current instruction to end of the basic block.
     //! \details This field is used only for scheduling.
@@ -566,6 +582,8 @@ struct LowOpRegMem : LowOp {
     //! \brief Memory as destination.
     LowOpndMem memDest;
 };
+
+
 
 /*!
 \brief data structure for labels used when lowering a method
@@ -674,24 +692,34 @@ extern char* stream; //current stream pointer
 extern char* streamMisPred;
 extern int lowOpTimeStamp;
 extern Method* currentMethod;
+#if defined(WITH_JIT)
 extern int currentExceptionBlockIdx;
+#endif
 
 extern int globalMapNum;
 extern int globalWorklistNum;
 extern int globalDataWorklistNum;
 extern int globalPCWorklistNum;
+#if defined(WITH_JIT)
 extern int chainingWorklistNum;
+#endif
 extern int VMAPIWorklistNum;
 
 extern LabelMap* globalDataWorklist;
 extern LabelMap* globalPCWorklist;
+#if defined(WITH_JIT)
 extern LabelMap* chainingWorklist;
+#endif
 extern LabelMap* VMAPIWorklist;
 
 extern int ncgClassNum;
 extern int ncgMethodNum;
 
+class Scheduler;
+extern Scheduler g_SchedulerInstance;
+
 bool existATryBlock(Method* method, int startPC, int endPC);
+#ifdef NCG_O1
 // interface between register allocator & lowering
 extern int num_removed_nullCheck;
 
@@ -707,7 +735,7 @@ bool checkTempReg2(int reg, int type, bool isPhysical, int physicalRegForVR, u2 
 int freeReg(bool spillGL);
 int nextVersionOfHardReg(PhysicalReg pReg, int refCount);
 int updateVirtualReg(int reg, LowOpndRegType type);
-int setVRNullCheck(int regNum, OpndSize size);
+void setVRNullCheck(int regNum, OpndSize size);
 bool isVRNullCheck(int regNum, OpndSize size);
 void setVRBoundCheck(int vr_array, int vr_index);
 bool isVRBoundCheck(int vr_array, int vr_index);
@@ -715,8 +743,8 @@ int requestVRFreeDelay(int regNum, u4 reason);
 void cancelVRFreeDelayRequest(int regNum, u4 reason);
 bool getVRFreeDelayRequested(int regNum);
 bool isGlueHandled(int glue_reg);
-int resetGlue(int glue_reg);
-int updateGlue(int reg, bool isPhysical, int glue_reg);
+void resetGlue(int glue_reg);
+void updateGlue(int reg, bool isPhysical, int glue_reg);
 int updateVRAtUse(int reg, LowOpndRegType pType, int regAll);
 int touchEcx();
 int touchEax();
@@ -728,7 +756,7 @@ void endBranch();
 void rememberState(int);
 void goToState(int);
 void transferToState(int);
-int globalVREndOfBB(const Method*);
+void globalVREndOfBB(const Method*);
 void constVREndOfBB();
 bool hasVRStoreExitOfLoop();
 void storeVRExitOfLoop();
@@ -736,6 +764,7 @@ void startNativeCode(int num, int type);
 void endNativeCode();
 void donotSpillReg(int physicalReg);
 void doSpillReg(int physicalReg);
+#endif
 
 #define XMM_1 PhysicalReg_XMM0
 #define XMM_2 PhysicalReg_XMM1
@@ -752,7 +781,6 @@ void load_effective_addr_scale(int base_reg, bool isBasePhysical,
 void load_fpu_cw(int disp, int base_reg, bool isBasePhysical);
 void store_fpu_cw(bool checkException, int disp, int base_reg, bool isBasePhysical);
 void convert_integer(OpndSize srcSize, OpndSize dstSize);
-void convert_int_to_fp(int srcReg, bool isSrcPhysical, int destReg, bool isDestPhysical, bool isDouble);
 void load_fp_stack(LowOp* op, OpndSize size, int disp, int base_reg, bool isBasePhysical);
 void load_int_fp_stack(OpndSize size, int disp, int base_reg, bool isBasePhysical);
 void load_int_fp_stack_imm(OpndSize size, int imm);
@@ -819,7 +847,6 @@ void unconditional_jump_int(int target, OpndSize size);
 void conditional_jump_block(ConditionCode cc, int targetBlockId);
 void unconditional_jump_block(int targetBlockId);
 void unconditional_jump_reg(int reg, bool isPhysical);
-void unconditional_jump_rel32(void * target);
 void call(const char* target);
 void call_reg(int reg, bool isPhysical);
 void call_reg_noalloc(int reg, bool isPhysical);
@@ -877,19 +904,6 @@ void moves_mem_disp_scale_to_reg(OpndSize size,
                       int base_reg, bool isBasePhysical,
                       int disp, int index_reg, bool isIndexPhysical, int scale,
                       int reg, bool isPhysical);
-
-//! \brief Performs MOVSX reg, reg2
-//!
-//! \details Sign extends reg and moves to reg2
-//! Size of destination register is fixed at 32-bits
-//! \param size of the source operand
-//! \param reg source operand
-//! \param isPhysical if reg is a physical register
-//! \param reg2 destination register
-//! \param isPhysical2 if reg2 is a physical register
-void moves_reg_to_reg(OpndSize size,
-                      int reg, bool isPhysical,
-                      int reg2, bool isPhysical2);
 void move_reg_to_reg(OpndSize size,
                       int reg, bool isPhysical,
                       int reg2, bool isPhysical2);
@@ -965,8 +979,6 @@ int set_glue_dvmdex(int reg, bool isPhysical);
 int get_suspendCount(int reg, bool isPhysical);
 int get_return_value(OpndSize size, int reg, bool isPhysical);
 int set_return_value(OpndSize size, int reg, bool isPhysical);
-void set_return_value(OpndSize size, int sourceReg, bool isSourcePhysical,
-        int scratchRegForSelfThread, int isScratchPhysical);
 int clear_exception();
 int get_exception(int reg, bool isPhysical);
 int set_exception(int reg, bool isPhysical);
@@ -994,12 +1006,14 @@ int call_dvmAllocPrimitiveArray();
 int call_dvmInterpHandleFillArrayData();
 int call_dvmNcgHandlePackedSwitch();
 int call_dvmNcgHandleSparseSwitch();
+#if defined(WITH_JIT)
 int call_dvmJitHandlePackedSwitch();
 int call_dvmJitHandleSparseSwitch();
 int call_dvmJitToInterpTraceSelectNoChain();
 int call_dvmJitToPatchPredictedChain();
 int call_dvmJitToInterpNormal();
 int call_dvmJitToInterpTraceSelect();
+#endif
 int call_dvmQuasiAtomicSwap64();
 int call_dvmQuasiAtomicRead64();
 int call_dvmCanPutArrayElement();
@@ -1041,7 +1055,9 @@ void performChainingWorklist();
 void freeNCGWorklist();
 void freeDataWorklist();
 void freeLabelWorklist();
+#if defined(WITH_JIT)
 void freeChainingWorklist();
+#endif
 
 int common_backwardBranch();
 int common_exceptionThrown();
@@ -1053,9 +1069,10 @@ int common_errNoSuchMethod();
 int common_errDivideByZero();
 int common_periodicChecks_entry();
 int common_periodicChecks4();
-int common_gotoBail(void);
-int common_gotoBail_0(void);
+int common_gotoBail();
+int common_gotoBail_0();
 int common_errStringIndexOutOfBounds();
+void goto_invokeArgsDone();
 
 #if defined VTUNE_DALVIK
 void sendLabelInfoToVTune(int startStreamPtr, int endStreamPtr, const char* labelName);
@@ -1313,10 +1330,6 @@ LowOpImmMem* dump_imm_mem_noalloc(Mnemonic m, OpndSize size,
 LowOpRegReg* dump_reg_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
                    int reg, bool isPhysical,
                    int reg2, bool isPhysical2, LowOpndRegType type);
-LowOpRegReg* dump_reg_reg_diff_types(Mnemonic m, AtomOpCode m2, OpndSize srcSize,
-                   int srcReg, int isSrcPhysical, LowOpndRegType srcType,
-                   OpndSize destSize, int destReg, int isDestPhysical,
-                   LowOpndRegType destType);
 LowOpRegReg* dump_movez_reg_reg(Mnemonic m, OpndSize size,
                         int reg, bool isPhysical,
                         int reg2, bool isPhysical2);
@@ -1349,10 +1362,10 @@ LowOpImmMem* dump_imm_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
                    int imm,
                    int disp, int base_reg, bool isBasePhysical,
                    MemoryAccessType mType, int mIndex, bool chaining);
-LowOpRegMem* dump_fp_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+LowOpRegMem* dump_fp_mem(Mnemonic m, OpndSize size, int reg,
                   int disp, int base_reg, bool isBasePhysical,
                   MemoryAccessType mType, int mIndex);
-LowOpMemReg* dump_mem_fp(Mnemonic m, AtomOpCode m2, OpndSize size,
+LowOpMemReg* dump_mem_fp(Mnemonic m, OpndSize size,
                   int disp, int base_reg, bool isBasePhysical,
                   MemoryAccessType mType, int mIndex,
                   int reg);
@@ -1360,7 +1373,6 @@ LowOpLabel* dump_label(Mnemonic m, OpndSize size, int imm,
                const char* label, bool isLocal);
 
 unsigned getJmpCallInstSize(OpndSize size, JmpCall_type type);
-bool lowerByteCodeJit(const Method* method, const u2* codePtr, MIR* mir);
 #if defined(WITH_JIT)
 bool lowerByteCodeJit(const Method* method, const MIR * mir, const u2 * dalvikPC);
 void startOfBasicBlock(struct BasicBlock* bb);
@@ -1397,7 +1409,7 @@ int getRelativeNCG(s4 tmp, JmpCall_type type, bool* unknown, OpndSize* size);
 void freeAtomMem();
 OpndSize estOpndSizeFromImm(int target);
 
-int preprocessingBB(BasicBlock* bb);
-int preprocessingTrace();
+void preprocessingBB(BasicBlock* bb);
+void preprocessingTrace();
 void dump_nop(int size);
 #endif

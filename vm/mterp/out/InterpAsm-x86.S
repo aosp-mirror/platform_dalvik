@@ -1,10 +1,10 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'x86'.
+ * This file was generated automatically by gen-mterp.py for 'x86-atom'.
  *
  * --> DO NOT EDIT <--
  */
 
-/* File: x86/header.S */
+/* File: x86-atom/header.S */
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -72,13 +72,24 @@ Notes:
 
 */
 
+# Many data elements that were accessed
+# by rGLUE in HC are now accessed through the
+# this pointer to the thread struct
 #define rSELF    8(%ebp)
+# For HC x86-atom this was also %esi
 #define rPC      %esi
+# For HC x86-atom this was also %edi
 #define rFP      %edi
+# For HC x86-atom this was also %ebx
 #define rINST    %ebx
+# For HC x86-atom this was also %bx
 #define rINSTw   %bx
+# For HC x86-atom this was also %bh
 #define rINSTbh  %bh
+# For HC x86-atom this was also %bl
 #define rINSTbl  %bl
+# For HC x86-atom this handler table base was
+# variable and not tied exclusively to %edx
 #define rIBASE   %edx
 
 
@@ -159,11 +170,11 @@ Notes:
  *
  * It's okay to do this more than once.
  */
-.macro EXPORT_PC
+.macro EXPORT_PC        # This is consistent to the HC x86-atom implementation
     movl     rPC, (-sizeofStackSaveArea + offStackSaveArea_currentPc)(rFP)
 .endm
 
-.macro GET_PC
+.macro GET_PC        # This is consistent to the HC x86-atom implementation
     movl     (-sizeofStackSaveArea + offStackSaveArea_currentPc)(rFP), rPC
 .endm
 
@@ -172,14 +183,14 @@ Notes:
  *
  * In C this is "((StackSaveArea*)(_fp) -1)".
  */
-.macro SAVEAREA_FROM_FP _reg
+.macro SAVEAREA_FROM_FP _reg    # This is consistent with the HC x86-atom implementation
     leal    -sizeofStackSaveArea(rFP), \_reg
 .endm
 
 /*
  * Fetch the next instruction from rPC into rINSTw.  Does not advance rPC.
  */
-.macro FETCH_INST
+.macro FETCH_INST       # This is consistent with the HC x86-atom implementation
     movzwl    (rPC),rINST
 .endm
 
@@ -187,7 +198,7 @@ Notes:
  * Fetch the opcode byte and zero-extend it into _reg.  Must be used
  * in conjunction with GOTO_NEXT_R
  */
-.macro FETCH_INST_R _reg
+.macro FETCH_INST_R _reg      # In HC x86-atom this was called FFETCH
     movzbl    (rPC),\_reg
 .endm
 
@@ -195,7 +206,7 @@ Notes:
  * Fetch the opcode byte at _count words offset from rPC and zero-extend
  * it into _reg.  Must be used in conjunction with GOTO_NEXT_R
  */
-.macro FETCH_INST_OPCODE _count _reg
+.macro FETCH_INST_OPCODE _count _reg    # In HC x86-atom this wa called FFETCH_ADV
     movzbl  \_count*2(rPC),\_reg
 .endm
 
@@ -203,7 +214,8 @@ Notes:
  * Fetch the nth instruction word from rPC into rINSTw.  Does not advance
  * rPC, and _count is in words
  */
-.macro FETCH_INST_WORD _count
+.macro FETCH_INST_WORD _count           # In HC x86-atom using "FETCH rINST"
+                                        # would be equivalent
     movzwl  \_count*2(rPC),rINST
 .endm
 
@@ -211,25 +223,29 @@ Notes:
  * Fetch instruction word indexed (used for branching).
  * Index is in instruction word units.
  */
-.macro FETCH_INST_INDEXED _reg
+.macro FETCH_INST_INDEXED _reg  # In HC x86-atom there is no translation for this.
     movzwl  (rPC,\_reg,2),rINST
 .endm
 
 /*
  * Advance rPC by instruction count
  */
-.macro ADVANCE_PC _count
+.macro ADVANCE_PC _count        # In HC x86-atom this was done during FETCH_ADV_INST but
+                                # that macro also updated rINST
     leal  2*\_count(rPC),rPC
 .endm
 
 /*
  * Advance rPC by branch offset in register
  */
-.macro ADVANCE_PC_INDEXED _reg
+.macro ADVANCE_PC_INDEXED _reg  # In HC x86-atom there is no translation for this.
     leal (rPC,\_reg,2),rPC
 .endm
 
-.macro GOTO_NEXT
+.macro GOTO_NEXT                # In HC x86-atom this is partly implemented in
+                                # FINISH_A. Essentially jumps to the next instruction
+                                # given rINST holds the next opcode. Also prepares
+                                # rINST.
      movzx   rINSTbl,%eax
      movzbl  rINSTbh,rINST
      jmp     *(rIBASE,%eax,4)
@@ -239,39 +255,82 @@ Notes:
     * Version of GOTO_NEXT that assumes _reg preloaded with opcode.
     * Should be paired with FETCH_INST_R
     */
-.macro GOTO_NEXT_R _reg
+.macro GOTO_NEXT_R _reg         # In HC x86-atom this is partly implemented in
+                                # FINISH_RB. Essentially jumps to the next instruction
+                                # given rINST holds the next opcode. Also prepares
+                                # rINST.
      movzbl  1(rPC),rINST
+     jmp     *(rIBASE,\_reg,4)
+.endm
+
+   /*
+    * Jumbo version of GOTO_NEXT that assumes _reg preloaded with table
+    * offset of the jumbo instruction, which is the top half of the extended
+    * opcode + 0x100.  Loads rINST with BBBB field, similar to GOTO_NEXT_R
+    */
+.macro GOTO_NEXT_JUMBO_R _reg   # No equivalent in HC
+     movzwl  6(rPC),rINST
      jmp     *(rIBASE,\_reg,4)
 .endm
 
 /*
  * Get/set the 32-bit value from a Dalvik register.
  */
-.macro GET_VREG_R _reg _vreg
+.macro GET_VREG_R _reg _vreg    # Equivalent to GET_VREG for HC x86-atom
     movl     (rFP,\_vreg,4),\_reg
 .endm
 
-.macro SET_VREG _reg _vreg
+.macro SET_VREG _reg _vreg      # Equivalent in HC x86-atom
     movl     \_reg,(rFP,\_vreg,4)
 .endm
 
-.macro GET_VREG_WORD _reg _vreg _offset
+.macro GET_VREG_WORD _reg _vreg _offset # No equivalent in HC x86-atom
     movl     4*(\_offset)(rFP,\_vreg,4),\_reg
 .endm
 
-.macro SET_VREG_WORD _reg _vreg _offset
+.macro SET_VREG_WORD _reg _vreg _offset # No equivalent in HC x86-atom
     movl     \_reg,4*(\_offset)(rFP,\_vreg,4)
 .endm
+
+#ifdef PROFILE_OPCODE
+
+/* Profile opcodes  */
+        .type   fiprint, %function
+  fiprint:
+        pushl   %eax
+        pushl   %ecx
+        pushl   %edx
+        pushl   (rPC)
+        call    fastinterptouch
+        popl    %edx
+        popl    %edx
+        popl    %ecx
+        popl    %eax
+        ret
+#endif
 
 #define sReg0 LOCAL0_OFFSET(%ebp)
 #define sReg1 LOCAL1_OFFSET(%ebp)
 #define sReg2 LOCAL2_OFFSET(%ebp)
 
    /*
-    * x86 JIT Helpers
+    * x86-atom JIT Helpers
     */
 
     .macro dumpSwitch _regData _regScratch1 _regScratch2
+#ifdef DEBUG_CALL_STACK3
+    movl        rGLUE, \_regScratch2
+    //use %ebx, %ecx, update numSwitch & switchPoints
+    movl        offGlue_numSwitch(\_regScratch2), \_regScratch1
+    lea         (\_regScratch2, \_regScratch1, 4), \_regScratch2
+    //numSwitch*4 + offGlue_switchPoints + _regGlue
+    movl        \_regData, offGlue_switchPoints(\_regScratch2)
+    //update offGlue_numSwitch(%edx) (+1)&0xff
+    addl        $1, \_regScratch1
+    movl        rGLUE, \_regScratch2
+    and         $0x00ff, \_regScratch1
+    movl        \_regScratch1, offGlue_numSwitch(\_regScratch2)
+#endif
     .endm
 
    /*
@@ -1051,7 +1110,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_NEW_INSTANCE: /* 0x22 */
-/* File: x86/OP_NEW_INSTANCE.S */
+/* File: x86-atom/OP_NEW_INSTANCE.S */
     /*
      * Create a new instance of a class.
      */
@@ -1519,7 +1578,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_GOTO: /* 0x28 */
-/* File: x86/OP_GOTO.S */
+/* File: x86-atom/OP_GOTO.S */
     /*
      * Unconditional branch, 8-bit offset.
      *
@@ -1542,7 +1601,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_GOTO_16: /* 0x29 */
-/* File: x86/OP_GOTO_16.S */
+/* File: x86-atom/OP_GOTO_16.S */
     /*
      * Unconditional branch, 16-bit offset.
      *
@@ -1564,7 +1623,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_GOTO_32: /* 0x2a */
-/* File: x86/OP_GOTO_32.S */
+/* File: x86-atom/OP_GOTO_32.S */
     /*
      * Unconditional branch, 32-bit offset.
      *
@@ -1586,7 +1645,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_PACKED_SWITCH: /* 0x2b */
-/* File: x86/OP_PACKED_SWITCH.S */
+/* File: x86-atom/OP_PACKED_SWITCH.S */
     /*
      * Handle a packed-switch or sparse-switch instruction.  In both cases
      * we decode it and hand it off to a helper function.
@@ -1617,8 +1676,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SPARSE_SWITCH: /* 0x2c */
-/* File: x86/OP_SPARSE_SWITCH.S */
-/* File: x86/OP_PACKED_SWITCH.S */
+/* File: x86-atom/OP_SPARSE_SWITCH.S */
+/* File: x86-atom/OP_PACKED_SWITCH.S */
     /*
      * Handle a packed-switch or sparse-switch instruction.  In both cases
      * we decode it and hand it off to a helper function.
@@ -1831,8 +1890,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_EQ: /* 0x32 */
-/* File: x86/OP_IF_EQ.S */
-/* File: x86/bincmp.S */
+/* File: x86-atom/OP_IF_EQ.S */
+/* File: x86-atom/bincmp.S */
     /*
      * Generic two-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -1865,8 +1924,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_NE: /* 0x33 */
-/* File: x86/OP_IF_NE.S */
-/* File: x86/bincmp.S */
+/* File: x86-atom/OP_IF_NE.S */
+/* File: x86-atom/bincmp.S */
     /*
      * Generic two-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -1899,8 +1958,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_LT: /* 0x34 */
-/* File: x86/OP_IF_LT.S */
-/* File: x86/bincmp.S */
+/* File: x86-atom/OP_IF_LT.S */
+/* File: x86-atom/bincmp.S */
     /*
      * Generic two-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -1933,8 +1992,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_GE: /* 0x35 */
-/* File: x86/OP_IF_GE.S */
-/* File: x86/bincmp.S */
+/* File: x86-atom/OP_IF_GE.S */
+/* File: x86-atom/bincmp.S */
     /*
      * Generic two-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -1967,8 +2026,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_GT: /* 0x36 */
-/* File: x86/OP_IF_GT.S */
-/* File: x86/bincmp.S */
+/* File: x86-atom/OP_IF_GT.S */
+/* File: x86-atom/bincmp.S */
     /*
      * Generic two-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -2001,8 +2060,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_LE: /* 0x37 */
-/* File: x86/OP_IF_LE.S */
-/* File: x86/bincmp.S */
+/* File: x86-atom/OP_IF_LE.S */
+/* File: x86-atom/bincmp.S */
     /*
      * Generic two-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -2035,8 +2094,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_EQZ: /* 0x38 */
-/* File: x86/OP_IF_EQZ.S */
-/* File: x86/zcmp.S */
+/* File: x86-atom/OP_IF_EQZ.S */
+/* File: x86-atom/zcmp.S */
     /*
      * Generic one-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -2065,8 +2124,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_NEZ: /* 0x39 */
-/* File: x86/OP_IF_NEZ.S */
-/* File: x86/zcmp.S */
+/* File: x86-atom/OP_IF_NEZ.S */
+/* File: x86-atom/zcmp.S */
     /*
      * Generic one-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -2095,8 +2154,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_LTZ: /* 0x3a */
-/* File: x86/OP_IF_LTZ.S */
-/* File: x86/zcmp.S */
+/* File: x86-atom/OP_IF_LTZ.S */
+/* File: x86-atom/zcmp.S */
     /*
      * Generic one-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -2125,8 +2184,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_GEZ: /* 0x3b */
-/* File: x86/OP_IF_GEZ.S */
-/* File: x86/zcmp.S */
+/* File: x86-atom/OP_IF_GEZ.S */
+/* File: x86-atom/zcmp.S */
     /*
      * Generic one-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -2155,8 +2214,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_GTZ: /* 0x3c */
-/* File: x86/OP_IF_GTZ.S */
-/* File: x86/zcmp.S */
+/* File: x86-atom/OP_IF_GTZ.S */
+/* File: x86-atom/zcmp.S */
     /*
      * Generic one-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -2185,8 +2244,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_IF_LEZ: /* 0x3d */
-/* File: x86/OP_IF_LEZ.S */
-/* File: x86/zcmp.S */
+/* File: x86-atom/OP_IF_LEZ.S */
+/* File: x86-atom/zcmp.S */
     /*
      * Generic one-operand compare-and-branch operation.  Provide a "revcmp"
      * fragment that specifies the *reverse* comparison to perform, e.g.
@@ -3473,7 +3532,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET: /* 0x60 */
-/* File: x86/OP_SGET.S */
+/* File: x86-atom/OP_SGET.S */
     /*
      * General 32-bit SGET handler.
      *
@@ -3489,7 +3548,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif        
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_resolve                # if not, make it so
@@ -3518,16 +3577,17 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     je      common_exceptionThrown             # no, handle exception
 #if defined(WITH_JIT)
     movl      TMP_SPILL2(%ebp), %ecx
-    SPILL(rIBASE)
+    SPILL(rIBASE) 
     call     common_verifyField
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SGET_finish                 # success, continue
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET_WIDE: /* 0x61 */
-/* File: x86/OP_SGET_WIDE.S */
+/* File: x86-atom/OP_SGET_WIDE.S */
     /*
      * 64-bit SGET handler.
      *
@@ -3542,7 +3602,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif                
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_WIDE_resolve                # if not, make it so
@@ -3579,11 +3639,12 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 #endif
     jmp      .LOP_SGET_WIDE_finish                 # success, continue
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET_OBJECT: /* 0x62 */
-/* File: x86/OP_SGET_OBJECT.S */
-/* File: x86/OP_SGET.S */
+/* File: x86-atom/OP_SGET_OBJECT.S */
+/* File: x86-atom/OP_SGET.S */
     /*
      * General 32-bit SGET handler.
      *
@@ -3599,7 +3660,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif        
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_OBJECT_resolve                # if not, make it so
@@ -3628,18 +3689,19 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     je      common_exceptionThrown             # no, handle exception
 #if defined(WITH_JIT)
     movl      TMP_SPILL2(%ebp), %ecx
-    SPILL(rIBASE)
+    SPILL(rIBASE) 
     call     common_verifyField
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SGET_OBJECT_finish                 # success, continue
 
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET_BOOLEAN: /* 0x63 */
-/* File: x86/OP_SGET_BOOLEAN.S */
-/* File: x86/OP_SGET.S */
+/* File: x86-atom/OP_SGET_BOOLEAN.S */
+/* File: x86-atom/OP_SGET.S */
     /*
      * General 32-bit SGET handler.
      *
@@ -3655,7 +3717,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif        
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_BOOLEAN_resolve                # if not, make it so
@@ -3684,18 +3746,19 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     je      common_exceptionThrown             # no, handle exception
 #if defined(WITH_JIT)
     movl      TMP_SPILL2(%ebp), %ecx
-    SPILL(rIBASE)
+    SPILL(rIBASE) 
     call     common_verifyField
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SGET_BOOLEAN_finish                 # success, continue
 
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET_BYTE: /* 0x64 */
-/* File: x86/OP_SGET_BYTE.S */
-/* File: x86/OP_SGET.S */
+/* File: x86-atom/OP_SGET_BYTE.S */
+/* File: x86-atom/OP_SGET.S */
     /*
      * General 32-bit SGET handler.
      *
@@ -3711,7 +3774,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif        
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_BYTE_resolve                # if not, make it so
@@ -3740,18 +3803,19 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     je      common_exceptionThrown             # no, handle exception
 #if defined(WITH_JIT)
     movl      TMP_SPILL2(%ebp), %ecx
-    SPILL(rIBASE)
+    SPILL(rIBASE) 
     call     common_verifyField
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SGET_BYTE_finish                 # success, continue
 
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET_CHAR: /* 0x65 */
-/* File: x86/OP_SGET_CHAR.S */
-/* File: x86/OP_SGET.S */
+/* File: x86-atom/OP_SGET_CHAR.S */
+/* File: x86-atom/OP_SGET.S */
     /*
      * General 32-bit SGET handler.
      *
@@ -3767,7 +3831,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif        
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_CHAR_resolve                # if not, make it so
@@ -3796,18 +3860,19 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     je      common_exceptionThrown             # no, handle exception
 #if defined(WITH_JIT)
     movl      TMP_SPILL2(%ebp), %ecx
-    SPILL(rIBASE)
+    SPILL(rIBASE) 
     call     common_verifyField
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SGET_CHAR_finish                 # success, continue
 
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET_SHORT: /* 0x66 */
-/* File: x86/OP_SGET_SHORT.S */
-/* File: x86/OP_SGET.S */
+/* File: x86-atom/OP_SGET_SHORT.S */
+/* File: x86-atom/OP_SGET.S */
     /*
      * General 32-bit SGET handler.
      *
@@ -3823,7 +3888,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif        
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_SHORT_resolve                # if not, make it so
@@ -3852,17 +3917,18 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     je      common_exceptionThrown             # no, handle exception
 #if defined(WITH_JIT)
     movl      TMP_SPILL2(%ebp), %ecx
-    SPILL(rIBASE)
+    SPILL(rIBASE) 
     call     common_verifyField
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SGET_SHORT_finish                 # success, continue
 
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT: /* 0x67 */
-/* File: x86/OP_SPUT.S */
+/* File: x86-atom/OP_SPUT.S */
     /*
      * General 32-bit SPUT handler.
      *
@@ -3915,7 +3981,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT_WIDE: /* 0x68 */
-/* File: x86/OP_SPUT_WIDE.S */
+/* File: x86-atom/OP_SPUT_WIDE.S */
     /*
      * General 32-bit SPUT handler.
      *
@@ -3931,7 +3997,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif                
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_WIDE_resolve                # if not, make it so
@@ -3965,13 +4031,14 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     SPILL(rIBASE)
     call     common_verifyField
     UNSPILL(rIBASE)
-#endif
+#endif     
     jmp      .LOP_SPUT_WIDE_finish                 # success, continue
+
 
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT_OBJECT: /* 0x69 */
-/* File: x86/OP_SPUT_OBJECT.S */
+/* File: x86-atom/OP_SPUT_OBJECT.S */
     /*
      * SPUT object handler.
      */
@@ -4029,8 +4096,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT_BOOLEAN: /* 0x6a */
-/* File: x86/OP_SPUT_BOOLEAN.S */
-/* File: x86/OP_SPUT.S */
+/* File: x86-atom/OP_SPUT_BOOLEAN.S */
+/* File: x86-atom/OP_SPUT.S */
     /*
      * General 32-bit SPUT handler.
      *
@@ -4084,8 +4151,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT_BYTE: /* 0x6b */
-/* File: x86/OP_SPUT_BYTE.S */
-/* File: x86/OP_SPUT.S */
+/* File: x86-atom/OP_SPUT_BYTE.S */
+/* File: x86-atom/OP_SPUT.S */
     /*
      * General 32-bit SPUT handler.
      *
@@ -4139,8 +4206,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT_CHAR: /* 0x6c */
-/* File: x86/OP_SPUT_CHAR.S */
-/* File: x86/OP_SPUT.S */
+/* File: x86-atom/OP_SPUT_CHAR.S */
+/* File: x86-atom/OP_SPUT.S */
     /*
      * General 32-bit SPUT handler.
      *
@@ -4194,8 +4261,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT_SHORT: /* 0x6d */
-/* File: x86/OP_SPUT_SHORT.S */
-/* File: x86/OP_SPUT.S */
+/* File: x86-atom/OP_SPUT_SHORT.S */
+/* File: x86-atom/OP_SPUT.S */
     /*
      * General 32-bit SPUT handler.
      *
@@ -4249,7 +4316,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_VIRTUAL: /* 0x6e */
-/* File: x86/OP_INVOKE_VIRTUAL.S */
+/* File: x86-atom/OP_INVOKE_VIRTUAL.S */
 
     /*
      * Handle a virtual method call.
@@ -4298,7 +4365,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_SUPER: /* 0x6f */
-/* File: x86/OP_INVOKE_SUPER.S */
+/* File: x86-atom/OP_INVOKE_SUPER.S */
     /*
      * Handle a "super" method call.
      *
@@ -4424,7 +4491,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_STATIC: /* 0x71 */
-/* File: x86/OP_INVOKE_STATIC.S */
+/* File: x86-atom/OP_INVOKE_STATIC.S */
     /*
      * Handle a static method call.
      *
@@ -4489,12 +4556,10 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     jne       common_invokeMethodNoRange
     jmp       common_exceptionThrown
 #endif
-
-
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_INTERFACE: /* 0x72 */
-/* File: x86/OP_INVOKE_INTERFACE.S */
+/* File: x86-atom/OP_INVOKE_INTERFACE.S */
     /*
      * Handle an interface method call.
      *
@@ -4537,8 +4602,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_VIRTUAL_RANGE: /* 0x74 */
-/* File: x86/OP_INVOKE_VIRTUAL_RANGE.S */
-/* File: x86/OP_INVOKE_VIRTUAL.S */
+/* File: x86-atom/OP_INVOKE_VIRTUAL_RANGE.S */
+/* File: x86-atom/OP_INVOKE_VIRTUAL.S */
 
     /*
      * Handle a virtual method call.
@@ -4588,8 +4653,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_SUPER_RANGE: /* 0x75 */
-/* File: x86/OP_INVOKE_SUPER_RANGE.S */
-/* File: x86/OP_INVOKE_SUPER.S */
+/* File: x86-atom/OP_INVOKE_SUPER_RANGE.S */
+/* File: x86-atom/OP_INVOKE_SUPER.S */
     /*
      * Handle a "super" method call.
      *
@@ -4718,8 +4783,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_STATIC_RANGE: /* 0x77 */
-/* File: x86/OP_INVOKE_STATIC_RANGE.S */
-/* File: x86/OP_INVOKE_STATIC.S */
+/* File: x86-atom/OP_INVOKE_STATIC_RANGE.S */
+/* File: x86-atom/OP_INVOKE_STATIC.S */
     /*
      * Handle a static method call.
      *
@@ -4785,13 +4850,11 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     jmp       common_exceptionThrown
 #endif
 
-
-
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_INTERFACE_RANGE: /* 0x78 */
-/* File: x86/OP_INVOKE_INTERFACE_RANGE.S */
-/* File: x86/OP_INVOKE_INTERFACE.S */
+/* File: x86-atom/OP_INVOKE_INTERFACE_RANGE.S */
+/* File: x86-atom/OP_INVOKE_INTERFACE.S */
     /*
      * Handle an interface method call.
      *
@@ -5518,48 +5581,33 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 .L_OP_DIV_INT: /* 0x93 */
 /* File: x86/OP_DIV_INT.S */
 /* File: x86/bindiv.S */
+
     /*
      * 32-bit binary div/rem operation.  Handles special case of op0=minint and
      * op1=-1.
      */
-
-    /* div/rem vAA, vBB, vCC */
+    /* binop vAA, vBB, vCC */
     movzbl   2(rPC),%eax            # eax<- BB
     movzbl   3(rPC),%ecx            # ecx<- CC
     GET_VREG_R %eax %eax            # eax<- vBB
-    GET_VREG_R %ecx %ecx            # ecx<- vCC
+    GET_VREG_R %ecx %ecx            # eax<- vBB
     SPILL(rIBASE)
     cmpl     $0,%ecx
     je       common_errDivideByZero
-    movl     %eax, %edx
-    orl      %ecx, %edx
-    test     $0xFFFFFF00, %edx     # If both arguments are less than 8-bit and +ve
-    jz      .LOP_DIV_INT_8         # Do 8-bit divide
-    test     $0xFFFF0000, %edx     # If both arguments are less than 16-bit and +ve
-    jz      .LOP_DIV_INT_16        # Do 16-bit divide
     cmpl     $-1,%ecx
-    jne      .LOP_DIV_INT_32
+    jne      .LOP_DIV_INT_continue_div
     cmpl     $0x80000000,%eax
-    jne      .LOP_DIV_INT_32
+    jne      .LOP_DIV_INT_continue_div
     movl     $0x80000000,%eax
-    jmp      .LOP_DIV_INT_finish
-.LOP_DIV_INT_32:
+    SET_VREG %eax rINST
+    UNSPILL(rIBASE)
+    FETCH_INST_OPCODE 2 %ecx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %ecx
+
+.LOP_DIV_INT_continue_div:
     cltd
-    idivl    %ecx
-    jmp      .LOP_DIV_INT_finish
-.LOP_DIV_INT_8:
-    div      %cl                    # 8-bit divide otherwise. Remainder in %ah, quotient in %al
-    .if 0
-    movl     %eax, %edx
-    shr      $8, %edx
-    .else
-    andl     $0x000000FF, %eax
-    .endif
-    jmp      .LOP_DIV_INT_finish
-.LOP_DIV_INT_16:
-    xorl    %edx, %edx              # Clear %edx before divide
-    div     %cx
-.LOP_DIV_INT_finish:
+    idivl   %ecx
     SET_VREG %eax rINST
     UNSPILL(rIBASE)
     FETCH_INST_OPCODE 2 %ecx
@@ -5572,48 +5620,33 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 .L_OP_REM_INT: /* 0x94 */
 /* File: x86/OP_REM_INT.S */
 /* File: x86/bindiv.S */
+
     /*
      * 32-bit binary div/rem operation.  Handles special case of op0=minint and
      * op1=-1.
      */
-
-    /* div/rem vAA, vBB, vCC */
+    /* binop vAA, vBB, vCC */
     movzbl   2(rPC),%eax            # eax<- BB
     movzbl   3(rPC),%ecx            # ecx<- CC
     GET_VREG_R %eax %eax            # eax<- vBB
-    GET_VREG_R %ecx %ecx            # ecx<- vCC
+    GET_VREG_R %ecx %ecx            # eax<- vBB
     SPILL(rIBASE)
     cmpl     $0,%ecx
     je       common_errDivideByZero
-    movl     %eax, %edx
-    orl      %ecx, %edx
-    test     $0xFFFFFF00, %edx     # If both arguments are less than 8-bit and +ve
-    jz      .LOP_REM_INT_8         # Do 8-bit divide
-    test     $0xFFFF0000, %edx     # If both arguments are less than 16-bit and +ve
-    jz      .LOP_REM_INT_16        # Do 16-bit divide
     cmpl     $-1,%ecx
-    jne      .LOP_REM_INT_32
+    jne      .LOP_REM_INT_continue_div
     cmpl     $0x80000000,%eax
-    jne      .LOP_REM_INT_32
+    jne      .LOP_REM_INT_continue_div
     movl     $0,rIBASE
-    jmp      .LOP_REM_INT_finish
-.LOP_REM_INT_32:
+    SET_VREG rIBASE rINST
+    UNSPILL(rIBASE)
+    FETCH_INST_OPCODE 2 %ecx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %ecx
+
+.LOP_REM_INT_continue_div:
     cltd
-    idivl    %ecx
-    jmp      .LOP_REM_INT_finish
-.LOP_REM_INT_8:
-    div      %cl                    # 8-bit divide otherwise. Remainder in %ah, quotient in %al
-    .if 1
-    movl     %eax, %edx
-    shr      $8, %edx
-    .else
-    andl     $0x000000FF, %eax
-    .endif
-    jmp      .LOP_REM_INT_finish
-.LOP_REM_INT_16:
-    xorl    %edx, %edx              # Clear %edx before divide
-    div     %cx
-.LOP_REM_INT_finish:
+    idivl   %ecx
     SET_VREG rIBASE rINST
     UNSPILL(rIBASE)
     FETCH_INST_OPCODE 2 %ecx
@@ -7831,8 +7864,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET_VOLATILE: /* 0xe5 */
-/* File: x86/OP_SGET_VOLATILE.S */
-/* File: x86/OP_SGET.S */
+/* File: x86-atom/OP_SGET_VOLATILE.S */
+/* File: x86-atom/OP_SGET.S */
     /*
      * General 32-bit SGET handler.
      *
@@ -7848,7 +7881,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif        
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_VOLATILE_resolve                # if not, make it so
@@ -7877,18 +7910,19 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     je      common_exceptionThrown             # no, handle exception
 #if defined(WITH_JIT)
     movl      TMP_SPILL2(%ebp), %ecx
-    SPILL(rIBASE)
+    SPILL(rIBASE) 
     call     common_verifyField
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SGET_VOLATILE_finish                 # success, continue
 
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT_VOLATILE: /* 0xe6 */
-/* File: x86/OP_SPUT_VOLATILE.S */
-/* File: x86/OP_SPUT.S */
+/* File: x86-atom/OP_SPUT_VOLATILE.S */
+/* File: x86-atom/OP_SPUT.S */
     /*
      * General 32-bit SPUT handler.
      *
@@ -8208,15 +8242,61 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_OBJECT_INIT_RANGE: /* 0xf0 */
-    /* (stub) */
-    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
-    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_INVOKE_OBJECT_INIT_RANGE     # do the real work
-    movl      rSELF,%ecx
-    LOAD_PC_FP_FROM_SELF             # retrieve updated values
-    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
-    FETCH_INST
-    GOTO_NEXT
+/* File: x86-atom/OP_INVOKE_OBJECT_INIT_RANGE.S */
+    /*
+     * Invoke Object.<init> on an object.  In practice we know that
+     * Object's nullary constructor doesn't do anything, so we just
+     * skip it unless a debugger is active.
+     */
+    movzwl     4(rPC),%eax              # eax<- CCCC, offset = 2 * cccc, cccc = 4 for jumbo
+    GET_VREG_R %ecx, %eax               # ecx<- "this" ptr
+    testl      %ecx,%ecx                # null this?
+    je         common_errNullObject     # yes, fail
+    movl       offObject_clazz(%ecx), %eax # eax<- obj->clazz
+    SPILL_TMP1(rIBASE)                  # save %edx
+    movl       offClassObject_accessFlags(%eax), %edx # edx<- clazz->accessFlags
+    andl       $CLASS_ISFINALIZABLE, %edx # is this class finalizable?
+    jnz        .LOP_INVOKE_OBJECT_INIT_RANGE_setFinal     # yes, go
+.LOP_INVOKE_OBJECT_INIT_RANGE_finish:
+    movl       rSELF, %ecx
+    movl       offThread_subMode(%ecx), %eax
+    andl       $kSubModeDebuggerActive, %eax # debugger active?
+    jnz        .LOP_INVOKE_OBJECT_INIT_RANGE_debugger     # Yes - skip optimization
+    UNSPILL_TMP1(rIBASE)
+    FETCH_INST_OPCODE 3 %ecx            # 3 = cccc + 1
+    ADVANCE_PC 3
+    GOTO_NEXT_R %ecx
+
+.LOP_INVOKE_OBJECT_INIT_RANGE_setFinal:
+    EXPORT_PC                           # can throw
+    movl       %ecx, OUT_ARG0(%esp)     # arg1<- obj
+    call       dvmSetFinalizable        # call dvmSetFinalizable(obj)
+    movl       rSELF, %ecx
+    movl       offThread_exception(%ecx), %eax # eax<- self->exception
+    cmpl       $0, %eax                # exception pending?
+    jne        common_exceptionThrown   # yes, handle it
+    jmp        .LOP_INVOKE_OBJECT_INIT_RANGE_finish
+
+    /*
+     * A debugger is attached, so we need to go ahead and do
+     * this.  For simplicity, we'll just jump directly to the
+     * corresponding handler.  Note that we can't use
+     * rIBASE here because it may be in single-step mode.
+     * Load the primary table base directly.
+     */
+.LOP_INVOKE_OBJECT_INIT_RANGE_debugger:
+    movl    offThread_mainHandlerTable(%ecx), %ecx # load main handler table
+    .if 0                               # if jumbo is enabled
+    movl       $OP_INVOKE_DIRECT_JUMBO, %eax
+    .else
+    movl       $OP_INVOKE_DIRECT_RANGE, %eax
+    .endif
+    /*
+     * We can't use GOTO_NEXT here since we want to jump directly to
+     * handler without touching rIBASE.
+     */
+    jmp        *(%ecx,%eax,4)
+
 /* ------------------------------ */
     .balign 16
 .L_OP_RETURN_VOID_BARRIER: /* 0xf1 */
@@ -8361,7 +8441,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_VIRTUAL_QUICK: /* 0xf8 */
-/* File: x86/OP_INVOKE_VIRTUAL_QUICK.S */
+/* File: x86-atom/OP_INVOKE_VIRTUAL_QUICK.S */
     /*
      * Handle an optimized virtual method call.
      *
@@ -8386,8 +8466,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_VIRTUAL_QUICK_RANGE: /* 0xf9 */
-/* File: x86/OP_INVOKE_VIRTUAL_QUICK_RANGE.S */
-/* File: x86/OP_INVOKE_VIRTUAL_QUICK.S */
+/* File: x86-atom/OP_INVOKE_VIRTUAL_QUICK_RANGE.S */
+/* File: x86-atom/OP_INVOKE_VIRTUAL_QUICK.S */
     /*
      * Handle an optimized virtual method call.
      *
@@ -8413,7 +8493,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_SUPER_QUICK: /* 0xfa */
-/* File: x86/OP_INVOKE_SUPER_QUICK.S */
+/* File: x86-atom/OP_INVOKE_SUPER_QUICK.S */
     /*
      * Handle an optimized "super" method call.
      *
@@ -8443,8 +8523,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_INVOKE_SUPER_QUICK_RANGE: /* 0xfb */
-/* File: x86/OP_INVOKE_SUPER_QUICK_RANGE.S */
-/* File: x86/OP_INVOKE_SUPER_QUICK.S */
+/* File: x86-atom/OP_INVOKE_SUPER_QUICK_RANGE.S */
+/* File: x86-atom/OP_INVOKE_SUPER_QUICK.S */
     /*
      * Handle an optimized "super" method call.
      *
@@ -8537,8 +8617,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
-/* File: x86/OP_SGET_OBJECT_VOLATILE.S */
-/* File: x86/OP_SGET.S */
+/* File: x86-atom/OP_SGET_OBJECT_VOLATILE.S */
+/* File: x86-atom/OP_SGET.S */
     /*
      * General 32-bit SGET handler.
      *
@@ -8554,7 +8634,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     lea       (%ecx,%eax,4),%ecx
     movl      %ecx, TMP_SPILL2(%ebp)
     movl      TMP_SPILL1(%ebp), %ecx
-#endif
+#endif        
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SGET_OBJECT_VOLATILE_resolve                # if not, make it so
@@ -8583,18 +8663,19 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     je      common_exceptionThrown             # no, handle exception
 #if defined(WITH_JIT)
     movl      TMP_SPILL2(%ebp), %ecx
-    SPILL(rIBASE)
+    SPILL(rIBASE) 
     call     common_verifyField
     UNSPILL(rIBASE)
 #endif
     jmp      .LOP_SGET_OBJECT_VOLATILE_finish                 # success, continue
 
 
+
 /* ------------------------------ */
     .balign 16
 .L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
-/* File: x86/OP_SPUT_OBJECT_VOLATILE.S */
-/* File: x86/OP_SPUT_OBJECT.S */
+/* File: x86-atom/OP_SPUT_OBJECT_VOLATILE.S */
+/* File: x86-atom/OP_SPUT_OBJECT.S */
     /*
      * SPUT object handler.
      */
@@ -8671,7 +8752,7 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NOP: /* 0x00 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8693,12 +8774,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(0*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE: /* 0x01 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8720,12 +8804,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(1*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_FROM16: /* 0x02 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8747,12 +8834,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(2*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_16: /* 0x03 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8774,12 +8864,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(3*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_WIDE: /* 0x04 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8801,12 +8894,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(4*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_WIDE_FROM16: /* 0x05 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8828,12 +8924,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(5*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_WIDE_16: /* 0x06 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8855,12 +8954,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(6*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_OBJECT: /* 0x07 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8882,12 +8984,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(7*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_OBJECT_FROM16: /* 0x08 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8909,12 +9014,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(8*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_OBJECT_16: /* 0x09 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8936,12 +9044,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(9*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_RESULT: /* 0x0a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8963,12 +9074,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(10*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_RESULT_WIDE: /* 0x0b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -8990,12 +9104,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(11*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_RESULT_OBJECT: /* 0x0c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9017,12 +9134,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(12*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MOVE_EXCEPTION: /* 0x0d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9044,12 +9164,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(13*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_RETURN_VOID: /* 0x0e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9071,12 +9194,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(14*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_RETURN: /* 0x0f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9098,12 +9224,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(15*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_RETURN_WIDE: /* 0x10 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9125,12 +9254,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(16*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_RETURN_OBJECT: /* 0x11 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9152,12 +9284,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(17*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_4: /* 0x12 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9179,12 +9314,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(18*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_16: /* 0x13 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9206,12 +9344,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(19*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST: /* 0x14 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9233,12 +9374,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(20*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_HIGH16: /* 0x15 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9260,12 +9404,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(21*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_WIDE_16: /* 0x16 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9287,12 +9434,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(22*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_WIDE_32: /* 0x17 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9314,12 +9464,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(23*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_WIDE: /* 0x18 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9341,12 +9494,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(24*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_WIDE_HIGH16: /* 0x19 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9368,12 +9524,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(25*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_STRING: /* 0x1a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9395,12 +9554,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(26*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_STRING_JUMBO: /* 0x1b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9422,12 +9584,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(27*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CONST_CLASS: /* 0x1c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9449,12 +9614,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(28*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MONITOR_ENTER: /* 0x1d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9476,12 +9644,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(29*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MONITOR_EXIT: /* 0x1e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9503,12 +9674,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(30*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CHECK_CAST: /* 0x1f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9530,12 +9704,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(31*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INSTANCE_OF: /* 0x20 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9557,12 +9734,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(32*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ARRAY_LENGTH: /* 0x21 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9584,12 +9764,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(33*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NEW_INSTANCE: /* 0x22 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9611,12 +9794,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(34*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NEW_ARRAY: /* 0x23 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9638,12 +9824,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(35*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_FILLED_NEW_ARRAY: /* 0x24 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9665,12 +9854,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(36*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_FILLED_NEW_ARRAY_RANGE: /* 0x25 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9692,12 +9884,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(37*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_FILL_ARRAY_DATA: /* 0x26 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9719,12 +9914,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(38*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_THROW: /* 0x27 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9746,12 +9944,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(39*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_GOTO: /* 0x28 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9773,12 +9974,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(40*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_GOTO_16: /* 0x29 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9800,12 +10004,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(41*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_GOTO_32: /* 0x2a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9827,12 +10034,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(42*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_PACKED_SWITCH: /* 0x2b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9854,12 +10064,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(43*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPARSE_SWITCH: /* 0x2c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9881,12 +10094,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(44*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CMPL_FLOAT: /* 0x2d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9908,12 +10124,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(45*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CMPG_FLOAT: /* 0x2e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9935,12 +10154,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(46*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CMPL_DOUBLE: /* 0x2f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9962,12 +10184,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(47*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CMPG_DOUBLE: /* 0x30 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -9989,12 +10214,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(48*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_CMP_LONG: /* 0x31 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10016,12 +10244,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(49*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_EQ: /* 0x32 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10043,12 +10274,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(50*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_NE: /* 0x33 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10070,12 +10304,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(51*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_LT: /* 0x34 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10097,12 +10334,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(52*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_GE: /* 0x35 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10124,12 +10364,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(53*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_GT: /* 0x36 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10151,12 +10394,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(54*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_LE: /* 0x37 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10178,12 +10424,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(55*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_EQZ: /* 0x38 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10205,12 +10454,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(56*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_NEZ: /* 0x39 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10232,12 +10484,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(57*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_LTZ: /* 0x3a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10259,12 +10514,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(58*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_GEZ: /* 0x3b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10286,12 +10544,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(59*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_GTZ: /* 0x3c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10313,12 +10574,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(60*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IF_LEZ: /* 0x3d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10340,12 +10604,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(61*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_3E: /* 0x3e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10367,12 +10634,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(62*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_3F: /* 0x3f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10394,12 +10664,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(63*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_40: /* 0x40 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10421,12 +10694,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(64*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_41: /* 0x41 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10448,12 +10724,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(65*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_42: /* 0x42 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10475,12 +10754,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(66*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_43: /* 0x43 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10502,12 +10784,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(67*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AGET: /* 0x44 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10529,12 +10814,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(68*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AGET_WIDE: /* 0x45 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10556,12 +10844,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(69*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AGET_OBJECT: /* 0x46 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10583,12 +10874,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(70*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AGET_BOOLEAN: /* 0x47 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10610,12 +10904,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(71*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AGET_BYTE: /* 0x48 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10637,12 +10934,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(72*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AGET_CHAR: /* 0x49 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10664,12 +10964,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(73*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AGET_SHORT: /* 0x4a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10691,12 +10994,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(74*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_APUT: /* 0x4b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10718,12 +11024,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(75*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_APUT_WIDE: /* 0x4c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10745,12 +11054,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(76*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_APUT_OBJECT: /* 0x4d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10772,12 +11084,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(77*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_APUT_BOOLEAN: /* 0x4e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10799,12 +11114,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(78*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_APUT_BYTE: /* 0x4f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10826,12 +11144,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(79*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_APUT_CHAR: /* 0x50 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10853,12 +11174,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(80*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_APUT_SHORT: /* 0x51 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10880,12 +11204,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(81*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET: /* 0x52 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10907,12 +11234,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(82*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_WIDE: /* 0x53 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10934,12 +11264,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(83*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_OBJECT: /* 0x54 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10961,12 +11294,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(84*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_BOOLEAN: /* 0x55 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -10988,12 +11324,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(85*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_BYTE: /* 0x56 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11015,12 +11354,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(86*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_CHAR: /* 0x57 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11042,12 +11384,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(87*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_SHORT: /* 0x58 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11069,12 +11414,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(88*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT: /* 0x59 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11096,12 +11444,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(89*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_WIDE: /* 0x5a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11123,12 +11474,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(90*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_OBJECT: /* 0x5b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11150,12 +11504,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(91*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_BOOLEAN: /* 0x5c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11177,12 +11534,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(92*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_BYTE: /* 0x5d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11204,12 +11564,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(93*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_CHAR: /* 0x5e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11231,12 +11594,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(94*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_SHORT: /* 0x5f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11258,12 +11624,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(95*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET: /* 0x60 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11285,12 +11654,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(96*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_WIDE: /* 0x61 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11312,12 +11684,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(97*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_OBJECT: /* 0x62 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11339,12 +11714,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(98*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_BOOLEAN: /* 0x63 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11366,12 +11744,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(99*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_BYTE: /* 0x64 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11393,12 +11774,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(100*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_CHAR: /* 0x65 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11420,12 +11804,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(101*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_SHORT: /* 0x66 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11447,12 +11834,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(102*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT: /* 0x67 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11474,12 +11864,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(103*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_WIDE: /* 0x68 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11501,12 +11894,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(104*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_OBJECT: /* 0x69 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11528,12 +11924,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(105*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_BOOLEAN: /* 0x6a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11555,12 +11954,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(106*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_BYTE: /* 0x6b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11582,12 +11984,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(107*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_CHAR: /* 0x6c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11609,12 +12014,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(108*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_SHORT: /* 0x6d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11636,12 +12044,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(109*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_VIRTUAL: /* 0x6e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11663,12 +12074,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(110*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_SUPER: /* 0x6f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11690,12 +12104,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(111*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_DIRECT: /* 0x70 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11717,12 +12134,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(112*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_STATIC: /* 0x71 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11744,12 +12164,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(113*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_INTERFACE: /* 0x72 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11771,12 +12194,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(114*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_73: /* 0x73 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11798,12 +12224,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(115*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_VIRTUAL_RANGE: /* 0x74 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11825,12 +12254,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(116*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_SUPER_RANGE: /* 0x75 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11852,12 +12284,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(117*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_DIRECT_RANGE: /* 0x76 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11879,12 +12314,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(118*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_STATIC_RANGE: /* 0x77 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11906,12 +12344,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(119*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_INTERFACE_RANGE: /* 0x78 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11933,12 +12374,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(120*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_79: /* 0x79 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11960,12 +12404,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(121*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_7A: /* 0x7a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -11987,12 +12434,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(122*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NEG_INT: /* 0x7b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12014,12 +12464,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(123*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NOT_INT: /* 0x7c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12041,12 +12494,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(124*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NEG_LONG: /* 0x7d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12068,12 +12524,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(125*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NOT_LONG: /* 0x7e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12095,12 +12554,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(126*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NEG_FLOAT: /* 0x7f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12122,12 +12584,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(127*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_NEG_DOUBLE: /* 0x80 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12149,12 +12614,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(128*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INT_TO_LONG: /* 0x81 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12176,12 +12644,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(129*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INT_TO_FLOAT: /* 0x82 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12203,12 +12674,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(130*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INT_TO_DOUBLE: /* 0x83 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12230,12 +12704,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(131*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_LONG_TO_INT: /* 0x84 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12257,12 +12734,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(132*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_LONG_TO_FLOAT: /* 0x85 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12284,12 +12764,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(133*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_LONG_TO_DOUBLE: /* 0x86 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12311,12 +12794,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(134*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_FLOAT_TO_INT: /* 0x87 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12338,12 +12824,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(135*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_FLOAT_TO_LONG: /* 0x88 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12365,12 +12854,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(136*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_FLOAT_TO_DOUBLE: /* 0x89 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12392,12 +12884,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(137*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DOUBLE_TO_INT: /* 0x8a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12419,12 +12914,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(138*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DOUBLE_TO_LONG: /* 0x8b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12446,12 +12944,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(139*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DOUBLE_TO_FLOAT: /* 0x8c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12473,12 +12974,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(140*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INT_TO_BYTE: /* 0x8d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12500,12 +13004,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(141*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INT_TO_CHAR: /* 0x8e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12527,12 +13034,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(142*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INT_TO_SHORT: /* 0x8f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12554,12 +13064,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(143*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_INT: /* 0x90 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12581,12 +13094,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(144*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SUB_INT: /* 0x91 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12608,12 +13124,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(145*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_INT: /* 0x92 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12635,12 +13154,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(146*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_INT: /* 0x93 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12662,12 +13184,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(147*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_INT: /* 0x94 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12689,12 +13214,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(148*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AND_INT: /* 0x95 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12716,12 +13244,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(149*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_OR_INT: /* 0x96 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12743,12 +13274,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(150*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_XOR_INT: /* 0x97 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12770,12 +13304,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(151*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHL_INT: /* 0x98 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12797,12 +13334,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(152*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHR_INT: /* 0x99 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12824,12 +13364,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(153*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_USHR_INT: /* 0x9a */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12851,12 +13394,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(154*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_LONG: /* 0x9b */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12878,12 +13424,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(155*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SUB_LONG: /* 0x9c */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12905,12 +13454,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(156*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_LONG: /* 0x9d */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12932,12 +13484,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(157*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_LONG: /* 0x9e */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12959,12 +13514,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(158*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_LONG: /* 0x9f */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -12986,12 +13544,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(159*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AND_LONG: /* 0xa0 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13013,12 +13574,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(160*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_OR_LONG: /* 0xa1 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13040,12 +13604,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(161*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_XOR_LONG: /* 0xa2 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13067,12 +13634,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(162*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHL_LONG: /* 0xa3 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13094,12 +13664,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(163*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHR_LONG: /* 0xa4 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13121,12 +13694,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(164*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_USHR_LONG: /* 0xa5 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13148,12 +13724,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(165*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_FLOAT: /* 0xa6 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13175,12 +13754,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(166*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SUB_FLOAT: /* 0xa7 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13202,12 +13784,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(167*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_FLOAT: /* 0xa8 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13229,12 +13814,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(168*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_FLOAT: /* 0xa9 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13256,12 +13844,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(169*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_FLOAT: /* 0xaa */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13283,12 +13874,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(170*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_DOUBLE: /* 0xab */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13310,12 +13904,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(171*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SUB_DOUBLE: /* 0xac */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13337,12 +13934,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(172*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_DOUBLE: /* 0xad */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13364,12 +13964,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(173*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_DOUBLE: /* 0xae */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13391,12 +13994,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(174*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_DOUBLE: /* 0xaf */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13418,12 +14024,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(175*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_INT_2ADDR: /* 0xb0 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13445,12 +14054,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(176*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SUB_INT_2ADDR: /* 0xb1 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13472,12 +14084,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(177*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_INT_2ADDR: /* 0xb2 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13499,12 +14114,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(178*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_INT_2ADDR: /* 0xb3 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13526,12 +14144,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(179*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_INT_2ADDR: /* 0xb4 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13553,12 +14174,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(180*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AND_INT_2ADDR: /* 0xb5 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13580,12 +14204,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(181*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_OR_INT_2ADDR: /* 0xb6 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13607,12 +14234,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(182*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_XOR_INT_2ADDR: /* 0xb7 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13634,12 +14264,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(183*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHL_INT_2ADDR: /* 0xb8 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13661,12 +14294,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(184*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHR_INT_2ADDR: /* 0xb9 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13688,12 +14324,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(185*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_USHR_INT_2ADDR: /* 0xba */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13715,12 +14354,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(186*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_LONG_2ADDR: /* 0xbb */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13742,12 +14384,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(187*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SUB_LONG_2ADDR: /* 0xbc */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13769,12 +14414,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(188*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_LONG_2ADDR: /* 0xbd */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13796,12 +14444,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(189*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_LONG_2ADDR: /* 0xbe */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13823,12 +14474,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(190*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_LONG_2ADDR: /* 0xbf */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13850,12 +14504,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(191*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AND_LONG_2ADDR: /* 0xc0 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13877,12 +14534,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(192*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_OR_LONG_2ADDR: /* 0xc1 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13904,12 +14564,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(193*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_XOR_LONG_2ADDR: /* 0xc2 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13931,12 +14594,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(194*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHL_LONG_2ADDR: /* 0xc3 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13958,12 +14624,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(195*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHR_LONG_2ADDR: /* 0xc4 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -13985,12 +14654,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(196*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_USHR_LONG_2ADDR: /* 0xc5 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14012,12 +14684,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(197*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_FLOAT_2ADDR: /* 0xc6 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14039,12 +14714,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(198*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SUB_FLOAT_2ADDR: /* 0xc7 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14066,12 +14744,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(199*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_FLOAT_2ADDR: /* 0xc8 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14093,12 +14774,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(200*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_FLOAT_2ADDR: /* 0xc9 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14120,12 +14804,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(201*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_FLOAT_2ADDR: /* 0xca */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14147,12 +14834,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(202*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_DOUBLE_2ADDR: /* 0xcb */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14174,12 +14864,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(203*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SUB_DOUBLE_2ADDR: /* 0xcc */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14201,12 +14894,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(204*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_DOUBLE_2ADDR: /* 0xcd */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14228,12 +14924,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(205*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_DOUBLE_2ADDR: /* 0xce */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14255,12 +14954,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(206*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_DOUBLE_2ADDR: /* 0xcf */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14282,12 +14984,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(207*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_INT_LIT16: /* 0xd0 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14309,12 +15014,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(208*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_RSUB_INT: /* 0xd1 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14336,12 +15044,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(209*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_INT_LIT16: /* 0xd2 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14363,12 +15074,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(210*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_INT_LIT16: /* 0xd3 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14390,12 +15104,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(211*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_INT_LIT16: /* 0xd4 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14417,12 +15134,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(212*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AND_INT_LIT16: /* 0xd5 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14444,12 +15164,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(213*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_OR_INT_LIT16: /* 0xd6 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14471,12 +15194,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(214*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_XOR_INT_LIT16: /* 0xd7 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14498,12 +15224,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(215*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_ADD_INT_LIT8: /* 0xd8 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14525,12 +15254,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(216*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_RSUB_INT_LIT8: /* 0xd9 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14552,12 +15284,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(217*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_MUL_INT_LIT8: /* 0xda */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14579,12 +15314,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(218*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_DIV_INT_LIT8: /* 0xdb */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14606,12 +15344,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(219*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_REM_INT_LIT8: /* 0xdc */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14633,12 +15374,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(220*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_AND_INT_LIT8: /* 0xdd */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14660,12 +15404,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(221*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_OR_INT_LIT8: /* 0xde */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14687,12 +15434,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(222*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_XOR_INT_LIT8: /* 0xdf */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14714,12 +15464,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(223*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHL_INT_LIT8: /* 0xe0 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14741,12 +15494,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(224*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SHR_INT_LIT8: /* 0xe1 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14768,12 +15524,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(225*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_USHR_INT_LIT8: /* 0xe2 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14795,12 +15554,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(226*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_VOLATILE: /* 0xe3 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14822,12 +15584,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(227*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_VOLATILE: /* 0xe4 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14849,12 +15614,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(228*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_VOLATILE: /* 0xe5 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14876,12 +15644,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(229*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_VOLATILE: /* 0xe6 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14903,12 +15674,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(230*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14930,12 +15704,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(231*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14957,12 +15734,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(232*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -14984,12 +15764,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(233*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_WIDE_VOLATILE: /* 0xea */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15011,12 +15794,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(234*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15038,12 +15824,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(235*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_BREAKPOINT: /* 0xec */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15065,12 +15854,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(236*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_THROW_VERIFICATION_ERROR: /* 0xed */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15092,12 +15884,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(237*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_EXECUTE_INLINE: /* 0xee */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15119,12 +15914,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(238*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_EXECUTE_INLINE_RANGE: /* 0xef */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15146,12 +15944,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(239*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_OBJECT_INIT_RANGE: /* 0xf0 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15173,12 +15974,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(240*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_RETURN_VOID_BARRIER: /* 0xf1 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15200,12 +16004,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(241*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_QUICK: /* 0xf2 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15227,12 +16034,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(242*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_WIDE_QUICK: /* 0xf3 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15254,12 +16064,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(243*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IGET_OBJECT_QUICK: /* 0xf4 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15281,12 +16094,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(244*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_QUICK: /* 0xf5 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15308,12 +16124,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(245*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_WIDE_QUICK: /* 0xf6 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15335,12 +16154,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(246*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_OBJECT_QUICK: /* 0xf7 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15362,12 +16184,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(247*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_VIRTUAL_QUICK: /* 0xf8 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15389,12 +16214,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(248*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_VIRTUAL_QUICK_RANGE: /* 0xf9 */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15416,12 +16244,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(249*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_SUPER_QUICK: /* 0xfa */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15443,12 +16274,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(250*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_INVOKE_SUPER_QUICK_RANGE: /* 0xfb */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15470,12 +16304,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(251*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15497,12 +16334,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(252*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15524,12 +16364,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(253*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15551,12 +16394,15 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(254*4)
 
 /* ------------------------------ */
     .balign 16
 .L_ALT_OP_UNUSED_FF: /* 0xff */
-/* File: x86/alt_stub.S */
+/* File: x86-atom/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckBefore to handle
  * any interesting requests and then jump to the real instruction
@@ -15578,6 +16424,9 @@ dvmAsmAltInstructionStartCode = .L_ALT_OP_NOP
     movl   rSELF, %eax
 1:
     movl   offThread_curHandlerTable(%eax), rIBASE # reload rIBASE
+#ifdef PROFILE_OPCODE
+    call   fiprint                           # profiling Fast interpreter code
+#endif
     jmp    *dvmAsmInstructionStart+(255*4)
 
     .balign 16
@@ -16104,7 +16953,7 @@ dvmAsmAltInstructionStart:
     .long .L_ALT_OP_SGET_OBJECT_VOLATILE /* 0xfd */
     .long .L_ALT_OP_SPUT_OBJECT_VOLATILE /* 0xfe */
     .long .L_ALT_OP_UNUSED_FF /* 0xff */
-/* File: x86/entry.S */
+/* File: x86-atom/entry.S */
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -16218,7 +17067,7 @@ dvmNcgInvokeInterpreter:
     .asciz  "Bad entry point %d\n"
 
 
-/* File: x86/footer.S */
+/* File: x86-atom/footer.S */
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -16263,6 +17112,11 @@ dvmJitToInterpPunt:
 #endif
     movl   rSELF, %ecx
     movl   offThread_curHandlerTable(%ecx),rIBASE
+
+    # In HC we set this value to 0. Seems it is needed for ICS
+    # Arm code includes a call to jitSVShadowRunEnd but it seems
+    # that is not necessary for the x86-atom JIT considering for HC
+    # this code is there for Arm but not used for the x86-atom JIT
     movl        $0, offThread_inJitCodeCache(%ecx)
     FETCH_INST_R %ecx
     GOTO_NEXT_R %ecx
@@ -16311,9 +17165,14 @@ dvmJitToInterpNoChainNoProfile:
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
     cmpl   $0, %eax
     jz     1f
+    ## In HC we use an indirect jmp here instead of a call. A call pushes
+    ## the return address on the stack so there is a difference here but
+    ## it is not clear how or if this is significant to this code.
     jmp    *%eax                     # exec translation if we've got one
     # won't return
 1:
+    ## Export PC is done in the HC code. Not sure if we did that for GC
+    ## purposes
     EXPORT_PC
     movl   rSELF, %ecx
     movl   offThread_curHandlerTable(%ecx),rIBASE
@@ -16354,7 +17213,7 @@ dvmJitToInterpTraceSelectNoChain:
     FETCH_INST_R %ecx         # Continue interpreting if not
     GOTO_NEXT_R %ecx
 2:
-    ## Looks like an EXPORT_PC is needed here. Now jmp to common_selectTrace2
+    ## Looks like an EXPORT_PC is needed here. Now jmp to common_selectTrace2 
     movl   $kJitTSelectRequestHot,%eax # ask for trace select
     jmp    common_selectTrace
 
@@ -16408,6 +17267,59 @@ dvmJitToExceptionThrown: //rPC in
 
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
+## This is implemented in HC for x86-atom but needed to be ported to ICS. The
+## HC version is commented out below while the port is below that.
+
+#dvmJitToInterpNormal:
+#/* one input: the target rPC value */
+#    movl        0(%esp), %eax          # get return address
+#    movl        %ebx, rPC              # get first argument (target rPC)
+##ifdef DEBUG_CALL_STACK3
+#    movl        $0x1111, %edx
+#    //use %ebx, %ecx, update numSwitch & switchPoints
+#    dumpSwitch %edx, %ebx, %ecx
+#    movl        %esp, %edx
+#    dumpSwitch %edx, %ebx, %ecx
+#    movl        %eax, %edx
+#    dumpSwitch %edx, %ebx, %ecx
+#    movl        rPC, %edx
+#    dumpSwitch %edx, %ebx, %ecx
+##endif
+##ifdef DEBUG_CALL_STACK2
+#    movl        $0x1111, %edx
+#    call        printMethod
+#    movl        rPC, %edx
+#    call        printMethod
+##endif
+#    lea         -12(%eax), %ebx #$JIT_OFFSET_CHAIN_START(%eax), %ebx
+#    movl        rPC, (%esp)
+#    call        dvmJitGetCodeAddr
+#    movl        rGLUE, %edx
+#    movl        offGlue_self(%edx), %edx
+#    movl        %eax, offThread_inJitCodeCache(%edx)
+#    lea         4(%esp), %esp
+#    cmp         $0, %eax
+#    je          toInterpreter
+#    lea         -8(%esp), %esp
+#    movl        %ebx, 4(%esp)         # %ebx live thorugh dvmJitGetCodeAddr
+#    movl        %eax, (%esp)         # first argument
+#    call        dvmJitChain
+#    lea         8(%esp), %esp
+#    cmp         $0, %eax
+#    je          toInterpreter
+##ifdef DEBUG_CALL_STACK2
+#    movl        $0x3333, %edx
+#    call        printMethod
+#    movl        %eax, %edx
+#    call        printMethod
+##endif
+#    jmp         *%eax                   #to native address
+
+## I do not yet understand this code (why is there a "return address" accessed
+## here but not in the arm code and why the ifdef DEBUG_CALL directives). In any
+## case it seems the changes from HC to ICS are w.r.t. rGLUE being eliminated and
+## the calling conventions defined originally in x86-google header.S
+
 /* one input: the target rPC value */
     movl        0(%esp), %eax          # get return address
     movl        %ebx, rPC              # get first argument (target rPC)
@@ -16441,7 +17353,55 @@ dvmJitToInterpNormal:
 
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
+## This is implemented in HC for x86-atom but needed to be ported to ICS. The
+## HC version is commented out below while the port is below that.
+
+#dvmJitToInterpNoChain: #rPC in eax
+##ifdef DEBUG_CALL_STACK3
+#    movl        $0x9999, %edx
+#    //use %ebx, %ecx, update numSwitch & switchPoints
+#    dumpSwitch %edx, %ebx, %ecx
+#    movl        %eax, %edx
+#    dumpSwitch %edx, %ebx, %ecx
+##endif
+##ifdef DEBUG_CALL_STACK2
+#    movl        $0x9999, %edx
+#    call        printMethod
+#    movl        %eax, %edx
+#    call        printMethod
+##endif
+#    movl        %eax, rPC
+#    lea         -4(%esp), %esp
+#    movl        %eax, (%esp)
+#    call        dvmJitGetCodeAddr
+#    movl        rGLUE, %edx
+#    movl        offGlue_self(%edx), %edx
+#    movl        %eax, offThread_inJitCodeCache(%edx)
+#    lea         4(%esp), %esp
+#    cmp         $0, %eax
+#    je          toInterpreter
+##ifdef DEBUG_CALL_STACK2
+#    movl        $0x3333, %edx
+#    call        printMethod
+#    movl        %eax, %edx
+#    call        printMethod
+##endif
+#    jmp         *%eax                   #to native address
+
 dvmJitToInterpNoChain: #rPC in eax
+#ifdef DEBUG_CALL_STACK3
+    movl        $0x9999, %edx
+    //use %ebx, %ecx, update numSwitch & switchPoints
+    dumpSwitch %edx, %ebx, %ecx
+    movl        %eax, %edx
+    dumpSwitch %edx, %ebx, %ecx
+#endif
+#ifdef DEBUG_CALL_STACK2
+    movl        $0x9999, %edx
+    call        printMethod
+    movl        %eax, %edx
+    call        printMethod
+#endif
 #if defined(WITH_JIT_TUNING)
     SPILL_TMP1(%eax)
     call   dvmBumpNoChain
@@ -16460,6 +17420,12 @@ dvmJitToInterpNoChain: #rPC in eax
     movl        %eax, offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
     cmp         $0, %eax
     je          toInterpreter
+#ifdef DEBUG_CALL_STACK2
+    movl        $0x3333, %edx
+    call        printMethod
+    movl        %eax, %edx
+    call        printMethod
+#endif
     jmp         *%eax                   #to native address
 
 toInterpreter:
@@ -16473,7 +17439,13 @@ toInterpreter:
 /* ebx holds the pointer to the jit profile table
    edx has the opCode */
 common_testUpdateProfile:
+    #cmp         $0, %eax
+    #jne         common_updateProfile
+    #FGETOP_JMPa %edx
+
     cmp         $0, %eax
+    #jne         common_updateProfile
+    #GOTO_NEXT_R %edx
     je          4f
 /* eax holds the pointer to the jit profile table
    edx has the opCode
@@ -16576,12 +17548,34 @@ common_selectTrace2:
 
 #endif
 
+## For the invoke codes we need to know what register holds the "this" pointer. However
+## it seems the this pointer is assigned consistently most times it is in %ecx but other
+## times it is in OP_INVOKE_INTERFACE_JUMBO OP_INVOKE_INTERFACE OP_INVOKE_SUPER_QUICK and
+## OP_INVOKE_VIRTUAL_QUICK
+
 /*
- * For the invoke codes we need to know what register holds the "this" pointer. However
- * it seems the this pointer is assigned consistently most times it is in %ecx but other
- * times it is in OP_INVOKE_INTERFACE_JUMBO OP_INVOKE_INTERFACE OP_INVOKE_SUPER_QUICK and
- * OP_INVOKE_VIRTUAL_QUICK
-*/
+ * Common code for jumbo method invocation.
+ *
+ * On entry:
+ *   eax = Method* methodToCall
+ *   rINSTw trashed, must reload
+ *   rIBASE trashed, must reload before resuming interpreter
+ */
+
+common_invokeMethodJumbo:
+.LinvokeNewJumbo:
+
+   /*
+    * prepare to copy args to "outs" area of current frame
+    */
+    movzwl      6(rPC),rINST            # rINST<- BBBB
+    movzwl      8(rPC), %ecx            # %ecx<- CCCC
+    ADVANCE_PC 2                        # adjust pc to make return similar
+    SAVEAREA_FROM_FP %edx               # %edx<- &StackSaveArea
+    test        rINST, rINST
+    movl        rINST, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- BBBB
+    jz          .LinvokeArgsDone        # no args; jump to args done
+    jmp         .LinvokeRangeArgs       # handle args like invoke range
 
 /*
  * Common code for method invocation with range.
@@ -16872,50 +17866,75 @@ common_invokeMethodNoRange:
 /*
  * Common code for handling a return instruction
  */
-    .balign 16
 common_returnFromMethod:
     movl    rSELF, %ecx
     SAVEAREA_FROM_FP %eax                       # %eax<- saveArea(old)
     cmpw    $0, offThread_subMode(%ecx)          # special action needed?
-    jne     .common_returnFromMethod_submodeHandler # go if so
-    // othewise fall through
+    jne     19f                                   # go if so
+14:
 
-    // When we get to this point, %ecx must hold self Thread pointer
-    // and %eax must hold the save area
-.common_returnFromMethod_resume:
-    movl        (offStackSaveArea_prevFrame - sizeofStackSaveArea)(rFP), rFP # rFP<- saveArea->PrevFrame
+    movl        offStackSaveArea_prevFrame(%eax), rFP # rFP<- saveArea->PrevFrame
+    movl        (offStackSaveArea_method - sizeofStackSaveArea)(rFP), rINST # rINST<- method we are returning to
+    cmpl        $0, rINST               # check for break frame
+    je          common_gotoBail         # bail if break frame
+    movl        offThread_curHandlerTable(%ecx),rIBASE
     movl        offStackSaveArea_savedPc(%eax), rPC # rPC<- saveAreaOld->savedPc
 #if defined(WITH_JIT)
-    movl        offStackSaveArea_returnAddr(%eax), %eax
+    movl        offStackSaveArea_returnAddr(%eax), %ecx
 #endif
-    movl        (offStackSaveArea_method - sizeofStackSaveArea)(rFP), rINST # rINST<- method we are returning to
-    movl        rFP, offThread_curFrame(%ecx) # glue->self->curFrame<- rFP
-    testl       rINST, rINST               # check for break frame
-    je          common_gotoBail         # bail if break frame
-
-    movl        rINST, offThread_method(%ecx) # glue->method<- newSave->method
+    movl        rSELF, %eax
+    movl        rINST, offThread_method(%eax) # glue->method<- newSave->method
     movl        offMethod_clazz(rINST), rINST # rINST<- method->clazz
+    movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- rFP
 #if defined(WITH_JIT)
-    movl        %eax, offThread_inJitCodeCache(%ecx)
+    //update self->offThread_inJitCodeCache
+    movl        %ecx, offThread_inJitCodeCache(%eax)
 #endif
     movl        offClassObject_pDvmDex(rINST), rINST # rINST<- method->clazz->pDvmDex
-    movl        rINST, offThread_methodClassDex(%ecx) # glue->pDvmDex<- method->clazz->pDvmDex
+    movl        rINST, offThread_methodClassDex(%eax) # glue->pDvmDex<- method->clazz->pDvmDex
 #if defined(WITH_JIT)
-    testl       %eax, %eax
-    je          .common_returnFromMethod_startInterpreting
+    cmp         $0, %ecx
+    je          .returnToBC
+##ifdef DEBUG_CALL_STACK3
+#    movl        $0xcccc, %edx
+#    //use %ebx, %eax, update numSwitch & switchPoints
+#    dumpSwitch %edx, %ebx, %eax
+#    movl        0(%edi), %edx
+#    dumpSwitch %edx, %ebx, %eax
+#    movl        %ecx, %edx
+#    dumpSwitch %edx, %ebx, %eax
+##endif
+    movl        %ecx, %eax
     jmp         *%eax
 #endif
-    // fallthrough so we can execute next bytecode
 
-.common_returnFromMethod_startInterpreting:
-    // Restore handler table
-    movl        offThread_curHandlerTable(%ecx),rIBASE
-    // Step over the invoke
-    FETCH_INST_OPCODE 3 %eax
+.returnToBC:
+
+#if defined(WITH_JIT)
+    FETCH_INST_OPCODE  3, %ecx                 # %eax<- next instruction hi; fetch, advance
+    // %ecx has the opcode
+    addl         $6, rPC               # 3*2 = 6
+    SPILL_TMP1   (%ecx)
+    movl         rSELF, %ecx
+    FETCH_INST
+    //GET_JIT_PROF_TABLE %ecx, %eax       # update %eax (scratch) & %ebx
+    //cmp          $0, %eax
+    //jne          common_updateProfile   # set up %ebx & %edx & rPC
+    UNSPILL_TMP1   (%ecx)
+    movzbl      1(rPC), rINST
+    jmp     *(rIBASE,%ecx,4)
+#else
+    //movzbl      (3*2)(rPC), %ecx
+    //movzbl      (3*2 + 1)(rPC), rINST
+    //addl        $(3*2), rPC
+    //jmp     *(rIBASE,%ecx,4)
+
+    FETCH_INST_WORD 3
     ADVANCE_PC 3
-    GOTO_NEXT_R %eax
+    GOTO_NEXT
+#endif
 
-.common_returnFromMethod_submodeHandler:
+19:
     /*
      * Handle special subMode actions
      * On entry, rFP: prevFP, %ecx: self, %eax: saveArea
@@ -16927,114 +17946,11 @@ common_returnFromMethod:
     movl     %ecx, OUT_ARG0(%esp)             # parameter self
     call     dvmReportReturn                  # (self)
     UNSPILL_TMP1(%ebx)
-    SAVEAREA_FROM_FP %eax                     # restore saveArea
     movl     rSELF, %ecx                      # restore self
-    jmp      .common_returnFromMethod_resume   # Resume returning from method
+    SAVEAREA_FROM_FP %eax                     # restore saveArea
+    jmp      14b
 
-#if defined(WITH_JIT)
-    .balign 16
-    // This implementation is a superset of implementation of .common_returnFromMethod_resume
-    .global dvmJitHelper_returnFromMethod
-dvmJitHelper_returnFromMethod:
-    // When we get to this point, %ecx must hold self Thread pointer
-    // %edx must hold the save area, and rFP must hold previous frame.
-
-    // Update thread's current frame
-    movl     rFP, offThread_curFrame(%ecx)
-    // Since we have updated the frame pointer, we must use edx now to
-    // access the old save area
-    movl     offStackSaveArea_returnAddr(%edx), %eax
-    // Put the method we are return to in rINST
-    movl     (offStackSaveArea_method - sizeofStackSaveArea)(rFP), rINST
-
-    // Check for break frame and bail if necessary
-    testl    rINST, rINST
-    jz       .jitHelper_returnFromMethod_bail
-
-    // Finish up return bookkeeping
-    movl     rINST, offThread_method(%ecx) # self->method <- newSave->method
-    movl     offMethod_clazz(rINST), rINST # rINST <- method->clazz
-    // Update PC with the invoke bytecode only after bailing
-    movl     offStackSaveArea_savedPc(%edx), rPC # rPC <- saveAreaOld->savedPc
-    movl     %eax, offThread_inJitCodeCache(%ecx) # self->inJitCodeCache <- returnAddr
-    movl     offClassObject_pDvmDex(rINST), rINST # rINST <- method->clazz->pDvmDex
-    movl     rINST, offThread_methodClassDex(%ecx) # self->methodClassDex <- method->clazz->pDvmDex
-
-    // Technically here we should check break flags, but x86 JIT doesn't
-    // support single step. Break flags are always set to kInterpSafePoint
-    // when Thread.suspendCount is non-zero, thus this check is okay.
-    cmpl     $0,offThread_suspendCount(%ecx)
-    // If suspend count is non-zero, we should chain to native trace
-    // directly. However, in order to stay consistent with ARM implementation
-    // which jumps to dvmJitToInterpNoChainNoProfile even if break flags are
-    // non-zero, look for a native trace head before deciding to interpret.
-    jnz      .jitHelper_returnFromMethod_lookForNativeTrace
-
-    // Do we have a native trace to return to?
-    testl    %eax, %eax
-#ifndef WITH_SELF_VERIFICATION
-    // At this point, if return address is zero, we can look for a native trace.
-    jz       .jitHelper_returnFromMethod_lookForNativeTrace
-#else
-    // If we have self verification, we need to go to interpreter.
-    // Technically, we shouldn't even consider returning to native trace.
-    // However, since testing for SV was done by still allowing returning
-    // to native address and since the effects of method inlining on SV
-    // are not clear, let's still allow the return to native trace. However,
-    // if return address is zero, instead of going to interpreter to start
-    // interpreting, go to special SV handler.
-    jz       .jitHelper_returnFromMethod_SVHandler
-#endif
-    jmp      *%eax
-
-.jitHelper_returnFromMethod_lookForNativeTrace:
-    // We know that our return address is zero, but we can still
-    // look for a native trace
-    leal     6(rPC),%edx              # Compute PC that skips over the invoke
-    movl     %edx,OUT_ARG0(%esp)
-    movl     %ecx,OUT_ARG1(%esp)      # Move self as parameter
-    call     dvmJitGetTraceAddrThread  # (pc, self)
-    movl     rSELF,%ecx                # Restore self
-    testl    %eax, %eax
-    movl     %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
-    jz       .jitHelper_returnFromMethod_startInterpreting
-    jmp      *%eax
-
-.jitHelper_returnFromMethod_startInterpreting:
-    // When we get here, ecx must hold thread pointer
-#ifdef WITH_JIT_TUNING
-    movl     $kCallsiteInterpreted,OUT_ARG0(%esp)
-    call     dvmBumpNoChain
-    movl     rSELF,%ecx                # Restore self
-#endif
-    // Since we start interpreting, we are no longer in JITed code
-    movl     $0, offThread_inJitCodeCache(%ecx)
-    // Restore handler table
-    movl     offThread_curHandlerTable(%ecx),rIBASE
-    // Step over the invoke
-    FETCH_INST_OPCODE 3 %eax
-    ADVANCE_PC 3
-    GOTO_NEXT_R %eax
-
-.jitHelper_returnFromMethod_bail:
-    movl     $0, offThread_inJitCodeCache(%ecx) # If we bail, we are no longer in jit code cache
-    // PC should be that of the return bytecode before bailing
-    jmp      common_gotoBail         # bail if break frame
-
-#ifdef WITH_SELF_VERIFICATION
-// Handler for self verification
-.jitHelper_returnFromMethod_SVHandler:
-    // When we get here, the PC hasn't been updated to skip over the invoke.
-    // So we put it in eax because that's where dvmJitToInterpNoChainNoProfile
-    // expects it.
-    leal     6(rPC),%eax
-    jmp      dvmJitToInterpNoChainNoProfile
-#endif
-#endif
-
-
-
-/*
+ /*
  * Prepare to strip the current frame and "longjump" back to caller of
  * dvmMterpStdRun.
  *
@@ -17113,7 +18029,7 @@ common_verifyField:
     UNSPILL_TMP1(%eax)
     ret
 #endif
-
+ 
 /*
  * After returning from a "selfd" function, pull out the updated values
  * and start executing at the next instruction.

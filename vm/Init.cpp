@@ -28,14 +28,28 @@
 #include <linux/fs.h>
 #include <cutils/fs.h>
 #include <unistd.h>
+#include <sstream>
+#ifdef HAVE_ANDROID_OS
+#include <sys/prctl.h>
+#endif
+#include <dlfcn.h>
+
+#ifdef HAVE_ANDROID_OS
+#include <cutils/properties.h>
+#endif
 
 #include "Dalvik.h"
 #include "test/Test.h"
 #include "mterp/Mterp.h"
 #include "Hash.h"
+#include "JniConstants.h"
 
 #ifdef ARCH_IA32
+#include "compiler/codegen/x86/lightcg/Lower.h"
+#include "compiler/codegen/x86/X86Common.h"
 #include "compiler/CompilerUtility.h"
+#include "compiler/PassDriver.h"
+#include "compiler/MethodContextHandler.h"
 #endif
 
 #if defined(WITH_JIT)
@@ -121,8 +135,6 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xzygote\n");
     dvmFprintf(stderr, "  -Xdexopt:{none,verified,all,full}\n");
     dvmFprintf(stderr, "  -Xnoquithandler\n");
-    dvmFprintf(stderr,
-                "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
     dvmFprintf(stderr, "  -Xjnitrace:substring (eg NativeClass or nativeMethod)\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
@@ -141,8 +153,8 @@ static void usage(const char* progName)
                        "[,hexopvalue[-endvalue]]*\n");
     dvmFprintf(stderr, "  -Xincludeselectedmethod\n");
     dvmFprintf(stderr, "  -Xjitthreshold:decimalvalue\n");
-    dvmFprintf(stderr, "  -Xjittablesize:decimalvalue\n");
-    dvmFprintf(stderr, "  -Xjitcodecachesize:decimalvalue\n");
+    dvmFprintf(stderr, "  -Xjitcodecachesize:decimalvalueofkbytes\n");
+    dvmFprintf(stderr, "  -Xjitdatacachesize:<decimal value of KBytes requested (Default is: 128 KBytes)>\n");
     dvmFprintf(stderr, "  -Xjitblocking\n");
     dvmFprintf(stderr, "  -Xjitmethod:signature[,signature]* "
                        "(eg Ljava/lang/String\\;replace)\n");
@@ -151,16 +163,56 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xjitconfig:filename\n");
     dvmFprintf(stderr, "  -Xjitcheckcg\n");
     dvmFprintf(stderr, "  -Xjitverbose\n");
+#ifdef ARCH_IA32
+    dvmFprintf(stderr, "  -Xjittablesize:<decimalvalue>\n");
+    dvmFprintf(stderr, "  -Xjitbackendoption:key=value[,key=value,...] (Provide option passing to the backend\n");
+    dvmFprintf(stderr, "  -Xjitbackendstring:value (Provide a string to the backend for post-processing\n");
     dvmFprintf(stderr, "  -Xjit[no]scheduling (Turn on/off Atom Instruction Scheduling)\n");
-    dvmFprintf(stderr, "  -Xjitarenatrimstyle:<none|onlyOne|average|user> select arena triming style\n");
-    dvmFprintf(stderr, "  -Xjitarenatrimvalue:<value> the value for the user based arena trim style\n");
+    dvmFprintf(stderr, "  -Xjituserplugin:<file.so> (Handle a user plugin file)\n");
+    dvmFprintf(stderr, "  -Xjituserpluginfatal (Is failure to load a user plugin fatal?\n");
+    dvmFprintf(stderr, "  -Xjitcodegen:<LCG|PCG> (Select code generator for JIT.)\n");
+    dvmFprintf(stderr, "  -Xjitarenatrimstyle:<none|onlyOne|average|user> (Select arena triming style)\n");
+    dvmFprintf(stderr, "  -Xjitarenatrimvalue:<value> (The value for the user based arena trim style)\n");
+    dvmFprintf(stderr, "  -Xjitnestedloops (Allows nested loops to be compiled or not)\n");
+    dvmFprintf(stderr, "  -Xjittestloops (Whether to test the loop formation)\n");
+    dvmFprintf(stderr, "  -Xjitbranchloops (Allows branches in loops, only tested if nestedloops is also off)\n");
+    dvmFprintf(stderr, "  -Xjitextraoptsfile:<file> handling extra options via a process filtering file\n");
+    dvmFprintf(stderr, "  -Xjitoldloops (Only accept the old loop detection system)\n");
+    dvmFprintf(stderr, "  -Xdisabletla (Disable TLA allocation for small objects)");
+    dvmFprintf(stderr, "  -Xjitignorepasses:<value> (Used to ignore loop passes. The full name of the pass must be included "
+            "and each pass separated by comma, see -Xjitlooppasses to get a list)\n");
+    dvmFprintf(stderr, "  -Xjitdebugpasses:<value> (Enable verbosity for optimization passes. The full name of the pass must "
+            "be included with each pass name separated by comma so use -Xjitlooppasses to get a list)\n");
+    dvmFprintf(stderr, "  -Xjitdebugallpasses (Used to enable verbosity for all optimization passes)\n");
+    dvmFprintf(stderr, "  -Xjitdebugdumpcfg (dump CFG after each loop optimization pass if jitdebugpasses or jitdebugallpasses set)\n");
+    dvmFprintf(stderr, "  -Xjitlooppasses (Prints the loop passes available)\n");
+    dvmFprintf(stderr, "  -Xjitvectorizestrengthreduction (Apply strength reduction in the vectorization pass)\n");
+    dvmFprintf(stderr, "  -Xjitregisterization:<value> Request a maximum of registerization requests\n");
+    dvmFprintf(stderr, "  -Xjitdisableinlining Disables all method inlining\n");
+    dvmFprintf(stderr, "  -Xjitinliningmethodsizemax:<value> The maximum number of bytecodes a method can have to be considered for inlining\n");
+    dvmFprintf(stderr, "  -Xjitdisablepredictedinlining Disable method inlining that is done on a predicted method");
+    dvmFprintf(stderr, "  -Xjitmaxscratch:<value> The maximum number of scratch registers that are allowed to be used in optimization passes\n");
+    dvmFprintf(stderr, "  -Xjitmaxmethodcontexts:<value> Set the maximum number of method context in the system\n");
+    dvmFprintf(stderr, "  -Xjitmaxconstantspercontext:<value> Set the maximum number of constants to collect per method context\n");
+    dvmFprintf(stderr, "  -Xjitmaxbasicblockspercontext:<value> Set the maximum number of basic blocks allowed in a method for method context\n");
+    dvmFprintf(stderr, "  -Xjitnontemporaliterations:<value> Set the minimum iterations for applying non-temporal moves for array stores\n");
+#endif
 #if defined(VTUNE_DALVIK)
     dvmFprintf(stderr, "  -Xjitsepdalvik\n");
     dvmFprintf(stderr, "  -Xjitvtuneinfo:{none,jit,dex,src}\n");
+    dvmFprintf(stderr, "  -Xjitvtuneversion:<build_num> (Generates jit files compatible with specific VTune build. Default is " STR_VALUE(VTUNE_VERSION_DEFAULT) ".)\n");
 #endif
     dvmFprintf(stderr, "  -Xjitprofile\n");
     dvmFprintf(stderr, "  -Xjitdisableopt\n");
     dvmFprintf(stderr, "  -Xjitsuspendpoll\n");
+#if defined(WITH_SELF_VERIFICATION)
+    dvmFprintf(stderr, "  -Xjitselfverificationspin\n");
+#endif
+#if defined(WITH_JIT_TUNING)
+    dvmFprintf(stderr, "  -Xjitmethodprofile:signature[, signature]* (eg Ljava/lang/String\\;replace) or -Xjitmethodprofile:filename "
+                       " (Dump specified methods' CFG)\n");
+    dvmFprintf(stderr, "  -Xjitmethodprofileprefix:<PATH> Change the CFG dump dir prefix, default is /sdcard/cfg/method/\n");
+#endif
 #endif
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
@@ -777,6 +829,289 @@ static int processXjitconfig(const char* opt) {
 }
 #endif
 
+/**
+ * @brief Parse the process names
+ * @param option the option file handle
+ * @param cmdLine the command line for the current process
+ * @return whether we should apply the options
+ */
+static bool parseProcessNames(FILE *option, const char *cmdLine)
+{
+    char buffer[1024];
+
+    bool except = false;
+    bool all = false;
+    bool foundName = false;
+
+    //Now read line per line
+    while (fgets(buffer, sizeof(buffer), option) != 0) {
+        //Check that we read the whole line
+        char *ptr = strchr(buffer, '\n');
+
+        if (ptr == 0) {
+            ALOGD("Extra Options: Problem reading a line in file: %s\n", buffer);
+            return false;
+        }
+
+        //Skip empty lines
+        if (ptr == buffer) {
+            continue;
+        }
+
+        //Trim input string
+        char *start = buffer;
+        while (start < ptr && isspace(*start)) {
+            start++;
+        }
+
+        //Trim and zero the end of line
+        while (start < ptr && isspace(*ptr)) {
+            *ptr = '\0';
+            ptr--;
+        }
+
+        // ptr is a last element of trimmed string
+        assert(strlen(start) == ptr - start + 1);
+
+        //Skip empty trimmed lines
+        if (ptr == start && isspace(*ptr)) {
+            continue;
+        }
+
+        //Break at OPTIONS
+        if (strstr(start, "OPTIONS") != 0) {
+            //If it's all or foundName, we should handle it
+            bool res = (all == true || foundName == true);
+
+            //Except will negate it
+            if (except == true) {
+                res = !res;
+            }
+
+            return res;
+        }
+
+        if (strcasecmp(start, "all") == 0) {
+            //Is it all?
+            all = true;
+        } else if (strcasecmp(start, "except") == 0) {
+            //Exception
+            except = true;
+        } else if (start == ptr && *ptr == '*') {
+            // Handle single asterisk '*' as all
+            all = true;
+        } else if (*start == '*' && *ptr == '*') {
+            // Handle asterisk at the start and end of name: '*acbdef*'
+            start++;
+            *ptr = 0;
+            ptr--;
+            if (start == ptr) {
+                all = true;
+            } else if (strstr(cmdLine, start) != 0) {
+                foundName = true;
+            }
+        } else if (*ptr == '*') {
+            // Handle asterisk at the end of name: 'acbdef*'
+            *ptr = 0;
+            if (strstr(cmdLine, start) == cmdLine) {
+                foundName = true;
+            }
+        } else if (*start == '*') {
+            // Handle asterisk at the start of name: '*acbdef'
+            start++;
+            int delta = strlen(cmdLine) - (ptr - start + 1);
+            if (strcmp(cmdLine + delta, start) == 0) {
+                foundName = true;
+            }
+        } else if (strcmp(cmdLine, start) == 0) {
+            foundName = true;
+        }
+    }
+
+    //Got here, we didn't have an OPTIONS
+    return false;
+}
+
+//Forward declaration for the option processing
+static int processOptions(int argc, const char* const argv[], bool ignoreUnrecognized);
+
+/**
+ * @brief Apply options until an empty line or end of file is found
+ * @param optionFile the option file handle
+ * @return whether we hit an empty line instead of the end of file
+ */
+static bool applyOptions(FILE *optionFile)
+{
+    char buffer[1024];
+
+    char *base = buffer;
+
+    //Get a pointer to buffer
+    char **ptrBuffer = &base;
+
+    //Read line per line
+    while (fgets(buffer, sizeof(buffer), optionFile) != 0) {
+        char *ptr = strchr(buffer, '\n');
+
+        //If not found, we have an issue
+        if (ptr == 0) {
+            ALOGD("Extra Options: Problem with applying an option: %s\n", buffer);
+            return false;
+        }
+
+        //If ptr == buffer, we are done: empty line
+        if (buffer == ptr) {
+            return true;
+        }
+
+        //Remove it
+        *ptr = '\0';
+
+        ALOGD("Extra Options: Applying option %s\n", buffer);
+
+        //Ok we have an option, now apply it
+        processOptions(1, ptrBuffer, false);
+    }
+
+    //End of file
+    return false;
+}
+
+/**
+ * Skip lines until an empty line
+ * @param optionFile the option file handler
+ * @return whether we did not hit the EOF before an empty line
+ */
+static bool skipOptions(FILE *optionFile)
+{
+    char buffer[1024];
+
+    //Read line per line
+    while (fgets(buffer, sizeof(buffer), optionFile) != 0) {
+        char *ptr = strchr(buffer, '\n');
+
+        //If not found, we have an issue
+        if (ptr == 0) {
+            ALOGD("Extra Options: Problem with skipping an option: %s\n", buffer);
+            return false;
+        }
+
+        //If ptr == buffer, we are done: empty line
+        if (buffer == ptr) {
+            return true;
+        }
+    }
+
+    //End of file
+    return false;
+}
+
+/**
+ * @brief Handle an extra option file
+ * @param name the file name containing the extra options
+ */
+static void handleExtraOptionsFile(const char *name)
+{
+    //Option not specified
+    if (name == NULL) {
+        ALOGD("Extra Options: not specified\n");
+        return;
+    }
+
+    //Now open the file
+    FILE *optionFile = fopen(name, "r");
+
+    //Error checking
+    if (optionFile == NULL) {
+        ALOGD("Extra Options: Problem opening file for -Xjitextraoptsfile option: %s\n", name);
+        return;
+    }
+
+    char myCmdLine[2048];
+    //Set it to 0
+    memset(myCmdLine, 0, sizeof(myCmdLine));
+
+    if (gDvm.niceName != NULL) {
+        // use process nice name for comparison with option patterns
+        strncpy(myCmdLine, gDvm.niceName, sizeof(myCmdLine));
+
+        // ensure it finishes with a '\0'
+        size_t max = sizeof(myCmdLine);
+        assert (max > 0);
+        myCmdLine[max - 1] = '\0';
+        ALOGD("Extra Options: Process' nice name %s\n", myCmdLine);
+    } else {
+
+        //First job is to see if we care or not, so find our name
+        pid_t mypid = getpid();
+
+        //We want our name so open our proc/cmdline
+        char buffer[1024];
+        snprintf(buffer, sizeof(buffer), "/proc/%d/cmdline", mypid);
+
+        //Open it up
+        FILE *myCmdFile = fopen(buffer, "r");
+
+        if (myCmdFile == 0) {
+            ALOGD("Extra Options: Problem opening the pid's cmdline file: %s\n", buffer);
+            fclose(optionFile), optionFile = 0;
+            return;
+        }
+
+        //Read the first line
+        char *ptr = fgets(myCmdLine, sizeof(myCmdLine), myCmdFile);
+
+        //Find last element not 0
+        int i = sizeof(myCmdLine) - 1;
+        while (i > 0) {
+            //Bail if not '\0'
+            if (myCmdLine[i] != '\0') {
+                break;
+            }
+            //Previous character
+            i--;
+        }
+
+        //Ok now we have what is read and there might be sparseProcessNamesome '\0', replace them
+        while (i > 0) {
+            //Replace if '\0'
+            if (myCmdLine[i] == '\0') {
+                myCmdLine[i] = '_';
+            }
+            //Previous character
+            i--;
+        }
+        ALOGD("Extra Options: Process' Command line %s\n", myCmdLine);
+
+        //Close command file handle
+        fclose(myCmdFile), myCmdFile = 0;
+
+        //If problem reading, bail
+        if (ptr == 0) {
+            ALOGD("Extra Options: Problem reading the pid's cmdline file line\n");
+            fclose(optionFile), optionFile = 0;
+            return;
+        }
+    }
+
+    bool continueParsing = true;
+
+    do {
+        //First find out if we want to apply the options to this process
+        bool shouldApply = parseProcessNames(optionFile, myCmdLine);
+
+        if (shouldApply == true) {
+            continueParsing = applyOptions(optionFile);
+        } else {
+            continueParsing = skipOptions(optionFile);
+        }
+
+    } while (continueParsing == true);
+
+    //Close option file
+    fclose(optionFile), optionFile = 0;
+}
+
 /*
  * Process an argument vector full of options.  Unlike standard C programs,
  * argv[0] does not contain the name of the program.
@@ -788,28 +1123,13 @@ static int processXjitconfig(const char* opt) {
  * Returns 0 on success, -1 on failure, and 1 for the special case of
  * "-version" where we want to stop without showing an error message.
  */
-static int processOptions(int argc, const char* const argv[],
-    bool ignoreUnrecognized)
+int processOptions(int argc, const char* const argv[], bool ignoreUnrecognized)
 {
     int i;
 
     ALOGV("VM options (%d):", argc);
     for (i = 0; i < argc; i++)
         ALOGV("  %d: '%s'", i, argv[i]);
-
-    /*
-     * Over-allocate AssertionControl array for convenience.  If allocated,
-     * the array must be able to hold at least one entry, so that the
-     * zygote-time activation can do its business.
-     */
-    assert(gDvm.assertionCtrl == NULL);
-    if (argc > 0) {
-        gDvm.assertionCtrl =
-            (AssertionControl*) malloc(sizeof(AssertionControl) * argc);
-        if (gDvm.assertionCtrl == NULL)
-            return -1;
-        assert(gDvm.assertionCtrlCount == 0);
-    }
 
     for (i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-help") == 0) {
@@ -950,6 +1270,8 @@ static int processOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Invalid -XX:HeapMaxFree option '%s'\n", argv[i]);
                 return -1;
             }
+        } else if (strcmp(argv[i], "-XX:LowMemoryMode") == 0) {
+          gDvm.lowMemoryMode = true;
         } else if (strncmp(argv[i], "-XX:HeapTargetUtilization=", 26) == 0) {
             const char* start = argv[i] + 26;
             const char* end = start;
@@ -1051,6 +1373,8 @@ static int processOptions(int argc, const char* const argv[],
             }
         } else if (strcmp(argv[i], "-Xrs") == 0) {
             gDvm.reduceSignals = true;
+        } else if (strcmp(argv[i], "-Xdisablevmexiterrorselimination") == 0) {
+            gDvm.disableVMExitErrorsElimination = true;
         } else if (strcmp(argv[i], "-Xnoquithandler") == 0) {
             /* disables SIGQUIT handler thread while still blocking SIGQUIT */
             /* (useful if we don't want thread but system still signals us) */
@@ -1085,13 +1409,7 @@ static int processOptions(int argc, const char* const argv[],
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xjnigreflimit:", 15) == 0) {
-            int lim = atoi(argv[i] + 15);
-            if (lim < 200 || (lim % 100) != 0) {
-                dvmFprintf(stderr, "Bad value for -Xjnigreflimit: '%s'\n",
-                    argv[i]+15);
-                return -1;
-            }
-            gDvm.jniGrefLimit = lim;
+            // Ignored for backwards compatibility.
         } else if (strncmp(argv[i], "-Xjnitrace:", 11) == 0) {
             gDvm.jniTrace = strdup(argv[i] + 11);
         } else if (strcmp(argv[i], "-Xlog-stdio") == 0) {
@@ -1138,7 +1456,23 @@ static int processOptions(int argc, const char* const argv[],
         } else if (strncmp(argv[i], "-Xjittablesize:", 15) == 0) {
             gDvmJit.jitTableSize = atoi(argv[i] + 15);
         } else if (strncmp(argv[i], "-Xjitcodecachesize:", 19) == 0) {
-            gDvmJit.codeCacheSize = atoi(argv[i] + 19);
+            gDvmJit.codeCacheSize = atoi(argv[i] + 19) * 1024;
+#ifndef ARCH_IA32
+            if (gDvmJit.codeCacheSize == 0) {
+                gDvm.executionMode = kExecutionModeInterpFast;
+            }
+#endif
+        } else if (strncmp(argv[i], "-Xjitdatacachesize:", 19) == 0) {
+            char *endPtr = NULL;
+            long int value = strtol(argv[i] + 19, &endPtr, 10);
+            if (*endPtr == '\0' && value >= 0 && *(argv[i] + 19) != '\0') {
+                gDvmJit.dataCacheSize = value * 1024;
+            }
+            else {
+                dvmFprintf(stderr,
+                    "Warning: Invalid value string "
+                    "%s\n", argv[i] + 19);
+            }
         } else if (strncmp(argv[i], "-Xincludeselectedop", 19) == 0) {
             gDvmJit.includeSelectedOp = true;
         } else if (strncmp(argv[i], "-Xincludeselectedmethod", 23) == 0) {
@@ -1151,10 +1485,354 @@ static int processOptions(int argc, const char* const argv[],
             gDvmJit.printBinary = true;
         } else if (strncmp(argv[i], "-Xjitverbose", 12) == 0) {
             gDvmJit.printMe = true;
+#ifdef ARCH_IA32
+        } else if (strncmp(argv[i], "-Xjitbackendstring:", 19) == 0) {
+            char *ptr = strchr (argv[i], ':');
+
+            //Paranoid
+            assert (ptr != 0);
+
+            //Next character
+            ptr++;
+
+            //Copy into the global structure
+            gDvmJit.backendString = ptr;
+
+        } else if (strncmp(argv[i], "-Xjitbackendoption:", 19) == 0) {
+            char *ptr = strchr (argv[i], ':');
+
+            //Paranoid
+            assert (ptr != 0);
+
+            //Next character
+            ptr++;
+
+            //Copy top 1024, should be enough
+            const int length = 1024;
+            char *copy = strndup (ptr, length);
+
+            //Paranoid
+            if (copy == 0)
+            {
+                dvmFprintf(stderr, "Option -Xjitbackendoption had a memory management issue, option ignored\n");
+                break;
+            }
+
+            //Copy and ptr must match
+            if (strcmp (copy, ptr) != 0)
+            {
+                dvmFprintf(stderr, "Option -Xjitbackendoption only allows a string after the ':' of %d characters, option ignored\n", length);
+                free (copy), copy = 0;
+                break;
+            }
+
+            //Go through the list
+            char *start = copy;
+
+            //Go through the options, we stop when start is nil
+            while (start != 0)
+            {
+                //Get =
+                char *equal = strchr (start, '=');
+                char *next = 0;
+
+                if (equal != 0)
+                {
+                    //Set to '\0', separating value and key
+                    *equal = '\0';
+
+                    //Next character
+                    equal++;
+
+                    //Find end of equal
+                    next = strchr (equal, ',');
+
+                    //If we have another option, we have to separate the current option couple and the next
+                    if (next != 0)
+                    {
+                        //Set to '\0', separating this key and next key/value couple
+                        *next = '\0';
+
+                        //Next character
+                        next++;
+                    }
+
+                    gDvmJit.backendOptions[start] = equal;
+                }
+                else
+                {
+                    gDvmJit.backendOptions[start] = "empty";
+                }
+
+                //Update start, it is the next
+                start = next;
+            }
+
+            //Free copy
+            free (copy), copy = 0;
+
         } else if (strncmp(argv[i], "-Xjitscheduling", 15) == 0) {
             gDvmJit.scheduling = true;
         } else if (strncmp(argv[i], "-Xjitnoscheduling", 17) == 0) {
             gDvmJit.scheduling = false;
+        } else if (strncmp(argv[i], "-Xjitnestedloops", 16) == 0) {
+            gDvmJit.nestedLoops = true;
+        } else if (strncmp(argv[i], "-Xjittestloops", 14) == 0) {
+            gDvmJit.testLoops = true;
+        } else if (strncmp (argv[i], "-Xjitbackendretries:", 20) == 0) {
+            char *endptr = NULL;
+            //Get requested style
+            long res = strtol (argv[i] + 20, &endptr, 0);
+
+            //Error checking: basic ones first
+            if (endptr != 0 && *endptr == '\0' && res != LONG_MIN && res != LONG_MAX && res > 0)
+            {
+                dvmFprintf (stderr, "Setting Back-end retries to: %ld\n", res);
+                gDvmJit.backEndRetries = res;
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: must be only a strictly positive number\n", argv[i]);
+            }
+        } else if (strncmp(argv[i], "-Xjitbranchloops", 16) == 0) {
+            gDvmJit.branchLoops = true;
+        } else if (strncmp(argv[i], "-Xjitnobackendregisterization", 29) == 0) {
+            gDvmJit.backEndRegisterization = false;
+            gDvmJit.maximumRegisterization = 0;
+        } else if (strncmp(argv[i], "-Xjitextraoptsfile:", 19) == 0) {
+            gDvm.extraOptionsFile = strdup (argv[i] + 19);
+        } else if (strncmp(argv[i], "-XjitvectorizedIterations:", 26) == 0) {
+            char *endptr = NULL;
+            //Get requested style
+            long res = strtol (argv[i] + 26, &endptr, 0);
+
+            //Error checking: basic ones first
+            if (endptr != NULL && *endptr == '\0' && res != LONG_MIN && res != LONG_MAX && res > 0)
+            {
+                dvmFprintf (stderr, "Setting Vector registers value to: %ld\n", res);
+                gDvmJit.minVectorizedIterations = res;
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: must be only a strictly positive number\n", argv[i]);
+            }
+        } else if (strncmp(argv[i], "-XjitvectorRegisters:", 21) == 0) {
+            char *endptr = NULL;
+            //Get requested style
+            long res = strtol (argv[i] + 21, &endptr, 0);
+
+            //Error checking: basic ones first
+            if (endptr != NULL && *endptr == '\0' && res != LONG_MIN && res != LONG_MAX && res > 0)
+            {
+                dvmFprintf (stderr, "Setting Vector registers value to: %ld\n", res);
+                gDvmJit.vectorRegisters = res;
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: must be only a strictly positive number\n", argv[i]);
+            }
+        } else if (strncmp(argv[i], "-Xjitregisterization:", 21) == 0) {
+            char *endptr = NULL;
+            //Get requested style
+            long res = strtol (argv[i] + 21, &endptr, 0);
+
+            //Error checking: basic ones first
+            if (endptr != NULL && *endptr == '\0' && res != LONG_MIN && res != LONG_MAX && res > 0)
+            {
+                dvmFprintf (stderr, "Setting Registerization value to: %ld\n", res);
+                gDvmJit.maximumRegisterization = res;
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: must be only a strictly positive number\n", argv[i]);
+            }
+#endif
+        } else if (strncmp(argv[i], "-Xjitdisableinlining", 20) == 0) {
+            gDvmJit.disableOpt |= 1 << kMethodInlining;
+        } else if (strncmp(argv[i], "-XjitdisableBEcomparisonifopt", 20) == 0) {
+            gDvmJit.disableOpt |= 1 << kBEComparisonIfOpt;
+        } else if (strncmp(argv[i], "-Xjitfastmath", strlen ("-Xjitfastmath")) == 0) {
+            gDvmJit.fastMath = true;
+        } else if (strncmp(argv[i], "-Xjitinliningmethodsizemax:", strlen ("-Xjitinliningmethodsizemax:")) == 0) {
+            const unsigned int sizeOfOption = strlen ("-Xjitinliningmethodsizemax:");
+            char *endptr = NULL;
+
+            long maxBytecodes = strtol (argv[i] + sizeOfOption, &endptr, 0);
+
+            if (endptr != 0 && *endptr == '\0' && maxBytecodes > 0 && errno != ERANGE)
+            {
+                gDvmJit.maximumInliningNumBytecodes = maxBytecodes;
+                dvmFprintf (stderr, "Set inlining max number of bytecodes to: %u\n",
+                        gDvmJit.maximumInliningNumBytecodes);
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: "
+                        "must be only a strictly positive number\n", argv[i]);
+            }
+        } else if (strncmp(argv[i], "-Xjitnontemporaliterations:", strlen ("-Xjitnontemporaliterations:")) == 0) {
+            const unsigned int sizeOfOption = strlen ("-Xjitnontemporaliterations:");
+            char *endptr = NULL;
+
+            unsigned long maxBytecodes = strtoul (argv[i] + sizeOfOption, &endptr, 0);
+
+            if (endptr != 0 && *endptr == '\0' && maxBytecodes > 0 && errno != ERANGE)
+            {
+                gDvmJit.minNonTemporalIterations = maxBytecodes;
+                dvmFprintf (stderr, "Set minimum number of iterations for applying non-temporal move to: %u\n",
+                        gDvmJit.minNonTemporalIterations);
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: "
+                        "must be only a strictly positive number\n", argv[i]);
+            }
+        } else if (strncmp(argv[i], "-Xjitdisablepredictedinlining", strlen ("-Xjitdisablepredictedinlining")) == 0) {
+            gDvmJit.disableOpt |= 1 << kPredictedMethodInlining;
+#ifdef ARCH_IA32
+        } else if (strncmp(argv[i], "-Xjitmaxscratch:", strlen ("-Xjitmaxscratch:")) == 0) {
+            const unsigned int sizeOfOption = strlen ("-Xjitmaxscratch:");
+            char *endptr = 0;
+
+            long maxScratch = strtol (argv[i] + sizeOfOption, &endptr, 0);
+
+            if (endptr != 0 && *endptr == '\0' && maxScratch >= 0 && errno != ERANGE)
+            {
+                gDvmJit.maximumScratchRegisters = maxScratch;
+                dvmFprintf (stderr, "Setting maximum number of scratch registers to: %u\n",
+                        gDvmJit.maximumScratchRegisters);
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: "
+                        "must be 0 or positive\n", argv[i]);
+            }
+        } else if (strncmp(argv[i], "-Xjitmaxcostsuspendcheckremoval:", strlen ("-Xjitmaxcostsuspendcheckremoval:")) == 0) {
+            const unsigned int sizeOfOption = strlen ("-Xjitmaxcostsuspendcheckremoval:");
+            char *endptr = NULL;
+
+            int64_t maxCostSuspendRemoval = strtol (argv[i] + sizeOfOption, &endptr, 0);
+
+            if (endptr != 0 && *endptr == '\0' && maxCostSuspendRemoval >= 0 && errno != ERANGE)
+            {
+                gDvmJit.maxCostSuspendRemoval = maxCostSuspendRemoval;
+                dvmFprintf (stderr, "Set max CFG cost for suspend point removal to: %u\n",
+                        gDvmJit.maxCostSuspendRemoval);
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: "
+                        "must be 0 or positive\n", argv[i]);
+            }
+        } else if (strncmp(argv[i], "-Xjitoldloops", 13) == 0) {
+            gDvmJit.oldLoopDetection = true;
+        } else if (strncmp(argv[i], "-Xjitignorepasses:", strlen ("-Xjitignorepasses:")) == 0) {
+            const unsigned int sizeOfOption = strlen ("-Xjitignorepasses:");
+            const unsigned int max = 64;
+
+            //Get a copy of the names
+            gDvmJit.ignorePasses = strndup (argv[i] + sizeOfOption, max);
+
+            //Paranoid for memory issues
+            if (gDvmJit.ignorePasses != 0)
+            {
+                //Paranoid: let's not let people do anything they want
+                if (strlen (gDvmJit.ignorePasses) < strnlen (argv[i] + sizeOfOption, max + 1))
+                {
+                    ALOGD ("Warning: -Xjitignorepasses' parameter was too long, are you sure it was wanted? Only part was accepted");
+                }
+
+                //Print what we will be ignoring
+                dvmCompilerPrintIgnorePasses ();
+            }
+        } else if (strncmp (argv[i], "-Xjitdebugpasses:", strlen ("-Xjitdebugpasses:")) == 0) {
+            const unsigned int sizeOfOption = strlen ("-Xjitdebugpasses:");
+            const unsigned int max = 64;
+
+            //Get a copy of the names of the passes to debug
+            gDvmJit.debugPasses = strndup (argv[i] + sizeOfOption, max);
+
+            //Paranoid for memory issues
+            if (gDvmJit.debugPasses != 0)
+            {
+                //Paranoid: let's not let people do anything they want
+                if (strlen (gDvmJit.debugPasses) < strnlen (argv[i] + sizeOfOption, max + 1))
+                {
+                    ALOGD ("Warning: The parameter for -Xjitdebugpasses was too long. Only part was accepted.");
+                }
+            }
+        } else if (strncmp (argv[i], "-Xjitdebugallpasses", sizeof ("-Xjitdebugallpasses")) == 0) {
+            //Set the flag to true for debugging all
+            gDvmJit.debugAllPasses = true;
+        } else if (strncmp (argv[i], "-Xjitdebugdumpcfg", sizeof ("-Xjitdebugdumpcfg")) == 0) {
+            //Set the flag to true for dumping cfgs
+            gDvmJit.debugDumpCFGAfterLoopOpt = true;
+        } else if (strncmp(argv[i], "-Xjitlooppasses", 15) == 0) {
+            //Simply call the loop pass printer
+            dvmCompilerPrintPassNames ();
+        } else if (strncmp(argv[i], "-Xjitdisablevsr", 15) == 0) {
+            //Disable vectorized strength reduction
+            gDvmJit.vectorizeStrengthReduction = false;
+        } else if (strncmp (argv[i], "-Xjituserpluginfatal", 20) == 0) {
+            gDvmJit.userpluginfatal = true;
+
+            //It is technically possible we have already failed
+            if (gDvmJit.userpluginfailed == true)
+            {
+                //Then abort now
+                dvmAbort ();
+            }
+        } else if (strncmp (argv[i], "-Xjituserplugin:", 16) == 0) {
+            const char *file = argv[i] + 16;
+            //Send off to handle user pass
+            dvmCompilerHandleUserPlugin (file);
+        } else if (strncmp (argv[i], "-Xjitcodegen:", 13) == 0) {
+            const char *cgSelection = argv[i] + 13;
+            if (strlen(cgSelection) == 3) {
+                if (strcmp(cgSelection,"LCG")==0){
+                    gDvmJit.codeGenerator = LCG;
+                }else if (strcmp(cgSelection,"PCG")==0){
+                    gDvmJit.codeGenerator = PCG;
+                }else{
+                    dvmFprintf (stderr, "Invalid code generator name %s.", argv[i]);
+                }
+            }else{
+                dvmFprintf (stderr, "Invalid code generator name %s.", argv[i]);
+            }
+#endif
+        } else if (strncmp (argv[i], "-Xjitabortonerror", 17) == 0) {
+            gDvmJit.abortOnCompilerError = true;
+#ifdef ARCH_IA32
+        } else if (strncmp (argv[i], "-Xjitmaxmethodcontexts:", 23) == 0) {
+            char *endptr = NULL;
+            //Get requested value
+            unsigned long res = strtoul (argv[i] + 23, &endptr, 0);
+
+            //Pass on the value to the context handler
+            if (endptr == NULL || *endptr != '\0' || MethodContextHandler::setMaxContexts (res) == false)
+            {
+                dvmFprintf (stderr, "Refusing option for %s, the value is invalid for the maximum number of contexts\n", argv[i]);
+            }
+        } else if (strncmp (argv[i], "-Xjitmaxconstantspercontext:", 28) == 0) {
+            char *endptr = NULL;
+            //Get requested value
+            unsigned long res = strtoul (argv[i] + 28, &endptr, 0);
+
+            //Pass on the value to the context handler
+            if (endptr == NULL || *endptr != '\0' || MethodContextHandler::setMaxConstantsPerContext (res) == false)
+            {
+                dvmFprintf (stderr, "Refusing option for %s, the value is either invalid or too large for the number of constants\n", argv[i]);
+            }
+        } else if (strncmp (argv[i], "-Xjitmaxbasicblockspercontext:", 30) == 0) {
+            char *endptr = NULL;
+            //Get requested value
+            unsigned long res = strtoul (argv[i] + 30, &endptr, 0);
+
+            //Pass on the value to the context handler
+            if (endptr == NULL || *endptr != '\0' || MethodContextHandler::setMaxBasicBlocksPerContext (res) == false)
+            {
+                dvmFprintf (stderr, "Refusing option for %s, the value is either invalid or too large for the number of basic blocks\n", argv[i]);
+            }
         } else if (strncmp (argv[i], "-Xjitarenatrimstyle:", 20) == 0) {
             const char *style = argv[i] + 20;
             const char *acceptedStyles[] = {"none", "onlyOne", "average", "user"};
@@ -1200,6 +1878,7 @@ static int processOptions(int argc, const char* const argv[],
             {
                 dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: must be only a strictly positive number\n", argv[i]);
             }
+#endif
 #if defined(VTUNE_DALVIK)
         } else if (strncmp(argv[i], "-Xjitsepdalvik", 14) == 0) {
             gDvmJit.vtuneInfo = kVTuneInfoNativeCode;
@@ -1216,6 +1895,14 @@ static int processOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Unrecognized option '%s'\n", argv[i]);
                 return -1;
             }
+        } else if (strncmp(argv[i], "-Xjitvtuneversion:", 18) == 0) {
+            char * endP;
+            long vtuneVersion = strtol(argv[i] + 18, &endP, 10);
+            if ((endP != NULL && *endP != '\0') || vtuneVersion == LONG_MAX || vtuneVersion < 0) {
+                dvmFprintf(stderr, "Invalid value for option '%s'\n", argv[i]);
+                return -1;
+            }
+            gDvmJit.vtuneVersion = vtuneVersion;
 #endif
         } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
             gDvmJit.profileMode = kTraceProfilingContinuous;
@@ -1229,8 +1916,31 @@ static int processOptions(int argc, const char* const argv[],
           }
         } else if (strncmp(argv[i], "-Xjitsuspendpoll", 16) == 0) {
           gDvmJit.genSuspendPoll = true;
+#if defined(WITH_SELF_VERIFICATION)
+        } else if (strncmp(argv[i], "-Xjitselfverificationspin", 25) == 0) {
+          gDvmJit.selfVerificationSpin = true;
+#endif
+#if defined(WITH_JIT_TUNING)
+        } else if (strncmp(argv[i], "-Xjitmethodprofile:", 19) == 0) {
+            if (argv[i][19] == '/') {
+                processXjitconfig(argv[i] + 19);
+            } else {
+                processXjitmethod(argv[i] +19, true);
+            }
+            if (gDvmJit.methodTable != NULL) {
+                gDvmJit.methodProfTable = dvmHashTableCreate(8, NULL);
+            } else {
+                dvmFprintf (stderr, "Profile method list not set, continue without method profile");
+            }
+        } else if (strncmp(argv[i], "-Xjitmethodprofileprefix:", 25) == 0) {
+            gDvmJit.cfgDirPrefix = strdup(argv[i]+25);
+#endif
 #endif
 
+#ifdef WITH_TLA
+        } else if (strncmp(argv[i], "-Xdisabletla", 12) == 0) {
+            gDvm.withTLA = false;
+#endif
         } else if (strncmp(argv[i], "-Xstacktracefile:", 17) == 0) {
             gDvm.stackTraceFile = strdup(argv[i]+17);
 
@@ -1284,7 +1994,10 @@ static int processOptions(int argc, const char* const argv[],
 #ifdef WITH_REGION_GC
         } else if (strcmp(argv[i], "-XnoRegionGC") == 0) {
             gDvm.enableRegionGC = false;
-
+#endif
+#ifdef WITH_CONDMARK
+        } else if (strcmp(argv[i], "-Xnocondmark") == 0) {
+            gDvm.disableCondmark = true;
 #endif
         } else {
             if (!ignoreUnrecognized) {
@@ -1296,6 +2009,34 @@ static int processOptions(int argc, const char* const argv[],
 
     return 0;
 }
+
+
+#if defined(WITH_JIT) && defined(ARCH_IA32)
+
+//Need the include for dvmCompilerMIR2LIR's definition
+#include "compiler/codegen/CompilerCodegen.h"
+
+/**
+ * @brief Set the default Jit Framework
+ */
+static void setJitFramework ()
+{
+    //Set the pass list
+    dvmCompilerBuildPassList ();
+
+    //Now set the default function pointers
+    SJitFramework &jitFramework = gDvmJit.jitFramework;
+
+    jitFramework.backEndFunction = dvmCompilerLCGMIR2LIR;
+    jitFramework.middleEndFunction = dvmCompileTrace;
+    jitFramework.backEndDumpSpecificBB = dvmCompilerLCGDumpBB;
+    jitFramework.backEndBasicBlockAllocation = dvmCompilerLCGNewBB;
+    jitFramework.backEndInvokeArgsDone = dvmCompilerHandleInvokeArgsHeader;
+    jitFramework.backendSupportExtendedOp = dvmCompilerArchSupportsExtendedOp;
+    jitFramework.backEndCompilationErrorHandlerAllocation = dvmCompilerLCGNewCompilationErrorHandler;
+    jitFramework.scratchRegAvail = dvmCompilerLcgGetMaxScratch;
+}
+#endif
 
 /*
  * Set defaults for fields altered or modified by arguments.
@@ -1325,6 +2066,7 @@ static void setCommandLineDefaults()
     gDvm.heapStartingSize = 2 * 1024 * 1024;  // Spec says 16MB; too big for us.
     gDvm.heapMaximumSize = 16 * 1024 * 1024;  // Spec says 75% physical mem
     gDvm.heapGrowthLimit = 0;  // 0 means no growth limit
+    gDvm.lowMemoryMode = false;
     gDvm.stackSize = kDefaultStackSize;
     gDvm.mainThreadStackSize = kDefaultStackSize;
     // When the heap is less than the maximum or growth limited size,
@@ -1351,6 +2093,10 @@ static void setCommandLineDefaults()
     gDvm.generateRegisterMaps = true;
     gDvm.registerMapMode = kRegisterMapModeTypePrecise;
 
+#ifdef WITH_TLA
+    gDvm.withTLA = true;
+#endif
+
     /*
      * Default execution mode.
      *
@@ -1360,21 +2106,86 @@ static void setCommandLineDefaults()
      */
 #if defined(WITH_JIT)
     gDvm.executionMode = kExecutionModeJit;
-#if defined(ARCH_IA32)
+
     gDvmJit.num_entries_pcTable = 0;
-    gDvmJit.scheduling = true;
     gDvmJit.includeSelectedMethod = false; //uninitialized variable may not be zero
     gDvmJit.includeSelectedOffset = false;
     gDvmJit.methodTable = NULL;
     gDvmJit.classTable = NULL;
-
-    gDvmJit.threshold = 0;
-    gDvmJit.jitTableSize = 0;
-    gDvmJit.codeCacheSize = 0;
+    gDvmJit.codeCacheSize = DEFAULT_CODE_CACHE_SIZE;
+    gDvmJit.dataCacheSize = UNINITIALIZED_DATA_CACHE_SIZE;
 
     gDvm.constInit = false;
     gDvm.commonInit = false;
-    gDvmJit.disableOpt = 1<<kMethodJit;
+
+    gDvmJit.nestedLoops = true;
+    gDvmJit.branchLoops = true;
+    gDvmJit.testLoops = false;
+    gDvmJit.oldLoopDetection = true;
+    gDvmJit.backEndRegisterization = true;
+    gDvmJit.maximumRegisterization = UINT_MAX;
+    gDvmJit.abortOnCompilerError = false;
+
+    //Maximum vectorized registers
+    gDvmJit.vectorRegisters = 8;
+    //Minimum vectorized iterations or we won't vectorize
+    gDvmJit.minVectorizedIterations = 3;
+
+    /*
+     * Setting the maximum cost of CFG to still allow suspend point removal. The cost
+     * calculator is conservative and each instruction gets at least a cost of 1.
+     * Thus in worst case, if instructions are not pipelined, a cost of 100,000,000
+     * will take about 50ms at 2 Ghz.
+     */
+    gDvmJit.maxCostSuspendRemoval = 100000000;
+
+    //Minimum number of iterations to apply non-temporal moves for array stores
+    gDvmJit.minNonTemporalIterations = 131072;
+
+    //By default only inline methods that meet certain size requirements.
+    //This is configurable via command line.
+    gDvmJit.maximumInliningNumBytecodes = 20;
+
+   //Backend should allow two retries
+    gDvmJit.backEndRetries = 2;
+
+    //We want to be able to use unlimited number of scratch registers unless
+    //otherwise requested
+    gDvmJit.maximumScratchRegisters = UINT_MAX;
+
+    //Fast math mode should be disabled by default because it does not adhere to java
+    //specifications for value safety of floating point operations.
+    gDvmJit.fastMath = false;
+
+    gDvmJit.ignorePasses = 0;
+    gDvmJit.debugPasses = 0;
+    gDvmJit.debugAllPasses = false;
+#if defined(ARCH_IA32)
+    gDvmJit.vectorizeStrengthReduction = true;
+#if defined(DEFAULT_JIT_CODE_GENERATOR)
+    gDvmJit.codeGenerator = DEFAULT_JIT_CODE_GENERATOR;
+#else
+#error DEFAULT_JIT_CODE_GENERATOR must be LCG or PCG
+#endif
+    //Set the jit framework in place
+    setJitFramework ();
+
+    gDvmJit.scheduling = true;
+    gDvmJit.threshold = 0;
+    gDvmJit.jitTableSize = 0;
+    //Reset for IA32
+    gDvmJit.codeCacheSize = 0;
+    gDvmJit.oldLoopDetection = false;
+
+    //Disable method jit
+    gDvmJit.disableOpt = (1 << kMethodJit);
+#if defined(WITH_JIT_TUNING)
+    gDvmJit.methodProfTable = NULL;
+    gDvmJit.cfgDirPrefix = NULL;
+#endif
+#if defined(WITH_SELF_VERIFICATION)
+    gDvmJit.selfVerificationSpin = false;
+#endif
 #endif
 #else
     gDvm.executionMode = kExecutionModeInterpFast;
@@ -1398,6 +2209,20 @@ static void setCommandLineDefaults()
      */
     gDvm.enableRegionGC = true;
 #endif
+
+#ifdef WITH_CONDMARK
+    /*
+     * Conditional marking is enabled by default.
+     * Use -Xnocondmark to disable.
+     */
+    gDvm.disableCondmark = false;
+#endif
+
+#if defined(VTUNE_DALVIK)
+    gDvmJit.vtuneInfo = kVTuneInfoDisabled;
+    gDvmJit.vtuneVersion = VTUNE_VERSION_DEFAULT;
+#endif
+
 }
 
 
@@ -1437,9 +2262,40 @@ static void blockSignals()
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
     sigaddset(&mask, SIGUSR2);      // used to investigate JIT internals
 #endif
-    //sigaddset(&mask, SIGPIPE);
+    sigaddset(&mask, SIGPIPE);
     cc = sigprocmask(SIG_BLOCK, &mask, NULL);
     assert(cc == 0);
+
+#ifdef HAVE_ANDROID_OS
+    /* Read the system property that holds name of the helper library.
+     * Setup the special signal handler from the provided library.
+     */
+    char propertyBuffer[PROPERTY_VALUE_MAX];
+    memset(propertyBuffer, 0, sizeof(propertyBuffer)); // zero out buffer so we don't use junk
+    property_get("system.debug.plugins", propertyBuffer, NULL);
+    if (propertyBuffer[0] == 0) {
+        ALOGI("No library specified. The standard exception handler will be used");
+    } else {
+        typedef void (*configureSignalsHandlerFunc)(void);
+        void *handle = dlopen(propertyBuffer, RTLD_LAZY);
+        if (handle == 0) {
+            ALOGI("The library has not been opened. The standard exception handler will be used");
+        } else {
+            //reset error
+            dlerror();
+            configureSignalsHandlerFunc configureSignalsHandler =
+                (configureSignalsHandlerFunc)dlsym(handle, "configureSignalsHandler");
+            // check for error code of dlsym
+            const char *error = dlerror();
+            if (error != 0 || configureSignalsHandler == 0) {
+                ALOGE("Failed to find the special signal handler in provided library: %s. The standard one will be used.", error);
+                dlclose(handle), handle = 0;
+            } else {
+                configureSignalsHandler();
+            }
+        }
+    }
+#endif
 
     if (false) {
         /* TODO: save the old sigaction in a global */
@@ -1491,6 +2347,20 @@ std::string dvmStartup(int argc, const char* const argv[],
     setCommandLineDefaults();
 
     /*
+     * Over-allocate AssertionControl array for convenience.  If allocated,
+     * the array must be able to hold at least one entry, so that the
+     * zygote-time activation can do its business.
+     */
+    assert(gDvm.assertionCtrl == NULL);
+    if (argc > 0) {
+        gDvm.assertionCtrl =
+            (AssertionControl*) malloc(sizeof(AssertionControl) * argc);
+        if (gDvm.assertionCtrl == NULL)
+            return "syntax error";
+        assert(gDvm.assertionCtrlCount == 0);
+    }
+
+    /*
      * Process the option flags (if any).
      */
     int cc = processOptions(argc, argv, ignoreUnrecognized);
@@ -1531,6 +2401,47 @@ std::string dvmStartup(int argc, const char* const argv[],
     /* mterp setup */
     ALOGV("Using executionMode %d", gDvm.executionMode);
     dvmCheckAsmConstants();
+
+#if defined(ARCH_IA32)
+#if defined(WITH_JIT)
+    // Set up the selected code generator for the JIT
+    switch (gDvmJit.codeGenerator) {
+    case LCG:
+        /* Currently, the JIT framework is set up for LCG earlier
+         * in initialization in 'SetupJitFramework', which is called
+         * in 'setCommandLineDefaults'.
+         */
+        break;
+    case PCG:
+        /* Load the PCG-based backend library.
+         * This will reset some of the items in the JIT framework so
+         * that the PCG-based code generator is used.
+         * Abort if the .so cannot be loaded.
+         */
+        if (access ("/system/lib/libpcgdvmjit.so", F_OK) == 0)
+        {
+            dvmCompilerHandleUserPlugin ("/system/lib/libpcgdvmjit.so");
+        }
+        else
+        {
+            /* For building the host version.  */
+            dvmCompilerHandleUserPlugin ("libpcgdvmjit.so");
+        }
+        if (gDvmJit.userpluginfailed == true) {
+            dvmAbort();
+        }
+        break;
+    default:
+        /* This should not happen, but just in case, issue an error message
+         * and fall back to LCG (which happens if we do nothing).
+         */
+        ALOGE("Bad value for gDvmJit.codeGenerator: %d.", gDvmJit.codeGenerator);
+        break;
+    }
+
+#endif
+#endif
+
 
     /*
      * Initialize components.
@@ -1676,7 +2587,6 @@ std::string dvmStartup(int argc, const char* const argv[],
         }
     }
 
-
 #ifndef NDEBUG
     if (!dvmTestHash())
         ALOGE("dvmTestHash FAILED");
@@ -1722,6 +2632,23 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     // Must set this before allowing JNI-based method registration.
     self->status = THREAD_NATIVE;
 
+    // First set up JniConstants, which is used by libcore.
+    JniConstants::init(pEnv);
+
+    // Set up our single JNI method.
+    // TODO: factor this out if we add more.
+    jclass c = pEnv->FindClass("java/lang/Class");
+    if (c == NULL) {
+        dvmAbort();
+    }
+    JNIEXPORT jobject JNICALL Java_java_lang_Class_getDex(JNIEnv* env, jclass javaClass);
+    const JNINativeMethod Java_java_lang_Class[] = {
+        { "getDex", "()Lcom/android/dex/Dex;", (void*) Java_java_lang_Class_getDex },
+    };
+    if (pEnv->RegisterNatives(c, Java_java_lang_Class, 1) != JNI_OK) {
+        dvmAbort();
+    }
+
     // Most JNI libraries can just use System.loadLibrary, but you can't
     // if you're the library that implements System.loadLibrary!
     loadJniLibrary("javacore");
@@ -1733,6 +2660,33 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     return true;
 }
 
+/*
+ * Copied and modified slightly from system/core/toolbox/mount.c
+ */
+static std::string getMountsDevDir(const char *arg)
+{
+    char mount_dev[256];
+    char mount_dir[256];
+    int match;
+
+    FILE *fp = fopen("/proc/self/mounts", "r");
+    if (fp == NULL) {
+        ALOGE("Could not open /proc/self/mounts: %s", strerror(errno));
+        return "";
+    }
+
+    while ((match = fscanf(fp, "%255s %255s %*s %*s %*d %*d\n", mount_dev, mount_dir)) != EOF) {
+        mount_dev[255] = 0;
+        mount_dir[255] = 0;
+        if (match == 2 && (strcmp(arg, mount_dir) == 0)) {
+            fclose(fp);
+            return mount_dev;
+        }
+    }
+
+    fclose(fp);
+    return "";
+}
 
 /*
  * Do zygote-mode-only initialization.
@@ -1762,11 +2716,42 @@ static bool initZygote()
     const char* target_base = getenv("EMULATED_STORAGE_TARGET");
     if (target_base != NULL) {
         if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
-                "uid=0,gid=1028,mode=0050") == -1) {
+                "uid=0,gid=1028,mode=0751") == -1) {
             SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
             return -1;
         }
     }
+
+    // Mark /system as NOSUID | NODEV
+    const char* android_root = getenv("ANDROID_ROOT");
+
+    if (android_root == NULL) {
+        SLOGE("environment variable ANDROID_ROOT does not exist?!?!");
+        return -1;
+    }
+
+    std::string mountDev(getMountsDevDir(android_root));
+    if (mountDev.empty()) {
+        SLOGE("Unable to find mount point for %s", android_root);
+        return -1;
+    }
+
+    if (mount(mountDev.c_str(), android_root, "none",
+            MS_REMOUNT | MS_NOSUID | MS_NODEV | MS_RDONLY | MS_BIND, NULL) == -1) {
+        SLOGE("Remount of %s failed: %s", android_root, strerror(errno));
+        return -1;
+    }
+
+#ifdef HAVE_ANDROID_OS
+    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
+        // Older kernels don't understand PR_SET_NO_NEW_PRIVS and return
+        // EINVAL. Don't die on such kernels.
+        if (errno != EINVAL) {
+            SLOGE("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
+            return -1;
+        }
+    }
+#endif
 
     return true;
 }
@@ -1779,6 +2764,9 @@ bool dvmInitAfterZygote()
 {
     u8 startHeap, startQuit, startJdwp;
     u8 endHeap, endQuit, endJdwp;
+
+    //Now load up any additional options
+    handleExtraOptionsFile (gDvm.extraOptionsFile);
 
     startHeap = dvmGetRelativeTimeUsec();
 
@@ -2001,14 +2989,10 @@ void dvmShutdown()
      */
     dvmGcThreadShutdown();
 
-    if (gDvm.jdwpState != NULL)
-        dvmJdwpShutdown(gDvm.jdwpState);
-    free(gDvm.jdwpHost);
-    gDvm.jdwpHost = NULL;
-    free(gDvm.jniTrace);
-    gDvm.jniTrace = NULL;
-    free(gDvm.stackTraceFile);
-    gDvm.stackTraceFile = NULL;
+    if (gDvm.jdwpState != NULL) {
+        // don't free jdwpState before daemon threads have been stopped
+        dvmJdwpShutdown(gDvm.jdwpState, false);
+    }
 
     /* tell signal catcher to shut down if it was started */
     dvmSignalCatcherShutdown();
@@ -2021,6 +3005,11 @@ void dvmShutdown()
         /* shut down the compiler thread */
         dvmCompilerShutdown();
     }
+
+#ifdef WITH_JIT_TUNING
+    free(gDvmJit.cfgDirPrefix), gDvmJit.cfgDirPrefix = NULL;
+#endif
+
 #endif
 
     /*
@@ -2032,6 +3021,21 @@ void dvmShutdown()
 
     if (gDvm.verboseShutdown)
         ALOGD("VM cleaning up");
+
+    // free resources only after daemon threads were stopped
+    // otherwise we can get unpredictable failures
+    if (gDvm.jdwpState != NULL) {
+        free(gDvm.jdwpState);
+        gDvm.jdwpState = NULL;
+    }
+    free(gDvm.jdwpHost);
+    gDvm.jdwpHost = NULL;
+    free(gDvm.jniTrace);
+    gDvm.jniTrace = NULL;
+    free(gDvm.stackTraceFile);
+    gDvm.stackTraceFile = NULL;
+    free (gDvm.niceName), gDvm.niceName = 0;
+    free (gDvm.extraOptionsFile), gDvm.extraOptionsFile = 0;
 
     dvmDebuggerShutdown();
     dvmProfilingShutdown();
@@ -2182,18 +3186,110 @@ void dvmAbort()
      */
     dvmPrintNativeBackTrace();
 
-    /*
-     * If we call abort(), all threads in the process receives a SIBABRT.
-     * debuggerd dumps the stack trace of the main thread, whether or not
-     * that was the thread that failed.
-     *
-     * By stuffing a value into a bogus address, we cause a segmentation
-     * fault in the current thread, and get a useful log from debuggerd.
-     * We can also trivially tell the difference between a VM crash and
-     * a deliberate abort by looking at the fault address.
-     */
-    *((char*)0xdeadd00d) = result;
     abort();
 
     /* notreached */
 }
+
+#ifdef WITH_JIT
+/*
+ * @brief Does a backend option exist?
+ * @param key the key we are looking for
+ * @return returns true if key is found
+ */
+bool dvmBackendOptionExists (const char *key)
+{
+    //Find it
+    std::map<std::string, std::string>::iterator it = gDvmJit.backendOptions.find (key);
+
+    //Did we find it?
+    return (it != gDvmJit.backendOptions.end ());
+}
+
+/*
+ * @brief Retrieve a backend option as a string
+ * @param key the key we are looking for
+ * @param value Updates the value parameter if found
+ * @return returns true if key is found
+ */
+bool dvmExtractBackendOption (const char *key, std::string &value)
+{
+    //Find it
+    std::map<std::string, std::string>::iterator it = gDvmJit.backendOptions.find (key);
+
+    //Did we find it?
+    if (it == gDvmJit.backendOptions.end ())
+    {
+        return false;
+    }
+    else
+    {
+        //Set it and leave
+        value = it->second;
+        return true;
+    }
+}
+
+/*
+ * @brief Retrieve a backend option as a char*
+ * @param key the key we are looking for
+ * @param value Updates the value parameter if found
+ * @return returns true if key is found
+ */
+bool dvmExtractBackendOption (const char *key, const char **value)
+{
+    //Get key
+    std::string svalue;
+    bool res = dvmExtractBackendOption (key, svalue);
+
+    //If not found, bail
+    if (res == false)
+    {
+        return false;
+    }
+
+    //Transform into a char *
+    *value = svalue.c_str ();
+    return true;
+}
+
+/*
+ * @brief Retrieve a backend option as a char*
+ * @param key the key we are looking for
+ * @param value Updates the value parameter if found
+ * @return returns true if key is found
+ */
+bool dvmExtractBackendOption (const char *key, int* value)
+{
+    //Get key
+    std::string svalue;
+    bool res = dvmExtractBackendOption (key, svalue);
+
+    //If not found, bail
+    if (res == false)
+    {
+        return false;
+    }
+
+    //Transform into a int
+    const char *c_str = svalue.c_str();
+    char *endptr = 0;
+
+    int tmp = strtol(c_str, &endptr, 0);
+
+    if (endptr != 0 && *endptr == '\0' && res != LONG_MIN && res != LONG_MAX)
+    {
+        *value = tmp;
+    }
+    else
+    {
+        dvmFprintf (stderr, "Extracting backend option had an issue: %s\n", key);
+
+        //Register failure
+        res = false;
+    }
+
+    //Return result
+    return res;
+}
+#endif

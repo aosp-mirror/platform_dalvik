@@ -42,8 +42,8 @@ host_smp_flag := -DANDROID_SMP=1
 # Build the installed version (libdvm.so) first
 include $(LOCAL_PATH)/ReconfigureDvm.mk
 
-ifeq ($(dvm_arch_variant),x86)
-  $(info [TARGET] Building with x86 fast interpreter)
+ifeq ($(dvm_arch_variant),x86-atom)
+  $(info [TARGET] Building with x86-atom fast interpreter)
   LOCAL_CFLAGS += -DMTERP_STUB
 endif
 ifeq ($(WITH_JIT),true)
@@ -123,12 +123,15 @@ ifeq ($(WITH_HOST_DALVIK),true)
         ifeq ($(DALVIK_FI),x86)
             dvm_arch_variant := $(DALVIK_FI)
         endif
+        ifeq ($(DALVIK_FI),x86-atom)
+            dvm_arch_variant := $(DALVIK_FI)
+        endif
     endif
 
     include $(LOCAL_PATH)/Dvm.mk
 
-    ifeq ($(dvm_arch_variant),x86)
-      $(info [HOST] Building with x86 fast interpreter)
+    ifeq ($(dvm_arch_variant),x86-atom)
+      $(info [HOST] Building with x86-atom fast interpreter)
       LOCAL_CFLAGS += -DMTERP_STUB
     endif
     ifeq ($(WITH_JIT),true)

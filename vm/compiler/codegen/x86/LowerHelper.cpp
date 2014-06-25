@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2013 Intel Corporation
+ * Copyright (C) 2010-2011 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,8 +46,6 @@ When allocating a physical register for an operand, we can't spill the operands 
 #include <math.h>
 #include "interp/InterpState.h"
 #include "Scheduler.h"
-#include "Singleton.h"
-#include "ExceptionHandling.h"
 
 extern "C" int64_t __divdi3(int64_t, int64_t);
 extern "C" int64_t __moddi3(int64_t, int64_t);
@@ -159,7 +157,7 @@ inline LowOpLabel* lower_label(Mnemonic m, OpndSize size, int imm,
         stream = encoder_imm(m, size, imm, stream);
         return NULL;
     }
-    LowOpLabel * op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpLabel>();
+    LowOpLabel * op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpLabel>();
     op->opCode = m;
     op->opCode2 = ATOM_NORMAL;
     op->opndSrc.size = size;
@@ -167,7 +165,7 @@ inline LowOpLabel* lower_label(Mnemonic m, OpndSize size, int imm,
     op->numOperands = 1;
     snprintf(op->labelOpnd.label, LABEL_SIZE, "%s", label);
     op->labelOpnd.isLocal = isLocal;
-    singletonPtr<Scheduler>()->updateUseDefInformation_imm(op);
+    g_SchedulerInstance.updateUseDefInformation_imm(op);
     return op;
 }
 
@@ -186,13 +184,13 @@ LowOpLabel* dump_label(Mnemonic m, OpndSize size, int imm, const char* label,
 LowOpBlock* dump_blockid_imm(Mnemonic m, int targetBlockId) {
     assert(gDvmJit.scheduling && "Scheduling must be turned on before "
                 "calling dump_blockid_imm");
-    LowOpBlock* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpBlock>();
+    LowOpBlock* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpBlock>();
     op->opCode = m;
     op->opCode2 = ATOM_NORMAL;
     op->opndSrc.type = LowOpndType_BlockId;
     op->numOperands = 1;
     op->blockIdOpnd.value = targetBlockId;
-    singletonPtr<Scheduler>()->updateUseDefInformation_imm(op);
+    g_SchedulerInstance.updateUseDefInformation_imm(op);
     return op;
 }
 
@@ -206,14 +204,14 @@ LowOpImm* lower_imm(Mnemonic m, OpndSize size, int imm) {
         stream = encoder_imm(m, size, imm, stream);
         return NULL;
     }
-    LowOpImm* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpImm>();
+    LowOpImm* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpImm>();
     op->opCode = m;
     op->opCode2 = ATOM_NORMAL;
     op->opndSrc.size = size;
     op->opndSrc.type = LowOpndType_Imm;
     op->numOperands = 1;
     op->immOpnd.value = imm;
-    singletonPtr<Scheduler>()->updateUseDefInformation_imm(op);
+    g_SchedulerInstance.updateUseDefInformation_imm(op);
     return op;
 }
 
@@ -232,7 +230,14 @@ LowOpImm* dump_imm(Mnemonic m, OpndSize size, int imm) {
 //! \param updateSecondOperand This is true when second operand needs updated
 void dump_imm_update(int imm, char* codePtr, bool updateSecondOperand) {
     // These encoder call do not need to go through scheduler since they need
-    // to be dumped at a specific location in code stream.
+    // to be dumped at a specific location in code stream. However, there might
+    // be a request to update a location which hasn't had code lowered, but this
+    // shouldn't happen.
+    if(codePtr > stream) { //! \warning Assumes code stream is incremental
+        LOGE("ERROR: Trying to update the immediate of an instruction, "
+                "but instruction is not in code stream yet!");
+        dvmAbort();
+    }
     if(updateSecondOperand)
         encoder_update_imm_rm(imm, codePtr);
     else // update first operand
@@ -254,14 +259,9 @@ LowOpMem* lower_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
         stream = encoder_mem(m, size, disp, base_reg, isBasePhysical, stream);
         return NULL;
     }
-
-    if (!isBasePhysical) {
-        ALOGE("JIT_ERROR: Base register not physical in lower_mem");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpMem>();
-
+    if (!isBasePhysical)
+        dvmAbort();
+    LowOpMem* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpMem>();
     op->opCode = m;
     op->opCode2 = m2;
     op->opndSrc.size = size;
@@ -270,7 +270,7 @@ LowOpMem* lower_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
     op->memOpnd.mType = MemoryAccess_Unknown;
     op->memOpnd.index = -1;
     set_mem_opnd(&(op->memOpnd), disp, base_reg, isBasePhysical);
-    singletonPtr<Scheduler>()->updateUseDefInformation_mem(op);
+    g_SchedulerInstance.updateUseDefInformation_mem(op);
     return op;
 }
 
@@ -298,21 +298,16 @@ LowOpReg* lower_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
         stream = encoder_reg(m, size, reg, isPhysical, type, stream);
         return NULL;
     }
-
-    if (!isPhysical) {
-        ALOGE("JIT_ERROR: Register not physical at lower_reg");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpReg>();
-
+    if (!isPhysical)
+        dvmAbort();
+    LowOpReg* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpReg>();
     op->opCode = m;
     op->opCode2 = m2;
     op->opndSrc.size = size;
     op->opndSrc.type = LowOpndType_Reg;
     op->numOperands = 1;
     set_reg_opnd(&(op->regOpnd), reg, isPhysical, type);
-    singletonPtr<Scheduler>()->updateUseDefInformation_reg(op);
+    g_SchedulerInstance.updateUseDefInformation_reg(op);
     return op;
 }
 
@@ -339,74 +334,31 @@ LowOpReg* dump_reg_noalloc(Mnemonic m, OpndSize size, int reg, bool isPhysical,
     return lower_reg(m, ATOM_NORMAL, size, reg, type, true /*isPhysical*/);
 }
 
-//! \brief Update fields of LowOp to generate an instruction with
-//! two register operands
-//!
-//! \details For MOVZX and MOVSX, allows source and destination
-//! operand sizes to be different, and fixes type to general purpose.
-//! \param m x86 mnemonic
-//! \param m2 Atom pseudo-mnemonic
-//! \param size operand size
-//! \param regSrc source register
-//! \param isPhysical if regSrc is a physical register
-//! \param regDest destination register
-//! \param isPhysical2 if regDest is a physical register
-//! \param type the register type. For MOVSX and MOVZX, type is fixed
-//! as general purpose
-//! \return a LowOp corresponding to the reg-reg operation
 LowOpRegReg* lower_reg_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int regSrc,
         bool isPhysical, int regDest, bool isPhysical2, LowOpndRegType type) {
-
-    OpndSize srcSize = size;
-    OpndSize destSize = size;
-    LowOpndRegType srcType = type;
-    LowOpndRegType destType = type;
-
-    //We may need to override the default size and type if src and dest can be
-    //of different size / type, as follows:
-
-    //For MOVSX and MOVZX, fix the destination size and type to 32-bit and GP
-    //respectively. Note that this is a rigid requirement, and for now won't
-    //allow, for example, MOVSX Sz8, Sz16
-    if (m == Mnemonic_MOVZX || m == Mnemonic_MOVSX) {
-        destSize = OpndSize_32;
-    }
-    //For CVTSI2SD or CVTSI2SS, the source needs to be fixed at 32-bit GP
-    else if (m == Mnemonic_CVTSI2SD || m == Mnemonic_CVTSI2SS) {
-        srcSize = OpndSize_32;
-        srcType = LowOpndRegType_gp;
-    }
-
     if (!gDvmJit.scheduling) {
         if (m == Mnemonic_FUCOMP || m == Mnemonic_FUCOM) {
             stream = encoder_compare_fp_stack(m == Mnemonic_FUCOMP, regSrc - regDest,
                     size == OpndSize_64, stream);
         } else {
-            stream = encoder_reg_reg_diff_sizes(m, srcSize, regSrc, isPhysical, destSize,
-                    regDest, isPhysical2, destType, stream);
+            stream = encoder_reg_reg(m, size, regSrc, isPhysical, regDest,
+                    isPhysical2, type, stream);
         }
         return NULL;
     }
-
-    if (!isPhysical && !isPhysical2) {
-        ALOGE("JIT_ERROR: Registers not physical at lower_reg_to_reg");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-
-    LowOpRegReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpRegReg>();
-
+    if (!isPhysical && !isPhysical2)
+        dvmAbort();
+    LowOpRegReg* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpRegReg>();
     op->opCode = m;
     op->opCode2 = m2;
-    op->opndDest.size = destSize;
+    op->opndDest.size = size;
     op->opndDest.type = LowOpndType_Reg;
-    op->opndSrc.size = srcSize;
+    op->opndSrc.size = size;
     op->opndSrc.type = LowOpndType_Reg;
     op->numOperands = 2;
-    set_reg_opnd(&(op->regDest), regDest, isPhysical2, destType);
-    set_reg_opnd(&(op->regSrc), regSrc, isPhysical, srcType);
-    singletonPtr<Scheduler>()->updateUseDefInformation_reg_to_reg(op);
-
+    set_reg_opnd(&(op->regDest), regDest, isPhysical2, type);
+    set_reg_opnd(&(op->regSrc), regSrc, isPhysical, type);
+    g_SchedulerInstance.updateUseDefInformation_reg_to_reg(op);
     return op;
 }
 
@@ -419,14 +371,7 @@ LowOpRegReg* dump_reg_reg_noalloc(Mnemonic m, OpndSize size, int reg,
             true /*isPhysical2*/, type);
 }
 
-//! \brief Check if we have a MOV instruction which can be redundant
-//!
-//! \details Checks if the Mnemonic is a MOV which can possibly be
-//! optimized. For example, MOVSX %ax, %eax cannot be optimized, while
-//! MOV %eax, %eax is a NOP, and can be treated as such.
-//! \param m Mnemonic to check for
-//! \return whether the move can possibly be optimized away
-inline bool isMoveOptimizable(Mnemonic m) {
+inline bool isMnemonicMove(Mnemonic m) {
     return (m == Mnemonic_MOV || m == Mnemonic_MOVQ || m == Mnemonic_MOVSS
             || m == Mnemonic_MOVSD);
 }
@@ -440,7 +385,7 @@ LowOpRegReg* dump_reg_reg_noalloc_dst(Mnemonic m, OpndSize size, int reg,
     if (gDvm.executionMode == kExecutionModeNcgO1) {
         int regAll = registerAlloc(type, reg, isPhysical, true);
         /* remove move from one register to the same register */
-        if (isMoveOptimizable(m) && regAll == reg2)
+        if (isMnemonicMove(m) && regAll == reg2)
             return NULL;
         return lower_reg_to_reg(m, ATOM_NORMAL, size, regAll, true /*isPhysical*/,
                 reg2, true /*isPhysical2*/, type);
@@ -458,7 +403,7 @@ LowOpRegReg* dump_reg_reg_noalloc_src(Mnemonic m, AtomOpCode m2, OpndSize size,
         LowOpndRegType type) {
     if (gDvm.executionMode == kExecutionModeNcgO1) {
         int regAll2;
-        if(isMoveOptimizable(m) && checkTempReg2(reg2, type, isPhysical2, reg, -1)) { //dst reg is logical
+        if(isMnemonicMove(m) && checkTempReg2(reg2, type, isPhysical2, reg, -1)) { //dst reg is logical
             //only from get_virtual_reg_all
             regAll2 = registerAllocMove(reg2, type, isPhysical2, reg);
         } else {
@@ -473,75 +418,40 @@ LowOpRegReg* dump_reg_reg_noalloc_src(Mnemonic m, AtomOpCode m2, OpndSize size,
     return NULL;
 }
 
-//! \brief Wrapper around lower_reg_to_reg with reg allocation
-//! \details Allocates both registers, checks for optimizations etc,
-//! and calls lower_reg_to_reg
-//! \param m The mnemonic
-//! \param m2 The ATOM mnemonic type
-//! \param srcSize Size of the source operand
-//! \param srcReg The source register itself
-//! \param isSrcPhysical Whether source is physical
-//! \param srcType The type of source register
-//! \param destSize Size of the destination operand
-//! \param destReg The destination register itself
-//! \param isDestPhysical Whether destination is physical
-//! \param destType The type of destination register
-//! \return The generated LowOp
-LowOpRegReg* dump_reg_reg_diff_types(Mnemonic m, AtomOpCode m2, OpndSize srcSize,
-        int srcReg, int isSrcPhysical, LowOpndRegType srcType, OpndSize destSize,
-        int destReg, int isDestPhysical, LowOpndRegType destType) {
+//!update fields of LowOp and generate a x86 instruction that takes two reg operands
+
+//!
+LowOpRegReg* dump_reg_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+        bool isPhysical, int reg2, bool isPhysical2, LowOpndRegType type) {
     if (gDvm.executionMode == kExecutionModeNcgO1) {
         startNativeCode(-1, -1);
         //reg is source if m is MOV
         freeReg(true);
-        int regAll = registerAlloc(srcType, srcReg, isSrcPhysical, true);
+        int regAll = registerAlloc(type, reg, isPhysical, true);
         int regAll2;
         LowOpRegReg* op = NULL;
 #ifdef MOVE_OPT2
-        if(isMoveOptimizable(m) &&
-                ((reg != PhysicalReg_EDI && srcReg != PhysicalReg_ESP && srcReg != PhysicalReg_EBP) || (!isSrcPhysical)) &&
-                isDestPhysical == false) { //dst reg is logical
+        if(isMnemonicMove(m) &&
+                ((reg != PhysicalReg_EDI && reg != PhysicalReg_ESP && reg != PhysicalReg_EBP) || (!isPhysical)) &&
+                isPhysical2 == false) { //dst reg is logical
             //called from move_reg_to_reg
-            regAll2 = registerAllocMove(regDest, destType, isDestPhysical, regAll);
+            regAll2 = registerAllocMove(reg2, type, isPhysical2, regAll);
         } else {
 #endif
         donotSpillReg(regAll);
-        regAll2 = registerAlloc(destType, destReg, isDestPhysical, true);
-
-        // NOTE: The use of (destSize, destType) as THE (size, type) can be confusing. In most
-        // cases, we are using this function through dump_reg_reg, so the (size, type) doesn't
-        // matter. For MOVSX and MOVZX, the size passed to dump_reg_reg is the srcSize (8 or 16),
-        // so destSize is technically the srcSize, (type is gpr) and we override destSize inside
-        // lower_reg_to_reg to 32. For CVTSI2SS and CVTSI2SD, the destSize is 64-bit, and we
-        // override the srcSize inside lower_reg_to_reg.
-        op = lower_reg_to_reg(m, m2, destSize, regAll, true /*isPhysical*/, regAll2,
-                true /*isPhysical2*/, destType);
+        regAll2 = registerAlloc(type, reg2, isPhysical2, true);
+        op = lower_reg_to_reg(m, m2, size, regAll, true /*isPhysical*/, regAll2,
+                true /*isPhysical2*/, type);
 #ifdef MOVE_OPT2
     }
 #endif
         endNativeCode();
         return op;
     } else {
-        return lower_reg_to_reg(m, m2, destSize, srcReg, isSrcPhysical, destReg, isDestPhysical,
-                destType);
+        return lower_reg_to_reg(m, m2, size, reg, isPhysical, reg2, isPhysical2,
+                type);
     }
     return NULL;
-}
-
-//! \brief Wrapper around dump_reg_reg_diff_types assuming sizes and types are same
-//! \param m The mnemonic
-//! \param m2 The ATOM mnemonic type
-//! \param size Size of the source and destination operands
-//! \param reg The source register
-//! \param isPhysical Whether source is physical
-//! \param reg2 The destination register
-//! \param isPhysical2 Whether destination is physical
-//! \param type The type of operation
-//! \return The generated LowOp
-LowOpRegReg* dump_reg_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
-        bool isPhysical, int reg2, bool isPhysical2, LowOpndRegType type) {
-    return dump_reg_reg_diff_types(m, m2, size, reg, isPhysical, type, size,
-            reg2, isPhysical2, type);
 }
 
 LowOpMemReg* lower_mem_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
@@ -551,18 +461,13 @@ LowOpMemReg* lower_mem_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int disp
     OpndSize overridden_size = isMovzs ? OpndSize_32 : size;
     LowOpndRegType overridden_type = isMovzs ? LowOpndRegType_gp : type;
     if (!gDvmJit.scheduling) {
-        stream = encoder_mem_to_reg_diff_sizes(m, size, disp, base_reg, isBasePhysical,
+        stream = encoder_mem_to_reg_2(m, size, disp, base_reg, isBasePhysical,
                 overridden_size, reg, isPhysical, overridden_type, stream);
         return NULL;
     }
-
-    if (!isBasePhysical && !isPhysical) {
-        ALOGE("JIT_ERROR: Base register or operand register not physical in lower_mem_to_reg");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpMemReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpMemReg>();
-
+    if (!isBasePhysical && !isPhysical)
+        dvmAbort();
+    LowOpMemReg* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpMemReg>();
     op->opCode = m;
     op->opCode2 = m2;
     op->opndDest.size = overridden_size;
@@ -574,7 +479,7 @@ LowOpMemReg* lower_mem_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int disp
     set_mem_opnd(&(op->memSrc), disp, base_reg, isBasePhysical);
     op->memSrc.mType = mType;
     op->memSrc.index = mIndex;
-    singletonPtr<Scheduler>()->updateUseDefInformation_mem_to_reg(op);
+    g_SchedulerInstance.updateUseDefInformation_mem_to_reg(op);
     return op;
 }
 
@@ -619,7 +524,7 @@ LowOpMemReg* dump_mem_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
         int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
                 true);
         //it is okay to use the same physical register
-        if (isMoveOptimizable(m)) {
+        if (isMnemonicMove(m)) {
             freeReg(true);
         } else {
             donotSpillReg(baseAll);
@@ -731,19 +636,14 @@ LowOpMemReg* lower_mem_scale_to_reg(Mnemonic m, OpndSize size, int base_reg,
     OpndSize overridden_size = isMovzs ? OpndSize_32 : size;
     LowOpndRegType overridden_type = isMovzs ? LowOpndRegType_gp : type;
     if (!gDvmJit.scheduling) {
-        stream = encoder_mem_disp_scale_to_reg_diff_sizes(m, size, base_reg, isBasePhysical,
+        stream = encoder_mem_disp_scale_to_reg_2(m, size, base_reg, isBasePhysical,
                 disp, index_reg, isIndexPhysical, scale, overridden_size, reg,
                 isPhysical, overridden_type, stream);
         return NULL;
     }
-
-    if (!isBasePhysical && !isIndexPhysical && !isPhysical) {
-        ALOGE("JIT_ERROR: Base, index or operand register not physical at lower_mem_scale_to_reg");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpMemReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpMemReg>();
-
+    if (!isBasePhysical && !isIndexPhysical && !isPhysical)
+        dvmAbort();
+    LowOpMemReg* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpMemReg>();
     op->opCode = m;
     op->opCode2 = ATOM_NORMAL;
     op->opndDest.size = overridden_size;
@@ -756,7 +656,7 @@ LowOpMemReg* lower_mem_scale_to_reg(Mnemonic m, OpndSize size, int base_reg,
     set_reg_opnd(&(op->regDest), reg, isPhysical, overridden_type);
     set_mem_opnd_scale(&(op->memSrc), base_reg, isBasePhysical, disp,
             index_reg, isIndexPhysical, scale);
-    singletonPtr<Scheduler>()->updateUseDefInformation_mem_to_reg(op);
+    g_SchedulerInstance.updateUseDefInformation_mem_scale_to_reg(op);
     return op;
 }
 
@@ -771,7 +671,7 @@ LowOpMemReg* dump_mem_scale_reg(Mnemonic m, OpndSize size, int base_reg,
         donotSpillReg(baseAll); //make sure index will not use the same physical reg
         int indexAll = registerAlloc(LowOpndRegType_gp, index_reg,
                 isIndexPhysical, true);
-        if (isMoveOptimizable(m)) {
+        if (isMnemonicMove(m)) {
             freeReg(true);
             doSpillReg(baseAll); //base can be used now
         } else {
@@ -803,14 +703,9 @@ LowOpRegMem* lower_reg_to_mem_scale(Mnemonic m, OpndSize size, int reg,
                 stream);
         return NULL;
     }
-
-    if (!isBasePhysical && !isIndexPhysical && !isPhysical) {
-        ALOGE("JIT_ERROR: Base, index or operand register not physical in lower_reg_to_mem_scale");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpRegMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpRegMem>();
-
+    if (!isBasePhysical && !isIndexPhysical && !isPhysical)
+        dvmAbort();
+    LowOpRegMem* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpRegMem>();
     op->opCode = m;
     op->opCode2 = ATOM_NORMAL;
     op->opndDest.size = size;
@@ -823,7 +718,7 @@ LowOpRegMem* lower_reg_to_mem_scale(Mnemonic m, OpndSize size, int reg,
     set_reg_opnd(&(op->regSrc), reg, isPhysical, type);
     set_mem_opnd_scale(&(op->memDest), base_reg, isBasePhysical, disp,
             index_reg, isIndexPhysical, scale);
-    singletonPtr<Scheduler>()->updateUseDefInformation_reg_to_mem(op);
+    g_SchedulerInstance.updateUseDefInformation_reg_to_mem_scale(op);
     return op;
 }
 
@@ -862,14 +757,9 @@ LowOpRegMem* lower_reg_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
                 isBasePhysical, type, stream);
         return NULL;
     }
-
-    if (!isBasePhysical && !isPhysical) {
-        ALOGE("JIT_ERROR: Base or operand register not physical in lower_reg_to_mem");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpRegMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpRegMem>();
-
+    if (!isBasePhysical && !isPhysical)
+        dvmAbort();
+    LowOpRegMem* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpRegMem>();
     op->opCode = m;
     op->opCode2 = m2;
     op->opndDest.size = size;
@@ -881,7 +771,7 @@ LowOpRegMem* lower_reg_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
     set_mem_opnd(&(op->memDest), disp, base_reg, isBasePhysical);
     op->memDest.mType = mType;
     op->memDest.index = mIndex;
-    singletonPtr<Scheduler>()->updateUseDefInformation_reg_to_mem(op);
+    g_SchedulerInstance.updateUseDefInformation_reg_to_mem(op);
     return op;
 }
 
@@ -931,14 +821,9 @@ LowOpImmReg* lower_imm_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
         stream = encoder_imm_reg(m, size, imm, reg, isPhysical, type, stream);
         return NULL;
     }
-
-    if (!isPhysical) {
-        ALOGE("JIT_ERROR: Operand register not physical in lower_imm_to_reg");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpImmReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpImmReg>();
-
+    if (!isPhysical)
+        dvmAbort();
+    LowOpImmReg* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpImmReg>();
     op->opCode = m;
     op->opCode2 = m2;
     op->opndDest.size = size;
@@ -948,7 +833,7 @@ LowOpImmReg* lower_imm_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
     op->opndSrc.type = chaining ? LowOpndType_Chain : LowOpndType_Imm;
     set_reg_opnd(&(op->regDest), reg, isPhysical, type);
     op->immSrc.value = imm;
-    singletonPtr<Scheduler>()->updateUseDefInformation_imm_to_reg(op);
+    g_SchedulerInstance.updateUseDefInformation_imm_to_reg(op);
     return op;
 }
 
@@ -985,14 +870,9 @@ LowOpImmMem* lower_imm_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
                 stream);
         return NULL;
     }
-
-    if (!isBasePhysical) {
-        ALOGE("JIT_ERROR: Base register not physical in lower_imm_to_mem");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpImmMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpImmMem>();
-
+    if (!isBasePhysical)
+        dvmAbort();
+    LowOpImmMem* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpImmMem>();
     op->opCode = m;
     op->opCode2 = m2;
     op->opndDest.size = size;
@@ -1004,7 +884,7 @@ LowOpImmMem* lower_imm_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
     op->immSrc.value = imm;
     op->memDest.mType = mType;
     op->memDest.index = mIndex;
-    singletonPtr<Scheduler>()->updateUseDefInformation_imm_to_mem(op);
+    g_SchedulerInstance.updateUseDefInformation_imm_to_mem(op);
     return op;
 }
 
@@ -1042,24 +922,18 @@ LowOpImmMem* dump_imm_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
 //!update fields of LowOp and generate a x86 instruction that uses the FP stack and takes one mem operand
 
 //!
-LowOpRegMem* lower_fp_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
-        int disp, int base_reg, bool isBasePhysical, MemoryAccessType mType,
-        int mIndex) {
+LowOpRegMem* lower_fp_to_mem(Mnemonic m, OpndSize size, int reg, int disp,
+        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex) {
     if (!gDvmJit.scheduling) {
         stream = encoder_fp_mem(m, size, reg, disp, base_reg, isBasePhysical,
                 stream);
         return NULL;
     }
-
-    if (!isBasePhysical) {
-        ALOGE("JIT_ERROR: Base register not physical in lower_fp_to_mem");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-    LowOpRegMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpRegMem>();
-
+    if (!isBasePhysical)
+        dvmAbort();
+    LowOpRegMem* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpRegMem>();
     op->opCode = m;
-    op->opCode2 = m2;
+    op->opCode2 = ATOM_NORMAL;
     op->opndDest.size = size;
     op->opndDest.type = LowOpndType_Mem;
     op->opndSrc.size = size;
@@ -1070,22 +944,21 @@ LowOpRegMem* lower_fp_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
     set_mem_opnd(&(op->memDest), disp, base_reg, isBasePhysical);
     op->memDest.mType = mType;
     op->memDest.index = mIndex;
-    singletonPtr<Scheduler>()->updateUseDefInformation_fp_to_mem(op);
+    g_SchedulerInstance.updateUseDefInformation_fp_to_mem(op);
     return op;
 }
 
-LowOpRegMem* dump_fp_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
-        int disp, int base_reg, bool isBasePhysical, MemoryAccessType mType,
-        int mIndex) {
+LowOpRegMem* dump_fp_mem(Mnemonic m, OpndSize size, int reg, int disp,
+        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex) {
     if (gDvm.executionMode == kExecutionModeNcgO1) {
         freeReg(true);
         int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
                 true);
-        return lower_fp_to_mem(m, m2, size, reg, disp, baseAll,
+        return lower_fp_to_mem(m, size, reg, disp, baseAll,
                 true /*isBasePhysical*/, mType, mIndex);
     } else {
-        return lower_fp_to_mem(m, m2, size, reg, disp, base_reg, isBasePhysical,
-                mType, mIndex);
+        return lower_fp_to_mem(m, size, reg, disp, base_reg, isBasePhysical, mType,
+                mIndex);
     }
     return NULL;
 }
@@ -1093,25 +966,18 @@ LowOpRegMem* dump_fp_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
 //!update fields of LowOp and generate a x86 instruction that uses the FP stack and takes one mem operand
 
 //!
-LowOpMemReg* lower_mem_to_fp(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
-        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex,
-        int reg) {
+LowOpMemReg* lower_mem_to_fp(Mnemonic m, OpndSize size, int disp, int base_reg,
+        bool isBasePhysical, MemoryAccessType mType, int mIndex, int reg) {
     if (!gDvmJit.scheduling) {
         stream = encoder_mem_fp(m, size, disp, base_reg, isBasePhysical, reg,
                 stream);
         return NULL;
     }
-
-    if (!isBasePhysical) {
-        ALOGE("JIT_ERROR: Base register not physical in lower_mem_to_fp");
-        SET_JIT_ERROR(kJitErrorInsScheduling);
-        return NULL;
-    }
-
-    LowOpMemReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpMemReg>();
-
+    if (!isBasePhysical)
+        dvmAbort();
+    LowOpMemReg* op = g_SchedulerInstance.allocateNewEmptyLIR<LowOpMemReg>();
     op->opCode = m;
-    op->opCode2 = m2;
+    op->opCode2 = ATOM_NORMAL;
     op->opndDest.size = size;
     op->opndDest.type = LowOpndType_Reg;
     op->opndSrc.size = size;
@@ -1122,22 +988,21 @@ LowOpMemReg* lower_mem_to_fp(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
     set_mem_opnd(&(op->memSrc), disp, base_reg, isBasePhysical);
     op->memSrc.mType = mType;
     op->memSrc.index = mIndex;
-    singletonPtr<Scheduler>()->updateUseDefInformation_mem_to_fp(op);
+    g_SchedulerInstance.updateUseDefInformation_mem_to_fp(op);
     return op;
 }
 
-LowOpMemReg* dump_mem_fp(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
-        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex,
-        int reg) {
+LowOpMemReg* dump_mem_fp(Mnemonic m, OpndSize size, int disp, int base_reg,
+        bool isBasePhysical, MemoryAccessType mType, int mIndex, int reg) {
     if (gDvm.executionMode == kExecutionModeNcgO1) {
         freeReg(true);
         int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
                 true);
-        return lower_mem_to_fp(m, m2, size, disp, baseAll,
-                true /*isBasePhysical*/, mType, mIndex, reg);
-    } else {
-        return lower_mem_to_fp(m, m2, size, disp, base_reg, isBasePhysical,
+        return lower_mem_to_fp(m, size, disp, baseAll, true /*isBasePhysical*/,
                 mType, mIndex, reg);
+    } else {
+        return lower_mem_to_fp(m, size, disp, base_reg, isBasePhysical, mType,
+                mIndex, reg);
     }
     return NULL;
 }
@@ -1191,35 +1056,19 @@ void convert_integer(OpndSize srcSize, OpndSize dstSize) { //cbw, cwd, cdq
     Mnemonic m = Mnemonic_CDQ;
     dump_reg_reg(m, ATOM_NORMAL, OpndSize_32, PhysicalReg_EAX, true, PhysicalReg_EDX, true, LowOpndRegType_gp);
 }
-
-//! \brief Generates the CVTSI2SD and CVTSI2SS opcodes
-//! \details performs cvtsi2** destReg, srcReg
-//! NOTE: Even for cvtsi2ss, the destination is still XMM
-//! and needs to be moved to a GPR.
-//! \param srcReg the src register
-//! \param isSrcPhysical if the srcReg is a physical register
-//! \param destReg the destination register
-//! \param isDestPhysical if destReg is a physical register
-//! \param isDouble if the destination needs to be a double value (float otherwise)
-void convert_int_to_fp(int srcReg, bool isSrcPhysical, int destReg, bool isDestPhysical, bool isDouble) {
-    Mnemonic m = isDouble ? Mnemonic_CVTSI2SD : Mnemonic_CVTSI2SS;
-    dump_reg_reg_diff_types(m, ATOM_NORMAL, OpndSize_32, srcReg, isSrcPhysical, LowOpndRegType_gp,
-            OpndSize_64, destReg, isDestPhysical, LowOpndRegType_xmm);
-}
-
 //!fld: load from memory (float or double) to stack
 
 //!
 void load_fp_stack(LowOp* op, OpndSize size, int disp, int base_reg, bool isBasePhysical) {//fld(s|l)
     Mnemonic m = Mnemonic_FLD;
-    dump_mem_fp(m, ATOM_NORMAL, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0); //ST0
+    dump_mem_fp(m, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0); //ST0
 }
 //! fild: load from memory (int or long) to stack
 
 //!
 void load_int_fp_stack(OpndSize size, int disp, int base_reg, bool isBasePhysical) {//fild(ll|l)
     Mnemonic m = Mnemonic_FILD;
-    dump_mem_fp(m, ATOM_NORMAL, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0); //ST0
+    dump_mem_fp(m, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0); //ST0
 }
 //!fild: load from memory (absolute addr)
 
@@ -1232,14 +1081,14 @@ void load_int_fp_stack_imm(OpndSize size, int imm) {//fild(ll|l)
 //!
 void store_fp_stack(LowOp* op, bool pop, OpndSize size, int disp, int base_reg, bool isBasePhysical) {//fst(p)(s|l)
     Mnemonic m = pop ? Mnemonic_FSTP : Mnemonic_FST;
-    dump_fp_mem(m, ATOM_NORMAL, size, 0, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1);
+    dump_fp_mem(m, size, 0, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1);
 }
 //!fist: store from stack to memory (int or long)
 
 //!
 void store_int_fp_stack(LowOp* op, bool pop, OpndSize size, int disp, int base_reg, bool isBasePhysical) {//fist(p)(l)
     Mnemonic m = pop ? Mnemonic_FISTP : Mnemonic_FIST;
-    dump_fp_mem(m, ATOM_NORMAL, size, 0, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1);
+    dump_fp_mem(m, size, 0, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1);
 }
 //!cmp reg, mem
 
@@ -1264,10 +1113,12 @@ void compare_mem_reg(OpndSize size,
 void compare_VR_reg_all(OpndSize size,
              int vA,
              int reg, bool isPhysical, Mnemonic m) {
+    OpndSize size2 = size;
     LowOpndRegType type = getTypeFromIntSize(size);
     LowOpndRegType pType = type;
     if(m == Mnemonic_COMISS) {
         size = OpndSize_32;
+        size2 = OpndSize_64;
         type = LowOpndRegType_ss;
         pType = LowOpndRegType_xmm;
     }
@@ -1277,7 +1128,7 @@ void compare_VR_reg_all(OpndSize size,
         if(isConst == 3) {
             if(m == Mnemonic_COMISS) {
 #ifdef DEBUG_NCG_O1
-                ALOGI("VR is const and SS in compare_VR_reg");
+                printf("INFO: VR is const and SS in compare_VR_reg\n");
 #endif
                 dumpImmToMem(vA, OpndSize_32, tmpValue[0]);
                 //dumpImmToMem(vA+1, OpndSize_32, 0); //CHECK necessary? will overwrite vA+1!!!
@@ -1286,14 +1137,14 @@ void compare_VR_reg_all(OpndSize size,
             }
             else if(size != OpndSize_64) {
 #ifdef DEBUG_NCG_O1
-                ALOGI("VR is const and 32 bits in compare_VR_reg");
+                printf("INFO: VR is const and 32 bits in compare_VR_reg\n");
 #endif
                 dump_imm_reg(m, ATOM_NORMAL, size, tmpValue[0], reg, isPhysical, pType, false);
                 return;
             }
             else if(size == OpndSize_64) {
 #ifdef DEBUG_NCG_O1
-                ALOGI("VR is const and 64 bits in compare_VR_reg");
+                printf("INFO: VR is const and 64 bits in compare_VR_reg\n");
 #endif
                 dumpImmToMem(vA, OpndSize_32, tmpValue[0]);
                 dumpImmToMem(vA+1, OpndSize_32, tmpValue[1]);
@@ -1350,13 +1201,13 @@ void load_fp_stack_VR_all(OpndSize size, int vB, Mnemonic m) {
         if(isConst > 0) {
             if(size != OpndSize_64) {
 #ifdef DEBUG_NCG_O1
-                ALOGI("VR is const and 32 bits in load_fp_stack");
+                printf("INFO: VR is const and 32 bits in load_fp_stack\n");
 #endif
                 dumpImmToMem(vB, OpndSize_32, tmpValue[0]);
             }
             else {
 #ifdef DEBUG_NCG_O1
-                ALOGI("VR is const and 64 bits in load_fp_stack_VR");
+                printf("INFO: VR is const and 64 bits in load_fp_stack_VR\n");
 #endif
                 if(isConst == 1 || isConst == 3) dumpImmToMem(vB, OpndSize_32, tmpValue[0]);
                 if(isConst == 2 || isConst == 3) dumpImmToMem(vB+1, OpndSize_32, tmpValue[1]);
@@ -1371,9 +1222,9 @@ void load_fp_stack_VR_all(OpndSize size, int vB, Mnemonic m) {
                     MemoryAccess_VR, vB, getTypeFromIntSize(size));
 #endif
         }
-        dump_mem_fp(m, ATOM_NORMAL, size, 4*vB, PhysicalReg_FP, true, MemoryAccess_VR, vB, 0);
+        dump_mem_fp(m, size, 4*vB, PhysicalReg_FP, true, MemoryAccess_VR, vB, 0);
     } else {
-        dump_mem_fp(m, ATOM_NORMAL, size, 4*vB, PhysicalReg_FP, true, MemoryAccess_VR, vB, 0);
+        dump_mem_fp(m, size, 4*vB, PhysicalReg_FP, true, MemoryAccess_VR, vB, 0);
     }
 }
 //!load VR(float or double) to stack
@@ -1395,7 +1246,7 @@ void load_int_fp_stack_VR(OpndSize size, int vA) {//fild(ll|l)
 //!
 void store_fp_stack_VR(bool pop, OpndSize size, int vA) {//fst(p)(s|l)
     Mnemonic m = pop ? Mnemonic_FSTP : Mnemonic_FST;
-    dump_fp_mem(m, ATOM_NORMAL, size, 0, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
+    dump_fp_mem(m, size, 0, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         if(size == OpndSize_32)
             updateVirtualReg(vA, LowOpndRegType_fs_s);
@@ -1408,7 +1259,7 @@ void store_fp_stack_VR(bool pop, OpndSize size, int vA) {//fst(p)(s|l)
 //!
 void store_int_fp_stack_VR(bool pop, OpndSize size, int vA) {//fist(p)(l)
     Mnemonic m = pop ? Mnemonic_FISTP : Mnemonic_FIST;
-    dump_fp_mem(m, ATOM_NORMAL, size, 0, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
+    dump_fp_mem(m, size, 0, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         if(size == OpndSize_32)
             updateVirtualReg(vA, LowOpndRegType_fs_s);
@@ -1439,13 +1290,11 @@ void fpu_VR(ALU_Opcode opc, OpndSize size, int vA) {
             }
         }
         if(!isInMemory(vA, size)) {
-            ALOGE("JIT_ERROR: VR not in memory for FPU operation");
-            SET_JIT_ERROR(kJitErrorRegAllocFailed);
-            return;
+            printf("ERROR: fpu_VR\n");
         }
-        dump_mem_fp(m, ATOM_NORMAL_ALU, size, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA, 0);
+        dump_mem_fp(m, size, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA, 0);
     } else {
-        dump_mem_fp(m, ATOM_NORMAL_ALU, size, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA, 0);
+        dump_mem_fp(m, size, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA, 0);
     }
 }
 //! cmp imm reg
@@ -1484,11 +1333,7 @@ void compare_imm_VR(OpndSize size, int imm,
              int vA) {
     Mnemonic m = Mnemonic_CMP;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        if(size != OpndSize_32) {
-            ALOGE("JIT_ERROR: Only 32 bits supported in compare_imm_VR");
-            SET_JIT_ERROR(kJitErrorRegAllocFailed);
-            return;
-        }
+        if(size != OpndSize_32) printf("ERROR: only 32 bits supported in compare_imm_VR\n");
         int tmpValue[2];
         int isConst = isVirtualRegConstant(vA, getTypeFromIntSize(size), tmpValue, false/*updateRefCount*/);
         if(isConst > 0) {
@@ -1571,11 +1416,11 @@ inline LowOp* lower_return() {
         stream = encoder_return(stream);
         return NULL;
     }
-    LowOp * op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOp>();
+    LowOp * op = g_SchedulerInstance.allocateNewEmptyLIR<LowOp>();
     op->numOperands = 0;
     op->opCode = Mnemonic_RET;
     op->opCode2 = ATOM_NORMAL;
-    singletonPtr<Scheduler>()->updateUseDefInformation(op);
+    g_SchedulerInstance.updateUseDefInformation(op);
     return op;
 }
 
@@ -1586,13 +1431,13 @@ void x86_return() {
 //!test imm reg
 
 //!
-void test_imm_reg(OpndSize size, int imm, int reg, bool isPhysical) {
+void test_imm_reg(OpndSize size, int imm, int reg, bool isPhysical){
     dump_imm_reg(Mnemonic_TEST, ATOM_NORMAL, size, imm, reg, isPhysical, getTypeFromIntSize(size), false);
 }
 //!test imm mem
 
 //!
-void test_imm_mem(OpndSize size, int imm, int disp, int reg, bool isPhysical) {
+void test_imm_mem(OpndSize size, int imm, int disp, int reg, bool isPhysical){
     dump_imm_mem(Mnemonic_TEST, ATOM_NORMAL, size, imm, disp, reg, isPhysical, MemoryAccess_Unknown, -1, false);
 }
 //!alu unary op with one reg operand
@@ -1698,7 +1543,7 @@ void alu_sd_binary_VR_reg(ALU_Opcode opc, int vA, int reg, bool isPhysical, bool
         updateRefCount(vA, type);
     }
     else {
-        dump_mem_reg(m, ATOM_NORMAL_ALU, size, 4*vA, PhysicalReg_FP, true,
+        dump_mem_reg(m, ATOM_NORMAL, size, 4*vA, PhysicalReg_FP, true,
                     MemoryAccess_VR, vA, reg, isPhysical, LowOpndRegType_xmm);
     }
 }
@@ -1748,7 +1593,7 @@ void alu_binary_VR_reg(OpndSize size, ALU_Opcode opc, int vA, int reg, bool isPh
         updateRefCount(vA, getTypeFromIntSize(size));
     }
     else {
-        dump_mem_reg(m, ATOM_NORMAL_ALU, size, 4*vA, PhysicalReg_FP, true,
+        dump_mem_reg(m, ATOM_NORMAL, size, 4*vA, PhysicalReg_FP, true,
             MemoryAccess_VR, vA, reg, isPhysical, getTypeFromIntSize(size));
     }
 }
@@ -1783,7 +1628,7 @@ void alu_binary_reg_mem(OpndSize size, ALU_Opcode opc,
 //!
 void fpu_mem(LowOp* op, ALU_Opcode opc, OpndSize size, int disp, int base_reg, bool isBasePhysical) {
     Mnemonic m = map_of_fpu_opcode_2_mnemonic[opc];
-    dump_mem_fp(m, ATOM_NORMAL_ALU, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0);
+    dump_mem_fp(m, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0);
 }
 //!SSE 32-bit ALU
 
@@ -1922,16 +1767,6 @@ void move_reg_to_reg(OpndSize size,
 }
 //!mov from one reg to another reg
 
-//!Sign extends the value. Only 32-bit support.
-void moves_reg_to_reg(OpndSize size,
-                      int reg, bool isPhysical,
-                      int reg2, bool isPhysical2) {
-    Mnemonic m = Mnemonic_MOVSX;
-    dump_reg_reg(m, ATOM_NORMAL, size, reg, isPhysical, reg2, isPhysical2, getTypeFromIntSize(size));
-}
-
-//!mov from one reg to another reg
-
 //!Operands are already allocated
 void move_reg_to_reg_noalloc(OpndSize size,
                   int reg, bool isPhysical,
@@ -1987,11 +1822,7 @@ void move_chain_to_mem(OpndSize size, int imm,
 void move_imm_to_mem(OpndSize size, int imm,
                       int disp, int base_reg, bool isBasePhysical) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) {
-        ALOGE("JIT_ERROR: Trying to move 64-bit imm to memory");
-        SET_JIT_ERROR(kJitErrorRegAllocFailed);
-        return;
-    }
+    if(size == OpndSize_64) printf("ERROR ERROR move_imm_to_mem with 64 bits\n");
     dump_imm_mem(Mnemonic_MOV, ATOM_NORMAL, size, imm, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, false);
 }
 //! set a VR to an immediate
@@ -1999,11 +1830,7 @@ void move_imm_to_mem(OpndSize size, int imm,
 //!
 void set_VR_to_imm(u2 vA, OpndSize size, int imm) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) {
-        ALOGE("JIT_ERROR: Trying to set VR with 64-bit imm");
-        SET_JIT_ERROR(kJitErrorRegAllocFailed);
-        return;
-    }
+    if(size == OpndSize_64) printf("ERROR ERROR move_imm_to_mem with 64 bits\n");
     Mnemonic m = (size == OpndSize_64) ? Mnemonic_MOVQ : Mnemonic_MOV;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         int regAll = checkVirtualReg(vA, getTypeFromIntSize(size), 0);
@@ -2035,11 +1862,7 @@ void set_VR_to_imm_noupdateref(LowOp* op, u2 vA, OpndSize size, int imm) {
 //! Do not allocate a physical register for the VR
 void set_VR_to_imm_noalloc(u2 vA, OpndSize size, int imm) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) {
-        ALOGE("JIT_ERROR: Trying to move 64-bit imm to memory (noalloc)");
-        SET_JIT_ERROR(kJitErrorRegAllocFailed);
-        return;
-    }
+    if(size == OpndSize_64) printf("ERROR ERROR move_imm_to_mem with 64 bits\n");
     Mnemonic m = (size == OpndSize_64) ? Mnemonic_MOVQ : Mnemonic_MOV;
     dump_imm_mem_noalloc(m, size, imm, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
 }
@@ -2053,11 +1876,7 @@ void move_chain_to_reg(OpndSize size, int imm, int reg, bool isPhysical) {
 //!
 void move_imm_to_reg(OpndSize size, int imm, int reg, bool isPhysical) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) {
-        ALOGE("JIT_ERROR: Trying to move 64-bit imm to register");
-        SET_JIT_ERROR(kJitErrorRegAllocFailed);
-        return;
-    }
+    if(size == OpndSize_64) printf("ERROR ERROR move_imm_to_reg with 64 bits\n");
     Mnemonic m = Mnemonic_MOV;
     dump_imm_reg(m, ATOM_NORMAL, size, imm, reg, isPhysical, LowOpndRegType_gp, false);
 }
@@ -2066,11 +1885,7 @@ void move_imm_to_reg(OpndSize size, int imm, int reg, bool isPhysical) {
 //! The operand is already allocated
 void move_imm_to_reg_noalloc(OpndSize size, int imm, int reg, bool isPhysical) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) {
-        ALOGE("JIT_ERROR: Trying to move 64-bit imm to register (noalloc)");
-        SET_JIT_ERROR(kJitErrorRegAllocFailed);
-        return;
-    }
+    if(size == OpndSize_64) printf("ERROR ERROR move_imm_to_reg with 64 bits\n");
     Mnemonic m = Mnemonic_MOV;
     dump_imm_reg_noalloc(m, size, imm, reg, isPhysical, LowOpndRegType_gp);
 }
@@ -2304,15 +2119,9 @@ int get_currentpc(int reg, bool isPhysical) {
     move_mem_to_reg(OpndSize_32, -sizeofStackSaveArea+offStackSaveArea_localRefTop, PhysicalReg_FP, true, reg, isPhysical);
     return 1;
 }
+//!generate native code to perform null check
 
-//! \brief generate native code to perform null check
-//!
-//! \details This function does not export PC
-//! \param reg
-//! \param isPhysical is the reg is physical
-//! \param vr the vr corresponding to reg
-//!
-//! \return -1 if error happened, 0 otherwise
+//!This function does not export PC
 int simpleNullCheck(int reg, bool isPhysical, int vr) {
     if(isVRNullCheck(vr, OpndSize_32)) {
         updateRefCount2(reg, LowOpndRegType_gp, isPhysical);
@@ -2321,9 +2130,7 @@ int simpleNullCheck(int reg, bool isPhysical, int vr) {
     }
     compare_imm_reg(OpndSize_32, 0, reg, isPhysical);
     conditional_jump_global_API(Condition_E, "common_errNullObject", false);
-    int retCode = setVRNullCheck(vr, OpndSize_32);
-    if (retCode < 0)
-        return retCode;
+    setVRNullCheck(vr, OpndSize_32);
     return 0;
 }
 
@@ -2353,19 +2160,10 @@ int boundCheck(int vr_array, int reg_array, bool isPhysical_array,
     return 0;
 }
 
-/**
- * @brief Generates native code to perform null check
- * @param reg temporary or physical register to test
- * @param isPhysical flag to indicate whether parameter reg is physical
- * register
- * @param exceptionNum
- * @param vr virtual register for which the null check is being done
- * @return >= 0 on success
- */
-int nullCheck(int reg, bool isPhysical, int exceptionNum, int vr) {
-    const char * errorName = "common_errNullObject";
-    int retCode = 0;
+//!generate native code to perform null check
 
+//!
+int nullCheck(int reg, bool isPhysical, int exceptionNum, int vr) {
     //nullCheck optimization is available in O1 mode only
     if(gDvm.executionMode == kExecutionModeNcgO1 && isVRNullCheck(vr, OpndSize_32)) {
         updateRefCount2(reg, LowOpndRegType_gp, isPhysical);
@@ -2376,108 +2174,54 @@ int nullCheck(int reg, bool isPhysical, int exceptionNum, int vr) {
         num_removed_nullCheck++;
         return 0;
     }
-
     compare_imm_reg(OpndSize_32, 0, reg, isPhysical);
-
-    // Get a label for exception handling restore state
-    char * newStreamLabel =
-            singletonPtr<ExceptionHandlingRestoreState>()->getUniqueLabel();
-
-    // Since we are not doing the exception handling restore state inline, in case of
-    // ZF=1 we must jump to the BB that restores the state
-    conditional_jump(Condition_E, newStreamLabel, true);
-
-    // We can save stream pointer now since this follows a jump and ensures that
-    // scheduler already flushed stream
-    char * originalStream = stream;
-
-    if (gDvm.executionMode == kExecutionModeNcgO1) {
+    if(gDvm.executionMode == kExecutionModeNcgO1)
         rememberState(exceptionNum);
-        if (exceptionNum > 1) {
-            nextVersionOfHardReg(PhysicalReg_EDX, 2); //next version has 2 ref count
-        }
-    }
-
+    char label[LABEL_SIZE];
+    snprintf(label, LABEL_SIZE, "after_exception_%d", exceptionNum);
+    conditional_jump(Condition_NE, label, true);
+    if(gDvm.executionMode == kExecutionModeNcgO1 && exceptionNum > 1)
+        nextVersionOfHardReg(PhysicalReg_EDX, 2); //next version has 2 ref count
     export_pc(); //use %edx
-
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         constVREndOfBB();
         beforeCall("exception"); //dump GG, GL VRs
     }
-
-    // We must flush scheduler queue now before we copy to exception handling
-    // stream.
-    if(gDvmJit.scheduling)
-        singletonPtr<Scheduler>()->signalEndOfNativeBasicBlock();
-
-    // Move all instructions to a deferred stream that will be dumped later
-    singletonPtr<ExceptionHandlingRestoreState>()->createExceptionHandlingStream(
-            originalStream, stream, errorName);
-
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+    unconditional_jump_global_API("common_errNullObject", false);
+    insertLabel(label, true);
+    if(gDvm.executionMode == kExecutionModeNcgO1)
         goToState(exceptionNum);
-        retCode = setVRNullCheck(vr, OpndSize_32);
-        if (retCode < 0)
-            return retCode;
-    }
-
+    if(gDvm.executionMode == kExecutionModeNcgO1)
+        setVRNullCheck(vr, OpndSize_32);
     return 0;
 }
+//!generate native code to handle potential exception
 
-/**
- * @brief Generates code to handle potential exception
- * @param code_excep Condition code to take exception path
- * @param code_okay Condition code to skip exception
- * @param exceptionNum
- * @param errName Name of exception to handle
- * @return >= 0 on success
- */
+//!
 int handlePotentialException(
                              ConditionCode code_excep, ConditionCode code_okay,
                              int exceptionNum, const char* errName) {
-    // Get a label for exception handling restore state
-    char * newStreamLabel =
-            singletonPtr<ExceptionHandlingRestoreState>()->getUniqueLabel();
-
-    // Since we are not doing the exception handling restore state inline, in case of
-    // code_excep we must jump to the BB that restores the state
-    conditional_jump(code_excep, newStreamLabel, true);
-
-    // We can save stream pointer now since this follows a jump and ensures that
-    // scheduler already flushed stream
-    char * originalStream = stream;
-
-    if (gDvm.executionMode == kExecutionModeNcgO1) {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         rememberState(exceptionNum);
-        if (exceptionNum > 1) {
-            nextVersionOfHardReg(PhysicalReg_EDX, 2); //next version has 2 ref count
-        }
     }
-
+    char label[LABEL_SIZE];
+    snprintf(label, LABEL_SIZE, "after_exception_%d", exceptionNum);
+    conditional_jump(code_okay, label, true);
+    if(gDvm.executionMode == kExecutionModeNcgO1 && exceptionNum > 1)
+        nextVersionOfHardReg(PhysicalReg_EDX, 2); //next version has 2 ref count
     export_pc(); //use %edx
-
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         constVREndOfBB();
         beforeCall("exception"); //dump GG, GL VRs
     }
-
     if(!strcmp(errName, "common_throw_message")) {
         move_imm_to_reg(OpndSize_32, LstrInstantiationErrorPtr, PhysicalReg_ECX, true);
     }
-
-    // We must flush scheduler queue now before we copy to exception handling
-    // stream.
-    if(gDvmJit.scheduling)
-        singletonPtr<Scheduler>()->signalEndOfNativeBasicBlock();
-
-    // Move all instructions to a deferred stream that will be dumped later
-    singletonPtr<ExceptionHandlingRestoreState>()->createExceptionHandlingStream(
-            originalStream, stream, errName);
-
+    unconditional_jump_global_API(errName, false);
+    insertLabel(label, true);
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         goToState(exceptionNum);
     }
-
     return 0;
 }
 //!generate native code to get the self pointer from glue
@@ -2491,7 +2235,6 @@ int get_self_pointer(int reg, bool isPhysical) {
 
 //!It uses two scratch registers
 int get_res_strings(int reg, bool isPhysical) {
-    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2514,15 +2257,12 @@ int get_res_strings(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, C_SCRATCH_2, isScratchPhysical);
             //glue is not in a physical reg nor in a spilled location
-            retCode = updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
-            if (retCode < 0)
-                return retCode;
+            updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
             move_mem_to_reg(OpndSize_32, offDvmDex_pResStrings, C_SCRATCH_2, isScratchPhysical, reg, isPhysical);
         }
     return 0;
 }
 int get_res_classes(int reg, bool isPhysical) {
-    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2539,9 +2279,7 @@ int get_res_classes(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, C_SCRATCH_2, isScratchPhysical);
             //glue is not in a physical reg nor in a spilled location
-            retCode = updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
-            if (retCode < 0)
-                return retCode;
+            updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
             move_mem_to_reg(OpndSize_32, offDvmDex_pResClasses, C_SCRATCH_2, isScratchPhysical, reg, isPhysical);
         }
     return 0;
@@ -2550,7 +2288,6 @@ int get_res_classes(int reg, bool isPhysical) {
 
 //!It uses two scratch registers
 int get_res_fields(int reg, bool isPhysical) {
-    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2567,9 +2304,7 @@ int get_res_fields(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, C_SCRATCH_2, isScratchPhysical);
             //glue is not in a physical reg nor in a spilled location
-            retCode = updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
-            if (retCode < 0)
-                return retCode;
+            updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
             move_mem_to_reg(OpndSize_32, offDvmDex_pResFields, C_SCRATCH_2, isScratchPhysical, reg, isPhysical);
         }
     return 0;
@@ -2578,7 +2313,6 @@ int get_res_fields(int reg, bool isPhysical) {
 
 //!It uses two scratch registers
 int get_res_methods(int reg, bool isPhysical) {
-    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2595,9 +2329,7 @@ int get_res_methods(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, C_SCRATCH_2, isScratchPhysical);
             //glue is not in a physical reg nor in a spilled location
-            retCode = updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
-            if (retCode < 0)
-                return retCode;
+            updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
             move_mem_to_reg(OpndSize_32, offDvmDex_pResMethods, C_SCRATCH_2, isScratchPhysical, reg, isPhysical);
         }
     return 0;
@@ -2632,7 +2364,6 @@ int set_glue_method(int reg, bool isPhysical) {
 
 //!It uses one scratch register
 int get_glue_dvmdex(int reg, bool isPhysical) {
-    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2650,9 +2381,7 @@ int get_glue_dvmdex(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, reg, isPhysical);
             //glue is not in a physical reg nor in a spilled location
-            retCode = updateGlue(reg, isPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
-            if (retCode < 0)
-                return retCode;
+            updateGlue(reg, isPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
         }
     return 0;
 }
@@ -2681,7 +2410,6 @@ int get_return_value(OpndSize size, int reg, bool isPhysical) {
     move_mem_to_reg(size, offsetof(Thread, interpSave.retval), C_SCRATCH_1, isScratchPhysical, reg, isPhysical);
     return 0;
 }
-
 //!generate native code to set retval in glue
 
 //!It uses one scratch register
@@ -2689,29 +2417,6 @@ int set_return_value(OpndSize size, int reg, bool isPhysical) {
     get_self_pointer(C_SCRATCH_1, isScratchPhysical);
     move_reg_to_mem(size, reg, isPhysical, offsetof(Thread, interpSave.retval), C_SCRATCH_1, isScratchPhysical);
     return 0;
-}
-
-/**
- * @brief Sets self Thread's retval.
- * @details This needs a scratch register to hold pointer to self.
- * @param size Size of return value
- * @param sourceReg Register that holds the return value.
- * @param isSourcePhysical Flag that determines if the source register is
- * physical or not. For example, the source register can be a temporary.
- * @param scratchRegForSelfThread Scratch register to use for self pointer
- * @param isScratchPhysical Marks whether the scratch register is physical
- * or not.
- * @todo Is retval set as expected for 64-bit? If retval is set as 64 bit
- * but read as 32-bit, is this correct?
- */
-void set_return_value(OpndSize size, int sourceReg, bool isSourcePhysical,
-        int scratchRegForSelfThread, int isScratchPhysical) {
-    // Get self pointer
-    get_self_pointer(scratchRegForSelfThread, isScratchPhysical);
-
-    // Now set Thread.retval with the source register's value
-    move_reg_to_mem(size, sourceReg, isSourcePhysical,
-            offsetof(Thread, interpSave.retval), scratchRegForSelfThread, isScratchPhysical);
 }
 //!generate native code to clear exception object in glue
 
@@ -2757,6 +2462,7 @@ int savearea_from_fp(int reg, bool isPhysical) {
     return 0;
 }
 
+#if defined(WITH_JIT)
 #ifdef DEBUG_CALL_STACK3
 int call_debug_dumpSwitch() {
     typedef void (*vmHelper)(int);
@@ -2767,29 +2473,29 @@ int call_debug_dumpSwitch() {
 #endif
 
 int call_dvmQuasiAtomicSwap64() {
-    typedef int64_t (*vmHelper)(int64_t, volatile int64_t*);
-    vmHelper funcPtr = dvmQuasiAtomicSwap64;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmQuasiAtomicSwap64");
-        callFuncPtr((int)funcPtr, "dvmQuasiAtomicSwap64");
+    }
+    typedef int64_t (*vmHelper)(int64_t, volatile int64_t*);
+    vmHelper funcPtr = dvmQuasiAtomicSwap64;
+    callFuncPtr((int)funcPtr, "dvmQuasiAtomicSwap64");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmQuasiAtomicSwap64");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmQuasiAtomicSwap64");
     }
     return 0;
 }
 
 int call_dvmQuasiAtomicRead64() {
-    typedef int64_t (*vmHelper)(volatile const int64_t*);
-    vmHelper funcPtr = dvmQuasiAtomicRead64;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmQuasiAtomiRead64");
-        callFuncPtr((int)funcPtr, "dvmQuasiAtomicRead64");
+    }
+    typedef int64_t (*vmHelper)(volatile const int64_t*);
+    vmHelper funcPtr = dvmQuasiAtomicRead64;
+    callFuncPtr((int)funcPtr, "dvmQuasiAtomicRead64");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmQuasiAtomicRead64");
         touchEax(); //for return value
         touchEdx();
-    } else {
-        callFuncPtr((int)funcPtr, "dvmQuasiAtomicRead64");
     }
     return 0;
 }
@@ -2802,59 +2508,60 @@ int call_dvmJitToInterpPunt() {
 }
 
 int call_dvmJitToInterpNormal() {
-    typedef void (*vmHelper)(int);
-    vmHelper funcPtr = dvmJitToInterpNormal;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmJitToInterpNormal");
-        callFuncPtr((int)funcPtr, "dvmJitToInterpNormal");
-        afterCall("dvmJitToInterpNormal");
-        touchEbx();
-    } else {
-        callFuncPtr((int)funcPtr, "dvmJitToInterpNormal");
     }
+    typedef void (*vmHelper)(int);
+    vmHelper funcPtr = dvmJitToInterpNormal;
+    callFuncPtr((int)funcPtr, "dvmJitToInterpNormal");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        afterCall("dvmJitToInterpNormal");
+    }
+    if(gDvm.executionMode == kExecutionModeNcgO1) touchEbx();
     return 0;
 }
 
 int call_dvmJitToInterpTraceSelectNoChain() {
-    typedef void (*vmHelper)(int);
-    vmHelper funcPtr = dvmJitToInterpTraceSelectNoChain;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmJitToInterpTraceSelectNoChain");
-        callFuncPtr((int)funcPtr, "dvmJitToInterpTraceSelectNoChain");
-        afterCall("dvmJitToInterpTraceSelectNoChain");
-        touchEbx();
-    } else {
-        callFuncPtr((int)funcPtr, "dvmJitToInterpTraceSelectNoChain");
     }
+    typedef void (*vmHelper)(int);
+    vmHelper funcPtr = dvmJitToInterpTraceSelectNoChain;
+    callFuncPtr((int)funcPtr, "dvmJitToInterpTraceSelectNoChain");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        afterCall("dvmJitToInterpTraceSelectNoChain");
+    }
+    if(gDvm.executionMode == kExecutionModeNcgO1) touchEbx();
     return 0;
 }
 
 int call_dvmJitToInterpTraceSelect() {
-    typedef void (*vmHelper)(int);
-    vmHelper funcPtr = dvmJitToInterpTraceSelect;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmJitToInterpTraceSelect");
-        callFuncPtr((int)funcPtr, "dvmJitToInterpTraceSelect");
-        afterCall("dvmJitToInterpTraceSelect");
-        touchEbx();
-    } else {
-        callFuncPtr((int)funcPtr, "dvmJitToInterpTraceSelect");
     }
+    typedef void (*vmHelper)(int);
+    vmHelper funcPtr = dvmJitToInterpTraceSelect;
+    callFuncPtr((int)funcPtr, "dvmJitToInterpTraceSelect");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        afterCall("dvmJitToInterpTraceSelect");
+    }
+    if(gDvm.executionMode == kExecutionModeNcgO1) touchEbx();
     return 0;
 }
+#endif
 
 int call_dvmJitToPatchPredictedChain() {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("dvmJitToPatchPredictedChain");
+    }
     typedef const Method * (*vmHelper)(const Method *method,
                                        Thread *self,
                                        PredictedChainingCell *cell,
                                        const ClassObject *clazz);
     vmHelper funcPtr = dvmJitToPatchPredictedChain;
+    callFuncPtr((int)funcPtr, "dvmJitToPatchPredictedChain");
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        beforeCall("dvmJitToPatchPredictedChain");
-        callFuncPtr((int)funcPtr, "dvmJitToPatchPredictedChain");
         afterCall("dvmJitToPatchPredictedChain");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmJitToPatchPredictedChain");
     }
     return 0;
 }
@@ -2865,10 +2572,10 @@ int call_dvmJitToPatchPredictedChain() {
 int call_moddi3() {
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("moddi3");
-        callFuncPtr((intptr_t)__moddi3, "__moddi3");
+    }
+    callFuncPtr((intptr_t)__moddi3, "__moddi3");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("moddi3");
-    } else {
-        callFuncPtr((intptr_t)__moddi3, "__moddi3");
     }
     return 0;
 }
@@ -2878,10 +2585,10 @@ int call_moddi3() {
 int call_divdi3() {
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("divdi3");
-        callFuncPtr((intptr_t)__divdi3, "__divdi3");
+    }
+    callFuncPtr((intptr_t)__divdi3, "__divdi3");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("divdi3");
-    } else {
-        callFuncPtr((intptr_t)__divdi3, "__divdi3");
     }
     return 0;
 }
@@ -2890,14 +2597,14 @@ int call_divdi3() {
 
 //!
 int call_fmod() {
-    typedef double (*libHelper)(double, double);
-    libHelper funcPtr = fmod;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("fmod");
-        callFuncPtr((int)funcPtr, "fmod");
+    }
+    typedef double (*libHelper)(double, double);
+    libHelper funcPtr = fmod;
+    callFuncPtr((int)funcPtr, "fmod");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("fmod");
-    } else {
-        callFuncPtr((int)funcPtr, "fmod");
     }
     return 0;
 }
@@ -2905,14 +2612,14 @@ int call_fmod() {
 
 //!
 int call_fmodf() {
-    typedef float (*libHelper)(float, float);
-    libHelper funcPtr = fmodf;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("fmodf");
-        callFuncPtr((int)funcPtr, "fmodf");
+    }
+    typedef float (*libHelper)(float, float);
+    libHelper funcPtr = fmodf;
+    callFuncPtr((int)funcPtr, "fmodf");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("fmodf");
-    } else {
-        callFuncPtr((int)funcPtr, "fmodf");
     }
     return 0;
 }
@@ -2920,16 +2627,16 @@ int call_fmodf() {
 
 //!
 int call_dvmFindCatchBlock() {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("dvmFindCatchBlock");
+    }
     //int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
     //bool doUnroll, void** newFrame)
     typedef int (*vmHelper)(Thread*, int, Object*, int, void**);
     vmHelper funcPtr = dvmFindCatchBlock;
+    callFuncPtr((int)funcPtr, "dvmFindCatchBlock");
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        beforeCall("dvmFindCatchBlock");
-        callFuncPtr((int)funcPtr, "dvmFindCatchBlock");
         afterCall("dvmFindCatchBlock");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmFindCatchBlock");
     }
     return 0;
 }
@@ -2937,14 +2644,14 @@ int call_dvmFindCatchBlock() {
 
 //!
 int call_dvmThrowVerificationError() {
-    typedef void (*vmHelper)(const Method*, int, int);
-    vmHelper funcPtr = dvmThrowVerificationError;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmThrowVerificationError");
-        callFuncPtr((int)funcPtr, "dvmThrowVerificationError");
+    }
+    typedef void (*vmHelper)(const Method*, int, int);
+    vmHelper funcPtr = dvmThrowVerificationError;
+    callFuncPtr((int)funcPtr, "dvmThrowVerificationError");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmThrowVerificationError");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmThrowVerificationError");
     }
     return 0;
 }
@@ -2953,15 +2660,15 @@ int call_dvmThrowVerificationError() {
 
 //!
 int call_dvmResolveMethod() {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("dvmResolveMethod");
+    }
     //Method* dvmResolveMethod(const ClassObject* referrer, u4 methodIdx, MethodType methodType);
     typedef Method* (*vmHelper)(const ClassObject*, u4, MethodType);
     vmHelper funcPtr = dvmResolveMethod;
+    callFuncPtr((int)funcPtr, "dvmResolveMethod");
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        beforeCall("dvmResolveMethod");
-        callFuncPtr((int)funcPtr, "dvmResolveMethod");
         afterCall("dvmResolveMethod");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmResolveMethod");
     }
     return 0;
 }
@@ -2969,15 +2676,15 @@ int call_dvmResolveMethod() {
 
 //!
 int call_dvmResolveClass() {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("dvmResolveClass");
+    }
     //ClassObject* dvmResolveClass(const ClassObject* referrer, u4 classIdx, bool fromUnverifiedConstant)
     typedef ClassObject* (*vmHelper)(const ClassObject*, u4, bool);
     vmHelper funcPtr = dvmResolveClass;
+    callFuncPtr((int)funcPtr, "dvmResolveClass");
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        beforeCall("dvmResolveClass");
-        callFuncPtr((int)funcPtr, "dvmResolveClass");
         afterCall("dvmResolveClass");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmResolveClass");
     }
     return 0;
 }
@@ -2986,14 +2693,14 @@ int call_dvmResolveClass() {
 
 //!
 int call_dvmInstanceofNonTrivial() {
-    typedef int (*vmHelper)(const ClassObject*, const ClassObject*);
-    vmHelper funcPtr = dvmInstanceofNonTrivial;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmInstanceofNonTrivial");
-        callFuncPtr((int)funcPtr, "dvmInstanceofNonTrivial");
+    }
+    typedef int (*vmHelper)(const ClassObject*, const ClassObject*);
+    vmHelper funcPtr = dvmInstanceofNonTrivial;
+    callFuncPtr((int)funcPtr, "dvmInstanceofNonTrivial");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmInstanceofNonTrivial");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmInstanceofNonTrivial");
     }
     return 0;
 }
@@ -3001,14 +2708,14 @@ int call_dvmInstanceofNonTrivial() {
 
 //!
 int call_dvmThrow() {
-    typedef void (*vmHelper)(ClassObject* exceptionClass, const char*);
-    vmHelper funcPtr = dvmThrowException;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmThrowException");
-        callFuncPtr((int)funcPtr, "dvmThrowException");
+    }
+    typedef void (*vmHelper)(ClassObject* exceptionClass, const char*);
+    vmHelper funcPtr = dvmThrowException;
+    callFuncPtr((int)funcPtr, "dvmThrowException");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmThrowException");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmThrowException");
     }
     return 0;
 }
@@ -3016,14 +2723,14 @@ int call_dvmThrow() {
 
 //!
 int call_dvmThrowWithMessage() {
-    typedef void (*vmHelper)(ClassObject* exceptionClass, const char*);
-    vmHelper funcPtr = dvmThrowExceptionWithClassMessage;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmThrowExceptionWithClassMessage");
-        callFuncPtr((int)funcPtr, "dvmThrowExceptionWithClassMessage");
+    }
+    typedef void (*vmHelper)(ClassObject* exceptionClass, const char*);
+    vmHelper funcPtr = dvmThrowExceptionWithClassMessage;
+    callFuncPtr((int)funcPtr, "dvmThrowExceptionWithClassMessage");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmThrowExceptionWithClassMessage");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmThrowExceptionWithClassMessage");
     }
     return 0;
 }
@@ -3031,14 +2738,14 @@ int call_dvmThrowWithMessage() {
 
 //!
 int call_dvmCheckSuspendPending() {
-    typedef bool (*vmHelper)(Thread*);
-    vmHelper funcPtr = dvmCheckSuspendPending;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmCheckSuspendPending");
-        callFuncPtr((int)funcPtr, "dvmCheckSuspendPending");
+    }
+    typedef bool (*vmHelper)(Thread*);
+    vmHelper funcPtr = dvmCheckSuspendPending;
+    callFuncPtr((int)funcPtr, "dvmCheckSuspendPending");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmCheckSuspendPending");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmCheckSuspendPending");
     }
     return 0;
 }
@@ -3046,14 +2753,14 @@ int call_dvmCheckSuspendPending() {
 
 //!
 int call_dvmLockObject() {
-    typedef void (*vmHelper)(struct Thread*, struct Object*);
-    vmHelper funcPtr = dvmLockObject;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmLockObject");
-        callFuncPtr((int)funcPtr, "dvmLockObject");
+    }
+    typedef void (*vmHelper)(struct Thread*, struct Object*);
+    vmHelper funcPtr = dvmLockObject;
+    callFuncPtr((int)funcPtr, "dvmLockObject");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmLockObject");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmLockObject");
     }
     return 0;
 }
@@ -3061,14 +2768,14 @@ int call_dvmLockObject() {
 
 //!
 int call_dvmUnlockObject() {
-    typedef bool (*vmHelper)(Thread*, Object*);
-    vmHelper funcPtr = dvmUnlockObject;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmUnlockObject");
-        callFuncPtr((int)funcPtr, "dvmUnlockObject");
+    }
+    typedef bool (*vmHelper)(Thread*, Object*);
+    vmHelper funcPtr = dvmUnlockObject;
+    callFuncPtr((int)funcPtr, "dvmUnlockObject");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmUnlockObject");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmUnlockObject");
     }
     return 0;
 }
@@ -3076,14 +2783,14 @@ int call_dvmUnlockObject() {
 
 //!
 int call_dvmInitClass() {
-    typedef bool (*vmHelper)(ClassObject*);
-    vmHelper funcPtr = dvmInitClass;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmInitClass");
-        callFuncPtr((int)funcPtr, "dvmInitClass");
+    }
+    typedef bool (*vmHelper)(ClassObject*);
+    vmHelper funcPtr = dvmInitClass;
+    callFuncPtr((int)funcPtr, "dvmInitClass");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmInitClass");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmInitClass");
     }
     return 0;
 }
@@ -3091,14 +2798,14 @@ int call_dvmInitClass() {
 
 //!
 int call_dvmAllocObject() {
-    typedef Object* (*vmHelper)(ClassObject*, int);
-    vmHelper funcPtr = dvmAllocObject;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmAllocObject");
-        callFuncPtr((int)funcPtr, "dvmAllocObject");
+    }
+    typedef Object* (*vmHelper)(ClassObject*, int);
+    vmHelper funcPtr = dvmAllocObject;
+    callFuncPtr((int)funcPtr, "dvmAllocObject");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmAllocObject");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmAllocObject");
     }
     return 0;
 }
@@ -3106,14 +2813,14 @@ int call_dvmAllocObject() {
 
 //!
 int call_dvmAllocArrayByClass() {
-    typedef ArrayObject* (*vmHelper)(ClassObject*, size_t, int);
-    vmHelper funcPtr = dvmAllocArrayByClass;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmAllocArrayByClass");
-        callFuncPtr((int)funcPtr, "dvmAllocArrayByClass");
+    }
+    typedef ArrayObject* (*vmHelper)(ClassObject*, size_t, int);
+    vmHelper funcPtr = dvmAllocArrayByClass;
+    callFuncPtr((int)funcPtr, "dvmAllocArrayByClass");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmAllocArrayByClass");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmAllocArrayByClass");
     }
     return 0;
 }
@@ -3121,14 +2828,14 @@ int call_dvmAllocArrayByClass() {
 
 //!
 int call_dvmAllocPrimitiveArray() {
-    typedef ArrayObject* (*vmHelper)(char, size_t, int);
-    vmHelper funcPtr = dvmAllocPrimitiveArray;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmAllocPrimitiveArray");
-        callFuncPtr((int)funcPtr, "dvmAllocPrimitiveArray");
+    }
+    typedef ArrayObject* (*vmHelper)(char, size_t, int);
+    vmHelper funcPtr = dvmAllocPrimitiveArray;
+    callFuncPtr((int)funcPtr, "dvmAllocPrimitiveArray");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmAllocPrimitiveArray");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmAllocPrimitiveArray");
     }
     return 0;
 }
@@ -3136,14 +2843,14 @@ int call_dvmAllocPrimitiveArray() {
 
 //!
 int call_dvmInterpHandleFillArrayData() {
-    typedef bool (*vmHelper)(ArrayObject*, const u2*);
-    vmHelper funcPtr = dvmInterpHandleFillArrayData;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmInterpHandleFillArrayData"); //before move_imm_to_reg to avoid spilling C_SCRATCH_1
-        callFuncPtr((int)funcPtr, "dvmInterpHandleFillArrayData");
+    }
+    typedef bool (*vmHelper)(ArrayObject*, const u2*);
+    vmHelper funcPtr = dvmInterpHandleFillArrayData;
+    callFuncPtr((int)funcPtr, "dvmInterpHandleFillArrayData");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmInterpHandleFillArrayData");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmInterpHandleFillArrayData");
     }
     return 0;
 }
@@ -3152,72 +2859,76 @@ int call_dvmInterpHandleFillArrayData() {
 
 //!
 int call_dvmNcgHandlePackedSwitch() {
-    typedef s4 (*vmHelper)(const s4*, s4, u2, s4);
-    vmHelper funcPtr = dvmNcgHandlePackedSwitch;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmNcgHandlePackedSwitch");
-        callFuncPtr((int)funcPtr, "dvmNcgHandlePackedSwitch");
+    }
+    typedef s4 (*vmHelper)(const s4*, s4, u2, s4);
+    vmHelper funcPtr = dvmNcgHandlePackedSwitch;
+    callFuncPtr((int)funcPtr, "dvmNcgHandlePackedSwitch");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmNcgHandlePackedSwitch");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmNcgHandlePackedSwitch");
     }
     return 0;
 }
 
+#if defined(WITH_JIT)
 int call_dvmJitHandlePackedSwitch() {
-    typedef s4 (*vmHelper)(const s4*, s4, u2, s4);
-    vmHelper funcPtr = dvmJitHandlePackedSwitch;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmJitHandlePackedSwitch");
-        callFuncPtr((int)funcPtr, "dvmJitHandlePackedSwitch");
+    }
+    typedef s4 (*vmHelper)(const s4*, s4, u2, s4);
+    vmHelper funcPtr = dvmJitHandlePackedSwitch;
+    callFuncPtr((int)funcPtr, "dvmJitHandlePackedSwitch");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmJitHandlePackedSwitch");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmJitHandlePackedSwitch");
     }
     return 0;
 }
+#endif
 
 //!generate native code to call dvmNcgHandleSparseSwitch
 
 //!
 int call_dvmNcgHandleSparseSwitch() {
-    typedef s4 (*vmHelper)(const s4*, u2, s4);
-    vmHelper funcPtr = dvmNcgHandleSparseSwitch;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmNcgHandleSparseSwitch");
-        callFuncPtr((int)funcPtr, "dvmNcgHandleSparseSwitch");
+    }
+    typedef s4 (*vmHelper)(const s4*, u2, s4);
+    vmHelper funcPtr = dvmNcgHandleSparseSwitch;
+    callFuncPtr((int)funcPtr, "dvmNcgHandleSparseSwitch");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmNcgHandleSparseSwitch");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmNcgHandleSparseSwitch");
     }
     return 0;
 }
 
+#if defined(WITH_JIT)
 int call_dvmJitHandleSparseSwitch() {
-    typedef s4 (*vmHelper)(const s4*, u2, s4);
-    vmHelper funcPtr = dvmJitHandleSparseSwitch;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmJitHandleSparseSwitch");
-        callFuncPtr((int)funcPtr, "dvmJitHandleSparseSwitch");
+    }
+    typedef s4 (*vmHelper)(const s4*, u2, s4);
+    vmHelper funcPtr = dvmJitHandleSparseSwitch;
+    callFuncPtr((int)funcPtr, "dvmJitHandleSparseSwitch");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmJitHandleSparseSwitch");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmJitHandleSparseSwitch");
     }
     return 0;
 }
+#endif
 
 //!generate native code to call dvmCanPutArrayElement
 
 //!
 int call_dvmCanPutArrayElement() {
-    typedef bool (*vmHelper)(const ClassObject*, const ClassObject*);
-    vmHelper funcPtr = dvmCanPutArrayElement;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmCanPutArrayElement");
-        callFuncPtr((int)funcPtr, "dvmCanPutArrayElement");
+    }
+    typedef bool (*vmHelper)(const ClassObject*, const ClassObject*);
+    vmHelper funcPtr = dvmCanPutArrayElement;
+    callFuncPtr((int)funcPtr, "dvmCanPutArrayElement");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmCanPutArrayElement");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmCanPutArrayElement");
     }
     return 0;
 }
@@ -3226,14 +2937,14 @@ int call_dvmCanPutArrayElement() {
 
 //!
 int call_dvmFindInterfaceMethodInCache() {
-    typedef Method* (*vmHelper)(ClassObject*, u4, const Method*, DvmDex*);
-    vmHelper funcPtr = dvmFindInterfaceMethodInCache2;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmFindInterfaceMethodInCache2");
-        callFuncPtr((int)funcPtr, "dvmFindInterfaceMethodInCache2");
+    }
+    typedef Method* (*vmHelper)(ClassObject*, u4, const Method*, DvmDex*);
+    vmHelper funcPtr = dvmFindInterfaceMethodInCache2;
+    callFuncPtr((int)funcPtr, "dvmFindInterfaceMethodInCache2");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmFindInterfaceMethodInCache2");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmFindInterfaceMethodInCache2");
     }
     return 0;
 }
@@ -3242,14 +2953,14 @@ int call_dvmFindInterfaceMethodInCache() {
 
 //!
 int call_dvmHandleStackOverflow() {
-    typedef void (*vmHelper)(Thread*, const Method*);
-    vmHelper funcPtr = dvmHandleStackOverflow;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmHandleStackOverflow");
-        callFuncPtr((int)funcPtr, "dvmHandleStackOverflow");
+    }
+    typedef void (*vmHelper)(Thread*, const Method*);
+    vmHelper funcPtr = dvmHandleStackOverflow;
+    callFuncPtr((int)funcPtr, "dvmHandleStackOverflow");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall("dvmHandleStackOverflow");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmHandleStackOverflow");
     }
     return 0;
 }
@@ -3257,15 +2968,15 @@ int call_dvmHandleStackOverflow() {
 
 //!
 int call_dvmResolveString() {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("dvmResolveString");
+    }
     //StringObject* dvmResolveString(const ClassObject* referrer, u4 stringIdx)
     typedef StringObject* (*vmHelper)(const ClassObject*, u4);
     vmHelper funcPtr = dvmResolveString;
+    callFuncPtr((int)funcPtr, "dvmResolveString");
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        beforeCall("dvmResolveString");
-        callFuncPtr((int)funcPtr, "dvmResolveString");
         afterCall("dvmResolveString");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmResolveString");
     }
     return 0;
 }
@@ -3273,15 +2984,15 @@ int call_dvmResolveString() {
 
 //!
 int call_dvmResolveInstField() {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("dvmResolveInstField");
+    }
     //InstField* dvmResolveInstField(const ClassObject* referrer, u4 ifieldIdx)
     typedef InstField* (*vmHelper)(const ClassObject*, u4);
     vmHelper funcPtr = dvmResolveInstField;
+    callFuncPtr((int)funcPtr, "dvmResolveInstField");
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        beforeCall("dvmResolveInstField");
-        callFuncPtr((int)funcPtr, "dvmResolveInstField");
         afterCall("dvmResolveInstField");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmResolveInstField");
     }
     return 0;
 }
@@ -3289,15 +3000,15 @@ int call_dvmResolveInstField() {
 
 //!
 int call_dvmResolveStaticField() {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("dvmResolveStaticField");
+    }
     //StaticField* dvmResolveStaticField(const ClassObject* referrer, u4 sfieldIdx)
     typedef StaticField* (*vmHelper)(const ClassObject*, u4);
     vmHelper funcPtr = dvmResolveStaticField;
+    callFuncPtr((int)funcPtr, "dvmResolveStaticField");
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        beforeCall("dvmResolveStaticField");
-        callFuncPtr((int)funcPtr, "dvmResolveStaticField");
         afterCall("dvmResolveStaticField");
-    } else {
-        callFuncPtr((int)funcPtr, "dvmResolveStaticField");
     }
     return 0;
 }
@@ -3317,8 +3028,7 @@ The only register that is still live after this function is ebx
 int const_string_resolve() {
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
-    if (insertLabel(".const_string_resolve", false) == -1)
-        return -1;
+    insertLabel(".const_string_resolve", false);
     //method stored in glue structure as well as on the interpreted stack
     get_glue_method_class(P_GPR_2, true);
     load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
@@ -3346,8 +3056,7 @@ The only register that is still live after this function is ebx
 int resolve_class2(
            int startLR/*scratch register*/, bool isPhysical, int indexReg/*const pool index*/,
            bool indexPhysical, int thirdArg) {
-    if (insertLabel(".class_resolve", false) == -1)
-        return -1;
+    insertLabel(".class_resolve", false);
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
 
@@ -3380,18 +3089,12 @@ int resolve_method2(
             int startLR/*logical register index*/, bool isPhysical, int indexReg/*const pool index*/,
             bool indexPhysical,
             int thirdArg/*VIRTUAL*/) {
-    if(thirdArg == METHOD_VIRTUAL) {
-        if (insertLabel(".virtual_method_resolve", false) == -1)
-            return -1;
-    }
-    else if(thirdArg == METHOD_DIRECT) {
-        if (insertLabel(".direct_method_resolve", false) == -1)
-            return -1;
-    }
-    else if(thirdArg == METHOD_STATIC) {
-        if (insertLabel(".static_method_resolve", false) == -1)
-            return -1;
-    }
+    if(thirdArg == METHOD_VIRTUAL)
+        insertLabel(".virtual_method_resolve", false);
+    else if(thirdArg == METHOD_DIRECT)
+        insertLabel(".direct_method_resolve", false);
+    else if(thirdArg == METHOD_STATIC)
+        insertLabel(".static_method_resolve", false);
 
     load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     move_reg_to_mem(OpndSize_32, indexReg, indexPhysical, 4, PhysicalReg_ESP, true);
@@ -3424,8 +3127,7 @@ The only register that is still live after this function is ebx
 int resolve_inst_field2(
             int startLR/*logical register index*/, bool isPhysical,
             int indexReg/*const pool index*/, bool indexPhysical) {
-    if (insertLabel(".inst_field_resolve", false) == -1)
-        return -1;
+    insertLabel(".inst_field_resolve", false);
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
 
@@ -3456,8 +3158,7 @@ The only register that is still live after this function is ebx
 int resolve_static_field2(
               int startLR/*logical register index*/, bool isPhysical, int indexReg/*const pool index*/,
               bool indexPhysical) {
-    if (insertLabel(".static_field_resolve", false) == -1)
-        return -1;
+    insertLabel(".static_field_resolve", false);
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
 
@@ -3497,8 +3198,8 @@ int popAllRegs() {
     return 0;
 }
 
-void dump_nop(int size) {
-    switch(size) {
+void dump_nop(int size){
+    switch(size){
         case 1:
           *stream = 0x90;
           break;
@@ -3517,3 +3218,4 @@ void dump_nop(int size) {
     }
     stream += size;
 }
+

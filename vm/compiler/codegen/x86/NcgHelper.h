@@ -1,5 +1,6 @@
+
 /*
- * Copyright (C) 2010-2013 Intel Corporation
+ * Copyright (C) 2010-2011 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +21,10 @@
 #include "mterp/Mterp.h"
 s4 dvmNcgHandlePackedSwitch(const s4*, s4, u2, s4);
 s4 dvmNcgHandleSparseSwitch(const s4*, u2, s4);
+#if defined(WITH_JIT)
 s4 dvmJitHandlePackedSwitch(const s4*, s4, u2, s4);
 s4 dvmJitHandleSparseSwitch(const s4*, u2, s4);
+#endif
 /*
  * Look up an interface on a class using the cache.
  */
@@ -30,11 +33,12 @@ Method* dvmFindInterfaceMethodInCache2(ClassObject* thisClass,
 /*
  * Find an interface method.
  */
+#if 0
+bool dvmNcgStdRun(MterpGlue* glue);
+#endif
 extern "C" void dvmNcgInvokeInterpreter(int pc); //interpreter to execute at pc
 extern "C" void dvmNcgInvokeNcg(int pc);
-
 #if defined(WITH_JIT)
-extern "C" void dvmJitHelper_returnFromMethod();
 extern "C" void dvmJitToInterpNormal(int targetpc); //in %ebx
 extern "C" void dvmJitToInterpTraceSelect(int targetpc); //in %ebx
 extern "C" void dvmJitToInterpTraceSelectNoChain(int targetpc); //in %ebx
@@ -42,10 +46,13 @@ extern "C" void dvmJitToInterpNoChain(int targetpc); //in %eax
 extern "C" void dvmJitToInterpNoChainNoProfile(int targetpc); //in %eax
 extern "C" void dvmJitToInterpPunt(int targetpc); //in currentPc
 extern "C" void dvmJitToExceptionThrown(int targetpc); //in currentPc
+#ifdef DEBUG_CALL_STACK3
+void debug_dumpSwitch(int); //in %ebx
 #endif
 
 const Method *dvmJitToPatchPredictedChain(const Method *method,
                                           Thread *self,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz);
+#endif
 #endif /*_DALVIK_NCG_HELPER*/
