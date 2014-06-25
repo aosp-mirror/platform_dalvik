@@ -237,6 +237,9 @@ static void selfVerificationDumpTrace(const u2* pc, Thread* self)
 static void selfVerificationSpinLoop(ShadowSpace *shadowSpace)
 {
     const u2 *startPC = shadowSpace->startPC;
+    ALOGD("******  SV SPIN LOOP Entry  ******");
+    // uncomment here if the VM may continue on divergence.
+    //return;
     JitTraceDescription* desc = dvmCopyTraceDescriptor(startPC, NULL);
     if (desc) {
         dvmCompilerWorkEnqueue(startPC, kWorkOrderTraceDebug, desc);
@@ -306,7 +309,7 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
             if (state == kSVSBackwardBranch) {
                 /* State mismatch on backward branch - try one more iteration */
                 shadowSpace->selfVerificationState = kSVSDebugInterp;
-                goto log_and_continue;
+                //goto log_and_continue;
             }
             ALOGD("~~~ DbgIntp(%d): REGISTERS DIVERGENCE!", self->threadId);
             selfVerificationDumpState(pc, self);
@@ -339,7 +342,7 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
                      * iteration.
                      */
                     shadowSpace->selfVerificationState = kSVSDebugInterp;
-                    goto log_and_continue;
+                    //goto log_and_continue;
                 }
                 ALOGD("~~~ DbgIntp(%d): REGISTERS (FRAME2) DIVERGENCE!",
                     self->threadId);
@@ -372,10 +375,10 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
                      * iteration.
                      */
                     shadowSpace->selfVerificationState = kSVSDebugInterp;
-                    goto log_and_continue;
+                    //goto log_and_continue;
                 }
                 ALOGD("~~~ DbgIntp(%d): MEMORY DIVERGENCE!", self->threadId);
-                ALOGD("Addr: %#x Intrp Data: %#x Jit Data: %#x",
+                ALOGD("Addr: %#x Intrp Data: %d Jit Data: %d",
                     heapSpacePtr->addr, memData, heapSpacePtr->data);
                 selfVerificationDumpState(pc, self);
                 selfVerificationDumpTrace(pc, self);
@@ -409,6 +412,7 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
 log_and_continue:
     /* If end not been reached, make sure max length not exceeded */
     if (shadowSpace->traceLength >= JIT_MAX_TRACE_LEN) {
+        ALOGD("~~~ DbgIntp JIT_MAX_TRACE_LEN(%d) exceeded", JIT_MAX_TRACE_LEN);
         ALOGD("~~~ DbgIntp(%d): CONTROL DIVERGENCE!", self->threadId);
         ALOGD("startPC: %#x endPC: %#x currPC: %#x",
             (int)shadowSpace->startPC, (int)shadowSpace->endPC, (int)pc);

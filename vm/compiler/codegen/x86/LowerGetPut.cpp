@@ -72,23 +72,161 @@ int aget_common_nohelper(ArrayAccess flag, u2 vA, u2 vref, u2 vindex, int mirOpt
     }
 
     if(flag == AGET) {
+#ifndef WITH_SELF_VERIFICATION
         move_mem_disp_scale_to_reg(OpndSize_32, 1, false, offArrayObject_contents, 2, false, 4, 4, false);
+#else
+        // Load address into temp 5
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 4, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 to (esp)
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // Mov opnd size to 4(esp)
+        move_imm_to_mem(OpndSize_32, int(OpndSize_32), 4, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationLoad();
+        // Restore ESP
+        load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move result of self verification load into temp4
+        move_reg_to_reg(OpndSize_32, PhysicalReg_EAX, true, 4, false);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
     }
     else if(flag == AGET_WIDE) {
+#ifndef WITH_SELF_VERIFICATION
         move_mem_disp_scale_to_reg(OpndSize_64, 1, false, offArrayObject_contents, 2, false, 8, 1, false);
+#else
+        // Load address into temp 5 (scale of 8 due to opnd size 64), temp 1 is base gp
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 8, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 to (esp)
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationLoadDoubleword();
+        // Restore ESP
+        load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move result of self verification load into temp 1(XMM)
+        move_reg_to_reg(OpndSize_64, PhysicalReg_XMM7, true, 1, false);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
     }
     else if(flag == AGET_CHAR) {
+#ifndef WITH_SELF_VERIFICATION
         movez_mem_disp_scale_to_reg(OpndSize_16, 1, false, offArrayObject_contents, 2, false, 2, 4, false);
+#else
+        // Load address into temp 5
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 2, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 to (esp) //address
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // Mov opnd size to 4(esp)  // op_size
+        move_imm_to_mem(OpndSize_32, int(OpndSize_16), 4, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationLoad();
+        // Restore ESP
+        load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move result of self verification load into temp 4
+        move_reg_to_reg(OpndSize_32, PhysicalReg_EAX, true, 4, false);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
     }
     else if(flag == AGET_SHORT) {
+#ifndef WITH_SELF_VERIFICATION
         moves_mem_disp_scale_to_reg(OpndSize_16, 1, false, offArrayObject_contents, 2, false, 2, 4, false);
+#else
+        // Load address into temp 5
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 2, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 to (esp) //address
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // Mov opnd size to 4(esp)  // op_size
+        move_imm_to_mem(OpndSize_32, int(0x22), 4, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationLoad();
+        // Restore ESP
+        load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move result of self verification load into temp 4
+        move_reg_to_reg(OpndSize_32, PhysicalReg_EAX, true, 4, false);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
     }
     else if(flag == AGET_BOOLEAN) {
+
+#ifndef WITH_SELF_VERIFICATION
         movez_mem_disp_scale_to_reg(OpndSize_8, 1, false, offArrayObject_contents, 2, false, 1, 4, false);
+#else
+        // Load address into temp 5
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 1, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 to (esp) //address
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // Mov opnd size to 4(esp)  // op_size
+        move_imm_to_mem(OpndSize_32, int(OpndSize_8), 4, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationLoad();
+        // Restore ESP
+        load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move result of self verification load into temp 4
+        move_reg_to_reg(OpndSize_32, PhysicalReg_EAX, true, 4, false);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
     }
     else if(flag == AGET_BYTE) {
+#ifndef WITH_SELF_VERIFICATION
         moves_mem_disp_scale_to_reg(OpndSize_8, 1, false, offArrayObject_contents, 2, false, 1, 4, false);
+#else
+        // Load address into temp 5
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 1, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 to (esp) //address
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // Mov opnd size to 4(esp)  // op_size
+        move_imm_to_mem(OpndSize_32, int(0x11), 4, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationLoad();
+        // Restore ESP
+        load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move result of self verification load into temp 4
+        move_reg_to_reg(OpndSize_32, PhysicalReg_EAX, true, 4, false);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
     }
+
     if(flag == AGET_WIDE) {
         set_virtual_reg(vA, OpndSize_64, 1, false);
     }
@@ -275,14 +413,107 @@ int aput_common_nohelper(ArrayAccess flag, u2 vA, u2 vref, u2 vindex, int mirOpt
     else {
         get_virtual_reg(vA, OpndSize_32, 4, false);
     }
-    if(flag == APUT)
+    if(flag == APUT) {
+#ifndef WITH_SELF_VERIFICATION
         move_reg_to_mem_disp_scale(OpndSize_32, 4, false, 1, false, offArrayObject_contents, 2, false, 4);
-    else if(flag == APUT_WIDE)
+#else
+        // Load address into temp 5
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 4, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 namely the address to (esp)
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // Store value from temp 4 namely the data to 4(esp)
+        move_reg_to_mem(OpndSize_32, 4, false, 4, PhysicalReg_ESP, true);
+        // Mov opnd size to 8(esp)
+        move_imm_to_mem(OpndSize_32, int(OpndSize_32), 8, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationStore();
+        // Restore ESP
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
+    } else if(flag == APUT_WIDE) {
+#ifndef WITH_SELF_VERIFICATION
         move_reg_to_mem_disp_scale(OpndSize_64, 1, false, 1, false, offArrayObject_contents, 2, false, 8);
-    else if(flag == APUT_CHAR || flag == APUT_SHORT)
+#else
+        // Load address into temp 4
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 8, 4, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 4 namely the address to (esp)
+        move_reg_to_mem(OpndSize_32, 4, false, 0, PhysicalReg_ESP, true);
+        // Store value from temp 1(XMM) namely the data to 4(esp)
+        move_reg_to_mem(OpndSize_64, 1, false, 4, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationStoreDoubleword();
+        // Restore ESP
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
+    }
+    else if(flag == APUT_CHAR || flag == APUT_SHORT) {
+#ifndef WITH_SELF_VERIFICATION
         move_reg_to_mem_disp_scale(OpndSize_16, 4, false, 1, false, offArrayObject_contents, 2, false, 2);
-    else if(flag == APUT_BOOLEAN || flag == APUT_BYTE)
+#else
+        // Load address into temp 5
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 2, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 namely the address to (esp)
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // Store value from temp 4 namely the data to 4(esp)
+        move_reg_to_mem(OpndSize_32, 4, false, 4, PhysicalReg_ESP, true);
+        // Mov opnd size to 8(esp)
+        move_imm_to_mem(OpndSize_32, int(OpndSize_16), 8, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationStore();
+        // Restore ESP
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
+    }
+    else if(flag == APUT_BOOLEAN || flag == APUT_BYTE) {
+#ifndef WITH_SELF_VERIFICATION
         move_reg_to_mem_disp_scale(OpndSize_8, 4, false, 1, false, offArrayObject_contents, 2, false, 1);
+#else
+        // Load address into temp 5
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 1, 5, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 5 namely the address to (esp)
+        move_reg_to_mem(OpndSize_32, 5, false, 0, PhysicalReg_ESP, true);
+        // Store value from temp 4 namely the data to 4(esp)
+        move_reg_to_mem(OpndSize_32, 4, false, 4, PhysicalReg_ESP, true);
+        // Mov opnd size to 8(esp)
+        move_imm_to_mem(OpndSize_32, int(OpndSize_8), 8, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationStore();
+        // Restore ESP
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
+    }
     //////////////////////////////////
     return 0;
 }
@@ -480,8 +711,24 @@ int op_aput_object(const MIR * mir) { //type checking
         compare_imm_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
         conditional_jump_global_API(Condition_E, "common_errArrayStore", false);
 
+
+#ifndef WITH_SELF_VERIFICATION
         //NOTE: "2, false" is live through function call
         move_reg_to_mem_disp_scale(OpndSize_32, 4, false, 1, false, offArrayObject_contents, 2, false, 4);
+#else
+        // lea to temp 7, temp 4 contains the data
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 4, 7, false);
+        pushCallerSavedRegs();
+        // make space on the stack and push 3 args (address, data, operand size)
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        move_reg_to_mem(OpndSize_32, 7, false, 0, PhysicalReg_ESP, true);  // address
+        move_reg_to_mem(OpndSize_32, 4, false, 4, PhysicalReg_ESP, true);  //data
+        move_imm_to_mem(OpndSize_32, int(OpndSize_32), 8, PhysicalReg_ESP, true);
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        call_selfVerificationStore();
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        popCallerSavedRegs();
+#endif
         markCard_notNull(1, 11, false);
         rememberState(2);
         ////TODO NCG O1 + code cache
@@ -489,9 +736,23 @@ int op_aput_object(const MIR * mir) { //type checking
 
         insertLabel(".aput_object_skip_check", true);
         goToState(1);
+#ifndef WITH_SELF_VERIFICATION
         //NOTE: "2, false" is live through function call
         move_reg_to_mem_disp_scale(OpndSize_32, 4, false, 1, false, offArrayObject_contents, 2, false, 4);
-
+#else
+        // lea to temp 7, temp 4 contains the data
+        load_effective_addr_scale_disp(1, false, offArrayObject_contents, 2, false, 4, 7, false);
+        pushCallerSavedRegs();
+        // make space on the stack and push 3 args (address, data, operand size)
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        move_reg_to_mem(OpndSize_32, 7, false, 0, PhysicalReg_ESP, true); //address
+        move_reg_to_mem(OpndSize_32, 4, false, 4, PhysicalReg_ESP, true); //data
+        move_imm_to_mem(OpndSize_32, int(OpndSize_32), 8, PhysicalReg_ESP, true);
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        call_selfVerificationStore();
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        popCallerSavedRegs();
+#endif
         transferToState(2);
         insertLabel(".aput_object_after_check", true);
         ///////////////////////////////
@@ -614,8 +875,33 @@ int iget_iput_common_nohelper(u2 referenceIndex, InstanceAccess flag, u2 vA,
     move_mem_to_reg(OpndSize_32, offInstField_byteOffset, PhysicalReg_EAX, true, 8, false); //byte offest
 #endif
     if(flag == IGET) {
+#ifndef WITH_SELF_VERIFICATION
         move_mem_scale_to_reg(OpndSize_32, 7, false, 8, false, 1, 9, false);
         set_virtual_reg(vA, OpndSize_32, 9, false);
+#else
+        // Load address into temp reg 10
+        load_effective_addr_scale(7, false, 8, false, 1, 10, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp reg 10 to (esp)
+        move_reg_to_mem(OpndSize_32, 10, false, 0, PhysicalReg_ESP, true);
+        // Mov opnd size to 4(esp)
+        move_imm_to_mem(OpndSize_32, int(OpndSize_32), 4, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationLoad();
+        // Restore ESP
+        load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move result of self verification load into tenp9
+        move_reg_to_reg(OpndSize_32, PhysicalReg_EAX, true, 9, false);
+        // pop caller saved registers
+        popCallerSavedRegs();
+        set_virtual_reg(vA, OpndSize_32, 9, false);
+#endif
+
 #ifdef DEBUG_IGET_OBJ
         if(isObj > 0) {
             pushAllRegs();
@@ -630,6 +916,7 @@ int iget_iput_common_nohelper(u2 referenceIndex, InstanceAccess flag, u2 vA,
         }
 #endif
     } else if(flag == IGET_WIDE) {
+#ifndef WITH_SELF_VERIFICATION
         if(isVolatile) {
             /* call dvmQuasiAtomicRead64(addr) */
             load_effective_addr(fieldOffset, 7, false, 9, false);
@@ -647,14 +934,63 @@ int iget_iput_common_nohelper(u2 referenceIndex, InstanceAccess flag, u2 vA,
             move_mem_scale_to_reg(OpndSize_64, 7, false, 8, false, 1, 1, false); //access field
             set_virtual_reg(vA, OpndSize_64, 1, false);
         }
+#else
+        // Load address into temp 10
+        if(isVolatile) {
+            load_effective_addr(fieldOffset, 7, false, 10, false);
+        } else {
+            load_effective_addr_scale(7, false, 8, false, 1, 10, false);
+        }
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 10 to (esp)
+        move_reg_to_mem(OpndSize_32, 10, false, 0, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_5;
+        // Load from shadow heap
+        call_selfVerificationLoadDoubleword();
+        // Restore ESP
+        load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move result of self verification load into temp 1(XMM)
+        move_reg_to_reg(OpndSize_64, PhysicalReg_XMM7, true, 1, false);
+        // pop caller saved registers
+        popCallerSavedRegs();
+        set_virtual_reg(vA, OpndSize_64, 1, false);
+#endif
     } else if(flag == IPUT) {
         get_virtual_reg(vA, OpndSize_32, 9, false);
+#ifndef WITH_SELF_VERIFICATION
         move_reg_to_mem_scale(OpndSize_32, 9, false, 7, false, 8, false, 1); //access field
+#else
+        // Load address into temp 10; reg temp 9 will contain the data
+        load_effective_addr_scale(7, false, 8, false, 1, 10, false);
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 10 namely the address to (esp)
+        move_reg_to_mem(OpndSize_32, 10, false, 0, PhysicalReg_ESP, true);
+        // Store value from temp 9 namely the data to 4(esp)
+        move_reg_to_mem(OpndSize_32, 9, false, 4, PhysicalReg_ESP, true);
+        // Mov opnd size to 8(esp)
+        move_imm_to_mem(OpndSize_32, int(OpndSize_32), 8, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_1;
+        // Load from shadow heap
+        call_selfVerificationStore();
+        // Restore ESP
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
         if(isObj) {
             markCard(9, 7, false, 11, false);
         }
     } else if(flag == IPUT_WIDE) {
         get_virtual_reg(vA, OpndSize_64, 1, false);
+#ifndef WITH_SELF_VERIFICATION
         if(isVolatile) {
             /* call dvmQuasiAtomicSwap64(val, addr) */
             load_effective_addr(fieldOffset, 7, false, 9, false);
@@ -668,6 +1004,31 @@ int iget_iput_common_nohelper(u2 referenceIndex, InstanceAccess flag, u2 vA,
         else {
             move_reg_to_mem_scale(OpndSize_64, 1, false, 7, false, 8, false, 1);
         }
+#else
+        //TODO: handle the volatile type correctly..
+        // Load address into temp 10
+        if(isVolatile) {
+            load_effective_addr(fieldOffset, 7, false, 10, false);
+        } else {
+            load_effective_addr_scale(7, false, 8, false, 1, 10, false);
+        }
+        // push caller saved registers
+        pushCallerSavedRegs();
+        // Set up arguments
+        load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // Move value in temp 10 namely the address to (esp)
+        move_reg_to_mem(OpndSize_32, 10, false, 0, PhysicalReg_ESP, true);
+        // Store value from temp 1(XMM) namely the data to 4(esp)
+        move_reg_to_mem(OpndSize_64, 1, false, 4, PhysicalReg_ESP, true);
+        // In order to call, the scratch reg must be set
+        scratchRegs[0] = PhysicalReg_SCRATCH_5;
+        // Load from shadow heap
+        call_selfVerificationStoreDoubleword();
+        // Restore ESP
+        load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+        // pop caller saved registers
+        popCallerSavedRegs();
+#endif
     }
     ///////////////////////////
     return 0;
@@ -952,9 +1313,34 @@ int sget_sput_common(StaticAccess flag, u2 vA, u2 referenceIndex, bool isObj,
         move_imm_to_reg(OpndSize_32, (int)fieldPtr, PhysicalReg_EAX, true);
 #endif
         if(flag == SGET) {
+#ifndef WITH_SELF_VERIFICATION
             move_mem_to_reg(OpndSize_32, offStaticField_value, PhysicalReg_EAX, true, 7, false); //access field
             set_virtual_reg(vA, OpndSize_32, 7, false);
+#else
+            // Load address into temp reg 8
+            load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 8, false);
+            // push caller saved registers
+            pushCallerSavedRegs();
+            // Set up arguments
+            load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            // Move value in temp reg 8 to (esp)
+            move_reg_to_mem(OpndSize_32, 8, false, 0, PhysicalReg_ESP, true);
+            // Mov opnd size to 4(esp)
+            move_imm_to_mem(OpndSize_32, int(OpndSize_32), 4, PhysicalReg_ESP, true);
+            // In order to call, the scratch reg must be set
+            scratchRegs[0] = PhysicalReg_SCRATCH_5;
+            // Load from shadow heap
+            call_selfVerificationLoad();
+            // Restore ESP
+            load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            // Move result of self verification load into temp 7
+            move_reg_to_reg(OpndSize_32, PhysicalReg_EAX, true, 7, false);
+            // pop caller saved registers
+            popCallerSavedRegs();
+            set_virtual_reg(vA, OpndSize_32, 7, false);
+#endif
         } else if(flag == SGET_WIDE) {
+#ifndef WITH_SELF_VERIFICATION
             if(isVolatile) {
                 /* call dvmQuasiAtomicRead64(addr) */
                 load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 9, false);
@@ -973,9 +1359,55 @@ int sget_sput_common(StaticAccess flag, u2 vA, u2 referenceIndex, bool isObj,
                 move_mem_to_reg(OpndSize_64, offStaticField_value, PhysicalReg_EAX, true, 1, false); //access field
                 set_virtual_reg(vA, OpndSize_64, 1, false);
             }
+#else
+            // TODO: the volatile 64 bit type is not handled;
+            // write a C function to only return the mapped shadow address(Read)
+            // Load address into temp 4
+            load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 4, false);
+            // push caller saved registers
+            pushCallerSavedRegs();
+            // Set up arguments
+            load_effective_addr(-4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            // Move value in temp 4 (address) to 0(esp)
+            move_reg_to_mem(OpndSize_32, 4, false, 0, PhysicalReg_ESP, true);
+            // In order to call, the scratch reg must be set
+            scratchRegs[0] = PhysicalReg_SCRATCH_5;
+            // Load from shadow heap
+            call_selfVerificationLoadDoubleword();
+            // Restore ESP
+            load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            // Move result of self verification load from XMM7 to temp 1(XMM)
+            move_reg_to_reg(OpndSize_64, PhysicalReg_XMM7, true, 1, false);
+            // pop caller saved registers
+            popCallerSavedRegs();
+            set_virtual_reg(vA, OpndSize_64, 1, false);
+#endif
         } else if(flag == SPUT) {
             get_virtual_reg(vA, OpndSize_32, 7, false);
+#ifndef WITH_SELF_VERIFICATION
             move_reg_to_mem(OpndSize_32, 7, false, offStaticField_value, PhysicalReg_EAX, true); //access field
+#else
+            // Load address into temp 8; reg temp 7 will contain the data
+            load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 8, false);
+            // push caller saved registers
+            pushCallerSavedRegs();
+            // Set up arguments
+            load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            // Move value in temp 8 namely the address to (esp)
+            move_reg_to_mem(OpndSize_32, 8, false, 0, PhysicalReg_ESP, true);
+            // Store value from temp 7 namely the data to 4(esp)
+            move_reg_to_mem(OpndSize_32, 7, false, 4, PhysicalReg_ESP, true);
+            // Mov opnd size to 8(esp)
+            move_imm_to_mem(OpndSize_32, int(OpndSize_32), 8, PhysicalReg_ESP, true);
+            // In order to call, the scratch reg must be set
+            scratchRegs[0] = PhysicalReg_SCRATCH_5;
+            // Load from shadow heap
+            call_selfVerificationStore();
+            // Restore ESP
+            load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            // pop caller saved registers
+            popCallerSavedRegs();
+#endif
             if(isObj) {
                 /* get clazz object, then use clazz object to mark card */
                 move_mem_to_reg(OpndSize_32, offField_clazz, PhysicalReg_EAX, true, 12, false);
@@ -983,6 +1415,7 @@ int sget_sput_common(StaticAccess flag, u2 vA, u2 referenceIndex, bool isObj,
             }
         } else if(flag == SPUT_WIDE) {
             get_virtual_reg(vA, OpndSize_64, 1, false);
+#ifndef WITH_SELF_VERIFICATION
             if(isVolatile) {
                 /* call dvmQuasiAtomicSwap64(val, addr) */
                 load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 9, false);
@@ -996,6 +1429,26 @@ int sget_sput_common(StaticAccess flag, u2 vA, u2 referenceIndex, bool isObj,
             else {
                 move_reg_to_mem(OpndSize_64, 1, false, offStaticField_value, PhysicalReg_EAX, true); //access field
             }
+#else
+            // Load address into temp 4; reg temp 1 will contain the data
+            load_effective_addr(offStaticField_value, PhysicalReg_EAX, true, 4, false);
+            // push caller saved registers
+            pushCallerSavedRegs();
+            // Set up arguments
+            load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            // Move value in temp 4 namely the address to (esp)
+            move_reg_to_mem(OpndSize_32, 4, false, 0, PhysicalReg_ESP, true);
+            // Store value from temp 1(XMM) namely the data to 4(esp)
+            move_reg_to_mem(OpndSize_64, 1, false, 4, PhysicalReg_ESP, true);
+            // In order to call, the scratch reg must be set
+            scratchRegs[0] = PhysicalReg_SCRATCH_5;
+            // Load from shadow heap
+            call_selfVerificationStoreDoubleword();
+            // Restore ESP
+            load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+            // pop caller saved registers
+            popCallerSavedRegs();
+#endif
         }
         //////////////////////////////////////////////
     }
@@ -1209,8 +1662,32 @@ int op_iget_quick(const MIR * mir) {
         cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
     }
 
-    move_mem_to_reg(OpndSize_32, fieldByteOffset, 1, false, 2, false);
+#ifndef WITH_SELF_VERIFICATION
+     move_mem_to_reg(OpndSize_32, fieldByteOffset, 1, false, 2, false);
+     set_virtual_reg(vA, OpndSize_32, 2, false);
+#else
+    // Load address into temp reg 3
+    load_effective_addr(fieldByteOffset, 1, false, 3, false);
+    // push caller saved registers
+    pushCallerSavedRegs();
+    // Set up arguments
+    load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    // Move value in temp reg 3 to (esp)
+    move_reg_to_mem(OpndSize_32, 3, false, 0, PhysicalReg_ESP, true);
+    // Mov opnd size to 4(esp)
+    move_imm_to_mem(OpndSize_32, int(OpndSize_32), 4, PhysicalReg_ESP, true);
+    // In order to call, the scratch reg must be set
+    scratchRegs[0] = PhysicalReg_SCRATCH_1;
+    // Load from shadow heap
+    call_selfVerificationLoad();
+    // Restore ESP
+    load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    // Move result of self verification load into temp 2
+    move_reg_to_reg(OpndSize_32, PhysicalReg_EAX, true, 2, false);
+    // pop caller saved registers
+    popCallerSavedRegs();
     set_virtual_reg(vA, OpndSize_32, 2, false);
+#endif
     return 0;
 }
 #undef P_GPR_1
@@ -1242,7 +1719,28 @@ int op_iget_wide_quick(const MIR * mir) {
         cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
     }
 
+#ifndef WITH_SELF_VERIFICATION
     move_mem_to_reg(OpndSize_64, fieldByteOffset, 1, false, 1, false);
+#else
+    // Load address into temp 3
+    load_effective_addr(fieldByteOffset, 1, false, 3, false);
+    // push caller saved registers
+    pushCallerSavedRegs();
+    // Set up arguments
+    load_effective_addr(-4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    // Move value in temp 3 (address) to 0(esp)
+    move_reg_to_mem(OpndSize_32, 3, false, 0, PhysicalReg_ESP, true);
+    // In order to call, the scratch reg must be set
+    scratchRegs[0] = PhysicalReg_SCRATCH_1;
+    // Load from shadow heap
+    call_selfVerificationLoadDoubleword();
+    // Restore ESP
+    load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    // Move result of self verification load from XMM7 to temp 1(XMM)
+    move_reg_to_reg(OpndSize_64, PhysicalReg_XMM7, true, 1, false);
+    // pop caller saved registers
+    popCallerSavedRegs();
+#endif
     set_virtual_reg(vA, OpndSize_64, 1, false);
     return 0;
 }
@@ -1289,7 +1787,30 @@ int iput_quick_common(const MIR * mir, bool isObj) {
     }
 
     get_virtual_reg(vA, OpndSize_32, 2, false);
+#ifndef WITH_SELF_VERIFICATION
     move_reg_to_mem(OpndSize_32, 2, false, fieldByteOffset, 1, false);
+#else
+    // Load address into temp 3; reg temp 2 will contain the data
+    load_effective_addr(fieldByteOffset, 1, false, 3, false);
+    // push caller saved registers
+    pushCallerSavedRegs();
+    // Set up arguments
+    load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    // Move value in temp 3 namely the address to (esp)
+    move_reg_to_mem(OpndSize_32, 3, false, 0, PhysicalReg_ESP, true);
+    // Store value from temp 2 namely the data to 4(esp)
+    move_reg_to_mem(OpndSize_32, 2, false, 4, PhysicalReg_ESP, true);
+    // Mov opnd size to 8(esp)
+    move_imm_to_mem(OpndSize_32, int(OpndSize_32), 8, PhysicalReg_ESP, true);
+    // In order to call, the scratch reg must be set
+    scratchRegs[0] = PhysicalReg_SCRATCH_1;
+    // Load from shadow heap
+    call_selfVerificationStore();
+    // Restore ESP
+    load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    // pop caller saved registers
+    popCallerSavedRegs();
+#endif
     if(isObj) {
         markCard(2/*valReg*/, 1, false, 11, false);
     }
@@ -1337,7 +1858,29 @@ int op_iput_wide_quick(const MIR * mir) {
     }
 
     get_virtual_reg(vA, OpndSize_64, 1, false);
+
+#ifndef WITH_SELF_VERIFICATION
     move_reg_to_mem(OpndSize_64, 1, false, fieldByteOffset, 1, false);
+#else
+    // Load address into temp 3; reg temp 1 will contain the data
+    load_effective_addr(fieldByteOffset, 1, false, 3, false);
+    // push caller saved registers
+    pushCallerSavedRegs();
+    // Set up arguments
+    load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    // Move value in temp 3 namely the address to (esp)
+    move_reg_to_mem(OpndSize_32, 3, false, 0, PhysicalReg_ESP, true);
+    // Store value from temp 1(XMM) namely the data to 4(esp)
+    move_reg_to_mem(OpndSize_64, 1, false, 4, PhysicalReg_ESP, true);
+    // In order to call, the scratch reg must be set
+    scratchRegs[0] = PhysicalReg_SCRATCH_1;
+    // Load from shadow heap
+    call_selfVerificationStoreDoubleword();
+    // Restore ESP
+    load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    // pop caller saved registers
+    popCallerSavedRegs();
+#endif
     return 0;
 }
 #undef P_GPR_1

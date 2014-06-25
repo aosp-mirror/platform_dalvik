@@ -778,6 +778,10 @@ void load_effective_addr(int disp, int base_reg, bool isBasePhysical,
 void load_effective_addr_scale(int base_reg, bool isBasePhysical,
                                 int index_reg, bool isIndexPhysical, int scale,
                                 int reg, bool isPhysical);
+//! lea reg, [base_reg + index_reg*scale + disp]
+void load_effective_addr_scale_disp(int base_reg, bool isBasePhysical, int disp,
+                int index_reg, bool isIndexPhysical, int scale,
+                int reg, bool isPhysical);
 void load_fpu_cw(int disp, int base_reg, bool isBasePhysical);
 void store_fpu_cw(bool checkException, int disp, int base_reg, bool isBasePhysical);
 void convert_integer(OpndSize srcSize, OpndSize dstSize);
@@ -1007,11 +1011,16 @@ int call_dvmInterpHandleFillArrayData();
 int call_dvmNcgHandlePackedSwitch();
 int call_dvmNcgHandleSparseSwitch();
 #if defined(WITH_JIT)
+/*!
+ * These functions will generate the asm instructions
+ * to call the named function.
+ */
 int call_dvmJitHandlePackedSwitch();
 int call_dvmJitHandleSparseSwitch();
 int call_dvmJitToInterpTraceSelectNoChain();
 int call_dvmJitToPatchPredictedChain();
 int call_dvmJitToInterpNormal();
+int call_dvmJitToInterpBackwardBranch(void);
 int call_dvmJitToInterpTraceSelect();
 #endif
 int call_dvmQuasiAtomicSwap64();
@@ -1022,6 +1031,12 @@ int call_dvmHandleStackOverflow();
 int call_dvmResolveString();
 int call_dvmResolveInstField();
 int call_dvmResolveStaticField();
+#ifdef WITH_SELF_VERIFICATION
+int call_selfVerificationLoad(void);
+int call_selfVerificationStore(void);
+int call_selfVerificationLoadDoubleword(void);
+int call_selfVerificationStoreDoubleword(void);
+#endif
 
 //labels and branches
 //shared branch to resolve class: 2 specialized versions
@@ -1413,3 +1428,6 @@ void preprocessingBB(BasicBlock* bb);
 void preprocessingTrace();
 void dump_nop(int size);
 #endif
+
+void pushCallerSavedRegs(void);
+void popCallerSavedRegs(void);

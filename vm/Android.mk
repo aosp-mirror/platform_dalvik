@@ -165,6 +165,9 @@ ifeq ($(WITH_HOST_DALVIK),true)
     # To enable assert in host mode, uncomment the following line
     # LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT -DWITH_JIT_TUNING
     LOCAL_CFLAGS += -Wa,--noexecstack
+    ifeq ($(HOST_ARCH),x86)
+        LOCAL_CFLAGS += -mmmx -msse
+    endif
     LOCAL_MODULE_TAGS := optional
     LOCAL_MODULE := libdvm
 

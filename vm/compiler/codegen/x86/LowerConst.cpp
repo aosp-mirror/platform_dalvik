@@ -96,6 +96,9 @@ int op_const_4(const MIR * mir) {
     u2 vA = mir->dalvikInsn.vA;
     s4 tmp = mir->dalvikInsn.vB;
     set_VR_to_imm(vA, OpndSize_32, tmp);
+#if defined(WITH_SELF_VERIFICATION)
+    constVREndOfBB();
+#endif
     return 1;
 }
 

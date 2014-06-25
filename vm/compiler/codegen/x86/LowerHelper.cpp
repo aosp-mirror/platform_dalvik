@@ -47,6 +47,7 @@ When allocating a physical register for an operand, we can't spill the operands 
 #include "interp/InterpState.h"
 #include "Scheduler.h"
 
+
 extern "C" int64_t __divdi3(int64_t, int64_t);
 extern "C" int64_t __moddi3(int64_t, int64_t);
 bool isScratchPhysical;
@@ -1024,7 +1025,7 @@ void load_effective_addr(int disp, int base_reg, bool isBasePhysical,
 }
 //! generate a native instruction lea
 
-//!
+//! lea reg, [base_reg + index_reg*scale]
 void load_effective_addr_scale(int base_reg, bool isBasePhysical,
                 int index_reg, bool isIndexPhysical, int scale,
                 int reg, bool isPhysical) {
@@ -1032,6 +1033,15 @@ void load_effective_addr_scale(int base_reg, bool isBasePhysical,
     dump_mem_scale_reg(m, OpndSize_32,
                               base_reg, isBasePhysical, 0/*disp*/, index_reg, isIndexPhysical, scale,
                               reg, isPhysical, LowOpndRegType_gp);
+}
+
+//! lea reg, [base_reg + index_reg*scale + disp]
+void load_effective_addr_scale_disp(int base_reg, bool isBasePhysical, int disp,
+                int index_reg, bool isIndexPhysical, int scale,
+                int reg, bool isPhysical) {
+    dump_mem_scale_reg(Mnemonic_LEA, OpndSize_32, base_reg, isBasePhysical, disp,
+            index_reg, isIndexPhysical, scale, reg, isPhysical,
+            LowOpndRegType_gp);
 }
 //!fldcw
 
@@ -2521,6 +2531,20 @@ int call_dvmJitToInterpNormal() {
     return 0;
 }
 
+int call_dvmJitToInterpBackwardBranch(void) {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("dvmJitToInterpBackwardBranch");
+    }
+    typedef void (*vmHelper)(int);
+    vmHelper funcPtr = dvmJitToInterpBackwardBranch;
+    callFuncPtr((int)funcPtr, "dvmJitToInterpBackwardBranch");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        afterCall("dvmJitToInterpBackwardBranch");
+    }
+    if(gDvm.executionMode == kExecutionModeNcgO1) touchEbx();
+    return 0;
+}
+
 int call_dvmJitToInterpTraceSelectNoChain() {
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmJitToInterpTraceSelectNoChain");
@@ -3219,3 +3243,280 @@ void dump_nop(int size){
     stream += size;
 }
 
+#ifdef WITH_SELF_VERIFICATION
+int selfVerificationLoad(int addr, int opndSize) {
+    assert (opndSize != OpndSize_64);
+    assert(addr != 0);
+
+    Thread *self = dvmThreadSelf();
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    ShadowHeap *heapSpacePtr;
+
+    assert(shadowSpace != 0);
+    assert(shadowSpace->heapSpace != 0);
+    int data = 0;
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+        heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            addr = (unsigned int)(&(heapSpacePtr->data));
+            break;
+        }
+    }
+
+    /* load addr from the shadow heap, native addr-> shadow heap addr
+     * if not found load the data from the native heap
+     */
+    switch (opndSize) {
+        case OpndSize_8:
+            data = *(reinterpret_cast<u1*> (addr));
+            break;
+        case OpndSize_16:
+            data = *(reinterpret_cast<u2*> (addr));
+            break;
+        //signed versions
+        case 0x11:  //signed OpndSize_8
+            data = *(reinterpret_cast<s1*> (addr));
+            break;
+        case 0x22:  //signed OpndSize_16
+            data = *(reinterpret_cast<s2*> (addr));
+            break;
+        case OpndSize_32:
+            data = *(reinterpret_cast<u4*> (addr));
+            break;
+        default:
+            ALOGE("*** ERROR: BAD SIZE IN selfVerificationLoad: %d", opndSize);
+            data = 0;
+            dvmAbort();
+            break;
+    }
+
+#if defined(SELF_VERIFICATION_LOG)
+    ALOGD("*** HEAP LOAD: Addr: %#x Data: %d Size: %d", addr, data, opndSize);
+#endif
+    return data;
+}
+
+void selfVerificationStore(int addr, int data, int opndSize)
+{
+    assert(addr != 0);
+    Thread *self = dvmThreadSelf();
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    ShadowHeap *heapSpacePtr;
+
+    assert(shadowSpace != 0);
+    assert(shadowSpace->heapSpace != 0);
+#if defined(SELF_VERIFICATION_LOG)
+    ALOGD("*** HEAP STORE: Addr: %#x Data: %d Size: %d", addr, data, opndSize);
+#endif
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            break;
+        }
+    }
+
+    //If the store addr is requested for the first time, its not present in the
+    //heap so add it to the shadow heap.
+    if (heapSpacePtr == shadowSpace->heapSpaceTail) {
+        heapSpacePtr->addr = addr;
+        shadowSpace->heapSpaceTail++;
+        // shadow heap can contain HEAP_SPACE(JIT_MAX_TRACE_LEN) number of entries
+        if(shadowSpace->heapSpaceTail >= &(shadowSpace->heapSpace[HEAP_SPACE])) {
+            ALOGD("*** Shadow HEAP store ran out of space, aborting VM");
+            dvmAbort();
+        }
+    }
+
+    //++data;  // test case for SV detection
+    addr = ((unsigned int) &(heapSpacePtr->data));
+    switch (opndSize) {
+        case OpndSize_8:
+            *(reinterpret_cast<u1*>(addr)) = data;
+            break;
+        case OpndSize_16:
+            *(reinterpret_cast<u2*>(addr)) = data;
+            break;
+        case OpndSize_32:
+            *(reinterpret_cast<u4*>(addr)) = data;
+            break;
+        default:
+            ALOGE("*** ERROR: BAD SIZE IN selfVerificationSave: %d", opndSize);
+            dvmAbort();
+            break;
+    }
+}
+
+void selfVerificationLoadDoubleword(int addr)
+{
+    assert(addr != 0);
+    Thread *self = dvmThreadSelf();
+    ShadowSpace* shadowSpace = self->shadowSpace;
+    ShadowHeap* heapSpacePtr;
+    s8 returnValue;
+    int byte_count = 0;
+
+    assert(shadowSpace != 0);
+    assert(shadowSpace->heapSpace != 0);
+    //TODO: do a volatile GET_WIDE implementation
+
+    int addr2 = addr+4;
+    /* load data and data2 from the native heap
+     * so in case this address is not stored in the shadow heap
+     * the value loaded from the native heap is used, else
+     * it is overwritten with the value from the shadow stack
+     */
+    unsigned int data = *(reinterpret_cast<unsigned int*> (addr));
+    unsigned int data2 = *(reinterpret_cast<unsigned int*> (addr2));
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            data = heapSpacePtr->data;
+            byte_count++;
+        } else if (heapSpacePtr->addr == addr2) {
+            data2 = heapSpacePtr->data;
+            byte_count++;
+        }
+        if(byte_count == 2) break;
+    }
+
+#if defined(SELF_VERIFICATION_LOG)
+    ALOGD("*** HEAP LOAD DOUBLEWORD: Addr: %#x Data: %#x Data2: %#x",
+        addr, data, data2);
+#endif
+
+    returnValue = (((s8) data2) << 32) | data;
+
+    asm volatile (
+            "movd %0, %%xmm6\n\t"
+            "movd %1, %%xmm7\n\t"
+            "psllq $32, %%xmm6\n\t"
+            "paddq %%xmm6, %%xmm7"
+            :
+            : "rm" (data2), "rm" (data)
+            : "xmm6", "xmm7");
+
+}
+
+void selfVerificationStoreDoubleword(int addr, s8 double_data)
+{
+    assert(addr != 0);
+
+    Thread *self = dvmThreadSelf();
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    ShadowHeap *heapSpacePtr;
+
+    assert(shadowSpace != 0);
+    assert(shadowSpace->heapSpace != 0);
+
+    int addr2 = addr+4;
+    int data = double_data;
+    int data2 = double_data >> 32;
+    bool store1 = false, store2 = false;
+
+#if defined(SELF_VERIFICATION_LOG)
+    ALOGD("*** HEAP STORE DOUBLEWORD: Addr: %#x Data: %#x, Data2: %#x",
+        addr, data, data2);
+#endif
+
+    //data++; data2++;  // test case for SV detection
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            heapSpacePtr->data = data;
+            store1 = true;
+        } else if (heapSpacePtr->addr == addr2) {
+            heapSpacePtr->data = data2;
+            store2 = true;
+        }
+        if(store1 && store2) {
+            break;
+        }
+    }
+
+    // shadow heap can contain HEAP_SPACE(JIT_MAX_TRACE_LEN) number of entries
+    if((shadowSpace->heapSpaceTail + 2) >= &(shadowSpace->heapSpace[HEAP_SPACE])) {
+        ALOGD("*** Shadow HEAP store ran out of space, aborting VM");
+        dvmAbort();
+    }
+
+    if (store1 == false) {
+        shadowSpace->heapSpaceTail->addr = addr;
+        shadowSpace->heapSpaceTail->data = data;
+        shadowSpace->heapSpaceTail++;
+    }
+    if (store2 == false) {
+        shadowSpace->heapSpaceTail->addr = addr2;
+        shadowSpace->heapSpaceTail->data = data2;
+        shadowSpace->heapSpaceTail++;
+    }
+}
+
+int call_selfVerificationLoad(void) {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("selfVerificationLoad");
+    }
+    typedef int (*vmHelper)(int, int);
+    vmHelper funcPtr = selfVerificationLoad;
+    callFuncPtr((int)funcPtr, "selfVerificationLoad");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        afterCall("selfVerificationLoad");
+    }
+    return 0;
+}
+
+int call_selfVerificationLoadDoubleword(void) {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("selfVerificationLoadDoubleword");
+    }
+    typedef void (*vmHelper)(int);
+    vmHelper funcPtr = selfVerificationLoadDoubleword;
+    callFuncPtr((int)funcPtr, "selfVerificationLoadDoubleword");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        afterCall("selfVerificationLoadDoubleword");
+    }
+    return 0;
+}
+
+int call_selfVerificationStore(void) {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("selfVerificationStore");
+    }
+    typedef void (*vmHelper)(int, int, int);
+    vmHelper funcPtr = selfVerificationStore;
+    callFuncPtr((int)funcPtr, "selfVerificationStore");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        afterCall("selfVerificationStore");
+    }
+    return 0;
+}
+
+int call_selfVerificationStoreDoubleword(void) {
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        beforeCall("selfVerificationStoreDoubleword");
+    }
+    typedef void (*vmHelper)(int, s8);
+    vmHelper funcPtr = selfVerificationStoreDoubleword;
+    callFuncPtr((int)funcPtr, "selfVerificationStoreDoubleword");
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        afterCall("selfVerificationStoreDoubleword");
+    }
+    return 0;
+}
+#endif
+
+void pushCallerSavedRegs(void) {
+    load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+    move_reg_to_mem(OpndSize_32, PhysicalReg_EAX, true, 8, PhysicalReg_ESP, true);
+    move_reg_to_mem(OpndSize_32, PhysicalReg_ECX, true, 4, PhysicalReg_ESP, true);
+    move_reg_to_mem(OpndSize_32, PhysicalReg_EDX, true, 0, PhysicalReg_ESP, true);
+}
+
+void popCallerSavedRegs(void) {
+    move_mem_to_reg(OpndSize_32, 8, PhysicalReg_ESP, true,  PhysicalReg_EAX, true);
+    move_mem_to_reg(OpndSize_32, 4, PhysicalReg_ESP, true,  PhysicalReg_ECX, true);
+    move_mem_to_reg(OpndSize_32, 0, PhysicalReg_ESP, true,  PhysicalReg_EDX, true);
+    load_effective_addr(12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
+}

@@ -39,11 +39,18 @@ bool dvmNcgStdRun(MterpGlue* glue);
 extern "C" void dvmNcgInvokeInterpreter(int pc); //interpreter to execute at pc
 extern "C" void dvmNcgInvokeNcg(int pc);
 #if defined(WITH_JIT)
+/**
+ * These functions handle the entry point from JIT to interpreter
+ * Each entry point is defined in asm in InterpAsm-x86-atom.S
+ * The rPC address is passed in %ebx
+ * @param targetpc
+ */
 extern "C" void dvmJitToInterpNormal(int targetpc); //in %ebx
 extern "C" void dvmJitToInterpTraceSelect(int targetpc); //in %ebx
 extern "C" void dvmJitToInterpTraceSelectNoChain(int targetpc); //in %ebx
 extern "C" void dvmJitToInterpNoChain(int targetpc); //in %eax
 extern "C" void dvmJitToInterpNoChainNoProfile(int targetpc); //in %eax
+extern "C" void dvmJitToInterpBackwardBranch(int targetpc); //in %ebx
 extern "C" void dvmJitToInterpPunt(int targetpc); //in currentPc
 extern "C" void dvmJitToExceptionThrown(int targetpc); //in currentPc
 #ifdef DEBUG_CALL_STACK3

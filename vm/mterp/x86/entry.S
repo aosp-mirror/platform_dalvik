@@ -53,11 +53,19 @@ dvmMterpStdRun:
     FETCH_INST
 #if defined(WITH_JIT)
     GET_JIT_PROF_TABLE %ecx %eax
-    movl        $$0, offThread_inJitCodeCache(%ecx)
-    cmpl        $$0, %eax
-    jne         common_updateProfile # set up %ebx & %edx & rPC
+    movl    $$0, offThread_inJitCodeCache(%ecx)
+    cmpl    $$0, %eax
+
+#if !defined(WITH_SELF_VERIFICATION)
+    jne     common_updateProfile        # profiling is enabled; set up %ebx & %edx & rPC
+#else
+    je      1f                                        # profiling is disabled
+    jmp     common_updateProfile         # collect profiles
 #endif
 
+#endif
+
+1:
    /* Normal case: start executing the instruction at rPC */
     GOTO_NEXT
 

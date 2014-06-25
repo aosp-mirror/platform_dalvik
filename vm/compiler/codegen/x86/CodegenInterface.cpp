@@ -31,6 +31,53 @@
 bool jitOpcodeTable[kNumPackedOpcodes];
 Opcode jitNotSupportedOpcode[] = {
     OP_INVOKE_OBJECT_INIT_RANGE,
+#if defined (WITH_SELF_VERIFICATION)
+    OP_MONITOR_ENTER,
+    OP_MONITOR_EXIT,
+    OP_NEW_INSTANCE,
+    OP_NEW_ARRAY,
+    OP_CHECK_CAST,
+    OP_MOVE_EXCEPTION,
+    OP_FILL_ARRAY_DATA,
+    OP_EXECUTE_INLINE,
+    OP_EXECUTE_INLINE_RANGE,
+
+    //TODO: fix for the test case
+    /* const does not generate assembly instructions
+     * so a divergence will falsely occur when interp executes and sets
+     * the virtual registers (in memory ).
+     *
+     * const/*
+     * return
+     *
+     * const/*
+     * invoke_*
+     */
+    OP_CONST_4,
+    OP_CONST_16,
+    OP_CONST,
+    OP_CONST_HIGH16,
+    OP_CONST_WIDE_16,
+    OP_CONST_WIDE_32,
+    OP_CONST_WIDE,
+    OP_CONST_WIDE_HIGH16,
+    OP_CONST_STRING,
+    OP_CONST_STRING_JUMBO,
+
+    OP_RETURN,
+    OP_RETURN_VOID, //const and return
+    OP_RETURN_OBJECT,
+    OP_INVOKE_VIRTUAL_QUICK_RANGE,
+    OP_INVOKE_VIRTUAL_QUICK,
+    OP_INVOKE_INTERFACE,
+    OP_INVOKE_STATIC,
+
+    //occurs with threaded apps
+    OP_APUT_CHAR,
+    OP_APUT_BOOLEAN,
+    OP_APUT_BYTE,
+
+#endif
 };
 
 
@@ -740,7 +787,11 @@ static int handleNormalChainingCell(CompilationUnit *cUnit,
     int nop_size = insertJumpHelp();
     move_imm_to_reg(OpndSize_32, (int) (cUnit->method->insns + offset), P_GPR_1, true);
     scratchRegs[0] = PhysicalReg_EAX;
+#ifndef WITH_SELF_VERIFICATION
     call_dvmJitToInterpNormal();
+#else
+    call_dvmJitToInterpBackwardBranch();
+#endif
     //move_imm_to_reg(OpndSize_32, (int) (cUnit->method->insns + offset), P_GPR_1, true); /* used when unchaining */
     return nop_size;
 }

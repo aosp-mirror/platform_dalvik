@@ -18,6 +18,7 @@
  */
 
 #if defined(WITH_JIT)
+
 /*
  * JIT-related re-entries into the interpreter.  In general, if the
  * exit from a translation can at some point be chained, the entry
@@ -26,6 +27,116 @@
  * of the next insn to handle.  If no chaining will happen, the entry
  * should be reached via a direct jump and rPC set beforehand.
  */
+
+    .global     dvmJitToExceptionThrown
+dvmJitToExceptionThrown: //rPC in
+    movl   rSELF, %edx
+    GET_PC
+    movl   $$0, offThread_inJitCodeCache(%edx)
+    jmp common_exceptionThrown
+
+#if defined(WITH_SELF_VERIFICATION)
+/*
+ * Interpreter entry point from JIT.
+ * Each entry point does rSELF.inJitCodeCache = 0
+ * passes the arguments (rPC, rFP, JITexit state, rSELF) to jitShadowRunEnd,
+ * after which the state is restored and interpretation continues.
+ * only the Jit exit state differs in each entry point which is used by the C
+ * code which performs the SV check
+ * On entry : rPC, rFP, rSELF - what they should contain.
+ * Invokes jitShadowRunEnd
+ */
+    .global dvmJitToInterpSingleStep
+dvmJitToInterpSingleStep:
+    /* TODO: Implement it as part of Single step enabling */
+    call     dvmAbort
+
+    .global dvmJitToInterpPunt
+dvmJitToInterpPunt:
+    GET_PC
+    movl   rPC, OUT_ARG0(%esp)
+    movl   rFP, OUT_ARG1(%esp)
+    movl   $$kSVSPunt,  OUT_ARG2(%esp)
+    movl   rSELF, %ecx
+    movl   offThread_curHandlerTable(%ecx), rIBASE
+    movl   $$0, offThread_inJitCodeCache(%ecx)
+    movl   %ecx, OUT_ARG3(%esp)
+    jmp    jitSVShadowRunEnd                    # doesn't return
+
+    .global dvmJitToInterpTraceSelectNoChain
+dvmJitToInterpTraceSelectNoChain:
+    movl   %ebx, rPC
+    lea    4(%esp), %esp            #to recover the esp update due to function call
+    movl   rSELF, %eax
+    movl   rPC, OUT_ARG0(%esp)
+    movl   rFP, OUT_ARG1(%esp)
+    movl   $$kSVSTraceSelect, OUT_ARG2(%esp)
+    movl   $$0, offThread_inJitCodeCache(%eax)  # 0 means !inJitCodeCache
+    movl   %eax, OUT_ARG3(%esp)
+    jmp    jitSVShadowRunEnd                    # doesn't return
+
+    .global dvmJitToInterpTraceSelect
+dvmJitToInterpTraceSelect:
+    movl   %ebx, rPC              # get first argument (target rPC)
+    lea    4(%esp), %esp          #to recover the esp update due to function call
+    #lea   -4(%esp), %esp         # Do not worry about signal handling now..
+    movl   rSELF, %eax
+    movl   $$0, offThread_inJitCodeCache(%eax)  # 0 means !inJitCodeCache
+    movl   rPC, OUT_ARG0(%esp)
+    movl   rFP, OUT_ARG1(%esp)
+    movl   $$kSVSTraceSelect, OUT_ARG2(%esp)
+    movl   %eax, OUT_ARG3(%esp)
+    jmp    jitSVShadowRunEnd                    # doesn't return
+
+    .global dvmJitToInterpBackwardBranch
+dvmJitToInterpBackwardBranch:
+    movl   %ebx, rPC              # get first argument (target rPC)
+    lea    4(%esp), %esp
+    movl   rSELF, %ecx
+    movl   $$0, offThread_inJitCodeCache(%ecx)  # 0 means !inJitCodeCache
+    movl   rPC, OUT_ARG0(%esp)
+    movl   rFP, OUT_ARG1(%esp)
+    movl   $$kSVSBackwardBranch, OUT_ARG2(%esp)
+    movl   %ecx, OUT_ARG3(%esp)
+    jmp    jitSVShadowRunEnd                    # doesn't return
+
+    # turn off JIT chaining by not invoking dvmJitChain and setting the
+    # value of %ebx/ rINST
+    .global dvmJitToInterpNormal
+dvmJitToInterpNormal:
+    movl   %ebx, rPC              # get first argument (target rPC)
+    lea    4(%esp), %esp
+    movl   rSELF, %ecx
+    movl   $$0, offThread_inJitCodeCache(%ecx)  # 0 means !inJitCodeCache
+    movl   rPC, OUT_ARG0(%esp)
+    movl   rFP, OUT_ARG1(%esp)
+    movl   $$kSVSNormal, OUT_ARG2(%esp)
+    movl   %ecx, OUT_ARG3(%esp)
+    jmp    jitSVShadowRunEnd                    # doesn't return
+
+    .global dvmJitToInterpNoChain
+dvmJitToInterpNoChain:
+    movl   %eax, rPC
+    movl   rPC, OUT_ARG0(%esp)
+    movl   rFP, OUT_ARG1(%esp)
+    movl   $$kSVSNoChain, OUT_ARG2(%esp)
+    movl   rSELF, %ecx
+    movl   $$0, offThread_inJitCodeCache(%ecx)  # 0 means !inJitCodeCache
+    movl   %ecx, OUT_ARG3(%esp)
+    jmp    jitSVShadowRunEnd                    # doesn't return
+
+        .global dvmJitToInterpNoChainNoProfile
+dvmJitToInterpNoChainNoProfile:
+    movl   %eax, rPC
+    movl   rPC, OUT_ARG0(%esp)
+    movl   rFP, OUT_ARG1(%esp)
+    movl   $$kSVSNoProfile, OUT_ARG2(%esp)
+    movl   rSELF, %ecx
+    movl   $$0, offThread_inJitCodeCache(%ecx)  # 0 means !inJitCodeCache
+    movl   %ecx, OUT_ARG3(%esp)
+    jmp    jitSVShadowRunEnd                    # doesn't return
+
+#else
 
     .global dvmJitToInterpPunt
 /*
@@ -42,11 +153,6 @@ dvmJitToInterpPunt:
 #endif
     movl   rSELF, %ecx
     movl   offThread_curHandlerTable(%ecx),rIBASE
-
-    # In HC we set this value to 0. Seems it is needed for ICS
-    # Arm code includes a call to jitSVShadowRunEnd but it seems
-    # that is not necessary for the x86-atom JIT considering for HC
-    # this code is there for Arm but not used for the x86-atom JIT
     movl        $$0, offThread_inJitCodeCache(%ecx)
     FETCH_INST_R %ecx
     GOTO_NEXT_R %ecx
@@ -188,68 +294,8 @@ dvmJitToInterpTraceSelect:
     .global dvmJitToInterpBackwardBranch
 dvmJitToInterpBackwardBranch:
 
-    .global     dvmJitToExceptionThrown
-dvmJitToExceptionThrown: //rPC in
-    movl   rSELF, %edx
-    GET_PC
-    movl   $$0, offThread_inJitCodeCache(%edx)
-    jmp common_exceptionThrown
-
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
-## This is implemented in HC for x86-atom but needed to be ported to ICS. The
-## HC version is commented out below while the port is below that.
-
-#dvmJitToInterpNormal:
-#/* one input: the target rPC value */
-#    movl        0(%esp), %eax          # get return address
-#    movl        %ebx, rPC              # get first argument (target rPC)
-##ifdef DEBUG_CALL_STACK3
-#    movl        $$0x1111, %edx
-#    //use %ebx, %ecx, update numSwitch & switchPoints
-#    dumpSwitch %edx, %ebx, %ecx
-#    movl        %esp, %edx
-#    dumpSwitch %edx, %ebx, %ecx
-#    movl        %eax, %edx
-#    dumpSwitch %edx, %ebx, %ecx
-#    movl        rPC, %edx
-#    dumpSwitch %edx, %ebx, %ecx
-##endif
-##ifdef DEBUG_CALL_STACK2
-#    movl        $$0x1111, %edx
-#    call        printMethod
-#    movl        rPC, %edx
-#    call        printMethod
-##endif
-#    lea         -12(%eax), %ebx #$$JIT_OFFSET_CHAIN_START(%eax), %ebx
-#    movl        rPC, (%esp)
-#    call        dvmJitGetCodeAddr
-#    movl        rGLUE, %edx
-#    movl        offGlue_self(%edx), %edx
-#    movl        %eax, offThread_inJitCodeCache(%edx)
-#    lea         4(%esp), %esp
-#    cmp         $$0, %eax
-#    je          toInterpreter
-#    lea         -8(%esp), %esp
-#    movl        %ebx, 4(%esp)         # %ebx live thorugh dvmJitGetCodeAddr
-#    movl        %eax, (%esp)         # first argument
-#    call        dvmJitChain
-#    lea         8(%esp), %esp
-#    cmp         $$0, %eax
-#    je          toInterpreter
-##ifdef DEBUG_CALL_STACK2
-#    movl        $$0x3333, %edx
-#    call        printMethod
-#    movl        %eax, %edx
-#    call        printMethod
-##endif
-#    jmp         *%eax                   #to native address
-
-## I do not yet understand this code (why is there a "return address" accessed
-## here but not in the arm code and why the ifdef DEBUG_CALL directives). In any
-## case it seems the changes from HC to ICS are w.r.t. rGLUE being eliminated and
-## the calling conventions defined originally in x86-google header.S
-
 /* one input: the target rPC value */
     movl        0(%esp), %eax          # get return address
     movl        %ebx, rPC              # get first argument (target rPC)
@@ -282,42 +328,6 @@ dvmJitToInterpNormal:
     jmp         *%eax                   #to native address
 
     .global dvmJitToInterpNoChain
-dvmJitToInterpNoChain:
-## This is implemented in HC for x86-atom but needed to be ported to ICS. The
-## HC version is commented out below while the port is below that.
-
-#dvmJitToInterpNoChain: #rPC in eax
-##ifdef DEBUG_CALL_STACK3
-#    movl        $$0x9999, %edx
-#    //use %ebx, %ecx, update numSwitch & switchPoints
-#    dumpSwitch %edx, %ebx, %ecx
-#    movl        %eax, %edx
-#    dumpSwitch %edx, %ebx, %ecx
-##endif
-##ifdef DEBUG_CALL_STACK2
-#    movl        $$0x9999, %edx
-#    call        printMethod
-#    movl        %eax, %edx
-#    call        printMethod
-##endif
-#    movl        %eax, rPC
-#    lea         -4(%esp), %esp
-#    movl        %eax, (%esp)
-#    call        dvmJitGetCodeAddr
-#    movl        rGLUE, %edx
-#    movl        offGlue_self(%edx), %edx
-#    movl        %eax, offThread_inJitCodeCache(%edx)
-#    lea         4(%esp), %esp
-#    cmp         $$0, %eax
-#    je          toInterpreter
-##ifdef DEBUG_CALL_STACK2
-#    movl        $$0x3333, %edx
-#    call        printMethod
-#    movl        %eax, %edx
-#    call        printMethod
-##endif
-#    jmp         *%eax                   #to native address
-
 dvmJitToInterpNoChain: #rPC in eax
 #ifdef DEBUG_CALL_STACK3
     movl        $$0x9999, %edx
@@ -357,6 +367,8 @@ dvmJitToInterpNoChain: #rPC in eax
     call        printMethod
 #endif
     jmp         *%eax                   #to native address
+
+#endif /*WITH_SELF_VERIFICATION */
 
 toInterpreter:
     EXPORT_PC
@@ -416,11 +428,17 @@ common_Profile:
     UNSPILL_TMP1(rINST)
     cmpl   $$0,%eax
     #jmp    1f # remove
+#if !defined(WITH_SELF_VERIFICATION)
     jz     1f
     jmp   *%eax        # TODO: decide call vs/ jmp!.  No return either way
 1:
     movl   $$kJitTSelectRequest,%eax
-    # On entry, eax<- jitState, rPC valid
+#else
+    jne    jitSVShadowRunStart         # set up self verification shadow space, translation address is in %eax
+    movl   $$kJitTSelectRequest,%eax
+#endif
+
+ # On entry, eax<- jitState, rPC valid
 common_selectTrace:
     SPILL_TMP1(%ebx)
     movl        rSELF, %ebx
@@ -476,7 +494,64 @@ common_selectTrace2:
 4:
    GOTO_NEXT
 
-#endif
+#if defined(WITH_SELF_VERIFICATION)
+/*
+ * Save PC and registers to shadow memory for self verification mode
+ * before jumping to native translation.
+ * On entry:
+ *    rPC, rFP, rSELF: the values that they should contain
+ *    %eax: the address of the target translation.
+ */
+jitSVShadowRunStart:
+    SPILL_TMP1(%eax)
+    movl   rPC,OUT_ARG0(%esp)      # program counter
+    movl   rFP,OUT_ARG1(%esp)      # frame pointer
+    movl   rSELF, %ecx
+    movl   %ecx,OUT_ARG2(%esp)    # self (Thread) pointer
+    movl   %eax,OUT_ARG3(%esp)     # %eax <- target translation
+    call   dvmSelfVerificationSaveState  # save registers to shadow space (pc, fp, self, targetTrace)
+    movl   offShadowSpace_shadowFP(%eax), rFP # rFP<- fp in shadow space
+    UNSPILL_TMP1(%eax)
+    jmp    *%eax                      # jump to the translation
+
+/*
+ * Restore PC, registers, and interpreter state to original values
+ * before jumping back to the interpreter.
+ * On entry:
+ *   ARG0:  dPC
+ *   ARG2:  self verification state
+ *   ARG1:  dFP
+ *   ARG3:  rSELF
+ */
+jitSVShadowRunEnd:
+    call dvmSelfVerificationRestoreState # restore pc and fp values (pc, fp, exitState, rSELF)
+    movl    rSELF, %ecx                     # get incoming rSELF
+    movl    offThread_pc(%ecx),rPC
+    movl    offThread_curFrame(%ecx),rFP
+
+    movl    offShadowSpace_jitExitState(%eax), %ecx  # get self verification state
+    movl    $$kSVSPunt, %eax
+    cmpl    %ecx, %eax                               # check if punt condition is true
+    je      1f
+
+    # Set up SV single-stepping
+    movl   rSELF, %ecx
+    movl   $$kJitSelfVerification, offThread_jitState(%ecx)   # set the Jit state to self verification
+    movl   %ecx, OUT_ARG0(%esp)    # self (Thread) pointer
+    movl   $$kSubModeJitSV, OUT_ARG1(%esp)
+    call   dvmEnableSubMode              # (self, subMode)  # set the interpreter break submode to SV state
+
+    # intentional fallthrough; Continue interpreting
+1:
+    EXPORT_PC
+    movl    rSELF, %ecx
+    movl    offThread_curHandlerTable(%ecx),rIBASE
+    FETCH_INST_R %ecx
+    GOTO_NEXT_R %ecx
+#endif /* WITH_SELF_VERIFICATION */
+
+
+#endif  /*WITH_JIT*/
 
 ## For the invoke codes we need to know what register holds the "this" pointer. However
 ## it seems the this pointer is assigned consistently most times it is in %ecx but other

@@ -93,13 +93,13 @@ int updateJumpInst(char* jumpInst, OpndSize immSize, int relativeNCG) {
 #endif
     if(immSize == OpndSize_8) { //-128 to 127
         if(relativeNCG >= 128 || relativeNCG < -128) {
-            LOGI("ERROR: pre-allocated space for a forward jump is not big enough\n");
+            LOGI("ERROR: pre-allocated space >+/-128 for a forward jump is not big enough\n");
             exit(-1);
         }
     }
     if(immSize == OpndSize_16) { //-2^16 to 2^16-1
         if(relativeNCG >= 32768 || relativeNCG < -32768) {
-            LOGI("ERROR: pre-allocated space for a forward jump is not big enough\n");
+            LOGI("ERROR: pre-allocated space >+/- 32768 for a forward jump is not big enough\n");
             exit(-1);
         }
     }
@@ -533,6 +533,12 @@ int getRelativeOffset(const char* target, bool isShortTerm, JmpCall_type type, b
             } else {
                 *immSize = OpndSize_8;
             }
+#ifdef WITH_SELF_VERIFICATION
+            if(!strcmp(target, ".aput_object_skip_check") ||
+               !strcmp(target, ".aput_object_after_check") ) {
+                *immSize = OpndSize_32;
+            }
+#endif
 #ifdef DEBUG_NCG_JUMP
             LOGI("insert to short worklist %s %d\n", target, *immSize);
 #endif

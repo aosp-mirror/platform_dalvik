@@ -1840,6 +1840,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray, const MIR * currentMIR) {
         vA = currentMIR->dalvikInsn.vA;
         vB = currentMIR->dalvikInsn.vB;
         codeSize = 2;
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_IGET_WIDE || inst_op == OP_IGET_WIDE_QUICK) {
             infoArray[1].regNum = vA;
             infoArray[1].refCount = 1;
@@ -1860,17 +1861,34 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray, const MIR * currentMIR) {
             infoArray[1].accessType = REGACCESS_D;
             infoArray[1].physicalType = LowOpndRegType_gp;
         }
+#else
+        if(inst_op == OP_IGET_WIDE || inst_op == OP_IGET_WIDE_QUICK ||
+           inst_op == OP_IGET_WIDE_VOLATILE) {
+            infoArray[1].regNum = vA;
+            infoArray[1].refCount = 1;
+            infoArray[1].accessType = REGACCESS_D;
+            infoArray[1].physicalType = LowOpndRegType_xmm; //64
+        } else {
+            infoArray[1].regNum = vA;
+            infoArray[1].refCount = 1;
+            infoArray[1].accessType = REGACCESS_D;
+            infoArray[1].physicalType = LowOpndRegType_gp;
+        }
+#endif
         infoArray[0].regNum = vB; //object instance
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
         infoArray[0].physicalType = LowOpndRegType_gp;
         updateCurrentBBWithConstraints(PhysicalReg_EAX);
         updateCurrentBBWithConstraints(PhysicalReg_EDX);
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_IGET_WIDE_VOLATILE)
             num_regs_per_bytecode = 3;
         else
+#else
             num_regs_per_bytecode = 2;
         break;
+#endif
     case OP_IPUT:
     case OP_IPUT_WIDE:
     case OP_IPUT_OBJECT:
@@ -1918,6 +1936,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray, const MIR * currentMIR) {
     case OP_SGET_SHORT:
         vA = currentMIR->dalvikInsn.vA;
         codeSize = 2;
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_SGET_WIDE) {
             infoArray[0].regNum = vA;
             infoArray[0].refCount = 1;
@@ -1944,6 +1963,22 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray, const MIR * currentMIR) {
             num_regs_per_bytecode = 1;
         updateCurrentBBWithConstraints(PhysicalReg_EAX);
         break;
+#else
+        if(inst_op == OP_SGET_WIDE || inst_op == OP_SGET_WIDE_VOLATILE) {
+            infoArray[0].regNum = vA;
+            infoArray[0].refCount = 1;
+            infoArray[0].accessType = REGACCESS_D;
+            infoArray[0].physicalType = LowOpndRegType_xmm; //64
+        }  else {
+            infoArray[0].regNum = vA;
+            infoArray[0].refCount = 1;
+            infoArray[0].accessType = REGACCESS_D;
+            infoArray[0].physicalType = LowOpndRegType_gp;
+        }
+        num_regs_per_bytecode = 1;
+        updateCurrentBBWithConstraints(PhysicalReg_EAX);
+        break;
+#endif
     case OP_SPUT:
     case OP_SPUT_WIDE:
     case OP_SPUT_OBJECT:
@@ -4058,12 +4093,37 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[3].refCount = 2; //DU
         infoArray[3].physicalType = LowOpndRegType_gp;
         infoArray[3].linkageToVR = vA;
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_AGET_BYTE || inst_op == OP_AGET_BOOLEAN)
             infoArray[3].is8Bit = true;
+#endif
         infoArray[4].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[4].refCount = 2;
+#else
+        infoArray[4].refCount = 4;
+#endif
         infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         return 5;
+#else
+        // Use temp 5 to store address of heap access
+        infoArray[5].regNum = 5;
+        infoArray[5].refCount = 2; //DU
+        infoArray[5].physicalType = LowOpndRegType_gp;
+        // Return value from calling loadFromShadowHeap will be in EAX
+        infoArray[6].regNum = PhysicalReg_EAX;
+        infoArray[6].refCount = 4;
+        infoArray[6].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        // Scratch for calling loadFromShadowHeap
+        infoArray[7].regNum = 1;
+        infoArray[7].refCount = 2; //DU
+        infoArray[7].physicalType = LowOpndRegType_scratch;
+        infoArray[8].regNum = PhysicalReg_ECX;
+        infoArray[8].refCount = 2;
+        infoArray[8].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 9;
+#endif
     case OP_AGET_WIDE:
 #ifdef INC_NCG_O0
         if(gDvm.helper_switch[7]) {
@@ -4092,9 +4152,34 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[3].refCount = 2; //DU
         infoArray[3].physicalType = LowOpndRegType_xmm;
         infoArray[4].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[4].refCount = 2;
+#else
+        infoArray[4].refCount = 4;
+#endif
         infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         return 5;
+#else
+        infoArray[5].regNum = PhysicalReg_XMM7;
+        infoArray[5].refCount = 1; //U
+        infoArray[5].physicalType = LowOpndRegType_xmm | LowOpndRegType_hard;
+        // Use temp 5 to store address of heap access
+        infoArray[6].regNum = 5;
+        infoArray[6].refCount = 2; //DU
+        infoArray[6].physicalType = LowOpndRegType_gp;
+        // Scratch for calling loadFromShadowHeap
+        infoArray[7].regNum = 1;
+        infoArray[7].refCount = 2; //DU
+        infoArray[7].physicalType = LowOpndRegType_scratch;
+        infoArray[8].regNum = PhysicalReg_EAX;
+        infoArray[8].refCount = 2;
+        infoArray[8].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[9].regNum = PhysicalReg_ECX;
+        infoArray[9].refCount = 2;
+        infoArray[9].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 10;
+#endif
     case OP_APUT_BYTE:
         for(k = 0; k < MAX_TEMP_REG_PER_BYTECODE; k++)
             infoArray[k].shareWithVR = true; //false;
@@ -4129,12 +4214,36 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[3].regNum = 4;
         infoArray[3].refCount = 2; //DU
         infoArray[3].physicalType = LowOpndRegType_gp;
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_APUT_BYTE || inst_op == OP_APUT_BOOLEAN)
             infoArray[3].is8Bit = true;
+#endif
         infoArray[4].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[4].refCount = 2;
+#else
+        infoArray[4].refCount = 4;
+#endif
         infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         return 5;
+#else
+        // Use temp 5 to store address of heap access
+        infoArray[5].regNum = 5;
+        infoArray[5].refCount = 2; //DU
+        infoArray[5].physicalType = LowOpndRegType_gp;
+        // Scratch for calling storeToShadowHeap
+        infoArray[6].regNum = 1;
+        infoArray[6].refCount = 2; //DU
+        infoArray[6].physicalType = LowOpndRegType_scratch;
+        infoArray[7].regNum = PhysicalReg_ECX;
+        infoArray[7].refCount = 2;
+        infoArray[7].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[8].regNum = PhysicalReg_EAX;
+        infoArray[8].refCount = 2;
+        infoArray[8].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 9;
+#endif
     case OP_APUT_WIDE:
 #ifdef INC_NCG_O0
         if(gDvm.helper_switch[18]) {
@@ -4163,9 +4272,31 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[3].refCount = 2; //DU
         infoArray[3].physicalType = LowOpndRegType_xmm;
         infoArray[4].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[4].refCount = 2;
+#else
+        infoArray[4].refCount = 4;
+#endif
         infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         return 5;
+#else
+        // Use temp 4 to store address of heap access
+        infoArray[5].regNum = 4;
+        infoArray[5].refCount = 2; //DU
+        infoArray[5].physicalType = LowOpndRegType_gp;
+        // Scratch for calling storeToShadowHeap
+        infoArray[6].regNum = 1;
+        infoArray[6].refCount = 2; //DU
+        infoArray[6].physicalType = LowOpndRegType_scratch;
+        infoArray[7].regNum = PhysicalReg_EAX;
+        infoArray[7].refCount = 2;
+        infoArray[7].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[8].regNum = PhysicalReg_ECX;
+        infoArray[8].refCount = 2;
+        infoArray[8].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 9;
+#endif
     case OP_APUT_OBJECT:
 #ifdef INC_NCG_O0
         if(gDvm.helper_switch[6]) {
@@ -4201,17 +4332,42 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[5].physicalType = LowOpndRegType_gp;
 
         infoArray[6].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[6].refCount = 2; //DU
+#else
+        infoArray[6].refCount = 4+2; //DU
+#endif
         infoArray[6].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
         infoArray[7].regNum = PhysicalReg_EAX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[7].refCount = 2; //DU
+#else
+        infoArray[7].refCount = 4+2;
+#endif
         infoArray[7].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
         infoArray[8].regNum = 1;
         infoArray[8].refCount = 2; //DU
         infoArray[8].physicalType = LowOpndRegType_scratch;
         infoArray[0].shareWithVR = false;
+
+#ifndef WITH_SELF_VERIFICATION
         return updateMarkCard_notNull(infoArray,
                                       0/*index for tgtAddrReg*/, 9);
+#else
+        // Use temp 7 to store address of heap access
+        infoArray[9].regNum = 7;
+        infoArray[9].refCount = 4; //DU
+        infoArray[9].physicalType = LowOpndRegType_gp;
+        // Scratch for calling storeToShadowHeap
+        infoArray[10].regNum = 1;
+        infoArray[10].refCount = 6; //DU
+        infoArray[10].physicalType = LowOpndRegType_scratch;
+        infoArray[11].regNum = PhysicalReg_ECX;
+        infoArray[11].refCount = 2+2;
+        infoArray[11].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return updateMarkCard_notNull(infoArray,
+                                      0/*index for tgtAddrReg*/, 12);
+#endif
 
     case OP_IGET:
     case OP_IGET_OBJECT:
@@ -4241,14 +4397,21 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[1].regNum = 2;
         infoArray[1].refCount = 2; //DU
         infoArray[1].physicalType = LowOpndRegType_scratch;
-
         infoArray[2].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[2].refCount = 2; //DU
+#else
+        infoArray[2].refCount = 4; //DU
+#endif
         infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
         infoArray[3].regNum = PhysicalReg_EAX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[3].refCount = 3; //DU
+#else
+        // Return value from calling loadFromShadowHeap will be in EAX
+        infoArray[3].refCount = 6; //DU
+#endif
         infoArray[3].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
-
         infoArray[4].regNum = 3;
         infoArray[4].refCount = 3; //DU
         infoArray[4].physicalType = LowOpndRegType_gp;
@@ -4280,7 +4443,21 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[7].regNum = 9;
         infoArray[7].refCount = 2; //DU
         infoArray[7].physicalType = LowOpndRegType_gp;
+#ifndef WITH_SELF_VERIFICATION
         return 8;
+#else
+        // Use temp 10 to store address of heap access
+        infoArray[8].regNum = 10;
+        infoArray[8].refCount = 2; //DU
+        infoArray[8].physicalType = LowOpndRegType_gp;
+        infoArray[9].regNum = 5;
+        infoArray[9].refCount = 2; //DU
+        infoArray[9].physicalType = LowOpndRegType_scratch;
+        infoArray[10].regNum = PhysicalReg_ECX;
+        infoArray[10].refCount = 2;
+        infoArray[10].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 11;
+#endif
     case OP_IPUT:
     case OP_IPUT_OBJECT:
     case OP_IPUT_VOLATILE:
@@ -4314,10 +4491,18 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[1].physicalType = LowOpndRegType_scratch;
 
         infoArray[2].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[2].refCount = 2; //DU
+#else
+        infoArray[2].refCount = 4; //DU
+#endif
         infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
         infoArray[3].regNum = PhysicalReg_EAX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[3].refCount = 3; //DU
+#else
+        infoArray[3].refCount = 5; //DU
+#endif
         infoArray[3].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
 
         infoArray[4].regNum = 3;
@@ -4332,12 +4517,32 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[7].regNum = 9;
         infoArray[7].refCount = 2; //DU
         infoArray[7].physicalType = LowOpndRegType_gp;
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_IPUT_OBJECT || inst_op == OP_IPUT_OBJECT_VOLATILE) {
             infoArray[5].shareWithVR = false;
             return updateMarkCard(infoArray, 7/*index for valReg*/,
                                   5/*index for tgtAddrReg*/, 8);
         }
         return 8;
+#else
+        // Use temp 10 to store address of heap access
+        infoArray[8].regNum = 10;
+        infoArray[8].refCount = 2; //DU
+        infoArray[8].physicalType = LowOpndRegType_gp;
+        infoArray[9].regNum = 5;
+        infoArray[9].refCount = 2; //DU
+        infoArray[9].physicalType = LowOpndRegType_scratch;
+        infoArray[10].regNum = PhysicalReg_ECX;
+        infoArray[10].refCount = 2;
+        infoArray[10].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        if(inst_op == OP_IPUT_OBJECT || inst_op == OP_IPUT_OBJECT_VOLATILE) {
+            infoArray[5].shareWithVR = false;
+            return updateMarkCard(infoArray, 7/*index for valReg*/,
+                                  5/*index for tgtAddrReg*/, 11);
+        }
+        return 11;
+#endif
+
     case OP_IGET_WIDE:
     case OP_IGET_WIDE_VOLATILE:
     case OP_IPUT_WIDE:
@@ -4377,12 +4582,19 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[1].regNum = 2;
         infoArray[1].refCount = 2; //DU
         infoArray[1].physicalType = LowOpndRegType_scratch;
-
         infoArray[2].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[2].refCount = 2; //DU
+#else
+        infoArray[2].refCount = 4;
+#endif
         infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
         infoArray[3].regNum = PhysicalReg_EAX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[3].refCount = 3; //DU
+#else
+        infoArray[3].refCount = 5;
+#endif
         infoArray[3].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
 
         infoArray[4].regNum = 3;
@@ -4397,7 +4609,7 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[7].regNum = 1;
         infoArray[7].refCount = 2; //DU
         infoArray[7].physicalType = LowOpndRegType_xmm;
-
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_IPUT_WIDE_VOLATILE || inst_op == OP_IGET_WIDE_VOLATILE) {
             infoArray[8].regNum = 3;
             infoArray[8].refCount = 2; //DU
@@ -4409,6 +4621,31 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         }
         return 8;
 
+#else
+        infoArray[8].regNum = PhysicalReg_XMM7;
+        infoArray[8].refCount = 1; //U
+        infoArray[8].physicalType = LowOpndRegType_xmm | LowOpndRegType_hard;
+        // Use temp 10 to store address of heap access
+        infoArray[9].regNum = 10;
+        infoArray[9].refCount = 4; //DU
+        infoArray[9].physicalType = LowOpndRegType_gp;
+        infoArray[10].regNum = 5;
+        infoArray[10].refCount = 4; //DU
+        infoArray[10].physicalType = LowOpndRegType_scratch;
+        infoArray[11].regNum = PhysicalReg_ECX;
+        infoArray[11].refCount = 2;
+        infoArray[11].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        if(inst_op == OP_IPUT_WIDE_VOLATILE || inst_op == OP_IGET_WIDE_VOLATILE) {
+            infoArray[12].regNum = 3;
+            infoArray[12].refCount = 4; //DU
+            infoArray[12].physicalType = LowOpndRegType_scratch;
+            infoArray[13].regNum = 9;
+            infoArray[13].refCount = 2; //DU
+            infoArray[13].physicalType = LowOpndRegType_gp;
+            return 14;
+        }
+        return 12;
+#endif
     case OP_SGET:
     case OP_SGET_OBJECT:
     case OP_SGET_VOLATILE:
@@ -4437,7 +4674,12 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
 
         infoArray[2].regNum = PhysicalReg_EAX;
 #if defined(WITH_JIT)
+#if defined(WITH_SELF_VERIFICATION)
+        // Return value from calling loadFromShadowHeap will be in EAX
+        infoArray[2].refCount = 6;
+#else
         infoArray[2].refCount = 2;
+#endif
 #else
         infoArray[2].refCount = 4; //DU
 #endif
@@ -4449,9 +4691,29 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[4].refCount = 2; //DU
         infoArray[4].physicalType = LowOpndRegType_gp;
         infoArray[5].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[5].refCount = 2; //DU
+#else
+        infoArray[5].refCount = 4; //DU
+#endif
         infoArray[5].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         return 6;
+#else
+        // Use temp 8 to store address of heap access
+        infoArray[6].regNum = 8;
+        infoArray[6].refCount = 2; //DU
+        infoArray[6].physicalType = LowOpndRegType_gp;
+        // Scratch for calling loadFromShadowHeap
+        infoArray[7].regNum = 5;
+        infoArray[7].refCount = 2; //DU
+        infoArray[7].physicalType = LowOpndRegType_scratch;
+        infoArray[8].regNum = PhysicalReg_ECX;
+        infoArray[8].refCount = 2;
+        infoArray[8].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 9;
+#endif
+
     case OP_SPUT:
     case OP_SPUT_OBJECT:
     case OP_SPUT_VOLATILE:
@@ -4483,7 +4745,11 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
 
         infoArray[2].regNum = PhysicalReg_EAX;
 #if defined(WITH_JIT)
-        infoArray[2].refCount = 2+1; //access clazz of the field
+#ifndef WITH_SELF_VERIFICATION
+        infoArray[2].refCount = 4;//2+1; //access clazz of the field
+#else
+        infoArray[2].refCount = 4+2;
+#endif
 #else
         infoArray[2].refCount = 4; //DU
 #endif
@@ -4495,8 +4761,14 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[4].refCount = 2; //DU
         infoArray[4].physicalType = LowOpndRegType_gp;
         infoArray[5].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[5].refCount = 2; //DU
+#else
+        infoArray[5].refCount = 4; //DU
+#endif
         infoArray[5].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_SPUT_OBJECT || inst_op == OP_SPUT_OBJECT_VOLATILE) {
             infoArray[2].shareWithVR = false;
             infoArray[6].regNum = 12;
@@ -4506,6 +4778,28 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
                                   6/*index for tgtAddrReg */, 7);
         }
         return 6;
+#else
+        // Use temp 8 to store address of heap access
+        infoArray[6].regNum = 8;
+        infoArray[6].refCount = 2; //DU
+        infoArray[6].physicalType = LowOpndRegType_gp;
+        // Scratch for calling storeToShadowHeap
+        infoArray[7].regNum = 5;
+        infoArray[7].refCount = 2; //DU
+        infoArray[7].physicalType = LowOpndRegType_scratch;
+        infoArray[8].regNum = PhysicalReg_ECX;
+        infoArray[8].refCount = 2;
+        infoArray[8].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        if(inst_op == OP_SPUT_OBJECT || inst_op == OP_SPUT_OBJECT_VOLATILE) {
+            infoArray[2].shareWithVR = false;
+            infoArray[9].regNum = 12;
+            infoArray[9].refCount = 1; //1 def, 2 uses in updateMarkCard
+            infoArray[9].physicalType = LowOpndRegType_gp;
+            return updateMarkCard(infoArray, 4/*index for valReg*/,
+                                  6/*index for tgtAddrReg */, 10);
+        }
+        return 9;
+#endif
     case OP_SGET_WIDE:
     case OP_SGET_WIDE_VOLATILE:
     case OP_SPUT_WIDE:
@@ -4542,7 +4836,11 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
 
         infoArray[2].regNum = PhysicalReg_EAX;
 #if defined(WITH_JIT)
+#ifndef WITH_SELF_VERIFICATION
         infoArray[2].refCount = 2;
+#else
+        infoArray[2].refCount = 4;
+#endif
 #else
         infoArray[2].refCount = 4; //DU
 #endif
@@ -4554,9 +4852,13 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[4].refCount = 2; //DU
         infoArray[4].physicalType = LowOpndRegType_xmm;
         infoArray[5].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[5].refCount = 2; //DU
+#else
+        infoArray[5].refCount = 4; //DU
+#endif
         infoArray[5].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
-
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_SPUT_WIDE_VOLATILE || inst_op == OP_SGET_WIDE_VOLATILE) {
             infoArray[6].regNum = 3;
             infoArray[6].refCount = 2; //DU
@@ -4567,6 +4869,33 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
             return 8;
         }
         return 6;
+#else
+        // use temp 4 to store address of shadow heap access
+        infoArray[6].regNum = 4;
+        infoArray[6].refCount = 2; //DU
+        infoArray[6].physicalType = LowOpndRegType_gp;
+        // Scratch for calling storeToShadowHeap
+        infoArray[7].regNum = 5;
+        infoArray[7].refCount = 2; //DU
+        infoArray[7].physicalType = LowOpndRegType_scratch;
+        infoArray[8].regNum = PhysicalReg_XMM7;
+        infoArray[8].refCount = 1; //U
+        infoArray[8].physicalType = LowOpndRegType_xmm | LowOpndRegType_hard;
+        infoArray[9].regNum = PhysicalReg_ECX;
+        infoArray[9].refCount = 2;
+        infoArray[9].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        if(inst_op == OP_SPUT_WIDE_VOLATILE || inst_op == OP_SGET_WIDE_VOLATILE) {
+            infoArray[10].regNum = 3;
+            infoArray[10].refCount = 2; //DU
+            infoArray[10].physicalType = LowOpndRegType_scratch;
+            infoArray[11].regNum = 9;
+            infoArray[11].refCount = 2; //DU
+            infoArray[11].physicalType = LowOpndRegType_gp;
+            return 12;
+        }
+        return 10;
+#endif
+
 
     case OP_IGET_QUICK:
     case OP_IGET_OBJECT_QUICK:
@@ -4577,9 +4906,32 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[1].refCount = 2; //DU
         infoArray[1].physicalType = LowOpndRegType_gp;
         infoArray[2].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[2].refCount = 2; //DU
+#else
+        infoArray[2].refCount = 4; //DU
+#endif
         infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         return 3;
+#else
+        // Use temp 3 to store address of heap access
+        infoArray[3].regNum = 3;
+        infoArray[3].refCount = 2; //DU
+        infoArray[3].physicalType = LowOpndRegType_gp;
+        // Return value from calling loadFromShadowHeap will be in EAX
+        infoArray[4].regNum = PhysicalReg_EAX;
+        infoArray[4].refCount = 4;
+        infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[5].regNum = PhysicalReg_ECX;
+        infoArray[5].refCount = 2;
+        infoArray[5].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        // Scratch for calling loadFromShadowHeap
+        infoArray[6].regNum = 1;
+        infoArray[6].refCount = 2; //DU
+        infoArray[6].physicalType = LowOpndRegType_scratch;
+        return 7;
+#endif
     case OP_IPUT_QUICK:
     case OP_IPUT_OBJECT_QUICK:
         infoArray[0].regNum = 1;
@@ -4589,14 +4941,41 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[1].refCount = 2; //DU
         infoArray[1].physicalType = LowOpndRegType_gp;
         infoArray[2].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[2].refCount = 2; //DU
+#else
+        infoArray[2].refCount = 4; //DU
+#endif
         infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         if(inst_op == OP_IPUT_OBJECT_QUICK) {
             infoArray[0].shareWithVR = false;
             return updateMarkCard(infoArray, 1/*index for valReg*/,
                                   0/*index for tgtAddrReg*/, 3);
         }
         return 3;
+#else
+        // Use temp 3 to store address of heap access
+        infoArray[3].regNum = 3;
+        infoArray[3].refCount = 2; //DU
+        infoArray[3].physicalType = LowOpndRegType_gp;
+        // Scratch for calling storeToShadowHeap
+        infoArray[4].regNum = 1;
+        infoArray[4].refCount = 2; //DU
+        infoArray[4].physicalType = LowOpndRegType_scratch;
+        infoArray[5].regNum = PhysicalReg_EAX;
+        infoArray[5].refCount = 2;
+        infoArray[5].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[6].regNum = PhysicalReg_ECX;
+        infoArray[6].refCount = 2;
+        infoArray[6].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        if(inst_op == OP_IPUT_OBJECT_QUICK) {
+            infoArray[0].shareWithVR = false;
+            return updateMarkCard(infoArray, 1/*index for valReg*/,
+                                  0/*index for tgtAddrReg*/, 7/*ScratchReg*/);
+        }
+        return 7;
+#endif
     case OP_IGET_WIDE_QUICK:
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //DU
@@ -4605,9 +4984,34 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[1].refCount = 2; //DU
         infoArray[1].physicalType = LowOpndRegType_xmm;
         infoArray[2].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[2].refCount = 2; //DU
+#else
+        infoArray[2].refCount = 4; //DU
+#endif
         infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         return 3;
+#else
+        // use temp 3 to store address of heap access
+        infoArray[3].regNum = 3;
+        infoArray[3].refCount = 2; //DU
+        infoArray[3].physicalType = LowOpndRegType_gp;
+        // Scratch for calling storeToShadowHeap
+        infoArray[4].regNum = 1;
+        infoArray[4].refCount = 2; //DU
+        infoArray[4].physicalType = LowOpndRegType_scratch;
+        infoArray[5].regNum = PhysicalReg_XMM7;
+        infoArray[5].refCount = 1; //U
+        infoArray[5].physicalType = LowOpndRegType_xmm | LowOpndRegType_hard;
+        infoArray[6].regNum = PhysicalReg_EAX;
+        infoArray[6].refCount = 2;
+        infoArray[6].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[7].regNum = PhysicalReg_ECX;
+        infoArray[7].refCount = 2;
+        infoArray[7].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 8;
+#endif
     case OP_IPUT_WIDE_QUICK:
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //DU
@@ -4616,9 +5020,31 @@ int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns a
         infoArray[1].refCount = 2; //DU
         infoArray[1].physicalType = LowOpndRegType_xmm;
         infoArray[2].regNum = PhysicalReg_EDX;
+#ifndef WITH_SELF_VERIFICATION
         infoArray[2].refCount = 2; //DU
+#else
+        infoArray[2].refCount = 4; //DU
+#endif
         infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+#ifndef WITH_SELF_VERIFICATION
         return 3;
+#else
+        // use temp 3 to store address of heap access
+        infoArray[3].regNum = 3;
+        infoArray[3].refCount = 2; //DU
+        infoArray[3].physicalType = LowOpndRegType_gp;
+        // Scratch for calling storeToShadowHeap
+        infoArray[4].regNum = 1;
+        infoArray[4].refCount = 2; //DU
+        infoArray[4].physicalType = LowOpndRegType_scratch;
+        infoArray[5].regNum = PhysicalReg_EAX;
+        infoArray[5].refCount = 2;
+        infoArray[5].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[6].regNum = PhysicalReg_ECX;
+        infoArray[6].refCount = 2;
+        infoArray[6].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 7;
+#endif
 
     case OP_RETURN_VOID:
     case OP_RETURN_VOID_BARRIER:

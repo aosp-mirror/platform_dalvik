@@ -39,6 +39,9 @@
 If the helper switch is on, this will generate a helper function
 */
 int common_returnFromMethod() {
+#if defined(WITH_SELF_VERIFICATION)
+    constVREndOfBB();
+#endif
 #if defined(ENABLE_TRACING) && !defined(TRACING_OPTION2)
     insertMapWorklist(offsetPC, mapFromBCtoNCG[offsetPC], 1); //check when helper switch is on
 #endif
@@ -220,7 +223,6 @@ int op_return_void(const MIR * mir) {
     {
         retval = common_returnFromMethod();
     }
-
     return retval;
 }
 
@@ -248,6 +250,7 @@ int op_return(const MIR * mir) {
     {
         common_returnFromMethod();
     }
+
     return 0;
 }
 

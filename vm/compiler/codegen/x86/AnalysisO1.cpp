@@ -3747,6 +3747,9 @@ int beforeCall(const char* target) { //spill all live registers
        || (!strcmp(target, "dvmJitToPatchPredictedChain"))
        || (!strcmp(target, "dvmJitHandlePackedSwitch"))
        || (!strcmp(target, "dvmJitHandleSparseSwitch"))
+#if defined(WITH_SELF_VERIFICATION)
+       || (!strcmp(target, "selfVerificationLoad"))
+#endif
 #endif
        ) {
         touchEax();
