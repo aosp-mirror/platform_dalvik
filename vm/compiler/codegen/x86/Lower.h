@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2010-2013 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 
 
-/*! \file lower.h
-    \brief A header file to define interface between lowering and register allocator
+/*! \file Lower.h
+    \brief A header file to define interface between lowering, register allocator, and scheduling
 */
 
 #ifndef _DALVIK_LOWER
@@ -26,8 +26,9 @@
 // comment out for phase 1 porting
 #define PREDICTED_CHAINING
 #define JIT_CHAIN
+#define WITH_JIT_INLINING
 
-#define NUM_DEPENDENCIES 24 /* max number of dependencies from a LowOp */
+#define NCG_O1
 //compilaton flags used by NCG O1
 #define DUMP_EXCEPTION //to measure performance, required to have correct exception handling
 /*! multiple versions for hardcoded registers */
@@ -51,6 +52,7 @@
 #define INVOKE_FIX //optimization
 #define GETVR_FIX //optimization
 
+#include "CodegenErrors.h"
 #include "Dalvik.h"
 #include "enc_wrapper.h"
 #include "AnalysisO1.h"
@@ -200,103 +202,14 @@ typedef enum JmpCall_type {
     JmpCall_call
 } JmpCall_type;
 
-////////////////////////////////////////////////////////////////
-/* data structure for native codes */
-/* Due to space considation, a lowered op (LowOp) has two operands (LowOpnd), depending on
-   the type of the operand, LowOpndReg or LowOpndImm or LowOpndMem will follow */
-/*! type of an operand can be immediate, register or memory */
-typedef enum LowOpndType {
-  LowOpndType_Imm = 0,
-  LowOpndType_Reg,
-  LowOpndType_Mem,
-  LowOpndType_Label,
-  LowOpndType_NCG,
-  LowOpndType_Chain
-} LowOpndType;
-typedef enum LowOpndDefUse {
-  LowOpndDefUse_Def = 0,
-  LowOpndDefUse_Use,
-  LowOpndDefUse_UseDef
-} LowOpndDefUse;
-
-/*!
-\brief base data structure for an operand */
-typedef struct LowOpnd {
-  LowOpndType type;
-  OpndSize size;
-  LowOpndDefUse defuse;
-} LowOpnd;
-/*!
-\brief data structure for a register operand */
-typedef struct LowOpndReg {
-  LowOpndRegType regType;
-  int logicalReg;
-  int physicalReg;
-} LowOpndReg;
-/*!
-\brief data structure for an immediate operand */
-typedef struct LowOpndImm {
-  union {
-    s4 value;
-    unsigned char bytes[4];
-  };
-} LowOpndImm;
-
-typedef struct LowOpndNCG {
-  union {
-    s4 value;
-    unsigned char bytes[4];
-  };
-} LowOpndNCG;
-
-#define LABEL_SIZE 256
-typedef struct LowOpndLabel {
-  char label[LABEL_SIZE];
-  bool isLocal;
-} LowOpndLabel;
-
-/* get ready for optimizations at LIR
-   add MemoryAccessType & virtualRegNum to memory operands */
-typedef enum MemoryAccessType {
-  MemoryAccess_GLUE,
-  MemoryAccess_VR,
-  MemoryAccess_SPILL,
-  MemoryAccess_Unknown
-} MemoryAccessType;
-typedef enum UseDefEntryType {
-  UseDefType_Ctrl = 0,
-  UseDefType_Float,
-  UseDefType_MemVR,
-  UseDefType_MemSpill,
-  UseDefType_MemUnknown,
-  UseDefType_Reg
-} UseDefEntryType;
-typedef struct UseDefProducerEntry {
-  UseDefEntryType type;
-  int index; //enum PhysicalReg for "Reg" type
-  int producerSlot;
-} UseDefProducerEntry;
-#define MAX_USE_PER_ENTRY 50 /* at most 10 uses for each entry */
-typedef struct UseDefUserEntry {
-  UseDefEntryType type;
-  int index;
-  int useSlots[MAX_USE_PER_ENTRY];
-  int num_uses_per_entry;
-} UseDefUserEntry;
-
-/*!
-\brief data structure for a memory operand */
-typedef struct LowOpndMem {
-  LowOpndImm m_disp;
-  LowOpndImm m_scale;
-  LowOpndReg m_index;
-  LowOpndReg m_base;
-  bool hasScale;
-  MemoryAccessType mType;
-  int index;
-} LowOpndMem;
-
-typedef enum AtomOpCode {
+//! \enum AtomOpCode
+//! \brief Pseudo-mnemonics for Atom
+//! \details Initially included to be in sync with ArmOpCode which specifies
+//! additional pseudo mnemonics for use during codegen, but it has
+//! diverted. Although there are references to this everywhere,
+//! very little of this is actually used for functionality.
+//! \todo Either refactor to match ArmOpCode or remove dependency on this.
+enum AtomOpCode {
     ATOM_PSEUDO_CHAINING_CELL_BACKWARD_BRANCH = -15,
     ATOM_NORMAL_ALU = -14,
     ATOM_PSEUDO_ENTRY_BLOCK = -13,
@@ -313,120 +226,346 @@ typedef enum AtomOpCode {
     ATOM_PSEUDO_EH_BLOCK_LABEL = -2,
     ATOM_PSEUDO_NORMAL_BLOCK_LABEL = -1,
     ATOM_NORMAL,
-} AtomOpCode;
+};
 
-typedef enum DependencyType {
-  Dependency_RAW,
-  Dependency_WAW,
-  Dependency_WAR,
-  Dependency_FLAG
-} DependencyType;
-typedef struct DependencyStruct {
-  DependencyType dType;
-  int nodeId;
-  int latency;
-} DependencyStruct;
+//! \enum LowOpndType
+//! \brief Defines types of operands that a LowOp can have.
+//! \details The Imm, Mem, and Reg variants correspond literally to what
+//! the final encoded x86 instruction will have. The others are used for
+//! additional behavior needed before the x86 encoding.
+//! \see LowOp
+enum LowOpndType {
+    //! \brief Immediate
+    LowOpndType_Imm,
+    //! \brief Register
+    LowOpndType_Reg,
+    //! \brief Memory access
+    LowOpndType_Mem,
+    //! \brief Used for jumps to labels
+    LowOpndType_Label,
+    //! \brief Used for jumps to other blocks
+    LowOpndType_BlockId,
+    //! \brief Used for chaining
+    LowOpndType_Chain
+};
 
-typedef struct LowOpBlock {
-  LIR generic;
-  Mnemonic opCode;
-  AtomOpCode opCode2;
-} LowOpBlock;
+//! \enum LowOpndDefUse
+//! \brief Defines type of usage that a LowOpnd can have.
+//! \see LowOpnd
+enum LowOpndDefUse {
+    //! \brief Definition
+    LowOpndDefUse_Def,
+    //! \brief Usage
+    LowOpndDefUse_Use,
+    //! \brief Usage and Definition
+    LowOpndDefUse_UseDef
+};
 
-/*!
-\brief data structure for a lowered operation */
-typedef struct LowOp {
-  LIR generic;
-  Mnemonic opCode;
-  AtomOpCode opCode2;
-  LowOpnd opnd1;
-  LowOpnd opnd2;
-  int numOperands;
-} LowOp;
+//! \enum MemoryAccessType
+//! \brief Classifies type of memory access.
+enum MemoryAccessType {
+    //! \brief access Dalvik virtual register
+    MemoryAccess_VR,
+    //! \brief access spill region
+    MemoryAccess_SPILL,
+    //! \brief unclassified memory access
+    MemoryAccess_Unknown
+};
 
-typedef struct LowOpLabel {
-  LowOp lop;
-  LowOpndLabel labelOpnd;
-}LowOpLabel;
+//! \enum UseDefEntryType
+//! \brief Defines types of resources on which there can be a dependency.
+enum UseDefEntryType {
+    //! \brief Control flags, EFLAGS register
+    UseDefType_Ctrl,
+    //! \brief Floating-point stack
+    //! \details This is a very generic resource for x87 operations and
+    //! doesn't break down different possible resources like control word,
+    //! status word, FPU flags, etc. All of x87 resources fall into this
+    //! type of resource.
+    UseDefType_Float,
+    //! \brief Dalvik virtual register. Corresponds to MemoryAccess_VR
+    UseDefType_MemVR,
+    //! \brief Spill region. Corresponds to MemoryAccess_SPILL
+    UseDefType_MemSpill,
+    //! \brief Unclassified memory access. Corresponds to MemoryAccess_Unknown
+    //! \details No memory disambiguation will be done with unknown accesses
+    UseDefType_MemUnknown,
+    //! \brief Register
+    UseDefType_Reg
+};
 
-typedef struct LowOpNCG {
-  LowOp lop;
-  LowOpndNCG ncgOpnd;
-}LowOpNCG;
+//! \enum DependencyType
+//! \brief Defines types of dependencies on a resource.
+enum DependencyType {
+    //! \brief Read after Write
+    Dependency_RAW,
+    //! \brief Write after Write
+    Dependency_WAW,
+    //! \brief Write after Read
+    Dependency_WAR,
+};
 
-typedef struct LowOpBlockLabel {
-  LowOpBlock lop;
-  LowOpndImm immOpnd;
-} LowOpBlockLabel;
+//! \enum LatencyBetweenNativeInstructions
+//! \brief Defines reasons for what causes pipeline stalls
+//! between two instructions.
+//! \warning Make sure that if adding new reasons here,
+//! the scheduler needs updated with the actual latency value.
+//! \see mapLatencyReasonToValue
+enum LatencyBetweenNativeInstructions {
+    //! \brief No latency between the two instructions
+    Latency_None = 0,
+    //! \brief Stall in address generation phase of pipeline
+    //! when register is not available.
+    Latency_Agen_stall,
+    //! \brief Stall when a memory load is blocked by a store
+    //! and there is no store forwarding.
+    Latency_Load_blocked_by_store,
+    //! \brief Stall due to cache miss during load from memory
+    Latency_Memory_Load,
+};
 
-typedef struct LowOpImm {
-  LowOp lop;
-  LowOpndImm immOpnd;
-} LowOpImm;
+//! \brief Defines a relationship between a resource and its producer.
+struct UseDefProducerEntry {
+    //! \brief Resource type on which there is a dependency.
+    UseDefEntryType type;
+    //! \brief Virtual or physical register this resource is
+    //! associated with.
+    //! \details When physical, this is of enum type PhysicalReg.
+    //! When VR, this is the virtual register number.
+    //! When there is no register related dependency, this is
+    //! negative.
+    int regNum;
+    //! \brief Corresponds to LowOp::slotId to keep track of producer.
+    unsigned int producerSlot;
+};
 
-typedef struct LowOpMem {
-  LowOp lop;
-  LowOpndMem memOpnd;
-} LowOpMem;
+//! \brief Defines a relationship between a resource and its users.
+struct UseDefUserEntry {
+    //! \brief Resource type on which there is a dependency.
+    UseDefEntryType type;
+    //! \brief Virtual or physical register this resource is
+    //! associated with.
+    //! \details When physical, this is of enum type PhysicalReg.
+    //! When VR, this is the virtual register number.
+    //! When there is no register related dependency, this is
+    //! negative.
+    int regNum;
+    //! \brief A list of LowOp::slotId to keep track of all users
+    //! of this resource.
+    std::vector<unsigned int> useSlotsList;
+};
 
-typedef struct LowOpReg {
-  LowOp lop;
-  LowOpndReg regOpnd;
-} LowOpReg;
+//! \brief Holds information on the data dependencies
+struct DependencyInformation {
+    //! \brief Type of data hazard
+    DependencyType dataHazard;
+    //! \brief Holds the LowOp::slotId of the LIR that causes this
+    //! data dependence.
+    unsigned int lowopSlotId;
+    //! \brief Description for what causes the edge latency
+    //! \see LatencyBetweenNativeInstructions
+    LatencyBetweenNativeInstructions causeOfEdgeLatency;
+    //! \brief Holds latency information for edges in the
+    //! dependency graph, not execute to execute latency for the
+    //! instructions.
+    int edgeLatency;
+};
 
-typedef struct LowOpImmImm {
-  LowOp lop;
-  LowOpndImm immOpnd1;
-  LowOpndImm immOpnd2;
-} LowOpImmImm;
+//! \brief Holds general information about an operand.
+struct LowOpnd {
+    //! \brief Classification of operand.
+    LowOpndType type;
+    //! \brief Size of operand.
+    OpndSize size;
+    //! \brief Usage, definition, or both of operand.
+    LowOpndDefUse defuse;
+};
 
-typedef struct LowOpImmReg {
-  LowOp lop;
-  LowOpndImm immOpnd1;
-  LowOpndReg regOpnd2;
-} LowOpImmReg;
+//! \brief Holds information about a register operand.
+struct LowOpndReg {
+    //! \brief Classification on type of register.
+    LowOpndRegType regType;
+    //! \brief Register number, either logical or physical.
+    int regNum;
+    //! \brief When false, register is logical.
+    bool isPhysical;
+};
 
-typedef struct LowOpImmMem {
-  LowOp lop;
-  LowOpndImm immOpnd1;
-  LowOpndMem memOpnd2;
-} LowOpImmMem;
+//! \brief Holds information about an immediate operand.
+struct LowOpndImm {
+    //! \brief Value of the immediate.
+    s4 value;
+};
 
-typedef struct LowOpRegImm {
-  LowOp lop;
-  LowOpndReg regOpnd1;
-  LowOpndImm immOpnd2;
-} LowOpRegImm;
+//! \brief Holds information about an immediate operand where the immediate
+//! has not been generated yet.
+struct LowOpndBlock {
+    //! \brief Holds id of MIR level basic block.
+    s4 value;
+};
 
-typedef struct LowOpRegReg {
-  LowOp lop;
-  LowOpndReg regOpnd1;
-  LowOpndReg regOpnd2;
-} LowOpRegReg;
+//! \brief Defines maximum length of string holding label name.
+#define LABEL_SIZE 256
 
-typedef struct LowOpRegMem {
-  LowOp lop;
-  LowOpndReg regOpnd1;
-  LowOpndMem memOpnd2;
-} LowOpRegMem;
+//! \brief Holds information about an immediate operand where the immediate
+//! has not been generated yet from label.
+struct LowOpndLabel {
+    //! \brief Name of the label for which to generate immediate.
+    char label[LABEL_SIZE];
+    //! \brief This is true when label is short term distance from caller
+    //! and an 8-bit operand is sufficient.
+    bool isLocal;
+};
 
-typedef struct LowOpMemImm {
-  LowOp lop;
-  LowOpndMem memOpnd1;
-  LowOpndImm immOpnd2;
-} LowOpMemImm;
+//! \brief Holds information about a memory operand.
+struct LowOpndMem {
+    //! \brief Displacement
+    LowOpndImm m_disp;
+    //! \brief Scaling
+    LowOpndImm m_scale;
+    //! \brief Index Register
+    LowOpndReg m_index;
+    //! \brief Base Register
+    LowOpndReg m_base;
+    //! \brief If true, must use the scaling value.
+    bool hasScale;
+    //! \brief Defines type of memory access.
+    MemoryAccessType mType;
+    //! \brief If positive, this represents the VR number
+    int index;
+};
 
-typedef struct LowOpMemReg {
-  LowOp lop;
-  LowOpndMem memOpnd1;
-  LowOpndReg regOpnd2;
-} LowOpMemReg;
+//! \brief Data structure for an x86 LIR.
+//! \todo Decouple fields used for scheduling from this struct.
+//! is a good idea if using it throughout the trace JIT and never
+//! actually passing it for scheduling.
+struct LowOp {
+    //! \brief Holds general LIR information (Google's implementation)
+    //! \warning Only offset information is used for x86 and the other
+    //! fields are not valid except in LowOpBlockLabel.
+    LIR generic;
+    //! \brief x86 mnemonic for instruction
+    Mnemonic opCode;
+    //! \brief x86 pseudo-mnemonic
+    AtomOpCode opCode2;
+    //! \brief Destination operand
+    //! \details This is not used when there are only 0 or 1 operands.
+    LowOpnd opndDest;
+    //! \brief Source operand
+    //! \details This is used when there is a single operand.
+    LowOpnd opndSrc;
+    //! \brief Holds number of operands for this LIR (0, 1, or 2)
+    unsigned short numOperands;
+    //! \brief Logical timestamp for ordering.
+    //! \details This value should uniquely identify an LIR and also
+    //! provide natural ordering depending on when it was requested.
+    //! This is used during scheduling to hold original order for the
+    //! native basic block.
+    unsigned int slotId;
+    //! \brief Logical time for when the LIR is ready.
+    //! \details This field is used only for scheduling.
+    int readyTime;
+    //! \brief Cycle in which LIR is scheduled for issue.
+    //! \details This field is used only for scheduling.
+    int scheduledTime;
+    //! \brief Execute to execute time for this instruction.
+    //! \details This field is used only for scheduling.
+    //! \see MachineModelEntry::executeToExecuteLatency
+    int instructionLatency;
+    //! \brief Issue port for this instruction.
+    //! \details This field is used only for scheduling.
+    //! \see MachineModelEntry::issuePortType
+    int portType;
+    //! \brief Weight of longest path in dependency graph from
+    //! current instruction to end of the basic block.
+    //! \details This field is used only for scheduling.
+    int longestPath;
+};
 
-typedef struct LowOpMemMem {
-  LowOp lop;
-  LowOpndMem memOpnd1;
-  LowOpndMem memOpnd2;
-} LowOpMemMem;
+//! \brief Specialized LowOp with known label operand but
+//! whose offset immediate is not known yet.
+struct LowOpLabel : LowOp {
+    //! \brief Label operand whose immediate has not yet been
+    //! generated.
+    LowOpndLabel labelOpnd;
+};
+
+//! \brief Specialized LowOp for use with block operand whose id
+//! is known but the offset immediate has not been generated yet.
+struct LowOpBlock : LowOp {
+    //! \brief Non-generated immediate operand
+    LowOpndBlock blockIdOpnd;
+};
+
+//! \brief Specialized LowOp which is only used with
+//! pseudo-mnemonic.
+//! \see AtomOpCode
+struct LowOpBlockLabel {
+    //! \todo Does not use inheritance like the other LowOp
+    //! data structures because of a git merge issue. In future,
+    //! this can be safely updated.
+    LowOp lop;
+    //! \brief Holds offset information.
+    LowOpndImm immOpnd;
+};
+
+//! \brief Specialized LowOp with an immediate operand.
+struct LowOpImm : LowOp {
+    //! \brief Immediate
+    LowOpndImm immOpnd;
+};
+
+//! \brief Specialized LowOp with a memory operand.
+struct LowOpMem : LowOp {
+    //! \brief Memory Operand
+    LowOpndMem memOpnd;
+};
+
+//! \brief Specialized LowOp with register operand.
+struct LowOpReg : LowOp {
+    //! \brief Register
+    LowOpndReg regOpnd;
+};
+
+//! \brief Specialized LowOp for immediate to register.
+struct LowOpImmReg : LowOp {
+    //! \brief Immediate as source.
+    LowOpndImm immSrc;
+    //! \brief Register as destination.
+    LowOpndReg regDest;
+};
+
+//! \brief Specialized LowOp for register to register.
+struct LowOpRegReg : LowOp {
+    //! \brief Register as source.
+    LowOpndReg regSrc;
+    //! \brief Register as destination.
+    LowOpndReg regDest;
+};
+
+//! \brief Specialized LowOp for memory to register.
+struct LowOpMemReg : LowOp {
+    //! \brief Memory as source.
+    LowOpndMem memSrc;
+    //! \brief Register as destination.
+    LowOpndReg regDest;
+};
+
+//! \brief Specialized LowOp for immediate to memory.
+struct LowOpImmMem : LowOp {
+    //! \brief Immediate as source.
+    LowOpndImm immSrc;
+    //! \brief Memory as destination.
+    LowOpndMem memDest;
+};
+
+//! \brief Specialized LowOp for register to memory.
+struct LowOpRegMem : LowOp {
+    //! \brief Register as source.
+    LowOpndReg regSrc;
+    //! \brief Memory as destination.
+    LowOpndMem memDest;
+};
 
 /*!
 \brief data structure for labels used when lowering a method
@@ -523,7 +662,6 @@ extern PhysicalReg scratchRegs[4];
 extern LowOp* ops[BUFFER_SIZE];
 extern bool isScratchPhysical;
 extern u2* rPC;
-extern u2 inst;
 extern int offsetPC;
 extern int offsetNCG;
 extern int mapFromBCtoNCG[BYTECODE_SIZE_PER_METHOD];
@@ -553,9 +691,6 @@ extern LabelMap* VMAPIWorklist;
 extern int ncgClassNum;
 extern int ncgMethodNum;
 
-extern LowOp* lirTable[200]; //Number of LIRs for all bytecodes do not exceed 200
-extern int num_lirs_in_table;
-
 bool existATryBlock(Method* method, int startPC, int endPC);
 // interface between register allocator & lowering
 extern int num_removed_nullCheck;
@@ -568,11 +703,11 @@ int updateRefCount2(int reg, int type, bool isPhysical);
 int spillVirtualReg(int vrNum, LowOpndRegType type, bool updateTable);
 int isVirtualRegConstant(int regNum, LowOpndRegType type, int* valuePtr, bool updateRef);
 int checkTempReg(int reg, int type, bool isPhysical, int vA);
-bool checkTempReg2(int reg, int type, bool isPhysical, int physicalRegForVR);
+bool checkTempReg2(int reg, int type, bool isPhysical, int physicalRegForVR, u2 vB);
 int freeReg(bool spillGL);
 int nextVersionOfHardReg(PhysicalReg pReg, int refCount);
 int updateVirtualReg(int reg, LowOpndRegType type);
-void setVRNullCheck(int regNum, OpndSize size);
+int setVRNullCheck(int regNum, OpndSize size);
 bool isVRNullCheck(int regNum, OpndSize size);
 void setVRBoundCheck(int vr_array, int vr_index);
 bool isVRBoundCheck(int vr_array, int vr_index);
@@ -580,8 +715,8 @@ int requestVRFreeDelay(int regNum, u4 reason);
 void cancelVRFreeDelayRequest(int regNum, u4 reason);
 bool getVRFreeDelayRequested(int regNum);
 bool isGlueHandled(int glue_reg);
-void resetGlue(int glue_reg);
-void updateGlue(int reg, bool isPhysical, int glue_reg);
+int resetGlue(int glue_reg);
+int updateGlue(int reg, bool isPhysical, int glue_reg);
 int updateVRAtUse(int reg, LowOpndRegType pType, int regAll);
 int touchEcx();
 int touchEax();
@@ -593,8 +728,10 @@ void endBranch();
 void rememberState(int);
 void goToState(int);
 void transferToState(int);
-void globalVREndOfBB(const Method*);
+int globalVREndOfBB(const Method*);
 void constVREndOfBB();
+bool hasVRStoreExitOfLoop();
+void storeVRExitOfLoop();
 void startNativeCode(int num, int type);
 void endNativeCode();
 void donotSpillReg(int physicalReg);
@@ -615,6 +752,7 @@ void load_effective_addr_scale(int base_reg, bool isBasePhysical,
 void load_fpu_cw(int disp, int base_reg, bool isBasePhysical);
 void store_fpu_cw(bool checkException, int disp, int base_reg, bool isBasePhysical);
 void convert_integer(OpndSize srcSize, OpndSize dstSize);
+void convert_int_to_fp(int srcReg, bool isSrcPhysical, int destReg, bool isDestPhysical, bool isDouble);
 void load_fp_stack(LowOp* op, OpndSize size, int disp, int base_reg, bool isBasePhysical);
 void load_int_fp_stack(OpndSize size, int disp, int base_reg, bool isBasePhysical);
 void load_int_fp_stack_imm(OpndSize size, int imm);
@@ -663,10 +801,10 @@ void move_ss_mem_to_reg(LowOp* op, int disp, int base_reg, bool isBasePhysical,
                         int reg, bool isPhysical);
 void move_ss_reg_to_mem(LowOp* op, int reg, bool isPhysical,
                          int disp, int base_reg, bool isBasePhysical);
-LowOpRegMem* move_ss_mem_to_reg_noalloc(int disp, int base_reg, bool isBasePhysical,
+LowOpMemReg* move_ss_mem_to_reg_noalloc(int disp, int base_reg, bool isBasePhysical,
                          MemoryAccessType mType, int mIndex,
                          int reg, bool isPhysical);
-LowOpMemReg* move_ss_reg_to_mem_noalloc(int reg, bool isPhysical,
+LowOpRegMem* move_ss_reg_to_mem_noalloc(int reg, bool isPhysical,
                          int disp, int base_reg, bool isBasePhysical,
                          MemoryAccessType mType, int mIndex);
 void move_sd_mem_to_reg(int disp, int base_reg, bool isBasePhysical,
@@ -678,7 +816,10 @@ void conditional_jump(ConditionCode cc, const char* target, bool isShortTerm);
 void unconditional_jump(const char* target, bool isShortTerm);
 void conditional_jump_int(ConditionCode cc, int target, OpndSize size);
 void unconditional_jump_int(int target, OpndSize size);
+void conditional_jump_block(ConditionCode cc, int targetBlockId);
+void unconditional_jump_block(int targetBlockId);
 void unconditional_jump_reg(int reg, bool isPhysical);
+void unconditional_jump_rel32(void * target);
 void call(const char* target);
 void call_reg(int reg, bool isPhysical);
 void call_reg_noalloc(int reg, bool isPhysical);
@@ -716,7 +857,7 @@ void push_reg_to_stack(OpndSize size, int reg, bool isPhysical);
 void move_reg_to_mem(OpndSize size,
                       int reg, bool isPhysical,
                       int disp, int base_reg, bool isBasePhysical);
-LowOpRegMem* move_mem_to_reg(OpndSize size,
+LowOpMemReg* move_mem_to_reg(OpndSize size,
                       int disp, int base_reg, bool isBasePhysical,
                       int reg, bool isPhysical);
 void movez_mem_to_reg(OpndSize size,
@@ -736,6 +877,19 @@ void moves_mem_disp_scale_to_reg(OpndSize size,
                       int base_reg, bool isBasePhysical,
                       int disp, int index_reg, bool isIndexPhysical, int scale,
                       int reg, bool isPhysical);
+
+//! \brief Performs MOVSX reg, reg2
+//!
+//! \details Sign extends reg and moves to reg2
+//! Size of destination register is fixed at 32-bits
+//! \param size of the source operand
+//! \param reg source operand
+//! \param isPhysical if reg is a physical register
+//! \param reg2 destination register
+//! \param isPhysical2 if reg2 is a physical register
+void moves_reg_to_reg(OpndSize size,
+                      int reg, bool isPhysical,
+                      int reg2, bool isPhysical2);
 void move_reg_to_reg(OpndSize size,
                       int reg, bool isPhysical,
                       int reg2, bool isPhysical2);
@@ -784,7 +938,7 @@ void move_reg_to_mem_noalloc(OpndSize size,
                       int reg, bool isPhysical,
                       int disp, int base_reg, bool isBasePhysical,
                       MemoryAccessType mType, int mIndex);
-LowOpRegMem* move_mem_to_reg_noalloc(OpndSize size,
+LowOpMemReg* move_mem_to_reg_noalloc(OpndSize size,
                       int disp, int base_reg, bool isBasePhysical,
                       MemoryAccessType mType, int mIndex,
                       int reg, bool isPhysical);
@@ -811,6 +965,8 @@ int set_glue_dvmdex(int reg, bool isPhysical);
 int get_suspendCount(int reg, bool isPhysical);
 int get_return_value(OpndSize size, int reg, bool isPhysical);
 int set_return_value(OpndSize size, int reg, bool isPhysical);
+void set_return_value(OpndSize size, int sourceReg, bool isSourcePhysical,
+        int scratchRegForSelfThread, int isScratchPhysical);
 int clear_exception();
 int get_exception(int reg, bool isPhysical);
 int set_exception(int reg, bool isPhysical);
@@ -887,7 +1043,6 @@ void freeDataWorklist();
 void freeLabelWorklist();
 void freeChainingWorklist();
 
-int common_invokeArgsDone(ArgsDoneType form, bool isJitFull);
 int common_backwardBranch();
 int common_exceptionThrown();
 int common_errNullObject();
@@ -898,302 +1053,306 @@ int common_errNoSuchMethod();
 int common_errDivideByZero();
 int common_periodicChecks_entry();
 int common_periodicChecks4();
-int common_gotoBail();
-int common_gotoBail_0();
-int common_StringIndexOutOfBounds();
-void goto_invokeArgsDone();
+int common_gotoBail(void);
+int common_gotoBail_0(void);
+int common_errStringIndexOutOfBounds();
+
+#if defined VTUNE_DALVIK
+void sendLabelInfoToVTune(int startStreamPtr, int endStreamPtr, const char* labelName);
+#endif
 
 //lower a bytecode
-int lowerByteCode(const Method* method);
+int lowerByteCode(const Method* method, const MIR * mir, const u2 * dalvikPC);
 
-int op_nop();
-int op_move();
-int op_move_from16();
-int op_move_16();
-int op_move_wide();
-int op_move_wide_from16();
-int op_move_wide_16();
-int op_move_result();
-int op_move_result_wide();
-int op_move_exception();
+int op_nop(const MIR * mir);
+int op_move(const MIR * mir);
+int op_move_from16(const MIR * mir);
+int op_move_16(const MIR * mir);
+int op_move_wide(const MIR * mir);
+int op_move_wide_from16(const MIR * mir);
+int op_move_wide_16(const MIR * mir);
+int op_move_result(const MIR * mir);
+int op_move_result_wide(const MIR * mir);
+int op_move_exception(const MIR * mir);
 
-int op_return_void();
-int op_return();
-int op_return_wide();
-int op_const_4();
-int op_const_16();
-int op_const();
-int op_const_high16();
-int op_const_wide_16();
-int op_const_wide_32();
-int op_const_wide();
-int op_const_wide_high16();
-int op_const_string();
-int op_const_string_jumbo();
-int op_const_class();
-int op_monitor_enter();
-int op_monitor_exit();
-int op_check_cast();
-int op_instance_of();
+int op_return_void(const MIR * mir);
+int op_return(const MIR * mir);
+int op_return_wide(const MIR * mir);
+int op_const_4(const MIR * mir);
+int op_const_16(const MIR * mir);
+int op_const(const MIR * mir);
+int op_const_high16(const MIR * mir);
+int op_const_wide_16(const MIR * mir);
+int op_const_wide_32(const MIR * mir);
+int op_const_wide(const MIR * mir);
+int op_const_wide_high16(const MIR * mir);
+int op_const_string(const MIR * mir);
+int op_const_string_jumbo(const MIR * mir);
+int op_const_class(const MIR * mir);
+int op_monitor_enter(const MIR * mir);
+int op_monitor_exit(const MIR * mir);
+int op_check_cast(const MIR * mir);
+int op_instance_of(const MIR * mir);
 
-int op_array_length();
-int op_new_instance();
-int op_new_array();
-int op_filled_new_array();
-int op_filled_new_array_range();
-int op_fill_array_data();
-int op_throw();
-int op_throw_verification_error();
-int op_goto();
-int op_goto_16();
-int op_goto_32();
-int op_packed_switch();
-int op_sparse_switch();
-int op_if_ge();
-int op_aget();
-int op_aget_wide();
-int op_aget_object();
-int op_aget_boolean();
-int op_aget_byte();
-int op_aget_char();
-int op_aget_short();
-int op_aput();
-int op_aput_wide();
-int op_aput_object();
-int op_aput_boolean();
-int op_aput_byte();
-int op_aput_char();
-int op_aput_short();
-int op_iget();
-int op_iget_wide(bool isVolatile);
-int op_iget_object();
-int op_iget_boolean();
-int op_iget_byte();
-int op_iget_char();
-int op_iget_short();
-int op_iput();
-int op_iput_wide(bool isVolatile);
-int op_iput_object();
-int op_iput_boolean();
-int op_iput_byte();
-int op_iput_char();
-int op_iput_short();
-int op_sget();
-int op_sget_wide(bool isVolatile);
-int op_sget_object();
-int op_sget_boolean();
-int op_sget_byte();
-int op_sget_char();
-int op_sget_short();
-int op_sput(bool isObj);
-int op_sput_wide(bool isVolatile);
-int op_sput_object();
-int op_sput_boolean();
-int op_sput_byte();
-int op_sput_char();
-int op_sput_short();
-int op_invoke_virtual();
-int op_invoke_super();
-int op_invoke_direct();
-int op_invoke_static();
-int op_invoke_interface();
-int op_invoke_virtual_range();
-int op_invoke_super_range();
-int op_invoke_direct_range();
-int op_invoke_static_range();
-int op_invoke_interface_range();
-int op_int_to_long();
-int op_add_long_2addr();
-int op_add_int_lit8();
-int op_cmpl_float();
-int op_cmpg_float();
-int op_cmpl_double();
-int op_cmpg_double();
-int op_cmp_long();
-int op_if_eq();
-int op_if_ne();
-int op_if_lt();
-int op_if_gt();
-int op_if_le();
-int op_if_eqz();
-int op_if_nez();
-int op_if_ltz();
-int op_if_gez();
-int op_if_gtz();
-int op_if_lez();
-int op_neg_int();
-int op_not_int();
-int op_neg_long();
-int op_not_long();
-int op_neg_float();
-int op_neg_double();
-int op_int_to_float();
-int op_int_to_double();
-int op_long_to_int();
-int op_long_to_float();
-int op_long_to_double();
-int op_float_to_int();
-int op_float_to_long();
-int op_float_to_double();
-int op_double_to_int();
-int op_double_to_long();
-int op_double_to_float();
-int op_int_to_byte();
-int op_int_to_char();
-int op_int_to_short();
-int op_add_int();
-int op_sub_int();
-int op_mul_int();
-int op_div_int();
-int op_rem_int();
-int op_and_int();
-int op_or_int();
-int op_xor_int();
-int op_shl_int();
-int op_shr_int();
-int op_ushr_int();
-int op_add_long();
-int op_sub_long();
-int op_mul_long();
-int op_div_long();
-int op_rem_long();
-int op_and_long();
-int op_or_long();
-int op_xor_long();
-int op_shl_long();
-int op_shr_long();
-int op_ushr_long();
-int op_add_float();
-int op_sub_float();
-int op_mul_float();
-int op_div_float();
-int op_rem_float();
-int op_add_double();
-int op_sub_double();
-int op_mul_double();
-int op_div_double();
-int op_rem_double();
-int op_add_int_2addr();
-int op_sub_int_2addr();
-int op_mul_int_2addr();
-int op_div_int_2addr();
-int op_rem_int_2addr();
-int op_and_int_2addr();
-int op_or_int_2addr();
-int op_xor_int_2addr();
-int op_shl_int_2addr();
-int op_shr_int_2addr();
-int op_ushr_int_2addr();
-int op_sub_long_2addr();
-int op_mul_long_2addr();
-int op_div_long_2addr();
-int op_rem_long_2addr();
-int op_and_long_2addr();
-int op_or_long_2addr();
-int op_xor_long_2addr();
-int op_shl_long_2addr();
-int op_shr_long_2addr();
-int op_ushr_long_2addr();
-int op_add_float_2addr();
-int op_sub_float_2addr();
-int op_mul_float_2addr();
-int op_div_float_2addr();
-int op_rem_float_2addr();
-int op_add_double_2addr();
-int op_sub_double_2addr();
-int op_mul_double_2addr();
-int op_div_double_2addr();
-int op_rem_double_2addr();
-int op_add_int_lit16();
-int op_rsub_int();
-int op_mul_int_lit16();
-int op_div_int_lit16();
-int op_rem_int_lit16();
-int op_and_int_lit16();
-int op_or_int_lit16();
-int op_xor_int_lit16();
-int op_rsub_int_lit8();
-int op_mul_int_lit8();
-int op_div_int_lit8();
-int op_rem_int_lit8();
-int op_and_int_lit8();
-int op_or_int_lit8();
-int op_xor_int_lit8();
-int op_shl_int_lit8();
-int op_shr_int_lit8();
-int op_ushr_int_lit8();
-int op_execute_inline(bool isRange);
-int op_invoke_object_init_range();
-int op_iget_quick();
-int op_iget_wide_quick();
-int op_iget_object_quick();
-int op_iput_quick();
-int op_iput_wide_quick();
-int op_iput_object_quick();
-int op_invoke_virtual_quick();
-int op_invoke_virtual_quick_range();
-int op_invoke_super_quick();
-int op_invoke_super_quick_range();
+int op_array_length(const MIR * mir);
+int op_new_instance(const MIR * mir);
+int op_new_array(const MIR * mir);
+int op_filled_new_array(const MIR * mir);
+int op_filled_new_array_range(const MIR * mir);
+int op_fill_array_data(const MIR * mir, const u2 * dalvikPC);
+int op_throw(const MIR * mir);
+int op_throw_verification_error(const MIR * mir);
+int op_goto(const MIR * mir);
+int op_goto_16(const MIR * mir);
+int op_goto_32(const MIR * mir);
+int op_packed_switch(const MIR * mir, const u2 * dalvikPC);
+int op_sparse_switch(const MIR * mir, const u2 * dalvikPC);
+int op_if_ge(const MIR * mir);
+int op_aget(const MIR * mir);
+int op_aget_wide(const MIR * mir);
+int op_aget_object(const MIR * mir);
+int op_aget_boolean(const MIR * mir);
+int op_aget_byte(const MIR * mir);
+int op_aget_char(const MIR * mir);
+int op_aget_short(const MIR * mir);
+int op_aput(const MIR * mir);
+int op_aput_wide(const MIR * mir);
+int op_aput_object(const MIR * mir);
+int op_aput_boolean(const MIR * mir);
+int op_aput_byte(const MIR * mir);
+int op_aput_char(const MIR * mir);
+int op_aput_short(const MIR * mir);
+int op_iget(const MIR * mir);
+int op_iget_wide(const MIR * mir, bool isVolatile);
+int op_iget_object(const MIR * mir);
+int op_iget_boolean(const MIR * mir);
+int op_iget_byte(const MIR * mir);
+int op_iget_char(const MIR * mir);
+int op_iget_short(const MIR * mir);
+int op_iput(const MIR * mir);
+int op_iput_wide(const MIR * mir, bool isVolatile);
+int op_iput_object(const MIR * mir);
+int op_iput_boolean(const MIR * mir);
+int op_iput_byte(const MIR * mir);
+int op_iput_char(const MIR * mir);
+int op_iput_short(const MIR * mir);
+int op_sget(const MIR * mir);
+int op_sget_wide(const MIR * mir, bool isVolatile);
+int op_sget_object(const MIR * mir);
+int op_sget_boolean(const MIR * mir);
+int op_sget_byte(const MIR * mir);
+int op_sget_char(const MIR * mir);
+int op_sget_short(const MIR * mir);
+int op_sput(const MIR * mir, bool isObj);
+int op_sput_wide(const MIR * mir, bool isVolatile);
+int op_sput_object(const MIR * mir);
+int op_sput_boolean(const MIR * mir);
+int op_sput_byte(const MIR * mir);
+int op_sput_char(const MIR * mir);
+int op_sput_short(const MIR * mir);
+int op_invoke_virtual(const MIR * mir);
+int op_invoke_super(const MIR * mir);
+int op_invoke_direct(const MIR * mir);
+int op_invoke_static(const MIR * mir);
+int op_invoke_interface(const MIR * mir);
+int op_invoke_virtual_range(const MIR * mir);
+int op_invoke_super_range(const MIR * mir);
+int op_invoke_direct_range(const MIR * mir);
+int op_invoke_static_range(const MIR * mir);
+int op_invoke_interface_range(const MIR * mir);
+int op_int_to_long(const MIR * mir);
+int op_add_long_2addr(const MIR * mir);
+int op_add_int_lit8(const MIR * mir);
+int op_cmpl_float(const MIR * mir);
+int op_cmpg_float(const MIR * mir);
+int op_cmpl_double(const MIR * mir);
+int op_cmpg_double(const MIR * mir);
+int op_cmp_long(const MIR * mir);
+int op_if_eq(const MIR * mir);
+int op_if_ne(const MIR * mir);
+int op_if_lt(const MIR * mir);
+int op_if_gt(const MIR * mir);
+int op_if_le(const MIR * mir);
+int op_if_eqz(const MIR * mir);
+int op_if_nez(const MIR * mir);
+int op_if_ltz(const MIR * mir);
+int op_if_gez(const MIR * mir);
+int op_if_gtz(const MIR * mir);
+int op_if_lez(const MIR * mir);
+int op_neg_int(const MIR * mir);
+int op_not_int(const MIR * mir);
+int op_neg_long(const MIR * mir);
+int op_not_long(const MIR * mir);
+int op_neg_float(const MIR * mir);
+int op_neg_double(const MIR * mir);
+int op_int_to_float(const MIR * mir);
+int op_int_to_double(const MIR * mir);
+int op_long_to_int(const MIR * mir);
+int op_long_to_float(const MIR * mir);
+int op_long_to_double(const MIR * mir);
+int op_float_to_int(const MIR * mir);
+int op_float_to_long(const MIR * mir);
+int op_float_to_double(const MIR * mir);
+int op_double_to_int(const MIR * mir);
+int op_double_to_long(const MIR * mir);
+int op_double_to_float(const MIR * mir);
+int op_int_to_byte(const MIR * mir);
+int op_int_to_char(const MIR * mir);
+int op_int_to_short(const MIR * mir);
+int op_add_int(const MIR * mir);
+int op_sub_int(const MIR * mir);
+int op_mul_int(const MIR * mir);
+int op_div_int(const MIR * mir);
+int op_rem_int(const MIR * mir);
+int op_and_int(const MIR * mir);
+int op_or_int(const MIR * mir);
+int op_xor_int(const MIR * mir);
+int op_shl_int(const MIR * mir);
+int op_shr_int(const MIR * mir);
+int op_ushr_int(const MIR * mir);
+int op_add_long(const MIR * mir);
+int op_sub_long(const MIR * mir);
+int op_mul_long(const MIR * mir);
+int op_div_long(const MIR * mir);
+int op_rem_long(const MIR * mir);
+int op_and_long(const MIR * mir);
+int op_or_long(const MIR * mir);
+int op_xor_long(const MIR * mir);
+int op_shl_long(const MIR * mir);
+int op_shr_long(const MIR * mir);
+int op_ushr_long(const MIR * mir);
+int op_add_float(const MIR * mir);
+int op_sub_float(const MIR * mir);
+int op_mul_float(const MIR * mir);
+int op_div_float(const MIR * mir);
+int op_rem_float(const MIR * mir);
+int op_add_double(const MIR * mir);
+int op_sub_double(const MIR * mir);
+int op_mul_double(const MIR * mir);
+int op_div_double(const MIR * mir);
+int op_rem_double(const MIR * mir);
+int op_add_int_2addr(const MIR * mir);
+int op_sub_int_2addr(const MIR * mir);
+int op_mul_int_2addr(const MIR * mir);
+int op_div_int_2addr(const MIR * mir);
+int op_rem_int_2addr(const MIR * mir);
+int op_and_int_2addr(const MIR * mir);
+int op_or_int_2addr(const MIR * mir);
+int op_xor_int_2addr(const MIR * mir);
+int op_shl_int_2addr(const MIR * mir);
+int op_shr_int_2addr(const MIR * mir);
+int op_ushr_int_2addr(const MIR * mir);
+int op_sub_long_2addr(const MIR * mir);
+int op_mul_long_2addr(const MIR * mir);
+int op_div_long_2addr(const MIR * mir);
+int op_rem_long_2addr(const MIR * mir);
+int op_and_long_2addr(const MIR * mir);
+int op_or_long_2addr(const MIR * mir);
+int op_xor_long_2addr(const MIR * mir);
+int op_shl_long_2addr(const MIR * mir);
+int op_shr_long_2addr(const MIR * mir);
+int op_ushr_long_2addr(const MIR * mir);
+int op_add_float_2addr(const MIR * mir);
+int op_sub_float_2addr(const MIR * mir);
+int op_mul_float_2addr(const MIR * mir);
+int op_div_float_2addr(const MIR * mir);
+int op_rem_float_2addr(const MIR * mir);
+int op_add_double_2addr(const MIR * mir);
+int op_sub_double_2addr(const MIR * mir);
+int op_mul_double_2addr(const MIR * mir);
+int op_div_double_2addr(const MIR * mir);
+int op_rem_double_2addr(const MIR * mir);
+int op_add_int_lit16(const MIR * mir);
+int op_rsub_int(const MIR * mir);
+int op_mul_int_lit16(const MIR * mir);
+int op_div_int_lit16(const MIR * mir);
+int op_rem_int_lit16(const MIR * mir);
+int op_and_int_lit16(const MIR * mir);
+int op_or_int_lit16(const MIR * mir);
+int op_xor_int_lit16(const MIR * mir);
+int op_rsub_int_lit8(const MIR * mir);
+int op_mul_int_lit8(const MIR * mir);
+int op_div_int_lit8(const MIR * mir);
+int op_rem_int_lit8(const MIR * mir);
+int op_and_int_lit8(const MIR * mir);
+int op_or_int_lit8(const MIR * mir);
+int op_xor_int_lit8(const MIR * mir);
+int op_shl_int_lit8(const MIR * mir);
+int op_shr_int_lit8(const MIR * mir);
+int op_ushr_int_lit8(const MIR * mir);
+int op_execute_inline(const MIR * mir, bool isRange);
+int op_invoke_direct_empty(const MIR * mir);
+int op_iget_quick(const MIR * mir);
+int op_iget_wide_quick(const MIR * mir);
+int op_iget_object_quick(const MIR * mir);
+int op_iput_quick(const MIR * mir);
+int op_iput_wide_quick(const MIR * mir);
+int op_iput_object_quick(const MIR * mir);
+int op_invoke_virtual_quick(const MIR * mir);
+int op_invoke_virtual_quick_range(const MIR * mir);
+int op_invoke_super_quick(const MIR * mir);
+int op_invoke_super_quick_range(const MIR * mir);
 
 ///////////////////////////////////////////////
 void set_reg_opnd(LowOpndReg* op_reg, int reg, bool isPhysical, LowOpndRegType type);
 void set_mem_opnd(LowOpndMem* mem, int disp, int base, bool isPhysical);
 void set_mem_opnd_scale(LowOpndMem* mem, int base, bool isPhysical, int disp, int index, bool indexPhysical, int scale);
-LowOpImm* dump_imm(Mnemonic m, OpndSize size,
-               int imm);
-LowOpNCG* dump_ncg(Mnemonic m, OpndSize size, int imm);
-LowOpImm* dump_imm_with_codeaddr(Mnemonic m, OpndSize size,
-               int imm, char* codePtr);
-LowOpImm* dump_special(AtomOpCode cc, int imm);
+LowOpImm* dump_imm(Mnemonic m, OpndSize size, int imm);
+void dump_imm_update(int imm, char* codePtr, bool updateSecondOperand);
+LowOpBlock* dump_blockid_imm(Mnemonic m, int targetBlockId);
 LowOpMem* dump_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
                int disp, int base_reg, bool isBasePhysical);
 LowOpReg* dump_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
                int reg, bool isPhysical, LowOpndRegType type);
 LowOpReg* dump_reg_noalloc(Mnemonic m, OpndSize size,
                int reg, bool isPhysical, LowOpndRegType type);
-LowOpMemImm* dump_imm_mem_noalloc(Mnemonic m, OpndSize size,
+LowOpImmMem* dump_imm_mem_noalloc(Mnemonic m, OpndSize size,
                            int imm,
                            int disp, int base_reg, bool isBasePhysical,
                            MemoryAccessType mType, int mIndex);
 LowOpRegReg* dump_reg_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
                    int reg, bool isPhysical,
                    int reg2, bool isPhysical2, LowOpndRegType type);
+LowOpRegReg* dump_reg_reg_diff_types(Mnemonic m, AtomOpCode m2, OpndSize srcSize,
+                   int srcReg, int isSrcPhysical, LowOpndRegType srcType,
+                   OpndSize destSize, int destReg, int isDestPhysical,
+                   LowOpndRegType destType);
 LowOpRegReg* dump_movez_reg_reg(Mnemonic m, OpndSize size,
                         int reg, bool isPhysical,
                         int reg2, bool isPhysical2);
-LowOpRegMem* dump_mem_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
+LowOpMemReg* dump_mem_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
                    int disp, int base_reg, bool isBasePhysical,
                    MemoryAccessType mType, int mIndex,
                    int reg, bool isPhysical, LowOpndRegType type);
-LowOpRegMem* dump_mem_reg_noalloc(Mnemonic m, OpndSize size,
+LowOpMemReg* dump_mem_reg_noalloc(Mnemonic m, OpndSize size,
                            int disp, int base_reg, bool isBasePhysical,
                            MemoryAccessType mType, int mIndex,
                            int reg, bool isPhysical, LowOpndRegType type);
-LowOpRegMem* dump_mem_scale_reg(Mnemonic m, OpndSize size,
+LowOpMemReg* dump_mem_scale_reg(Mnemonic m, OpndSize size,
                          int base_reg, bool isBasePhysical, int disp, int index_reg, bool isIndexPhysical, int scale,
                          int reg, bool isPhysical, LowOpndRegType type);
-LowOpMemReg* dump_reg_mem_scale(Mnemonic m, OpndSize size,
+LowOpRegMem* dump_reg_mem_scale(Mnemonic m, OpndSize size,
                          int reg, bool isPhysical,
                          int base_reg, bool isBasePhysical, int disp, int index_reg, bool isIndexPhysical, int scale,
                          LowOpndRegType type);
-LowOpMemReg* dump_reg_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
+LowOpRegMem* dump_reg_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
                    int reg, bool isPhysical,
                    int disp, int base_reg, bool isBasePhysical,
                    MemoryAccessType mType, int mIndex, LowOpndRegType type);
-LowOpMemReg* dump_reg_mem_noalloc(Mnemonic m, OpndSize size,
+LowOpRegMem* dump_reg_mem_noalloc(Mnemonic m, OpndSize size,
                            int reg, bool isPhysical,
                            int disp, int base_reg, bool isBasePhysical,
                            MemoryAccessType mType, int mIndex, LowOpndRegType type);
-LowOpRegImm* dump_imm_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
+LowOpImmReg* dump_imm_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
                    int imm, int reg, bool isPhysical, LowOpndRegType type, bool chaining);
-LowOpMemImm* dump_imm_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
+LowOpImmMem* dump_imm_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
                    int imm,
                    int disp, int base_reg, bool isBasePhysical,
                    MemoryAccessType mType, int mIndex, bool chaining);
-LowOpMemReg* dump_fp_mem(Mnemonic m, OpndSize size, int reg,
+LowOpRegMem* dump_fp_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
                   int disp, int base_reg, bool isBasePhysical,
                   MemoryAccessType mType, int mIndex);
-LowOpRegMem* dump_mem_fp(Mnemonic m, OpndSize size,
+LowOpMemReg* dump_mem_fp(Mnemonic m, AtomOpCode m2, OpndSize size,
                   int disp, int base_reg, bool isBasePhysical,
                   MemoryAccessType mType, int mIndex,
                   int reg);
@@ -1202,10 +1361,13 @@ LowOpLabel* dump_label(Mnemonic m, OpndSize size, int imm,
 
 unsigned getJmpCallInstSize(OpndSize size, JmpCall_type type);
 bool lowerByteCodeJit(const Method* method, const u2* codePtr, MIR* mir);
+#if defined(WITH_JIT)
+bool lowerByteCodeJit(const Method* method, const MIR * mir, const u2 * dalvikPC);
 void startOfBasicBlock(struct BasicBlock* bb);
 extern LowOpBlockLabel* traceLabelList;
 extern struct BasicBlock* traceCurrentBB;
-extern struct MIR* traceCurrentMIR;
+extern JitMode traceMode;
+extern bool branchInLoop;
 void startOfTrace(const Method* method, LowOpBlockLabel* labelList, int, CompilationUnit*);
 void endOfTrace(bool freeOnly);
 LowOp* jumpToBasicBlock(char* instAddr, int targetId);
@@ -1217,6 +1379,7 @@ void handleExtendedMIR(CompilationUnit *cUnit, MIR *mir);
 int insertChainingWorklist(int bbId, char * codeStart);
 void startOfTraceO1(const Method* method, LowOpBlockLabel* labelList, int exceptionBlockId, CompilationUnit *cUnit);
 void endOfTraceO1();
+#endif
 int isPowerOfTwo(int imm);
 void move_chain_to_mem(OpndSize size, int imm,
                         int disp, int base_reg, bool isBasePhysical);
@@ -1234,7 +1397,7 @@ int getRelativeNCG(s4 tmp, JmpCall_type type, bool* unknown, OpndSize* size);
 void freeAtomMem();
 OpndSize estOpndSizeFromImm(int target);
 
-void preprocessingBB(BasicBlock* bb);
-void preprocessingTrace();
+int preprocessingBB(BasicBlock* bb);
+int preprocessingTrace();
 void dump_nop(int size);
 #endif

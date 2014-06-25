@@ -64,7 +64,7 @@ dvmMterpStdRun:
     .global dvmMterpStdBail
     .type   dvmMterpStdBail, %function
 /*
- * void dvmMterpStdBail(Thread* self, bool changeInterp)
+ * void dvmMterpStdBail(Thread* self, int changeInterp)
  *
  * Restore the stack pointer and PC from the save point established on entry.
  * This is essentially the same as a longjmp, but should be cheaper.  The
@@ -75,7 +75,7 @@ dvmMterpStdRun:
  *
  * On entry:
  *  esp+4 (arg0)  Thread* self
- *  esp+8 (arg1)  bool changeInterp
+ *  esp+8 (arg1)  int changeInterp
  */
 dvmMterpStdBail:
     movl    4(%esp),%ecx                 # grab self

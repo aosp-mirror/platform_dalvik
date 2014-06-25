@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2010-2013 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,16 +42,16 @@ When allocating a physical register for an operand, we can't spill the operands 
 #include "NcgAot.h"
 #include "enc_wrapper.h"
 #include "vm/mterp/Mterp.h"
-#include "vm/mterp/common/FindInterface.h"
 #include "NcgHelper.h"
 #include <math.h>
 #include "interp/InterpState.h"
+#include "Scheduler.h"
+#include "Singleton.h"
+#include "ExceptionHandling.h"
 
 extern "C" int64_t __divdi3(int64_t, int64_t);
 extern "C" int64_t __moddi3(int64_t, int64_t);
 bool isScratchPhysical;
-LowOp* lirTable[200];
-int num_lirs_in_table = 0;
 
 //4 tables are defined: GPR integer ALU ops, ALU ops in FPU, SSE 32-bit, SSE 64-bit
 //the index to the table is the opcode
@@ -103,396 +103,548 @@ const  Mnemonic map_of_64_opcode_2_mnemonic[] = {
     Mnemonic_Null
 };
 
-////////////////////////////////////////////////
-//!update fields of LowOpndReg
-
-//!
-void set_reg_opnd(LowOpndReg* op_reg, int reg, bool isPhysical, LowOpndRegType type) {
+//! \brief Simplifies update of LowOpndReg fields.
+void set_reg_opnd(LowOpndReg* op_reg, int reg, bool isPhysical,
+        LowOpndRegType type) {
     op_reg->regType = type;
-    if(isPhysical) {
-        op_reg->logicalReg = -1;
-        op_reg->physicalReg = reg;
-    }
-    else
-        op_reg->logicalReg = reg;
-    return;
+    op_reg->regNum = reg;
+    op_reg->isPhysical = isPhysical;
 }
-//!update fields of LowOpndMem
 
-//!
+//! \brief Simplifies update of LowOpndMem fields when only base and
+//! displacement is used.
 void set_mem_opnd(LowOpndMem* mem, int disp, int base, bool isPhysical) {
     mem->m_disp.value = disp;
     mem->hasScale = false;
     mem->m_base.regType = LowOpndRegType_gp;
-    if(isPhysical) {
-        mem->m_base.logicalReg = -1;
-        mem->m_base.physicalReg = base;
-    } else {
-        mem->m_base.logicalReg = base;
-    }
-    return;
+    mem->m_base.regNum = base;
+    mem->m_base.isPhysical = isPhysical;
 }
-//!update fields of LowOpndMem
 
-//!
-void set_mem_opnd_scale(LowOpndMem* mem, int base, bool isPhysical, int disp, int index, bool indexPhysical, int scale) {
+//! \brief Simplifies update of LowOpndMem fields when base, displacement, index,
+//! and scaling is used.
+void set_mem_opnd_scale(LowOpndMem* mem, int base, bool isPhysical, int disp,
+        int index, bool indexPhysical, int scale) {
     mem->hasScale = true;
     mem->m_base.regType = LowOpndRegType_gp;
-    if(isPhysical) {
-        mem->m_base.logicalReg = -1;
-        mem->m_base.physicalReg = base;
-    } else {
-        mem->m_base.logicalReg = base;
-    }
-    if(indexPhysical) {
-        mem->m_index.logicalReg = -1;
-        mem->m_index.physicalReg = index;
-    } else {
-        mem->m_index.logicalReg = index;
-    }
+    mem->m_base.regNum = base;
+    mem->m_base.isPhysical = isPhysical;
+    mem->m_index.regNum = index;
+    mem->m_index.isPhysical = indexPhysical;
     mem->m_disp.value = disp;
     mem->m_scale.value = scale;
-    return;
 }
-//!return either LowOpndRegType_xmm or LowOpndRegType_gp
 
-//!
+//! \brief Return either LowOpndRegType_xmm or LowOpndRegType_gp
+//! depending on operand size.
+//! \param size
 inline LowOpndRegType getTypeFromIntSize(OpndSize size) {
     return size == OpndSize_64 ? LowOpndRegType_xmm : LowOpndRegType_gp;
 }
 
-// copied from JIT compiler
-typedef struct AtomMemBlock {
-    size_t bytesAllocated;
-    struct AtomMemBlock *next;
-    char ptr[0];
-} AtomMemBlock;
-
-#define ATOMBLOCK_DEFAULT_SIZE 4096
-AtomMemBlock *atomMemHead = NULL;
-AtomMemBlock *currentAtomMem = NULL;
-void * atomNew(size_t size) {
-    lowOpTimeStamp++; //one LowOp constructed
-    if(atomMemHead == NULL) {
-        atomMemHead = (AtomMemBlock*)malloc(sizeof(AtomMemBlock) + ATOMBLOCK_DEFAULT_SIZE);
-        if(atomMemHead == NULL) {
-            ALOGE("Memory allocation failed");
-            return NULL;
-        }
-        currentAtomMem = atomMemHead;
-        currentAtomMem->bytesAllocated = 0;
-        currentAtomMem->next = NULL;
-    }
-    size = (size + 3) & ~3;
-    if (size > ATOMBLOCK_DEFAULT_SIZE) {
-        ALOGE("Requesting %d bytes which exceed the maximal size allowed", size);
+//! \brief Thin layer over encoder that makes scheduling decision and
+//! is used for dumping instruction whose immediate is a target label.
+//! \param m x86 mnemonic
+//! \param size operand size
+//! \param imm When scheduling is disabled, this is the actual immediate.
+//! When scheduling is enabled, this is 0 because immediate has not been
+//! generated yet.
+//! \param label name of label for which we need to generate immediate for
+//! using the label address.
+//! \param isLocal Used to hint the distance from this instruction to label.
+//! When this is true, it means that 8 bits should be enough.
+inline LowOpLabel* lower_label(Mnemonic m, OpndSize size, int imm,
+        const char* label, bool isLocal) {
+    if (!gDvmJit.scheduling) {
+        stream = encoder_imm(m, size, imm, stream);
         return NULL;
     }
-retry:
-    if (size + currentAtomMem->bytesAllocated <= ATOMBLOCK_DEFAULT_SIZE) {
-        void *ptr;
-        ptr = &currentAtomMem->ptr[currentAtomMem->bytesAllocated];
-        return ptr;
-    }
-    if (currentAtomMem->next) {
-        currentAtomMem = currentAtomMem->next;
-        goto retry;
-    }
-    /* Time to allocate a new arena */
-    AtomMemBlock *newAtomMem = (AtomMemBlock*)malloc(sizeof(AtomMemBlock) + ATOMBLOCK_DEFAULT_SIZE);
-    if(newAtomMem == NULL) {
-        ALOGE("Memory allocation failed");
-        return NULL;
-    }
-    newAtomMem->bytesAllocated = 0;
-    newAtomMem->next = NULL;
-    currentAtomMem->next = newAtomMem;
-    currentAtomMem = newAtomMem;
-    goto retry;
-    ALOGE("atomNew requesting %d bytes", size);
-    return NULL;
-}
-
-void freeAtomMem() {
-    //LOGI("free all atom memory");
-    AtomMemBlock * tmpMem = atomMemHead;
-    while(tmpMem != NULL) {
-        tmpMem->bytesAllocated = 0;
-        tmpMem = tmpMem->next;
-    }
-    currentAtomMem = atomMemHead;
-}
-
-LowOpImm* dump_special(AtomOpCode cc, int imm) {
-    LowOpImm* op = (LowOpImm*)atomNew(sizeof(LowOpImm));
-    op->lop.opCode = Mnemonic_NULL;
-    op->lop.opCode2 = cc;
-    op->lop.opnd1.type = LowOpndType_Imm;
-    op->lop.numOperands = 1;
-    op->immOpnd.value = imm;
-    //stream = encoder_imm(m, size, imm, stream);
+    LowOpLabel * op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpLabel>();
+    op->opCode = m;
+    op->opCode2 = ATOM_NORMAL;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Label;
+    op->numOperands = 1;
+    snprintf(op->labelOpnd.label, LABEL_SIZE, "%s", label);
+    op->labelOpnd.isLocal = isLocal;
+    singletonPtr<Scheduler>()->updateUseDefInformation_imm(op);
     return op;
 }
 
-LowOpLabel* lower_label(Mnemonic m, OpndSize size, int imm, const char* label, bool isLocal) {
-    stream = encoder_imm(m, size, imm, stream);
-    return NULL;
-}
-
-LowOpLabel* dump_label(Mnemonic m, OpndSize size, int imm,
-               const char* label, bool isLocal) {
+//! \brief Interface to encoder.
+LowOpLabel* dump_label(Mnemonic m, OpndSize size, int imm, const char* label,
+        bool isLocal) {
     return lower_label(m, size, imm, label, isLocal);
 }
 
-LowOpNCG* dump_ncg(Mnemonic m, OpndSize size, int imm) {
-    stream = encoder_imm(m, size, imm, stream);
-    return NULL;
+//! Used for dumping an instruction with a single immediate to the code stream
+//! but the immediate is not yet known because the target MIR block still needs
+//! code generated for it. This is only valid when scheduling is on.
+//! \pre Instruction scheduling must be enabled
+//! \param m x86 mnemonic
+//! \param targetBlockId id of the MIR block
+LowOpBlock* dump_blockid_imm(Mnemonic m, int targetBlockId) {
+    assert(gDvmJit.scheduling && "Scheduling must be turned on before "
+                "calling dump_blockid_imm");
+    LowOpBlock* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpBlock>();
+    op->opCode = m;
+    op->opCode2 = ATOM_NORMAL;
+    op->opndSrc.type = LowOpndType_BlockId;
+    op->numOperands = 1;
+    op->blockIdOpnd.value = targetBlockId;
+    singletonPtr<Scheduler>()->updateUseDefInformation_imm(op);
+    return op;
 }
 
-//!update fields of LowOp and generate a x86 instruction with a single immediate operand
-
-//!
-LowOpImm* lower_imm(Mnemonic m, OpndSize size, int imm, bool updateTable) {
-    stream = encoder_imm(m, size, imm, stream);
-    return NULL;
+//! \brief Thin layer over encoder that makes scheduling decision and
+//! is used for dumping instruction with a known immediate.
+//! \param m x86 mnemonic
+//! \param size operand size
+//! \param imm immediate
+LowOpImm* lower_imm(Mnemonic m, OpndSize size, int imm) {
+    if (!gDvmJit.scheduling) {
+        stream = encoder_imm(m, size, imm, stream);
+        return NULL;
+    }
+    LowOpImm* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpImm>();
+    op->opCode = m;
+    op->opCode2 = ATOM_NORMAL;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Imm;
+    op->numOperands = 1;
+    op->immOpnd.value = imm;
+    singletonPtr<Scheduler>()->updateUseDefInformation_imm(op);
+    return op;
 }
 
+//! \brief Interface to encoder.
 LowOpImm* dump_imm(Mnemonic m, OpndSize size, int imm) {
-    return lower_imm(m, size, imm, true);
+    return lower_imm(m, size, imm);
 }
 
-LowOpImm* dump_imm_with_codeaddr(Mnemonic m, OpndSize size,
-               int imm, char* codePtr) {
-    encoder_imm(m, size, imm, codePtr);
-    return NULL;
+//! \brief Used to update the immediate of an instruction already in the
+//! code stream.
+//! \warning This assumes that the instruction to update is already in the
+//! code stream. If it is not, the VM will abort.
+//! \param imm new immediate to use
+//! \param codePtr pointer to location in code stream where the instruction
+//! whose immediate needs updated
+//! \param updateSecondOperand This is true when second operand needs updated
+void dump_imm_update(int imm, char* codePtr, bool updateSecondOperand) {
+    // These encoder call do not need to go through scheduler since they need
+    // to be dumped at a specific location in code stream.
+    if(updateSecondOperand)
+        encoder_update_imm_rm(imm, codePtr);
+    else // update first operand
+        encoder_update_imm(imm, codePtr);
 }
 
-//!update fields of LowOp and generate a x86 instruction that takes a single memory operand
-
-//!With NCG O1, we call freeReg to free up physical registers, then call registerAlloc to allocate a physical register for memory base
-LowOpMem* lower_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
-               int disp, int base_reg) {
-    stream = encoder_mem(m, size, disp, base_reg, true, stream);
-    return NULL;
-}
-
-LowOpMem* dump_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
-               int disp, int base_reg, bool isBasePhysical) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
-        freeReg(true);
-        //type of the base is gpr
-        int regAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
-        return lower_mem(m, m2, size, disp, regAll);
-    } else {
+//! \brief Thin layer over encoder that makes scheduling decision and
+//! is used for dumping instruction with a single memory operand.
+//! \param m x86 mnemonic
+//! \param m2 Atom pseudo-mnemonic
+//! \param size operand size
+//! \param disp displacement offset
+//! \param base_reg physical register (PhysicalReg type) or a logical register
+//! \param isBasePhysical notes if base_reg is a physical register. It must
+//! be true when scheduling is enabled or else VM will abort.
+LowOpMem* lower_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
+        int base_reg, bool isBasePhysical) {
+    if (!gDvmJit.scheduling) {
         stream = encoder_mem(m, size, disp, base_reg, isBasePhysical, stream);
         return NULL;
     }
+
+    if (!isBasePhysical) {
+        ALOGE("JIT_ERROR: Base register not physical in lower_mem");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+    LowOpMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpMem>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Mem;
+    op->numOperands = 1;
+    op->memOpnd.mType = MemoryAccess_Unknown;
+    op->memOpnd.index = -1;
+    set_mem_opnd(&(op->memOpnd), disp, base_reg, isBasePhysical);
+    singletonPtr<Scheduler>()->updateUseDefInformation_mem(op);
+    return op;
 }
+
+//! \brief Interface to encoder which includes register allocation
+//! decision.
+//! \details With NCG O1, call freeReg to free up physical registers,
+//! then call registerAlloc to allocate a physical register for memory base
+LowOpMem* dump_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
+        int base_reg, bool isBasePhysical) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
+        freeReg(true);
+        //type of the base is gpr
+        int regAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
+        return lower_mem(m, m2, size, disp, regAll, true /*isBasePhysical*/);
+    } else {
+        return lower_mem(m, m2, size, disp, base_reg, isBasePhysical);
+    }
+}
+
 //!update fields of LowOp and generate a x86 instruction that takes a single reg operand
+LowOpReg* lower_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+        LowOpndRegType type, bool isPhysical) {
+    if (!gDvmJit.scheduling) {
+        stream = encoder_reg(m, size, reg, isPhysical, type, stream);
+        return NULL;
+    }
+
+    if (!isPhysical) {
+        ALOGE("JIT_ERROR: Register not physical at lower_reg");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+    LowOpReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpReg>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Reg;
+    op->numOperands = 1;
+    set_reg_opnd(&(op->regOpnd), reg, isPhysical, type);
+    singletonPtr<Scheduler>()->updateUseDefInformation_reg(op);
+    return op;
+}
 
 //!With NCG O1, wecall freeReg to free up physical registers, then call registerAlloc to allocate a physical register for the single operand
-LowOpReg* lower_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
-               int reg, LowOpndRegType type) {
-    stream = encoder_reg(m, size, reg, true, type, stream);
-    return NULL;
-}
-
-LowOpReg* dump_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
-               int reg, bool isPhysical, LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpReg* dump_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+        bool isPhysical, LowOpndRegType type) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         freeReg(true);
-        if(m == Mnemonic_MUL || m == Mnemonic_IDIV) {
-            //these two instructions use eax & edx implicitly
+        if (m == Mnemonic_MUL || m == Mnemonic_IMUL || m == Mnemonic_DIV
+                || m == Mnemonic_IDIV) {
+            //these four instructions use eax & edx implicitly
             touchEax();
             touchEdx();
         }
         int regAll = registerAlloc(type, reg, isPhysical, true);
-        return lower_reg(m, m2, size, regAll, type);
+        return lower_reg(m, m2, size, regAll, type, true /*isPhysical*/);
     } else {
-        stream = encoder_reg(m, size, reg, isPhysical, type, stream);
-        return NULL;
+        return lower_reg(m, m2, size, reg, type, isPhysical);
     }
-}
-LowOpReg* dump_reg_noalloc(Mnemonic m, OpndSize size,
-               int reg, bool isPhysical, LowOpndRegType type) {
-    return lower_reg(m, ATOM_NORMAL, size, reg, type);
 }
 
-LowOpRegReg* lower_reg_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
-                 int reg, int reg2, LowOpndRegType type) {
-    if(m == Mnemonic_FUCOMP || m == Mnemonic_FUCOM) {
-        stream = encoder_compare_fp_stack(m == Mnemonic_FUCOMP,
-                                          reg-reg2, size==OpndSize_64, stream);
+LowOpReg* dump_reg_noalloc(Mnemonic m, OpndSize size, int reg, bool isPhysical,
+        LowOpndRegType type) {
+    return lower_reg(m, ATOM_NORMAL, size, reg, type, true /*isPhysical*/);
+}
+
+//! \brief Update fields of LowOp to generate an instruction with
+//! two register operands
+//!
+//! \details For MOVZX and MOVSX, allows source and destination
+//! operand sizes to be different, and fixes type to general purpose.
+//! \param m x86 mnemonic
+//! \param m2 Atom pseudo-mnemonic
+//! \param size operand size
+//! \param regSrc source register
+//! \param isPhysical if regSrc is a physical register
+//! \param regDest destination register
+//! \param isPhysical2 if regDest is a physical register
+//! \param type the register type. For MOVSX and MOVZX, type is fixed
+//! as general purpose
+//! \return a LowOp corresponding to the reg-reg operation
+LowOpRegReg* lower_reg_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int regSrc,
+        bool isPhysical, int regDest, bool isPhysical2, LowOpndRegType type) {
+
+    OpndSize srcSize = size;
+    OpndSize destSize = size;
+    LowOpndRegType srcType = type;
+    LowOpndRegType destType = type;
+
+    //We may need to override the default size and type if src and dest can be
+    //of different size / type, as follows:
+
+    //For MOVSX and MOVZX, fix the destination size and type to 32-bit and GP
+    //respectively. Note that this is a rigid requirement, and for now won't
+    //allow, for example, MOVSX Sz8, Sz16
+    if (m == Mnemonic_MOVZX || m == Mnemonic_MOVSX) {
+        destSize = OpndSize_32;
     }
-    else {
-        stream = encoder_reg_reg(m, size, reg, true, reg2, true, type, stream);
+    //For CVTSI2SD or CVTSI2SS, the source needs to be fixed at 32-bit GP
+    else if (m == Mnemonic_CVTSI2SD || m == Mnemonic_CVTSI2SS) {
+        srcSize = OpndSize_32;
+        srcType = LowOpndRegType_gp;
     }
-    return NULL;
+
+    if (!gDvmJit.scheduling) {
+        if (m == Mnemonic_FUCOMP || m == Mnemonic_FUCOM) {
+            stream = encoder_compare_fp_stack(m == Mnemonic_FUCOMP, regSrc - regDest,
+                    size == OpndSize_64, stream);
+        } else {
+            stream = encoder_reg_reg_diff_sizes(m, srcSize, regSrc, isPhysical, destSize,
+                    regDest, isPhysical2, destType, stream);
+        }
+        return NULL;
+    }
+
+    if (!isPhysical && !isPhysical2) {
+        ALOGE("JIT_ERROR: Registers not physical at lower_reg_to_reg");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+
+    LowOpRegReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpRegReg>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndDest.size = destSize;
+    op->opndDest.type = LowOpndType_Reg;
+    op->opndSrc.size = srcSize;
+    op->opndSrc.type = LowOpndType_Reg;
+    op->numOperands = 2;
+    set_reg_opnd(&(op->regDest), regDest, isPhysical2, destType);
+    set_reg_opnd(&(op->regSrc), regSrc, isPhysical, srcType);
+    singletonPtr<Scheduler>()->updateUseDefInformation_reg_to_reg(op);
+
+    return op;
 }
 
 //!update fields of LowOp and generate a x86 instruction that takes two reg operands
 
-//Here, both registers are physical
-LowOpRegReg* dump_reg_reg_noalloc(Mnemonic m, OpndSize size,
-                           int reg, bool isPhysical,
-                           int reg2, bool isPhysical2, LowOpndRegType type) {
-    return lower_reg_reg(m, ATOM_NORMAL, size, reg, reg2, type);
+//!Here, both registers are physical
+LowOpRegReg* dump_reg_reg_noalloc(Mnemonic m, OpndSize size, int reg,
+        bool isPhysical, int reg2, bool isPhysical2, LowOpndRegType type) {
+    return lower_reg_to_reg(m, ATOM_NORMAL, size, reg, true /*isPhysical*/, reg2,
+            true /*isPhysical2*/, type);
 }
 
-inline bool isMnemonicMove(Mnemonic m) {
-    return (m == Mnemonic_MOV || m == Mnemonic_MOVQ ||
-            m == Mnemonic_MOVSS || m == Mnemonic_MOVSD);
+//! \brief Check if we have a MOV instruction which can be redundant
+//!
+//! \details Checks if the Mnemonic is a MOV which can possibly be
+//! optimized. For example, MOVSX %ax, %eax cannot be optimized, while
+//! MOV %eax, %eax is a NOP, and can be treated as such.
+//! \param m Mnemonic to check for
+//! \return whether the move can possibly be optimized away
+inline bool isMoveOptimizable(Mnemonic m) {
+    return (m == Mnemonic_MOV || m == Mnemonic_MOVQ || m == Mnemonic_MOVSS
+            || m == Mnemonic_MOVSD);
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes two reg operands
 
 //!here dst reg is already allocated to a physical reg
 //! we should not spill the physical register for dst when allocating for src
-LowOpRegReg* dump_reg_reg_noalloc_dst(Mnemonic m, OpndSize size,
-                               int reg, bool isPhysical,
-                               int reg2, bool isPhysical2, LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpRegReg* dump_reg_reg_noalloc_dst(Mnemonic m, OpndSize size, int reg,
+        bool isPhysical, int reg2, bool isPhysical2, LowOpndRegType type) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         int regAll = registerAlloc(type, reg, isPhysical, true);
         /* remove move from one register to the same register */
-        if(isMnemonicMove(m) && regAll == reg2) return NULL;
-        return lower_reg_reg(m, ATOM_NORMAL, size, regAll, reg2, type);
+        if (isMoveOptimizable(m) && regAll == reg2)
+            return NULL;
+        return lower_reg_to_reg(m, ATOM_NORMAL, size, regAll, true /*isPhysical*/,
+                reg2, true /*isPhysical2*/, type);
     } else {
-        stream = encoder_reg_reg(m, size, reg, isPhysical, reg2, isPhysical2, type, stream);
-        return NULL;
+        return lower_reg_to_reg(m, ATOM_NORMAL, size, reg, isPhysical, reg2,
+                isPhysical2, type);
     }
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes two reg operands
 
 //!here src reg is already allocated to a physical reg
 LowOpRegReg* dump_reg_reg_noalloc_src(Mnemonic m, AtomOpCode m2, OpndSize size,
-                               int reg, bool isPhysical,
-                               int reg2, bool isPhysical2, LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        int reg, bool isPhysical, int reg2, bool isPhysical2,
+        LowOpndRegType type) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         int regAll2;
-        if(isMnemonicMove(m) && checkTempReg2(reg2, type, isPhysical2, reg)) { //dst reg is logical
+        if(isMoveOptimizable(m) && checkTempReg2(reg2, type, isPhysical2, reg, -1)) { //dst reg is logical
             //only from get_virtual_reg_all
             regAll2 = registerAllocMove(reg2, type, isPhysical2, reg);
         } else {
             regAll2 = registerAlloc(type, reg2, isPhysical2, true);
-            return lower_reg_reg(m, m2, size, reg, regAll2, type);
+            return lower_reg_to_reg(m, m2, size, reg, true /*isPhysical*/, regAll2,
+                    true /*isPhysical2*/, type);
         }
     } else {
-        stream = encoder_reg_reg(m, size, reg, isPhysical, reg2, isPhysical2, type, stream);
-        return NULL;
+        return lower_reg_to_reg(m, m2, size, reg, isPhysical, reg2, isPhysical2,
+                type);
     }
     return NULL;
 }
-//!update fields of LowOp and generate a x86 instruction that takes two reg operands
 
-//!
-LowOpRegReg* dump_reg_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
-                   int reg, bool isPhysical,
-                   int reg2, bool isPhysical2, LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+//! \brief Wrapper around lower_reg_to_reg with reg allocation
+//! \details Allocates both registers, checks for optimizations etc,
+//! and calls lower_reg_to_reg
+//! \param m The mnemonic
+//! \param m2 The ATOM mnemonic type
+//! \param srcSize Size of the source operand
+//! \param srcReg The source register itself
+//! \param isSrcPhysical Whether source is physical
+//! \param srcType The type of source register
+//! \param destSize Size of the destination operand
+//! \param destReg The destination register itself
+//! \param isDestPhysical Whether destination is physical
+//! \param destType The type of destination register
+//! \return The generated LowOp
+LowOpRegReg* dump_reg_reg_diff_types(Mnemonic m, AtomOpCode m2, OpndSize srcSize,
+        int srcReg, int isSrcPhysical, LowOpndRegType srcType, OpndSize destSize,
+        int destReg, int isDestPhysical, LowOpndRegType destType) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         startNativeCode(-1, -1);
         //reg is source if m is MOV
         freeReg(true);
-        int regAll = registerAlloc(type, reg, isPhysical, true);
+        int regAll = registerAlloc(srcType, srcReg, isSrcPhysical, true);
         int regAll2;
         LowOpRegReg* op = NULL;
 #ifdef MOVE_OPT2
-        if(isMnemonicMove(m) &&
-           ((reg != PhysicalReg_EDI && reg != PhysicalReg_ESP && reg != PhysicalReg_EBP) || (!isPhysical)) &&
-           isPhysical2 == false) { //dst reg is logical
+        if(isMoveOptimizable(m) &&
+                ((reg != PhysicalReg_EDI && srcReg != PhysicalReg_ESP && srcReg != PhysicalReg_EBP) || (!isSrcPhysical)) &&
+                isDestPhysical == false) { //dst reg is logical
             //called from move_reg_to_reg
-            regAll2 = registerAllocMove(reg2, type, isPhysical2, regAll);
+            regAll2 = registerAllocMove(regDest, destType, isDestPhysical, regAll);
         } else {
 #endif
-            donotSpillReg(regAll);
-            regAll2 = registerAlloc(type, reg2, isPhysical2, true);
-            op = lower_reg_reg(m, m2, size, regAll, regAll2, type);
+        donotSpillReg(regAll);
+        regAll2 = registerAlloc(destType, destReg, isDestPhysical, true);
+
+        // NOTE: The use of (destSize, destType) as THE (size, type) can be confusing. In most
+        // cases, we are using this function through dump_reg_reg, so the (size, type) doesn't
+        // matter. For MOVSX and MOVZX, the size passed to dump_reg_reg is the srcSize (8 or 16),
+        // so destSize is technically the srcSize, (type is gpr) and we override destSize inside
+        // lower_reg_to_reg to 32. For CVTSI2SS and CVTSI2SD, the destSize is 64-bit, and we
+        // override the srcSize inside lower_reg_to_reg.
+        op = lower_reg_to_reg(m, m2, destSize, regAll, true /*isPhysical*/, regAll2,
+                true /*isPhysical2*/, destType);
 #ifdef MOVE_OPT2
-        }
+    }
 #endif
         endNativeCode();
         return op;
-    }
-    else {
-        stream = encoder_reg_reg(m, size, reg, isPhysical, reg2, isPhysical2, type, stream);
+    } else {
+        return lower_reg_to_reg(m, m2, destSize, srcReg, isSrcPhysical, destReg, isDestPhysical,
+                destType);
     }
     return NULL;
 }
 
-LowOpRegMem* lower_mem_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
-                 int disp, int base_reg,
-                 MemoryAccessType mType, int mIndex,
-                 int reg, LowOpndRegType type, bool isMoves) {
-    if(m == Mnemonic_MOVSX) {
-        stream = encoder_moves_mem_to_reg(size, disp, base_reg, true,
-                                          reg, true, stream);
+//! \brief Wrapper around dump_reg_reg_diff_types assuming sizes and types are same
+//! \param m The mnemonic
+//! \param m2 The ATOM mnemonic type
+//! \param size Size of the source and destination operands
+//! \param reg The source register
+//! \param isPhysical Whether source is physical
+//! \param reg2 The destination register
+//! \param isPhysical2 Whether destination is physical
+//! \param type The type of operation
+//! \return The generated LowOp
+LowOpRegReg* dump_reg_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+        bool isPhysical, int reg2, bool isPhysical2, LowOpndRegType type) {
+    return dump_reg_reg_diff_types(m, m2, size, reg, isPhysical, type, size,
+            reg2, isPhysical2, type);
+}
+
+LowOpMemReg* lower_mem_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
+        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex,
+        int reg, bool isPhysical, LowOpndRegType type) {
+    bool isMovzs = (m == Mnemonic_MOVZX || m == Mnemonic_MOVSX);
+    OpndSize overridden_size = isMovzs ? OpndSize_32 : size;
+    LowOpndRegType overridden_type = isMovzs ? LowOpndRegType_gp : type;
+    if (!gDvmJit.scheduling) {
+        stream = encoder_mem_to_reg_diff_sizes(m, size, disp, base_reg, isBasePhysical,
+                overridden_size, reg, isPhysical, overridden_type, stream);
+        return NULL;
     }
-    else if(m == Mnemonic_MOVZX) {
-        stream = encoder_movez_mem_to_reg(size, disp, base_reg, true,
-                                          reg, true, stream);
+
+    if (!isBasePhysical && !isPhysical) {
+        ALOGE("JIT_ERROR: Base register or operand register not physical in lower_mem_to_reg");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
     }
-    else {
-        stream = encoder_mem_reg(m, size, disp, base_reg, true,
-                                 reg, true, type, stream);
-    }
-    return NULL;
+    LowOpMemReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpMemReg>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndDest.size = overridden_size;
+    op->opndDest.type = LowOpndType_Reg;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Mem;
+    op->numOperands = 2;
+    set_reg_opnd(&(op->regDest), reg, isPhysical, overridden_type);
+    set_mem_opnd(&(op->memSrc), disp, base_reg, isBasePhysical);
+    op->memSrc.mType = mType;
+    op->memSrc.index = mIndex;
+    singletonPtr<Scheduler>()->updateUseDefInformation_mem_to_reg(op);
+    return op;
 }
 
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!Here, operands are already allocated to physical registers
-LowOpRegMem* dump_mem_reg_noalloc(Mnemonic m, OpndSize size,
-                           int disp, int base_reg, bool isBasePhysical,
-                           MemoryAccessType mType, int mIndex,
-                           int reg, bool isPhysical, LowOpndRegType type) {
-    return lower_mem_reg(m, ATOM_NORMAL, size, disp, base_reg, mType, mIndex, reg, type, false);
+LowOpMemReg* dump_mem_reg_noalloc(Mnemonic m, OpndSize size, int disp,
+        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex,
+        int reg, bool isPhysical, LowOpndRegType type) {
+    return lower_mem_to_reg(m, ATOM_NORMAL, size, disp, base_reg,
+            true /*isBasePhysical*/, mType, mIndex, reg, true /*isPhysical*/,
+            type);
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!Here, memory operand is already allocated to physical register
-LowOpRegMem* dump_mem_reg_noalloc_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
-                               int disp, int base_reg, bool isBasePhysical,
-                               MemoryAccessType mType, int mIndex,
-                               int reg, bool isPhysical, LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpMemReg* dump_mem_reg_noalloc_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
+        int disp, int base_reg, bool isBasePhysical, MemoryAccessType mType,
+        int mIndex, int reg, bool isPhysical, LowOpndRegType type) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         int regAll = registerAlloc(type, reg, isPhysical, true);
-        return lower_mem_reg(m, m2, size, disp, base_reg, mType, mIndex, regAll, type, false);
+        return lower_mem_to_reg(m, m2, size, disp, base_reg,
+                true /*isBasePhysical*/, mType, mIndex, regAll,
+                true /*isPhysical*/, type);
     } else {
-        stream = encoder_mem_reg(m, size, disp, base_reg, isBasePhysical,
-                                 reg, isPhysical, type, stream);
+        return lower_mem_to_reg(m, m2, size, disp, base_reg, isBasePhysical, mType,
+                mIndex, reg, isPhysical, type);
     }
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!
-LowOpRegMem* dump_mem_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
-                   int disp, int base_reg, bool isBasePhysical,
-                   MemoryAccessType mType, int mIndex,
-                   int reg, bool isPhysical, LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpMemReg* dump_mem_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
+        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex,
+        int reg, bool isPhysical, LowOpndRegType type) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         startNativeCode(-1, -1);
         freeReg(true);
-        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
+        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
         //it is okay to use the same physical register
-        if(isMnemonicMove(m)) {
+        if (isMoveOptimizable(m)) {
             freeReg(true);
         } else {
             donotSpillReg(baseAll);
         }
         int regAll = registerAlloc(type, reg, isPhysical, true);
         endNativeCode();
-        return lower_mem_reg(m, m2, size, disp, baseAll, mType, mIndex, regAll, type, false);
+        return lower_mem_to_reg(m, m2, size, disp, baseAll,
+                true /*isBasePhysical*/, mType, mIndex, regAll,
+                true /*isPhysical*/, type);
     } else {
-        stream = encoder_mem_reg(m, size, disp, base_reg, isBasePhysical,
-                                 reg, isPhysical, type, stream);
+        return lower_mem_to_reg(m, m2, size, disp, base_reg, isBasePhysical, mType,
+                mIndex, reg, isPhysical, type);
     }
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!
-LowOpRegMem* dump_moves_mem_reg(Mnemonic m, OpndSize size,
+LowOpMemReg* dump_moves_mem_reg(Mnemonic m, OpndSize size,
                          int disp, int base_reg, bool isBasePhysical,
              int reg, bool isPhysical) {
+#if 0 /* Commented out because it is dead code. If re-enabling, this needs to be updated
+         to work with instruction scheduling and cannot call encoder directly. Please see
+         dump_movez_mem_reg for an example */
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         startNativeCode(-1, -1);
         freeReg(true);
@@ -505,25 +657,30 @@ LowOpRegMem* dump_moves_mem_reg(Mnemonic m, OpndSize size,
     } else {
         stream = encoder_moves_mem_to_reg(size, disp, base_reg, isBasePhysical, reg, isPhysical, stream);
     }
+#endif
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!
-LowOpRegMem* dump_movez_mem_reg(Mnemonic m, OpndSize size,
-             int disp, int base_reg, bool isBasePhysical,
-             int reg, bool isPhysical) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpMemReg* dump_movez_mem_reg(Mnemonic m, OpndSize size, int disp,
+        int base_reg, bool isBasePhysical, int reg, bool isPhysical) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         startNativeCode(-1, -1);
         freeReg(true);
-        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
+        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
         donotSpillReg(baseAll);
         int regAll = registerAlloc(LowOpndRegType_gp, reg, isPhysical, true);
         endNativeCode();
-        return lower_mem_reg(m, ATOM_NORMAL, size, disp, baseAll, MemoryAccess_Unknown, -1,
-            regAll, LowOpndRegType_gp, true/*moves*/);
+        return lower_mem_to_reg(m, ATOM_NORMAL, size, disp, baseAll,
+                true /*isBasePhysical*/, MemoryAccess_Unknown, -1, regAll,
+                true /*isPhysical*/, LowOpndRegType_gp);
     } else {
-        stream = encoder_movez_mem_to_reg(size, disp, base_reg, isBasePhysical, reg, isPhysical, stream);
+        return lower_mem_to_reg(m, ATOM_NORMAL, size, disp, base_reg,
+                isBasePhysical, MemoryAccess_Unknown, -1, reg, isPhysical,
+                LowOpndRegType_gp);
     }
     return NULL;
 }
@@ -534,6 +691,9 @@ LowOpRegMem* dump_movez_mem_reg(Mnemonic m, OpndSize size,
 LowOpRegReg* dump_movez_reg_reg(Mnemonic m, OpndSize size,
              int reg, bool isPhysical,
              int reg2, bool isPhysical2) {
+#if 0 /* Commented out because it is dead code. If re-enabling, this needs to be updated
+         to work with instruction scheduling and cannot call encoder directly. Please see
+         dump_movez_mem_reg for an example */
     LowOpRegReg* op = (LowOpRegReg*)atomNew(sizeof(LowOpRegReg));
     op->lop.opCode = m;
     op->lop.opnd1.size = OpndSize_32;
@@ -557,229 +717,427 @@ LowOpRegReg* dump_movez_reg_reg(Mnemonic m, OpndSize size,
         stream = encoder_movez_reg_to_reg(size, reg, isPhysical, reg2,
                                         isPhysical2, LowOpndRegType_gp, stream);
     }
+#endif
     return NULL;
 }
 
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!
-LowOpRegMem* lower_mem_scale_reg(Mnemonic m, OpndSize size, int base_reg, int disp, int index_reg,
-                 int scale, int reg, LowOpndRegType type) {
+LowOpMemReg* lower_mem_scale_to_reg(Mnemonic m, OpndSize size, int base_reg,
+        bool isBasePhysical, int disp, int index_reg, bool isIndexPhysical,
+        int scale, int reg, bool isPhysical, LowOpndRegType type) {
     bool isMovzs = (m == Mnemonic_MOVZX || m == Mnemonic_MOVSX);
-    if(isMovzs)
-        stream = encoder_movzs_mem_disp_scale_reg(m, size, base_reg, true, disp, index_reg, true,
-                                                  scale, reg, true, type, stream);
-    else {
-        if(disp == 0)
-            stream = encoder_mem_scale_reg(m, size, base_reg, true, index_reg, true,
-                                           scale, reg, true, type, stream);
-        else
-            stream = encoder_mem_disp_scale_reg(m, size, base_reg, true, disp, index_reg, true,
-                                                scale, reg, true, type, stream);
+    OpndSize overridden_size = isMovzs ? OpndSize_32 : size;
+    LowOpndRegType overridden_type = isMovzs ? LowOpndRegType_gp : type;
+    if (!gDvmJit.scheduling) {
+        stream = encoder_mem_disp_scale_to_reg_diff_sizes(m, size, base_reg, isBasePhysical,
+                disp, index_reg, isIndexPhysical, scale, overridden_size, reg,
+                isPhysical, overridden_type, stream);
+        return NULL;
     }
-    return NULL;
+
+    if (!isBasePhysical && !isIndexPhysical && !isPhysical) {
+        ALOGE("JIT_ERROR: Base, index or operand register not physical at lower_mem_scale_to_reg");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+    LowOpMemReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpMemReg>();
+
+    op->opCode = m;
+    op->opCode2 = ATOM_NORMAL;
+    op->opndDest.size = overridden_size;
+    op->opndDest.type = LowOpndType_Reg;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Mem;
+    op->numOperands = 2;
+    op->memSrc.mType = MemoryAccess_Unknown;
+    op->memSrc.index = -1;
+    set_reg_opnd(&(op->regDest), reg, isPhysical, overridden_type);
+    set_mem_opnd_scale(&(op->memSrc), base_reg, isBasePhysical, disp,
+            index_reg, isIndexPhysical, scale);
+    singletonPtr<Scheduler>()->updateUseDefInformation_mem_to_reg(op);
+    return op;
 }
 
-LowOpRegMem* dump_mem_scale_reg(Mnemonic m, OpndSize size,
-                         int base_reg, bool isBasePhysical, int disp, int index_reg, bool isIndexPhysical, int scale,
-                         int reg, bool isPhysical, LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpMemReg* dump_mem_scale_reg(Mnemonic m, OpndSize size, int base_reg,
+        bool isBasePhysical, int disp, int index_reg, bool isIndexPhysical,
+        int scale, int reg, bool isPhysical, LowOpndRegType type) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         startNativeCode(-1, -1);
         freeReg(true);
-        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
+        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
         donotSpillReg(baseAll); //make sure index will not use the same physical reg
-        int indexAll = registerAlloc(LowOpndRegType_gp, index_reg, isIndexPhysical, true);
-        if(isMnemonicMove(m)) {
+        int indexAll = registerAlloc(LowOpndRegType_gp, index_reg,
+                isIndexPhysical, true);
+        if (isMoveOptimizable(m)) {
             freeReg(true);
             doSpillReg(baseAll); //base can be used now
         } else {
             donotSpillReg(indexAll);
         }
         bool isMovzs = (m == Mnemonic_MOVZX || m == Mnemonic_MOVSX);
-        int regAll = registerAlloc(isMovzs ? LowOpndRegType_gp : type, reg, isPhysical, true);
+        int regAll = registerAlloc(isMovzs ? LowOpndRegType_gp : type, reg,
+                isPhysical, true);
         endNativeCode();
-        return lower_mem_scale_reg(m, size, baseAll, disp, indexAll, scale, regAll, type);
+        return lower_mem_scale_to_reg(m, size, baseAll, true /*isBasePhysical*/,
+                disp, indexAll, true /*isIndexPhysical*/, scale, regAll,
+                true /*isPhysical*/, type);
     } else {
-        stream = encoder_mem_scale_reg(m, size, base_reg, isBasePhysical, index_reg,
-                                       isIndexPhysical, scale, reg, isPhysical, type, stream);
+        return lower_mem_scale_to_reg(m, size, base_reg, isBasePhysical, disp,
+                index_reg, isIndexPhysical, scale, reg, isPhysical, type);
     }
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!
-LowOpMemReg* lower_reg_mem_scale(Mnemonic m, OpndSize size, int reg,
-                 int base_reg, int disp, int index_reg, int scale, LowOpndRegType type) {
-    if(disp == 0)
-        stream = encoder_reg_mem_scale(m, size, reg, true, base_reg, true,
-                                       index_reg, true, scale, type, stream);
-    else
-        stream = encoder_reg_mem_disp_scale(m, size, reg, true, base_reg, true,
-                                            disp, index_reg, true, scale, type, stream);
-    return NULL;
+LowOpRegMem* lower_reg_to_mem_scale(Mnemonic m, OpndSize size, int reg,
+        bool isPhysical, int base_reg, bool isBasePhysical, int disp,
+        int index_reg, bool isIndexPhysical, int scale, LowOpndRegType type) {
+    if (!gDvmJit.scheduling) {
+        stream = encoder_reg_mem_disp_scale(m, size, reg, isPhysical, base_reg,
+                isBasePhysical, disp, index_reg, isIndexPhysical, scale, type,
+                stream);
+        return NULL;
+    }
+
+    if (!isBasePhysical && !isIndexPhysical && !isPhysical) {
+        ALOGE("JIT_ERROR: Base, index or operand register not physical in lower_reg_to_mem_scale");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+    LowOpRegMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpRegMem>();
+
+    op->opCode = m;
+    op->opCode2 = ATOM_NORMAL;
+    op->opndDest.size = size;
+    op->opndDest.type = LowOpndType_Mem;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Reg;
+    op->numOperands = 2;
+    op->memDest.mType = MemoryAccess_Unknown;
+    op->memDest.index = -1;
+    set_reg_opnd(&(op->regSrc), reg, isPhysical, type);
+    set_mem_opnd_scale(&(op->memDest), base_reg, isBasePhysical, disp,
+            index_reg, isIndexPhysical, scale);
+    singletonPtr<Scheduler>()->updateUseDefInformation_reg_to_mem(op);
+    return op;
 }
 
-LowOpMemReg* dump_reg_mem_scale(Mnemonic m, OpndSize size,
-                         int reg, bool isPhysical,
-                         int base_reg, bool isBasePhysical, int disp, int index_reg, bool isIndexPhysical, int scale,
-                         LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpRegMem* dump_reg_mem_scale(Mnemonic m, OpndSize size, int reg,
+        bool isPhysical, int base_reg, bool isBasePhysical, int disp,
+        int index_reg, bool isIndexPhysical, int scale, LowOpndRegType type) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         startNativeCode(-1, -1);
         freeReg(true);
-        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
+        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
         donotSpillReg(baseAll);
-        int indexAll = registerAlloc(LowOpndRegType_gp, index_reg, isIndexPhysical, true);
+        int indexAll = registerAlloc(LowOpndRegType_gp, index_reg,
+                isIndexPhysical, true);
         donotSpillReg(indexAll);
         int regAll = registerAlloc(type, reg, isPhysical, true);
         endNativeCode();
-        return lower_reg_mem_scale(m, size, regAll, baseAll, disp, indexAll, scale, type);
+        return lower_reg_to_mem_scale(m, size, regAll, true /*isPhysical*/,
+                baseAll, true /*isBasePhysical*/, disp, indexAll,
+                true /*isIndexPhysical*/, scale, type);
     } else {
-        stream = encoder_reg_mem_scale(m, size, reg, isPhysical, base_reg, isBasePhysical,
-                                       index_reg, isIndexPhysical, scale, type, stream);
+        return lower_reg_to_mem_scale(m, size, reg, isPhysical, base_reg,
+                isBasePhysical, disp, index_reg, isIndexPhysical, scale, type);
     }
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!Here operands are already allocated
-LowOpMemReg* lower_reg_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
-                 int disp, int base_reg, MemoryAccessType mType, int mIndex,
-                 LowOpndRegType type) {
-    stream = encoder_reg_mem(m, size, reg, true, disp, base_reg, true, type, stream);
-    return NULL;
+LowOpRegMem* lower_reg_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+        bool isPhysical, int disp, int base_reg, bool isBasePhysical,
+        MemoryAccessType mType, int mIndex, LowOpndRegType type) {
+    if (!gDvmJit.scheduling) {
+        stream = encoder_reg_mem(m, size, reg, isPhysical, disp, base_reg,
+                isBasePhysical, type, stream);
+        return NULL;
+    }
+
+    if (!isBasePhysical && !isPhysical) {
+        ALOGE("JIT_ERROR: Base or operand register not physical in lower_reg_to_mem");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+    LowOpRegMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpRegMem>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndDest.size = size;
+    op->opndDest.type = LowOpndType_Mem;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Reg;
+    op->numOperands = 2;
+    set_reg_opnd(&(op->regSrc), reg, isPhysical, type);
+    set_mem_opnd(&(op->memDest), disp, base_reg, isBasePhysical);
+    op->memDest.mType = mType;
+    op->memDest.index = mIndex;
+    singletonPtr<Scheduler>()->updateUseDefInformation_reg_to_mem(op);
+    return op;
 }
 
-LowOpMemReg* dump_reg_mem_noalloc(Mnemonic m, OpndSize size,
-                           int reg, bool isPhysical,
-                           int disp, int base_reg, bool isBasePhysical,
-                           MemoryAccessType mType, int mIndex, LowOpndRegType type) {
-    return lower_reg_mem(m, ATOM_NORMAL, size, reg, disp, base_reg, mType, mIndex, type);
+LowOpRegMem* dump_reg_mem_noalloc(Mnemonic m, OpndSize size, int reg,
+        bool isPhysical, int disp, int base_reg, bool isBasePhysical,
+        MemoryAccessType mType, int mIndex, LowOpndRegType type) {
+    return lower_reg_to_mem(m, ATOM_NORMAL, size, reg, true /*isPhysical*/, disp,
+            base_reg, true /*isBasePhysical*/, mType, mIndex, type);
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one reg operand and one mem operand
 
 //!
-LowOpMemReg* dump_reg_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
-                   int reg, bool isPhysical,
-                   int disp, int base_reg, bool isBasePhysical,
-                   MemoryAccessType mType, int mIndex, LowOpndRegType type) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpRegMem* dump_reg_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+        bool isPhysical, int disp, int base_reg, bool isBasePhysical,
+        MemoryAccessType mType, int mIndex, LowOpndRegType type) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         startNativeCode(-1, -1);
         freeReg(true);
-        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
+        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
         donotSpillReg(baseAll);
         int regAll = registerAlloc(type, reg, isPhysical, true);
         endNativeCode();
-        return lower_reg_mem(m, m2, size, regAll, disp, baseAll, mType, mIndex, type);
+        return lower_reg_to_mem(m, m2, size, regAll, true /*isPhysical*/, disp,
+                baseAll, true /*isBasePhysical*/, mType, mIndex, type);
     } else {
-        stream = encoder_reg_mem(m, size, reg, isPhysical, disp, base_reg, isBasePhysical, type, stream);
+        return lower_reg_to_mem(m, m2, size, reg, isPhysical, disp, base_reg,
+                isBasePhysical, mType, mIndex, type);
     }
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one immediate and one reg operand
 
 //!The reg operand is allocated already
-LowOpRegImm* lower_imm_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
-                 int imm, int reg, LowOpndRegType type, bool chaining) {
-    stream = encoder_imm_reg(m, size, imm, reg, true, type, stream);
-    return NULL;
+LowOpImmReg* lower_imm_to_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
+        int reg, bool isPhysical, LowOpndRegType type, bool chaining) {
+    // size of opnd1 can be different from size of opnd2:
+    OpndSize overridden_size =
+            (m == Mnemonic_SAL || m == Mnemonic_SHR || m == Mnemonic_SHL
+                    || m == Mnemonic_SAR || m == Mnemonic_ROR) ?
+                    OpndSize_8 : size;
+    if (!gDvmJit.scheduling) {
+        // No need to pass overridden size to encoder because it has same logic
+        // for determining size of immediate
+        stream = encoder_imm_reg(m, size, imm, reg, isPhysical, type, stream);
+        return NULL;
+    }
+
+    if (!isPhysical) {
+        ALOGE("JIT_ERROR: Operand register not physical in lower_imm_to_reg");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+    LowOpImmReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpImmReg>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndDest.size = size;
+    op->opndDest.type = LowOpndType_Reg;
+    op->numOperands = 2;
+    op->opndSrc.size = overridden_size;
+    op->opndSrc.type = chaining ? LowOpndType_Chain : LowOpndType_Imm;
+    set_reg_opnd(&(op->regDest), reg, isPhysical, type);
+    op->immSrc.value = imm;
+    singletonPtr<Scheduler>()->updateUseDefInformation_imm_to_reg(op);
+    return op;
 }
 
-LowOpRegImm* dump_imm_reg_noalloc(Mnemonic m, OpndSize size,
-                           int imm, int reg, bool isPhysical, LowOpndRegType type) {
-    return lower_imm_reg(m, ATOM_NORMAL, size, imm, reg, type, false);
+LowOpImmReg* dump_imm_reg_noalloc(Mnemonic m, OpndSize size, int imm, int reg,
+        bool isPhysical, LowOpndRegType type) {
+    return lower_imm_to_reg(m, ATOM_NORMAL, size, imm, reg, true /*isPhysical*/,
+            type, false);
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one immediate and one reg operand
 
 //!
-LowOpRegImm* dump_imm_reg(Mnemonic m, AtomOpCode m2, OpndSize size,
-                   int imm, int reg, bool isPhysical, LowOpndRegType type, bool chaining) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpImmReg* dump_imm_reg(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
+        int reg, bool isPhysical, LowOpndRegType type, bool chaining) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         freeReg(true);
         int regAll = registerAlloc(type, reg, isPhysical, true);
-        return lower_imm_reg(m, m2, size, imm, regAll, type, chaining);
+        return lower_imm_to_reg(m, m2, size, imm, regAll, true /*isPhysical*/,
+                type, chaining);
     } else {
-        stream = encoder_imm_reg(m, size, imm, reg, isPhysical, type, stream);
+        return lower_imm_to_reg(m, m2, size, imm, reg, isPhysical, type, chaining);
     }
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one immediate and one mem operand
 
 //!The mem operand is already allocated
-LowOpMemImm* lower_imm_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
-                 int disp, int base_reg, MemoryAccessType mType, int mIndex,
-                 bool chaining) {
-    stream = encoder_imm_mem(m, size, imm, disp, base_reg, true, stream);
-    return NULL;
+LowOpImmMem* lower_imm_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
+        int disp, int base_reg, bool isBasePhysical, MemoryAccessType mType,
+        int mIndex, bool chaining) {
+    if (!gDvmJit.scheduling) {
+        stream = encoder_imm_mem(m, size, imm, disp, base_reg, isBasePhysical,
+                stream);
+        return NULL;
+    }
+
+    if (!isBasePhysical) {
+        ALOGE("JIT_ERROR: Base register not physical in lower_imm_to_mem");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+    LowOpImmMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpImmMem>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndDest.size = size;
+    op->opndDest.type = LowOpndType_Mem;
+    op->opndSrc.size = size;
+    op->opndSrc.type = chaining ? LowOpndType_Chain : LowOpndType_Imm;
+    op->numOperands = 2;
+    set_mem_opnd(&(op->memDest), disp, base_reg, isBasePhysical);
+    op->immSrc.value = imm;
+    op->memDest.mType = mType;
+    op->memDest.index = mIndex;
+    singletonPtr<Scheduler>()->updateUseDefInformation_imm_to_mem(op);
+    return op;
 }
 
-LowOpMemImm* dump_imm_mem_noalloc(Mnemonic m, OpndSize size,
-                           int imm,
-                           int disp, int base_reg, bool isBasePhysical,
-                           MemoryAccessType mType, int mIndex) {
-    return lower_imm_mem(m, ATOM_NORMAL, size, imm, disp, base_reg, mType, mIndex, false);
+LowOpImmMem* dump_imm_mem_noalloc(Mnemonic m, OpndSize size, int imm, int disp,
+        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex) {
+    return lower_imm_to_mem(m, ATOM_NORMAL, size, imm, disp, base_reg,
+            true /*isBasePhysical*/, mType, mIndex, false);
 }
+
 //!update fields of LowOp and generate a x86 instruction that takes one immediate and one mem operand
 
 //!
-LowOpMemImm* dump_imm_mem(Mnemonic m, AtomOpCode m2, OpndSize size,
-                   int imm,
-                   int disp, int base_reg, bool isBasePhysical,
-                   MemoryAccessType mType, int mIndex, bool chaining) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpImmMem* dump_imm_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int imm,
+        int disp, int base_reg, bool isBasePhysical, MemoryAccessType mType,
+        int mIndex, bool chaining) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         /* do not free register if the base is %edi, %esp, or %ebp
-           make sure dump_imm_mem will only generate a single instruction */
-        if(!isBasePhysical || (base_reg != PhysicalReg_EDI &&
-                               base_reg != PhysicalReg_ESP &&
-                               base_reg != PhysicalReg_EBP)) {
+         make sure dump_imm_mem will only generate a single instruction */
+        if (!isBasePhysical
+                || (base_reg != PhysicalReg_EDI && base_reg != PhysicalReg_ESP
+                        && base_reg != PhysicalReg_EBP)) {
             freeReg(true);
         }
-        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
-        return lower_imm_mem(m, m2, size, imm, disp, baseAll, mType, mIndex, chaining);
+        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
+        return lower_imm_to_mem(m, m2, size, imm, disp, baseAll,
+                true /*isBasePhysical*/, mType, mIndex, chaining);
     } else {
-        stream = encoder_imm_mem(m, size, imm, disp, base_reg, isBasePhysical, stream);
+        return lower_imm_to_mem(m, m2, size, imm, disp, base_reg, isBasePhysical,
+                mType, mIndex, chaining);
     }
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that uses the FP stack and takes one mem operand
 
 //!
-LowOpMemReg* lower_fp_mem(Mnemonic m, OpndSize size, int reg,
-                  int disp, int base_reg, MemoryAccessType mType, int mIndex) {
-    stream = encoder_fp_mem(m, size, reg, disp, base_reg, true, stream);
-    return NULL;
+LowOpRegMem* lower_fp_to_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+        int disp, int base_reg, bool isBasePhysical, MemoryAccessType mType,
+        int mIndex) {
+    if (!gDvmJit.scheduling) {
+        stream = encoder_fp_mem(m, size, reg, disp, base_reg, isBasePhysical,
+                stream);
+        return NULL;
+    }
+
+    if (!isBasePhysical) {
+        ALOGE("JIT_ERROR: Base register not physical in lower_fp_to_mem");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+    LowOpRegMem* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpRegMem>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndDest.size = size;
+    op->opndDest.type = LowOpndType_Mem;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Reg;
+    op->numOperands = 2;
+    set_reg_opnd(&(op->regSrc), PhysicalReg_ST0 + reg, true,
+            LowOpndRegType_fs);
+    set_mem_opnd(&(op->memDest), disp, base_reg, isBasePhysical);
+    op->memDest.mType = mType;
+    op->memDest.index = mIndex;
+    singletonPtr<Scheduler>()->updateUseDefInformation_fp_to_mem(op);
+    return op;
 }
 
-LowOpMemReg* dump_fp_mem(Mnemonic m, OpndSize size, int reg,
-                  int disp, int base_reg, bool isBasePhysical,
-                  MemoryAccessType mType, int mIndex) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpRegMem* dump_fp_mem(Mnemonic m, AtomOpCode m2, OpndSize size, int reg,
+        int disp, int base_reg, bool isBasePhysical, MemoryAccessType mType,
+        int mIndex) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         freeReg(true);
-        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
-        return lower_fp_mem(m, size, reg, disp, baseAll, mType, mIndex);
+        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
+        return lower_fp_to_mem(m, m2, size, reg, disp, baseAll,
+                true /*isBasePhysical*/, mType, mIndex);
     } else {
-        stream = encoder_fp_mem(m, size, reg, disp, base_reg, isBasePhysical, stream);
+        return lower_fp_to_mem(m, m2, size, reg, disp, base_reg, isBasePhysical,
+                mType, mIndex);
     }
     return NULL;
 }
+
 //!update fields of LowOp and generate a x86 instruction that uses the FP stack and takes one mem operand
 
 //!
-LowOpRegMem* lower_mem_fp(Mnemonic m, OpndSize size, int disp, int base_reg,
-                 MemoryAccessType mType, int mIndex, int reg) {
-    stream = encoder_mem_fp(m, size, disp, base_reg, true, reg, stream);
-    return NULL;
+LowOpMemReg* lower_mem_to_fp(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
+        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex,
+        int reg) {
+    if (!gDvmJit.scheduling) {
+        stream = encoder_mem_fp(m, size, disp, base_reg, isBasePhysical, reg,
+                stream);
+        return NULL;
+    }
+
+    if (!isBasePhysical) {
+        ALOGE("JIT_ERROR: Base register not physical in lower_mem_to_fp");
+        SET_JIT_ERROR(kJitErrorInsScheduling);
+        return NULL;
+    }
+
+    LowOpMemReg* op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOpMemReg>();
+
+    op->opCode = m;
+    op->opCode2 = m2;
+    op->opndDest.size = size;
+    op->opndDest.type = LowOpndType_Reg;
+    op->opndSrc.size = size;
+    op->opndSrc.type = LowOpndType_Mem;
+    op->numOperands = 2;
+    set_reg_opnd(&(op->regDest), PhysicalReg_ST0 + reg, true,
+            LowOpndRegType_fs);
+    set_mem_opnd(&(op->memSrc), disp, base_reg, isBasePhysical);
+    op->memSrc.mType = mType;
+    op->memSrc.index = mIndex;
+    singletonPtr<Scheduler>()->updateUseDefInformation_mem_to_fp(op);
+    return op;
 }
 
-LowOpRegMem* dump_mem_fp(Mnemonic m, OpndSize size,
-                  int disp, int base_reg, bool isBasePhysical,
-                  MemoryAccessType mType, int mIndex,
-                  int reg) {
-    if(gDvm.executionMode == kExecutionModeNcgO1) {
+LowOpMemReg* dump_mem_fp(Mnemonic m, AtomOpCode m2, OpndSize size, int disp,
+        int base_reg, bool isBasePhysical, MemoryAccessType mType, int mIndex,
+        int reg) {
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
         freeReg(true);
-        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical, true);
-        return lower_mem_fp(m, size, disp, baseAll, mType, mIndex, reg);
+        int baseAll = registerAlloc(LowOpndRegType_gp, base_reg, isBasePhysical,
+                true);
+        return lower_mem_to_fp(m, m2, size, disp, baseAll,
+                true /*isBasePhysical*/, mType, mIndex, reg);
     } else {
-        stream = encoder_mem_fp(m, size, disp, base_reg, isBasePhysical, reg, stream);
+        return lower_mem_to_fp(m, m2, size, disp, base_reg, isBasePhysical,
+                mType, mIndex, reg);
     }
     return NULL;
 }
@@ -833,19 +1191,35 @@ void convert_integer(OpndSize srcSize, OpndSize dstSize) { //cbw, cwd, cdq
     Mnemonic m = Mnemonic_CDQ;
     dump_reg_reg(m, ATOM_NORMAL, OpndSize_32, PhysicalReg_EAX, true, PhysicalReg_EDX, true, LowOpndRegType_gp);
 }
+
+//! \brief Generates the CVTSI2SD and CVTSI2SS opcodes
+//! \details performs cvtsi2** destReg, srcReg
+//! NOTE: Even for cvtsi2ss, the destination is still XMM
+//! and needs to be moved to a GPR.
+//! \param srcReg the src register
+//! \param isSrcPhysical if the srcReg is a physical register
+//! \param destReg the destination register
+//! \param isDestPhysical if destReg is a physical register
+//! \param isDouble if the destination needs to be a double value (float otherwise)
+void convert_int_to_fp(int srcReg, bool isSrcPhysical, int destReg, bool isDestPhysical, bool isDouble) {
+    Mnemonic m = isDouble ? Mnemonic_CVTSI2SD : Mnemonic_CVTSI2SS;
+    dump_reg_reg_diff_types(m, ATOM_NORMAL, OpndSize_32, srcReg, isSrcPhysical, LowOpndRegType_gp,
+            OpndSize_64, destReg, isDestPhysical, LowOpndRegType_xmm);
+}
+
 //!fld: load from memory (float or double) to stack
 
 //!
 void load_fp_stack(LowOp* op, OpndSize size, int disp, int base_reg, bool isBasePhysical) {//fld(s|l)
     Mnemonic m = Mnemonic_FLD;
-    dump_mem_fp(m, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0); //ST0
+    dump_mem_fp(m, ATOM_NORMAL, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0); //ST0
 }
 //! fild: load from memory (int or long) to stack
 
 //!
 void load_int_fp_stack(OpndSize size, int disp, int base_reg, bool isBasePhysical) {//fild(ll|l)
     Mnemonic m = Mnemonic_FILD;
-    dump_mem_fp(m, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0); //ST0
+    dump_mem_fp(m, ATOM_NORMAL, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0); //ST0
 }
 //!fild: load from memory (absolute addr)
 
@@ -858,14 +1232,14 @@ void load_int_fp_stack_imm(OpndSize size, int imm) {//fild(ll|l)
 //!
 void store_fp_stack(LowOp* op, bool pop, OpndSize size, int disp, int base_reg, bool isBasePhysical) {//fst(p)(s|l)
     Mnemonic m = pop ? Mnemonic_FSTP : Mnemonic_FST;
-    dump_fp_mem(m, size, 0, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1);
+    dump_fp_mem(m, ATOM_NORMAL, size, 0, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1);
 }
 //!fist: store from stack to memory (int or long)
 
 //!
 void store_int_fp_stack(LowOp* op, bool pop, OpndSize size, int disp, int base_reg, bool isBasePhysical) {//fist(p)(l)
     Mnemonic m = pop ? Mnemonic_FISTP : Mnemonic_FIST;
-    dump_fp_mem(m, size, 0, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1);
+    dump_fp_mem(m, ATOM_NORMAL, size, 0, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1);
 }
 //!cmp reg, mem
 
@@ -903,7 +1277,7 @@ void compare_VR_reg_all(OpndSize size,
         if(isConst == 3) {
             if(m == Mnemonic_COMISS) {
 #ifdef DEBUG_NCG_O1
-                LOGI("VR is const and SS in compare_VR_reg");
+                ALOGI("VR is const and SS in compare_VR_reg");
 #endif
                 dumpImmToMem(vA, OpndSize_32, tmpValue[0]);
                 //dumpImmToMem(vA+1, OpndSize_32, 0); //CHECK necessary? will overwrite vA+1!!!
@@ -912,14 +1286,14 @@ void compare_VR_reg_all(OpndSize size,
             }
             else if(size != OpndSize_64) {
 #ifdef DEBUG_NCG_O1
-                LOGI("VR is const and 32 bits in compare_VR_reg");
+                ALOGI("VR is const and 32 bits in compare_VR_reg");
 #endif
                 dump_imm_reg(m, ATOM_NORMAL, size, tmpValue[0], reg, isPhysical, pType, false);
                 return;
             }
             else if(size == OpndSize_64) {
 #ifdef DEBUG_NCG_O1
-                LOGI("VR is const and 64 bits in compare_VR_reg");
+                ALOGI("VR is const and 64 bits in compare_VR_reg");
 #endif
                 dumpImmToMem(vA, OpndSize_32, tmpValue[0]);
                 dumpImmToMem(vA+1, OpndSize_32, tmpValue[1]);
@@ -976,13 +1350,13 @@ void load_fp_stack_VR_all(OpndSize size, int vB, Mnemonic m) {
         if(isConst > 0) {
             if(size != OpndSize_64) {
 #ifdef DEBUG_NCG_O1
-                LOGI("VR is const and 32 bits in load_fp_stack");
+                ALOGI("VR is const and 32 bits in load_fp_stack");
 #endif
                 dumpImmToMem(vB, OpndSize_32, tmpValue[0]);
             }
             else {
 #ifdef DEBUG_NCG_O1
-                LOGI("VR is const and 64 bits in load_fp_stack_VR");
+                ALOGI("VR is const and 64 bits in load_fp_stack_VR");
 #endif
                 if(isConst == 1 || isConst == 3) dumpImmToMem(vB, OpndSize_32, tmpValue[0]);
                 if(isConst == 2 || isConst == 3) dumpImmToMem(vB+1, OpndSize_32, tmpValue[1]);
@@ -997,9 +1371,9 @@ void load_fp_stack_VR_all(OpndSize size, int vB, Mnemonic m) {
                     MemoryAccess_VR, vB, getTypeFromIntSize(size));
 #endif
         }
-        dump_mem_fp(m, size, 4*vB, PhysicalReg_FP, true, MemoryAccess_VR, vB, 0);
+        dump_mem_fp(m, ATOM_NORMAL, size, 4*vB, PhysicalReg_FP, true, MemoryAccess_VR, vB, 0);
     } else {
-        dump_mem_fp(m, size, 4*vB, PhysicalReg_FP, true, MemoryAccess_VR, vB, 0);
+        dump_mem_fp(m, ATOM_NORMAL, size, 4*vB, PhysicalReg_FP, true, MemoryAccess_VR, vB, 0);
     }
 }
 //!load VR(float or double) to stack
@@ -1021,7 +1395,7 @@ void load_int_fp_stack_VR(OpndSize size, int vA) {//fild(ll|l)
 //!
 void store_fp_stack_VR(bool pop, OpndSize size, int vA) {//fst(p)(s|l)
     Mnemonic m = pop ? Mnemonic_FSTP : Mnemonic_FST;
-    dump_fp_mem(m, size, 0, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
+    dump_fp_mem(m, ATOM_NORMAL, size, 0, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         if(size == OpndSize_32)
             updateVirtualReg(vA, LowOpndRegType_fs_s);
@@ -1034,7 +1408,7 @@ void store_fp_stack_VR(bool pop, OpndSize size, int vA) {//fst(p)(s|l)
 //!
 void store_int_fp_stack_VR(bool pop, OpndSize size, int vA) {//fist(p)(l)
     Mnemonic m = pop ? Mnemonic_FISTP : Mnemonic_FIST;
-    dump_fp_mem(m, size, 0, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
+    dump_fp_mem(m, ATOM_NORMAL, size, 0, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         if(size == OpndSize_32)
             updateVirtualReg(vA, LowOpndRegType_fs_s);
@@ -1065,11 +1439,13 @@ void fpu_VR(ALU_Opcode opc, OpndSize size, int vA) {
             }
         }
         if(!isInMemory(vA, size)) {
-            ALOGE("fpu_VR");
+            ALOGE("JIT_ERROR: VR not in memory for FPU operation");
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            return;
         }
-        dump_mem_fp(m, size, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA, 0);
+        dump_mem_fp(m, ATOM_NORMAL_ALU, size, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA, 0);
     } else {
-        dump_mem_fp(m, size, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA, 0);
+        dump_mem_fp(m, ATOM_NORMAL_ALU, size, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA, 0);
     }
 }
 //! cmp imm reg
@@ -1083,9 +1459,9 @@ void compare_imm_reg(OpndSize size, int imm,
         if(gDvm.executionMode == kExecutionModeNcgO1) {
             freeReg(true);
             int regAll = registerAlloc(type, reg, isPhysical, true);
-            lower_reg_reg(m, ATOM_NORMAL, size, regAll, regAll, type);
+            lower_reg_to_reg(m, ATOM_NORMAL, size, regAll, true /*isPhysical*/, regAll, true /*isPhysical2*/, type);
         } else {
-            stream = encoder_reg_reg(m, size, reg, isPhysical, reg, isPhysical, type, stream);
+            lower_reg_to_reg(m, ATOM_NORMAL, size, reg, isPhysical, reg, isPhysical, type);
         }
         return;
     }
@@ -1108,7 +1484,11 @@ void compare_imm_VR(OpndSize size, int imm,
              int vA) {
     Mnemonic m = Mnemonic_CMP;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        if(size != OpndSize_32) ALOGE("only 32 bits supported in compare_imm_VR");
+        if(size != OpndSize_32) {
+            ALOGE("JIT_ERROR: Only 32 bits supported in compare_imm_VR");
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            return;
+        }
         int tmpValue[2];
         int isConst = isVirtualRegConstant(vA, getTypeFromIntSize(size), tmpValue, false/*updateRefCount*/);
         if(isConst > 0) {
@@ -1178,16 +1558,25 @@ void compare_sd_reg_with_reg(LowOp* op, int reg1, bool isPhysical1,
 //!
 void compare_fp_stack(bool pop, int reg, bool isDouble) { //compare ST(0) with ST(reg)
     Mnemonic m = pop ? Mnemonic_FUCOMP : Mnemonic_FUCOM;
-    lower_reg_reg(m, ATOM_NORMAL, isDouble ? OpndSize_64 : OpndSize_32,
-                  PhysicalReg_ST0+reg, PhysicalReg_ST0, LowOpndRegType_fs);
+    lower_reg_to_reg(m, ATOM_NORMAL, isDouble ? OpndSize_64 : OpndSize_32,
+                  PhysicalReg_ST0+reg, true /*isPhysical*/, PhysicalReg_ST0, true /*isPhysical2*/, LowOpndRegType_fs);
 }
+
 /*!
 \brief generate a single return instruction
 
 */
-LowOp* lower_return() {
-    stream = encoder_return(stream);
-    return NULL;
+inline LowOp* lower_return() {
+    if (gDvm.executionMode == kExecutionModeNcgO0 || !gDvmJit.scheduling) {
+        stream = encoder_return(stream);
+        return NULL;
+    }
+    LowOp * op = singletonPtr<Scheduler>()->allocateNewEmptyLIR<LowOp>();
+    op->numOperands = 0;
+    op->opCode = Mnemonic_RET;
+    op->opCode2 = ATOM_NORMAL;
+    singletonPtr<Scheduler>()->updateUseDefInformation(op);
+    return op;
 }
 
 void x86_return() {
@@ -1309,7 +1698,7 @@ void alu_sd_binary_VR_reg(ALU_Opcode opc, int vA, int reg, bool isPhysical, bool
         updateRefCount(vA, type);
     }
     else {
-        dump_mem_reg(m, ATOM_NORMAL, size, 4*vA, PhysicalReg_FP, true,
+        dump_mem_reg(m, ATOM_NORMAL_ALU, size, 4*vA, PhysicalReg_FP, true,
                     MemoryAccess_VR, vA, reg, isPhysical, LowOpndRegType_xmm);
     }
 }
@@ -1359,7 +1748,7 @@ void alu_binary_VR_reg(OpndSize size, ALU_Opcode opc, int vA, int reg, bool isPh
         updateRefCount(vA, getTypeFromIntSize(size));
     }
     else {
-        dump_mem_reg(m, ATOM_NORMAL, size, 4*vA, PhysicalReg_FP, true,
+        dump_mem_reg(m, ATOM_NORMAL_ALU, size, 4*vA, PhysicalReg_FP, true,
             MemoryAccess_VR, vA, reg, isPhysical, getTypeFromIntSize(size));
     }
 }
@@ -1394,7 +1783,7 @@ void alu_binary_reg_mem(OpndSize size, ALU_Opcode opc,
 //!
 void fpu_mem(LowOp* op, ALU_Opcode opc, OpndSize size, int disp, int base_reg, bool isBasePhysical) {
     Mnemonic m = map_of_fpu_opcode_2_mnemonic[opc];
-    dump_mem_fp(m, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0);
+    dump_mem_fp(m, ATOM_NORMAL_ALU, size, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, 0);
 }
 //!SSE 32-bit ALU
 
@@ -1446,7 +1835,7 @@ void move_reg_to_mem_noalloc(OpndSize size,
 //!move from memory to reg
 
 //!
-LowOpRegMem* move_mem_to_reg(OpndSize size,
+LowOpMemReg* move_mem_to_reg(OpndSize size,
                       int disp, int base_reg, bool isBasePhysical,
                       int reg, bool isPhysical) {
     Mnemonic m = (size == OpndSize_64) ? Mnemonic_MOVQ : Mnemonic_MOV;
@@ -1455,7 +1844,7 @@ LowOpRegMem* move_mem_to_reg(OpndSize size,
 //!move from memory to reg
 
 //!Operands are already allocated
-LowOpRegMem* move_mem_to_reg_noalloc(OpndSize size,
+LowOpMemReg* move_mem_to_reg_noalloc(OpndSize size,
                   int disp, int base_reg, bool isBasePhysical,
                   MemoryAccessType mType, int mIndex,
                   int reg, bool isPhysical) {
@@ -1465,7 +1854,7 @@ LowOpRegMem* move_mem_to_reg_noalloc(OpndSize size,
 //!movss from memory to reg
 
 //!Operands are already allocated
-LowOpRegMem* move_ss_mem_to_reg_noalloc(int disp, int base_reg, bool isBasePhysical,
+LowOpMemReg* move_ss_mem_to_reg_noalloc(int disp, int base_reg, bool isBasePhysical,
                  MemoryAccessType mType, int mIndex,
                  int reg, bool isPhysical) {
     return dump_mem_reg_noalloc(Mnemonic_MOVSS, OpndSize_32, disp, base_reg, isBasePhysical, mType, mIndex, reg, isPhysical, LowOpndRegType_xmm);
@@ -1473,7 +1862,7 @@ LowOpRegMem* move_ss_mem_to_reg_noalloc(int disp, int base_reg, bool isBasePhysi
 //!movss from reg to memory
 
 //!Operands are already allocated
-LowOpMemReg* move_ss_reg_to_mem_noalloc(int reg, bool isPhysical,
+LowOpRegMem* move_ss_reg_to_mem_noalloc(int reg, bool isPhysical,
                  int disp, int base_reg, bool isBasePhysical,
                  MemoryAccessType mType, int mIndex) {
     return dump_reg_mem_noalloc(Mnemonic_MOVSS, OpndSize_32, reg, isPhysical, disp, base_reg, isBasePhysical, mType, mIndex, LowOpndRegType_xmm);
@@ -1484,8 +1873,7 @@ LowOpMemReg* move_ss_reg_to_mem_noalloc(int reg, bool isPhysical,
 void movez_mem_to_reg(OpndSize size,
                int disp, int base_reg, bool isBasePhysical,
                int reg, bool isPhysical) {
-    Mnemonic m = Mnemonic_MOVZX;
-    dump_movez_mem_reg(m, size, disp, base_reg, isBasePhysical, reg, isPhysical);
+    dump_movez_mem_reg(Mnemonic_MOVZX, size, disp, base_reg, isBasePhysical, reg, isPhysical);
 }
 
 //!movzx from one reg to another reg
@@ -1514,7 +1902,6 @@ void moves_mem_disp_scale_to_reg(OpndSize size,
                   disp, index_reg, isIndexPhysical, scale,
                   reg, isPhysical, LowOpndRegType_gp);
 }
-
 //!movsx from memory to reg
 
 //!
@@ -1533,6 +1920,16 @@ void move_reg_to_reg(OpndSize size,
     Mnemonic m = (size == OpndSize_64) ? Mnemonic_MOVQ : Mnemonic_MOV;
     dump_reg_reg(m, ATOM_NORMAL, size, reg, isPhysical, reg2, isPhysical2, getTypeFromIntSize(size));
 }
+//!mov from one reg to another reg
+
+//!Sign extends the value. Only 32-bit support.
+void moves_reg_to_reg(OpndSize size,
+                      int reg, bool isPhysical,
+                      int reg2, bool isPhysical2) {
+    Mnemonic m = Mnemonic_MOVSX;
+    dump_reg_reg(m, ATOM_NORMAL, size, reg, isPhysical, reg2, isPhysical2, getTypeFromIntSize(size));
+}
+
 //!mov from one reg to another reg
 
 //!Operands are already allocated
@@ -1590,7 +1987,11 @@ void move_chain_to_mem(OpndSize size, int imm,
 void move_imm_to_mem(OpndSize size, int imm,
                       int disp, int base_reg, bool isBasePhysical) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) ALOGE("move_imm_to_mem with 64 bits");
+    if(size == OpndSize_64) {
+        ALOGE("JIT_ERROR: Trying to move 64-bit imm to memory");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
+    }
     dump_imm_mem(Mnemonic_MOV, ATOM_NORMAL, size, imm, disp, base_reg, isBasePhysical, MemoryAccess_Unknown, -1, false);
 }
 //! set a VR to an immediate
@@ -1598,7 +1999,11 @@ void move_imm_to_mem(OpndSize size, int imm,
 //!
 void set_VR_to_imm(u2 vA, OpndSize size, int imm) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) ALOGE("move_imm_to_mem with 64 bits");
+    if(size == OpndSize_64) {
+        ALOGE("JIT_ERROR: Trying to set VR with 64-bit imm");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
+    }
     Mnemonic m = (size == OpndSize_64) ? Mnemonic_MOVQ : Mnemonic_MOV;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         int regAll = checkVirtualReg(vA, getTypeFromIntSize(size), 0);
@@ -1630,7 +2035,11 @@ void set_VR_to_imm_noupdateref(LowOp* op, u2 vA, OpndSize size, int imm) {
 //! Do not allocate a physical register for the VR
 void set_VR_to_imm_noalloc(u2 vA, OpndSize size, int imm) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) ALOGE("move_imm_to_mem with 64 bits");
+    if(size == OpndSize_64) {
+        ALOGE("JIT_ERROR: Trying to move 64-bit imm to memory (noalloc)");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
+    }
     Mnemonic m = (size == OpndSize_64) ? Mnemonic_MOVQ : Mnemonic_MOV;
     dump_imm_mem_noalloc(m, size, imm, 4*vA, PhysicalReg_FP, true, MemoryAccess_VR, vA);
 }
@@ -1644,7 +2053,11 @@ void move_chain_to_reg(OpndSize size, int imm, int reg, bool isPhysical) {
 //!
 void move_imm_to_reg(OpndSize size, int imm, int reg, bool isPhysical) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) ALOGE("move_imm_to_reg with 64 bits");
+    if(size == OpndSize_64) {
+        ALOGE("JIT_ERROR: Trying to move 64-bit imm to register");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
+    }
     Mnemonic m = Mnemonic_MOV;
     dump_imm_reg(m, ATOM_NORMAL, size, imm, reg, isPhysical, LowOpndRegType_gp, false);
 }
@@ -1653,7 +2066,11 @@ void move_imm_to_reg(OpndSize size, int imm, int reg, bool isPhysical) {
 //! The operand is already allocated
 void move_imm_to_reg_noalloc(OpndSize size, int imm, int reg, bool isPhysical) {
     assert(size != OpndSize_64);
-    if(size == OpndSize_64) ALOGE("move_imm_to_reg with 64 bits");
+    if(size == OpndSize_64) {
+        ALOGE("JIT_ERROR: Trying to move 64-bit imm to register (noalloc)");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
+    }
     Mnemonic m = Mnemonic_MOV;
     dump_imm_reg_noalloc(m, size, imm, reg, isPhysical, LowOpndRegType_gp);
 }
@@ -1761,7 +2178,7 @@ void get_virtual_reg_all(u2 vB, OpndSize size, int reg, bool isPhysical, Mnemoni
         }
 
         //temporary reg has pType
-        if(checkTempReg2(reg, pType, isPhysical, regAll)) {
+        if(checkTempReg2(reg, pType, isPhysical, regAll, vB)) {
             registerAllocMove(reg, pType, isPhysical, regAll);
             dump_mem_reg_noalloc(m, size, 4*vB, PhysicalReg_FP, true,
                 MemoryAccess_VR, vB, regAll, true, pType);
@@ -1887,9 +2304,15 @@ int get_currentpc(int reg, bool isPhysical) {
     move_mem_to_reg(OpndSize_32, -sizeofStackSaveArea+offStackSaveArea_localRefTop, PhysicalReg_FP, true, reg, isPhysical);
     return 1;
 }
-//!generate native code to perform null check
 
-//!This function does not export PC
+//! \brief generate native code to perform null check
+//!
+//! \details This function does not export PC
+//! \param reg
+//! \param isPhysical is the reg is physical
+//! \param vr the vr corresponding to reg
+//!
+//! \return -1 if error happened, 0 otherwise
 int simpleNullCheck(int reg, bool isPhysical, int vr) {
     if(isVRNullCheck(vr, OpndSize_32)) {
         updateRefCount2(reg, LowOpndRegType_gp, isPhysical);
@@ -1898,7 +2321,9 @@ int simpleNullCheck(int reg, bool isPhysical, int vr) {
     }
     compare_imm_reg(OpndSize_32, 0, reg, isPhysical);
     conditional_jump_global_API(Condition_E, "common_errNullObject", false);
-    setVRNullCheck(vr, OpndSize_32);
+    int retCode = setVRNullCheck(vr, OpndSize_32);
+    if (retCode < 0)
+        return retCode;
     return 0;
 }
 
@@ -1928,79 +2353,131 @@ int boundCheck(int vr_array, int reg_array, bool isPhysical_array,
     return 0;
 }
 
-//!generate native code to perform null check
-
-//!
+/**
+ * @brief Generates native code to perform null check
+ * @param reg temporary or physical register to test
+ * @param isPhysical flag to indicate whether parameter reg is physical
+ * register
+ * @param exceptionNum
+ * @param vr virtual register for which the null check is being done
+ * @return >= 0 on success
+ */
 int nullCheck(int reg, bool isPhysical, int exceptionNum, int vr) {
-    char label[LABEL_SIZE];
+    const char * errorName = "common_errNullObject";
+    int retCode = 0;
+
+    //nullCheck optimization is available in O1 mode only
+    if(gDvm.executionMode == kExecutionModeNcgO1 && isVRNullCheck(vr, OpndSize_32)) {
+        updateRefCount2(reg, LowOpndRegType_gp, isPhysical);
+        if(exceptionNum <= 1) {
+            updateRefCount2(PhysicalReg_EDX, LowOpndRegType_gp, true);
+            updateRefCount2(PhysicalReg_EDX, LowOpndRegType_gp, true);
+        }
+        num_removed_nullCheck++;
+        return 0;
+    }
+
+    compare_imm_reg(OpndSize_32, 0, reg, isPhysical);
+
+    // Get a label for exception handling restore state
+    char * newStreamLabel =
+            singletonPtr<ExceptionHandlingRestoreState>()->getUniqueLabel();
+
+    // Since we are not doing the exception handling restore state inline, in case of
+    // ZF=1 we must jump to the BB that restores the state
+    conditional_jump(Condition_E, newStreamLabel, true);
+
+    // We can save stream pointer now since this follows a jump and ensures that
+    // scheduler already flushed stream
+    char * originalStream = stream;
+
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
+        rememberState(exceptionNum);
+        if (exceptionNum > 1) {
+            nextVersionOfHardReg(PhysicalReg_EDX, 2); //next version has 2 ref count
+        }
+    }
+
+    export_pc(); //use %edx
 
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        //nullCheck optimization is available in O1 mode only
-        if(isVRNullCheck(vr, OpndSize_32)) {
-            updateRefCount2(reg, LowOpndRegType_gp, isPhysical);
-            if(exceptionNum <= 1) {
-                updateRefCount2(PhysicalReg_EDX, LowOpndRegType_gp, true);
-                updateRefCount2(PhysicalReg_EDX, LowOpndRegType_gp, true);
-            }
-            num_removed_nullCheck++;
-            return 0;
-        }
-        compare_imm_reg(OpndSize_32, 0, reg, isPhysical);
-        rememberState(exceptionNum);
-        snprintf(label, LABEL_SIZE, "after_exception_%d", exceptionNum);
-        conditional_jump(Condition_NE, label, true);
-        if(exceptionNum > 1)
-            nextVersionOfHardReg(PhysicalReg_EDX, 2); //next version has 2 ref count
-        export_pc(); //use %edx
         constVREndOfBB();
         beforeCall("exception"); //dump GG, GL VRs
-        unconditional_jump_global_API("common_errNullObject", false);
-        insertLabel(label, true);
-        goToState(exceptionNum);
-        setVRNullCheck(vr, OpndSize_32);
-    } else {
-        compare_imm_reg(OpndSize_32, 0, reg, isPhysical);
-        snprintf(label, LABEL_SIZE, "after_exception_%d", exceptionNum);
-        conditional_jump(Condition_NE, label, true);
-        export_pc(); //use %edx
-        unconditional_jump_global_API("common_errNullObject", false);
-        insertLabel(label, true);
     }
+
+    // We must flush scheduler queue now before we copy to exception handling
+    // stream.
+    if(gDvmJit.scheduling)
+        singletonPtr<Scheduler>()->signalEndOfNativeBasicBlock();
+
+    // Move all instructions to a deferred stream that will be dumped later
+    singletonPtr<ExceptionHandlingRestoreState>()->createExceptionHandlingStream(
+            originalStream, stream, errorName);
+
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        goToState(exceptionNum);
+        retCode = setVRNullCheck(vr, OpndSize_32);
+        if (retCode < 0)
+            return retCode;
+    }
+
     return 0;
 }
-//!generate native code to handle potential exception
 
-//!
+/**
+ * @brief Generates code to handle potential exception
+ * @param code_excep Condition code to take exception path
+ * @param code_okay Condition code to skip exception
+ * @param exceptionNum
+ * @param errName Name of exception to handle
+ * @return >= 0 on success
+ */
 int handlePotentialException(
                              ConditionCode code_excep, ConditionCode code_okay,
                              int exceptionNum, const char* errName) {
-    char label[LABEL_SIZE];
+    // Get a label for exception handling restore state
+    char * newStreamLabel =
+            singletonPtr<ExceptionHandlingRestoreState>()->getUniqueLabel();
+
+    // Since we are not doing the exception handling restore state inline, in case of
+    // code_excep we must jump to the BB that restores the state
+    conditional_jump(code_excep, newStreamLabel, true);
+
+    // We can save stream pointer now since this follows a jump and ensures that
+    // scheduler already flushed stream
+    char * originalStream = stream;
+
+    if (gDvm.executionMode == kExecutionModeNcgO1) {
+        rememberState(exceptionNum);
+        if (exceptionNum > 1) {
+            nextVersionOfHardReg(PhysicalReg_EDX, 2); //next version has 2 ref count
+        }
+    }
+
+    export_pc(); //use %edx
 
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        rememberState(exceptionNum);
-        snprintf(label, LABEL_SIZE, "after_exception_%d", exceptionNum);
-        conditional_jump(code_okay, label, true);
-        if(exceptionNum > 1)
-            nextVersionOfHardReg(PhysicalReg_EDX, 2); //next version has 2 ref count
-        export_pc(); //use %edx
         constVREndOfBB();
         beforeCall("exception"); //dump GG, GL VRs
-        if(!strcmp(errName, "common_throw_message")) {
-            move_imm_to_reg(OpndSize_32, LstrInstantiationErrorPtr, PhysicalReg_ECX, true);
-        }
-        unconditional_jump_global_API(errName, false);
-        insertLabel(label, true);
-        goToState(exceptionNum);
-    } else {
-        snprintf(label, LABEL_SIZE, "after_exception_%d", exceptionNum);
-        conditional_jump(code_okay, label, true);
-        export_pc(); //use %edx
-        if(!strcmp(errName, "common_throw_message")) {
-            move_imm_to_reg(OpndSize_32, LstrInstantiationErrorPtr, PhysicalReg_ECX, true);
-        }
-        unconditional_jump_global_API(errName, false);
-        insertLabel(label, true);
     }
+
+    if(!strcmp(errName, "common_throw_message")) {
+        move_imm_to_reg(OpndSize_32, LstrInstantiationErrorPtr, PhysicalReg_ECX, true);
+    }
+
+    // We must flush scheduler queue now before we copy to exception handling
+    // stream.
+    if(gDvmJit.scheduling)
+        singletonPtr<Scheduler>()->signalEndOfNativeBasicBlock();
+
+    // Move all instructions to a deferred stream that will be dumped later
+    singletonPtr<ExceptionHandlingRestoreState>()->createExceptionHandlingStream(
+            originalStream, stream, errName);
+
+    if(gDvm.executionMode == kExecutionModeNcgO1) {
+        goToState(exceptionNum);
+    }
+
     return 0;
 }
 //!generate native code to get the self pointer from glue
@@ -2014,6 +2491,7 @@ int get_self_pointer(int reg, bool isPhysical) {
 
 //!It uses two scratch registers
 int get_res_strings(int reg, bool isPhysical) {
+    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2036,12 +2514,15 @@ int get_res_strings(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, C_SCRATCH_2, isScratchPhysical);
             //glue is not in a physical reg nor in a spilled location
-            updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            retCode = updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            if (retCode < 0)
+                return retCode;
             move_mem_to_reg(OpndSize_32, offDvmDex_pResStrings, C_SCRATCH_2, isScratchPhysical, reg, isPhysical);
         }
     return 0;
 }
 int get_res_classes(int reg, bool isPhysical) {
+    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2058,7 +2539,9 @@ int get_res_classes(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, C_SCRATCH_2, isScratchPhysical);
             //glue is not in a physical reg nor in a spilled location
-            updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            retCode = updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            if (retCode < 0)
+                return retCode;
             move_mem_to_reg(OpndSize_32, offDvmDex_pResClasses, C_SCRATCH_2, isScratchPhysical, reg, isPhysical);
         }
     return 0;
@@ -2067,6 +2550,7 @@ int get_res_classes(int reg, bool isPhysical) {
 
 //!It uses two scratch registers
 int get_res_fields(int reg, bool isPhysical) {
+    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2083,7 +2567,9 @@ int get_res_fields(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, C_SCRATCH_2, isScratchPhysical);
             //glue is not in a physical reg nor in a spilled location
-            updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            retCode = updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            if (retCode < 0)
+                return retCode;
             move_mem_to_reg(OpndSize_32, offDvmDex_pResFields, C_SCRATCH_2, isScratchPhysical, reg, isPhysical);
         }
     return 0;
@@ -2092,6 +2578,7 @@ int get_res_fields(int reg, bool isPhysical) {
 
 //!It uses two scratch registers
 int get_res_methods(int reg, bool isPhysical) {
+    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2108,7 +2595,9 @@ int get_res_methods(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, C_SCRATCH_2, isScratchPhysical);
             //glue is not in a physical reg nor in a spilled location
-            updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            retCode = updateGlue(C_SCRATCH_2, isScratchPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            if (retCode < 0)
+                return retCode;
             move_mem_to_reg(OpndSize_32, offDvmDex_pResMethods, C_SCRATCH_2, isScratchPhysical, reg, isPhysical);
         }
     return 0;
@@ -2143,6 +2632,7 @@ int set_glue_method(int reg, bool isPhysical) {
 
 //!It uses one scratch register
 int get_glue_dvmdex(int reg, bool isPhysical) {
+    int retCode = 0;
     //if spill_loc_index > 0 || reg != NULL, use registerAlloc
     if(isGlueHandled(PhysicalReg_GLUE_DVMDEX)) {
         //if spill_loc_index > 0
@@ -2160,7 +2650,9 @@ int get_glue_dvmdex(int reg, bool isPhysical) {
             get_self_pointer(C_SCRATCH_1, isScratchPhysical);
             move_mem_to_reg(OpndSize_32, offsetof(Thread, interpSave.methodClassDex), C_SCRATCH_1, isScratchPhysical, reg, isPhysical);
             //glue is not in a physical reg nor in a spilled location
-            updateGlue(reg, isPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            retCode = updateGlue(reg, isPhysical, PhysicalReg_GLUE_DVMDEX); //spill_loc_index is -1, set physicalReg
+            if (retCode < 0)
+                return retCode;
         }
     return 0;
 }
@@ -2189,6 +2681,7 @@ int get_return_value(OpndSize size, int reg, bool isPhysical) {
     move_mem_to_reg(size, offsetof(Thread, interpSave.retval), C_SCRATCH_1, isScratchPhysical, reg, isPhysical);
     return 0;
 }
+
 //!generate native code to set retval in glue
 
 //!It uses one scratch register
@@ -2196,6 +2689,29 @@ int set_return_value(OpndSize size, int reg, bool isPhysical) {
     get_self_pointer(C_SCRATCH_1, isScratchPhysical);
     move_reg_to_mem(size, reg, isPhysical, offsetof(Thread, interpSave.retval), C_SCRATCH_1, isScratchPhysical);
     return 0;
+}
+
+/**
+ * @brief Sets self Thread's retval.
+ * @details This needs a scratch register to hold pointer to self.
+ * @param size Size of return value
+ * @param sourceReg Register that holds the return value.
+ * @param isSourcePhysical Flag that determines if the source register is
+ * physical or not. For example, the source register can be a temporary.
+ * @param scratchRegForSelfThread Scratch register to use for self pointer
+ * @param isScratchPhysical Marks whether the scratch register is physical
+ * or not.
+ * @todo Is retval set as expected for 64-bit? If retval is set as 64 bit
+ * but read as 32-bit, is this correct?
+ */
+void set_return_value(OpndSize size, int sourceReg, bool isSourcePhysical,
+        int scratchRegForSelfThread, int isScratchPhysical) {
+    // Get self pointer
+    get_self_pointer(scratchRegForSelfThread, isScratchPhysical);
+
+    // Now set Thread.retval with the source register's value
+    move_reg_to_mem(size, sourceReg, isSourcePhysical,
+            offsetof(Thread, interpSave.retval), scratchRegForSelfThread, isScratchPhysical);
 }
 //!generate native code to clear exception object in glue
 
@@ -2406,7 +2922,7 @@ int call_fmodf() {
 int call_dvmFindCatchBlock() {
     //int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
     //bool doUnroll, void** newFrame)
-    typedef int (*vmHelper)(Thread*, int, Object*, bool, void**);
+    typedef int (*vmHelper)(Thread*, int, Object*, int, void**);
     vmHelper funcPtr = dvmFindCatchBlock;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         beforeCall("dvmFindCatchBlock");
@@ -2706,18 +3222,18 @@ int call_dvmCanPutArrayElement() {
     return 0;
 }
 
-//!generate native code to call dvmFindInterfaceMethodInCache
+//!generate native code to call dvmFindInterfaceMethodInCache2
 
 //!
 int call_dvmFindInterfaceMethodInCache() {
     typedef Method* (*vmHelper)(ClassObject*, u4, const Method*, DvmDex*);
-    vmHelper funcPtr = dvmFindInterfaceMethodInCache;
+    vmHelper funcPtr = dvmFindInterfaceMethodInCache2;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
-        beforeCall("dvmFindInterfaceMethodInCache");
-        callFuncPtr((int)funcPtr, "dvmFindInterfaceMethodInCache");
-        afterCall("dvmFindInterfaceMethodInCache");
+        beforeCall("dvmFindInterfaceMethodInCache2");
+        callFuncPtr((int)funcPtr, "dvmFindInterfaceMethodInCache2");
+        afterCall("dvmFindInterfaceMethodInCache2");
     } else {
-        callFuncPtr((int)funcPtr, "dvmFindInterfaceMethodInCache");
+        callFuncPtr((int)funcPtr, "dvmFindInterfaceMethodInCache2");
     }
     return 0;
 }
@@ -2801,7 +3317,8 @@ The only register that is still live after this function is ebx
 int const_string_resolve() {
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
-    insertLabel(".const_string_resolve", false);
+    if (insertLabel(".const_string_resolve", false) == -1)
+        return -1;
     //method stored in glue structure as well as on the interpreted stack
     get_glue_method_class(P_GPR_2, true);
     load_effective_addr(-8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
@@ -2829,7 +3346,8 @@ The only register that is still live after this function is ebx
 int resolve_class2(
            int startLR/*scratch register*/, bool isPhysical, int indexReg/*const pool index*/,
            bool indexPhysical, int thirdArg) {
-    insertLabel(".class_resolve", false);
+    if (insertLabel(".class_resolve", false) == -1)
+        return -1;
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
 
@@ -2862,12 +3380,18 @@ int resolve_method2(
             int startLR/*logical register index*/, bool isPhysical, int indexReg/*const pool index*/,
             bool indexPhysical,
             int thirdArg/*VIRTUAL*/) {
-    if(thirdArg == METHOD_VIRTUAL)
-        insertLabel(".virtual_method_resolve", false);
-    else if(thirdArg == METHOD_DIRECT)
-        insertLabel(".direct_method_resolve", false);
-    else if(thirdArg == METHOD_STATIC)
-        insertLabel(".static_method_resolve", false);
+    if(thirdArg == METHOD_VIRTUAL) {
+        if (insertLabel(".virtual_method_resolve", false) == -1)
+            return -1;
+    }
+    else if(thirdArg == METHOD_DIRECT) {
+        if (insertLabel(".direct_method_resolve", false) == -1)
+            return -1;
+    }
+    else if(thirdArg == METHOD_STATIC) {
+        if (insertLabel(".static_method_resolve", false) == -1)
+            return -1;
+    }
 
     load_effective_addr(-12, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     move_reg_to_mem(OpndSize_32, indexReg, indexPhysical, 4, PhysicalReg_ESP, true);
@@ -2900,7 +3424,8 @@ The only register that is still live after this function is ebx
 int resolve_inst_field2(
             int startLR/*logical register index*/, bool isPhysical,
             int indexReg/*const pool index*/, bool indexPhysical) {
-    insertLabel(".inst_field_resolve", false);
+    if (insertLabel(".inst_field_resolve", false) == -1)
+        return -1;
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
 
@@ -2931,7 +3456,8 @@ The only register that is still live after this function is ebx
 int resolve_static_field2(
               int startLR/*logical register index*/, bool isPhysical, int indexReg/*const pool index*/,
               bool indexPhysical) {
-    insertLabel(".static_field_resolve", false);
+    if (insertLabel(".static_field_resolve", false) == -1)
+        return -1;
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2010-2013 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,9 @@
 #include "interp/InterpState.h"
 #include "interp/InterpDefs.h"
 #include "libdex/Leb128.h"
+#include "Scheduler.h"
+#include "Singleton.h"
+
 
 /* compilation flags to turn on debug printout */
 //#define DEBUG_COMPILE_TABLE
@@ -251,10 +254,10 @@ int sortAllocConstraint(RegAllocConstraint* allocConstraints,
                         RegAllocConstraint* allocConstraintsSorted, bool fromHighToLow);
 
 //used in codeGenBasicBlock
-void insertFromVirtualInfo(BasicBlock_O1* bb, int k); //update compileTable
-void insertFromTempInfo(int k); //update compileTable
+int insertFromVirtualInfo(BasicBlock_O1* bb, int k); //update compileTable
+int insertFromTempInfo(int k); //update compileTable
 int updateXferPoints();
-void updateLiveTable();
+static int updateLiveTable();
 void printDefUseTable();
 bool isFirstOfHandler(BasicBlock_O1* bb);
 
@@ -266,9 +269,9 @@ RegAccessType updateAccess2(RegAccessType C1, RegAccessType C2);
 RegAccessType updateAccess3(RegAccessType C, RegAccessType B);
 
 void updateDefUseTable();
-void updateReachingDefA(int indexToA, OverlapCase isBPartiallyOverlapA);
-void updateReachingDefB1(int indexToA);
-void updateReachingDefB2();
+static int updateReachingDefA(int indexToA, OverlapCase isBPartiallyOverlapA);
+static int updateReachingDefB1(int indexToA);
+static int updateReachingDefB2();
 void updateReachingDefB3();
 
 RegAccessType insertAUse(DefUsePair* ptr, int offsetPC, int regNum, LowOpndRegType physicalType);
@@ -277,9 +280,9 @@ RegAccessType insertDefUsePair(int reachingDefIndex);
 
 //used in updateXferPoints
 int fakeUsageAtEndOfBB(BasicBlock_O1* bb);
-void insertLoadXfer(int offset, int regNum, LowOpndRegType pType);
+static int insertLoadXfer(int offset, int regNum, LowOpndRegType pType);
 int searchMemTable(int regNum);
-void mergeLiveRange(int tableIndex, int rangeStart, int rangeEnd);
+static int mergeLiveRange(int tableIndex, int rangeStart, int rangeEnd);
 //used in updateLiveTable
 RegAccessType setAccessTypeOfUse(OverlapCase isDefPartiallyOverlapUse, RegAccessType reachingDefLive);
 DefUsePair* searchDefUseTable(int offsetPC, int regNum, LowOpndRegType pType);
@@ -288,17 +291,14 @@ void insertAccess(int tableIndex, LiveRange* startP, int rangeStart);
 //register allocation
 int spillLogicalReg(int spill_index, bool updateTable);
 
-/** check whether the current bytecode is IF or GOTO or SWITCH
+/**
+ * @brief Checks whether the opcode can branch or switch
+ * @param opcode the Dalvik mnemonic
+ * @return true if opcode can branch or switch
  */
-bool isCurrentByteCodeJump() {
-    u2 inst_op = INST_INST(inst);
-    if(inst_op == OP_IF_EQ || inst_op == OP_IF_NE || inst_op == OP_IF_LT ||
-       inst_op == OP_IF_GE || inst_op == OP_IF_GT || inst_op == OP_IF_LE) return true;
-    if(inst_op == OP_IF_EQZ || inst_op == OP_IF_NEZ || inst_op == OP_IF_LTZ ||
-       inst_op == OP_IF_GEZ || inst_op == OP_IF_GTZ || inst_op == OP_IF_LEZ) return true;
-    if(inst_op == OP_GOTO || inst_op == OP_GOTO_16 || inst_op == OP_GOTO_32) return true;
-    if(inst_op == OP_PACKED_SWITCH || inst_op == OP_SPARSE_SWITCH) return true;
-    return false;
+static inline bool isCurrentByteCodeJump(Opcode opcode) {
+    int flags = dexGetFlagsFromOpcode(opcode);
+    return (flags & (kInstrCanBranch | kInstrCanSwitch)) != 0;
 }
 
 /* this function is called before code generation of basic blocks
@@ -351,27 +351,33 @@ void syncAllRegs() {
         }
         if(!stillUsed && allRegs[k].isUsed) {
             allRegs[k].isUsed = false;
-            allRegs[k].freeTimeStamp = lowOpTimeStamp;
+            allRegs[k].freeTimeStamp = lowOpTimeStamp; /* TODO Semantics of code that uses freeTimeStamp might
+                                                          not be correct because value of lowOpTimeStamp is not
+                                                          being updated when each x86 instruction is emitted. */
         }
     }
     return;
 }
 
-//!sync up spillIndexUsed with compileTable
+//! \brief sync up spillIndexUsed with compileTable
 
-//!
-void updateSpillIndexUsed() {
+//! \return -1 if error, 0 otherwise
+static int updateSpillIndexUsed(void) {
     int k;
     for(k = 0; k <= MAX_SPILL_JIT_IA-1; k++) spillIndexUsed[k] = 0;
     for(k = 0; k < num_compile_entries; k++) {
         if(isVirtualReg(compileTable[k].physicalType)) continue;
         if(compileTable[k].spill_loc_index >= 0) {
-            if(compileTable[k].spill_loc_index > 4*(MAX_SPILL_JIT_IA-1))
-                ALOGE("spill_loc_index is wrong for entry %d: %d",
+            if(compileTable[k].spill_loc_index > 4*(MAX_SPILL_JIT_IA-1)) {
+                ALOGE("JIT_ERROR: spill_loc_index is wrong for entry %d: %d\n",
                       k, compileTable[k].spill_loc_index);
+                SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                return -1;
+            }
             spillIndexUsed[compileTable[k].spill_loc_index >> 2] = 1;
         }
     }
+    return 0;
 }
 
 /* free memory used in all basic blocks */
@@ -412,7 +418,7 @@ void initializeRegStateOfBB(BasicBlock_O1* bb) {
                     /* at the beginning of an exception handler, GG VR is in the interpreted stack */
                     compileTable[k].physicalReg = PhysicalReg_Null;
 #ifdef DEBUG_COMPILE_TABLE
-                    ALOGI("at the first basic block of an exception handler, GG VR %d type %d is in memory",
+                    ALOGI("At the first basic block of an exception handler, GG VR %d type %d is in memory",
                           compileTable[k].regNum, compileTable[k].physicalType);
 #endif
                 } else {
@@ -452,8 +458,11 @@ void initializeNullCheck(int indexToMemVR) {
     memVRTable[indexToMemVR].nullCheckDone = found;
 }
 
-/* initialize memVRTable */
-void initializeMemVRTable() {
+/* @brief Initializes the MemVRTable
+ *
+ * @return -1 if error happened, 0 otherwise
+ */
+static int initializeMemVRTable(void) {
     num_memory_vr = 0;
     int k;
     for(k = 0; k < num_compile_entries; k++) {
@@ -480,8 +489,9 @@ void initializeMemVRTable() {
             /* the low half of VR is not in memVRTable
                add an entry for the low half in memVRTable */
             if(num_memory_vr >= NUM_MEM_VR_ENTRY) {
-                ALOGE("exceeds size of memVRTable");
-                dvmAbort();
+                ALOGE("JIT_ERROR: Index %d exceeds size of memVRTable\n", num_memory_vr);
+                SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                return -1;
             }
             memVRTable[num_memory_vr].regNum = regNum;
             memVRTable[num_memory_vr].inMemory = setToInMemory;
@@ -496,8 +506,9 @@ void initializeMemVRTable() {
             /* the high half of VR is not in memVRTable
                add an entry for the high half in memVRTable */
             if(num_memory_vr >= NUM_MEM_VR_ENTRY) {
-                ALOGE("exceeds size of memVRTable");
-                dvmAbort();
+                ALOGE("JIT_ERROR: Index %d exceeds size of memVRTable for 64-bit OpndSize\n", num_memory_vr);
+                SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                return -1;
             }
             memVRTable[num_memory_vr].regNum = regNum+1;
             memVRTable[num_memory_vr].inMemory = setToInMemory;
@@ -509,19 +520,27 @@ void initializeMemVRTable() {
             num_memory_vr++;
         }
     }
+    return 0;
 }
 
 /* create a O1 basic block from basic block constructed in JIT MIR */
 BasicBlock_O1* createBasicBlockO1(BasicBlock* bb) {
     BasicBlock_O1* bb1 = createBasicBlock(0, -1);
+    if (bb1 == NULL) return bb1;
     bb1->jitBasicBlock = bb;
     return bb1;
 }
 
-/* a basic block in JIT MIR can contain bytecodes that are not in program order
-   for example, a "goto" bytecode will be followed by the goto target */
-void preprocessingBB(BasicBlock* bb) {
+/* @brief Pre-process BasicBlocks
+ * @detail A basic block in JIT MIR can contain bytecodes
+ * that are not in program order. For example, a "goto"
+ * bytecode will be followed by the goto target
+ * @return -1 if error happened, 0 otherwise
+ */
+int preprocessingBB(BasicBlock* bb) {
     currentBB = createBasicBlockO1(bb);
+    if (currentBB == NULL)
+        return -1;
     /* initialize currentBB->allocConstraints */
     int ii;
     for(ii = 0; ii < 8; ii++) {
@@ -533,10 +552,15 @@ void preprocessingBB(BasicBlock* bb) {
     dumpVirtualInfoOfBasicBlock(currentBB);
 #endif
     currentBB = NULL;
+    return 0;
 }
 
-void preprocessingTrace() {
+//! \brief preprocess a trace
+//!
+//! \return -1 on error, 0 on success
+int preprocessingTrace() {
     int k, k2, k3, jj;
+    int retCode = 0;
     /* this is a simplified verson of setTypeOfVR()
         all VRs are assumed to be GL, no VR will be GG
     */
@@ -552,7 +576,9 @@ void preprocessingTrace() {
         currentBB = method_bbs_sorted[k2];
         /* update compileTable with virtual register from currentBB */
         for(k3 = 0; k3 < currentBB->num_regs; k3++) {
-            insertFromVirtualInfo(currentBB, k3);
+            retCode = insertFromVirtualInfo(currentBB, k3);
+            if (retCode < 0)
+                return retCode;
         }
 
         /* for each GL|GG type VR, insert fake usage at end of basic block to keep it live */
@@ -580,6 +606,7 @@ void preprocessingTrace() {
     dumpCompileTable();
 #endif
     currentBB = NULL;
+    return 0;
 }
 
 void printJitTraceInfoAtRunTime(const Method* method, int offset) {
@@ -626,13 +653,35 @@ int codeGenBasicBlockJit(const Method* method, BasicBlock* bb) {
         if(method_bbs_sorted[k]->jitBasicBlock == bb) {
             lowOpTimeStamp = 0; //reset time stamp at start of a basic block
             currentBB = method_bbs_sorted[k];
+#if 0
+            if(indexForGlue >= 0) {
+                /* at start of a basic block, GLUE is mapped to %ebp */
+                compileTable[indexForGlue].physicalReg = PhysicalReg_EBP;
+                compileTable[indexForGlue].spill_loc_index = -1;
+                if(!currentBB->hasAccessToGlue) {
+                    /* since GLUE is not used in this basic block, spill it to free one GPR */
+                    spillLogicalReg(indexForGlue, true);
+                    syncAllRegs(); /* sync up allRegs with compileTable */
+                }
+            }
+#endif
+            // Basic block here also means new native basic block
+            if (gDvmJit.scheduling)
+                singletonPtr<Scheduler>()->signalEndOfNativeBasicBlock();
+
             int cg_ret = codeGenBasicBlock(method, currentBB);
+
+            // End of managed basic block means end of native basic block
+            if (gDvmJit.scheduling)
+                singletonPtr<Scheduler>()->signalEndOfNativeBasicBlock();
+
             currentBB = NULL;
             return cg_ret;
         }
     }
-    ALOGE("can't find the corresponding O1 basic block for id %d type %d",
+    ALOGE("JIT_ERROR: Cannot find the corresponding O1 basic block for id %d type %d",
          bb->id, bb->blockType);
+    SET_JIT_ERROR(kJitErrorInvalidBBId);
     return -1;
 }
 void endOfBasicBlock(BasicBlock* bb) {
@@ -654,29 +703,25 @@ int collectInfoOfBasicBlock(Method* method, BasicBlock_O1* bb) {
     bb->num_defs = 0;
     bb->defUseTable = NULL;
     bb->defUseTail = NULL;
-    u2* rPC_start = (u2*)method->insns;
     int kk;
     bb->endsWithReturn = false;
     bb->hasAccessToGlue = false;
 
-    MIR* mir;
     int seqNum = 0;
     /* traverse the MIR in basic block
        sequence number is used to make sure next bytecode will have a larger sequence number */
-    for(mir = bb->jitBasicBlock->firstMIRInsn; mir; mir = mir->next) {
+    for(MIR * mir = bb->jitBasicBlock->firstMIRInsn; mir; mir = mir->next) {
         offsetPC = seqNum;
         mir->seqNum = seqNum++;
-        rPC = rPC_start + mir->offset;
-#ifdef WITH_JIT_INLINING
+#ifdef WITH_JIT_INLINING_PHASE2
         if(mir->dalvikInsn.opcode >= kMirOpFirst &&
            mir->dalvikInsn.opcode != kMirOpCheckInlinePrediction) continue;
-        if(ir->dalvikInsn.opcode == kMirOpCheckInlinePrediction) { //TODO
+        if(mir->dalvikInsn.opcode == kMirOpCheckInlinePrediction) { //TODO
         }
 #else
         if(mir->dalvikInsn.opcode >= kNumPackedOpcodes) continue;
 #endif
-        inst = FETCH(0);
-        u2 inst_op = INST_INST(inst);
+        Opcode inst_op = mir->dalvikInsn.opcode;
         /* update bb->hasAccessToGlue */
         if((inst_op >= OP_MOVE_RESULT && inst_op <= OP_RETURN_OBJECT) ||
            (inst_op >= OP_MONITOR_ENTER && inst_op <= OP_INSTANCE_OF) ||
@@ -694,15 +739,17 @@ int collectInfoOfBasicBlock(Method* method, BasicBlock_O1* bb) {
             bb->endsWithReturn = true;
 
         /* get virtual register usage in current bytecode */
-        getVirtualRegInfo(infoByteCode);
+        getVirtualRegInfo(infoByteCode, mir);
         int num_regs = num_regs_per_bytecode;
         for(kk = 0; kk < num_regs; kk++) {
             currentInfo = infoByteCode[kk];
 #ifdef DEBUG_MERGE_ENTRY
-            ALOGI("call mergeEntry2 at offsetPC %x kk %d VR %d %d", offsetPC, kk,
+            ALOGI("Call mergeEntry2 at offsetPC %x kk %d VR %d %d\n", offsetPC, kk,
                   currentInfo.regNum, currentInfo.physicalType);
 #endif
-            mergeEntry2(bb); //update defUseTable of the basic block
+            int retCode = mergeEntry2(bb); //update defUseTable of the basic block
+            if (retCode < 0)
+                return retCode;
         }
 
         //dumpVirtualInfoOfBasicBlock(bb);
@@ -713,14 +760,14 @@ int collectInfoOfBasicBlock(Method* method, BasicBlock_O1* bb) {
     //sort allocConstraints of each basic block
     for(kk = 0; kk < bb->num_regs; kk++) {
 #ifdef DEBUG_ALLOC_CONSTRAINT
-        ALOGI("sort virtual reg %d type %d -------", bb->infoBasicBlock[kk].regNum,
+        ALOGI("Sort virtual reg %d type %d -------", bb->infoBasicBlock[kk].regNum,
               bb->infoBasicBlock[kk].physicalType);
 #endif
         sortAllocConstraint(bb->infoBasicBlock[kk].allocConstraints,
                             bb->infoBasicBlock[kk].allocConstraintsSorted, true);
     }
 #ifdef DEBUG_ALLOC_CONSTRAINT
-    ALOGI("sort constraints for BB %d --------", bb->bb_index);
+    ALOGI("Sort constraints for BB %d --------", bb->bb_index);
 #endif
     sortAllocConstraint(bb->allocConstraints, bb->allocConstraintsSorted, false);
     return 0;
@@ -738,20 +785,27 @@ int collectInfoOfBasicBlock(Method* method, BasicBlock_O1* bb) {
     At end of the basic block, right before the jump instruction, handles constant VRs and GG VRs
 */
 int codeGenBasicBlock(const Method* method, BasicBlock_O1* bb) {
+    int retCode = 0;
     /* we assume at the beginning of each basic block,
        all GL VRs reside in memory and all GG VRs reside in predefined physical registers,
        so at the end of a basic block, recover a spilled GG VR, store a GL VR to memory */
     /* update compileTable with entries in bb->infoBasicBlock */
     int k;
     for(k = 0; k < bb->num_regs; k++) {
-        insertFromVirtualInfo(bb, k);
+        retCode = insertFromVirtualInfo(bb, k);
+        if (retCode < 0)
+            return retCode;
     }
-    updateXferPoints(); //call fakeUsageAtEndOfBB
+    retCode = updateXferPoints(); //call fakeUsageAtEndOfBB
+    if (retCode < 0)
+        return retCode;
 #ifdef DEBUG_REACHING_DEF
     printDefUseTable();
 #endif
 #ifdef DSE_OPT
-    removeDeadDefs();
+    retCode = removeDeadDefs();
+    if (retCode < 0)
+        return retCode;
     printDefUseTable();
 #endif
     //clear const section of compileTable
@@ -762,20 +816,22 @@ int codeGenBasicBlock(const Method* method, BasicBlock_O1* bb) {
     dumpCompileTable();
 #endif
     initializeRegStateOfBB(bb);
-    initializeMemVRTable();
-    updateLiveTable();
+    retCode = initializeMemVRTable();
+    if (retCode < 0)
+        return retCode;
+    retCode = updateLiveTable();
+    if (retCode < 0)
+        return retCode;
     freeReg(true);  //before code gen of a basic block, also called at end of a basic block?
 #ifdef DEBUG_COMPILE_TABLE
     ALOGI("At start of basic block %d (num of VRs %d) -------", bb->bb_index, bb->num_regs);
 #endif
 
-    u2* rPC_start = (u2*)method->insns;
     bool lastByteCodeIsJump = false;
-    MIR* mir;
-    for(mir = bb->jitBasicBlock->firstMIRInsn; mir; mir = mir->next) {
+    for(MIR * mir = bb->jitBasicBlock->firstMIRInsn; mir; mir = mir->next) {
         offsetPC = mir->seqNum;
-        rPC = rPC_start + mir->offset;
-#ifdef WITH_JIT_INLINING
+        rPC = const_cast<u2 *>(method->insns) + mir->offset;
+#ifdef WITH_JIT_INLINING_PHASE2
         if(mir->dalvikInsn.opcode >= kMirOpFirst &&
            mir->dalvikInsn.opcode != kMirOpCheckInlinePrediction) {
 #else
@@ -785,12 +841,13 @@ int codeGenBasicBlock(const Method* method, BasicBlock_O1* bb) {
             continue;
         }
 
-        inst = FETCH(0);
         //before handling a bytecode, import info of temporary registers to compileTable including refCount
-        num_temp_regs_per_bytecode = getTempRegInfo(infoByteCodeTemp);
+        num_temp_regs_per_bytecode = getTempRegInfo(infoByteCodeTemp, mir);
         for(k = 0; k < num_temp_regs_per_bytecode; k++) {
             if(infoByteCodeTemp[k].versionNum > 0) continue;
-            insertFromTempInfo(k);
+            retCode = insertFromTempInfo(k);
+            if (retCode < 0)
+                return retCode;
         }
         startNativeCode(-1, -1);
         for(k = 0; k <= MAX_SPILL_JIT_IA-1; k++) spillIndexUsed[k] = 0;
@@ -807,7 +864,16 @@ int codeGenBasicBlock(const Method* method, BasicBlock_O1* bb) {
 #endif
         //set isConst to true for CONST & MOVE MOVE_OBJ?
         //clear isConst to true for MOVE, MOVE_OBJ, MOVE_RESULT, MOVE_EXCEPTION ...
-        bool isConst = getConstInfo(bb); //will reset isConst if a VR is updated by the bytecode
+        bool isConst = false;
+        int retCode = getConstInfo(bb, mir); //will return 0 if a VR is updated by the bytecode
+        //if the bytecode generates a constant
+        if (retCode == 1)
+            isConst = true;
+        //if something went wrong at getConstInfo. getConstInfo has logged it
+        else if (retCode == -1)
+            return retCode;
+        //otherwise, bytecode does not generate a constant
+
         bool isDeadStmt = false;
 #ifdef DSE_OPT
         for(k = 0; k < num_dead_pc; k++) {
@@ -817,7 +883,7 @@ int codeGenBasicBlock(const Method* method, BasicBlock_O1* bb) {
             }
         }
 #endif
-        getVirtualRegInfo(infoByteCode);
+        getVirtualRegInfo(infoByteCode, mir);
         //call something similar to mergeEntry2, but only update refCount
         //clear refCount
         for(k = 0; k < num_regs_per_bytecode; k++) {
@@ -852,36 +918,36 @@ int codeGenBasicBlock(const Method* method, BasicBlock_O1* bb) {
 #ifdef DEBUG_COMPILE_TABLE
             dumpCompileTable();
 #endif
-            globalShortMap = NULL;
-            if(isCurrentByteCodeJump()) lastByteCodeIsJump = true;
+            freeShortMap();
+            if (isCurrentByteCodeJump(mir->dalvikInsn.opcode))
+                lastByteCodeIsJump = true;
             //lowerByteCode will call globalVREndOfBB if it is jump
-            int retCode = lowerByteCodeJit(method, rPC, mir);
+
+            bool retCode = lowerByteCodeJit(method, mir, rPC);
             if(gDvmJit.codeCacheByteUsed + (stream - streamStart) +
                  CODE_CACHE_PADDING > gDvmJit.codeCacheSize) {
-                 ALOGE("JIT code cache full");
+                 ALOGE("JIT_ERROR: Code cache full while lowering bytecode %s", dexGetOpcodeName(mir->dalvikInsn.opcode));
                  gDvmJit.codeCacheFull = true;
+                 SET_JIT_ERROR(kJitErrorCodeCacheFull);
                  return -1;
             }
 
-            if (retCode == 1) {
-                // We always fall back to the interpreter for OP_INVOKE_OBJECT_INIT_RANGE,
-                // but any other failure is unexpected and should be logged.
-                if (mir->dalvikInsn.opcode != OP_INVOKE_OBJECT_INIT_RANGE) {
-                    ALOGE("JIT couldn't compile %s%s dex_pc=%d opcode=%d",
-                          method->clazz->descriptor,
-                          method->name,
-                          offsetPC,
-                          mir->dalvikInsn.opcode);
-                }
+            if (retCode){
+                SET_JIT_ERROR(kJitErrorUnsupportedBytecode);
+                ALOGE("JIT_ERROR: Unsupported bytecode %s\n", dexGetOpcodeName(mir->dalvikInsn.opcode));
                 return -1;
             }
+
+            //Check if an error happened while in the bytecode
+            if (IS_ANY_JIT_ERROR_SET()) {
+                SET_JIT_ERROR(kJitErrorCodegen);
+                return -1;
+            }
+
             updateConstInfo(bb);
             freeShortMap();
-            if(retCode < 0) {
-                ALOGE("error in lowering the bytecode");
-                return retCode;
-            }
             freeReg(true); //may dump GL VR to memory (this is necessary)
+
             //after each bytecode, make sure non-VRs have refCount of zero
             for(k = 0; k < num_compile_entries; k++) {
                 if(isTemporary(compileTable[k].physicalType, compileTable[k].regNum)) {
@@ -898,12 +964,12 @@ int codeGenBasicBlock(const Method* method, BasicBlock_O1* bb) {
             offsetNCG = stream - streamMethodStart;
             mapFromBCtoNCG[offsetPC] = offsetNCG;
 #ifdef DEBUG_COMPILE_TABLE
-            ALOGI("this bytecode generates a constant and has no side effect");
+            ALOGI("Bytecode %s generates a constant and has no side effect\n", dexGetOpcodeName(mir->dalvikInsn.opcode));
 #endif
             freeReg(true); //may dump GL VR to memory (this is necessary)
         }
 #ifdef DEBUG_COMPILE_TABLE
-        ALOGI("after one bytecode BB %d (num of VRs %d)", bb->bb_index, bb->num_regs);
+        ALOGI("After one bytecode BB %d (num of VRs %d)", bb->bb_index, bb->num_regs);
 #endif
     }//for each bytecode
 #ifdef DEBUG_COMPILE_TABLE
@@ -911,7 +977,11 @@ int codeGenBasicBlock(const Method* method, BasicBlock_O1* bb) {
 #endif
     if(!lastByteCodeIsJump) constVREndOfBB();
     //at end of a basic block, get spilled GG VR & dump GL VR
-    if(!lastByteCodeIsJump) globalVREndOfBB(method);
+    if(!lastByteCodeIsJump) {
+        retCode = globalVREndOfBB(method);
+        if (retCode < 0)
+            return retCode;
+    }
     //remove entries for temporary registers, L VR and GL VR
     int jj;
     for(k = 0; k < num_compile_entries; ) {
@@ -991,7 +1061,9 @@ int mergeEntry2(BasicBlock_O1* bb) {
             for(k = 0; k < currentInfo.num_reaching_defs; k++)
                 currentInfo.reachingDefs[k] = bb->infoBasicBlock[jj].reachingDefs[k];
             updateDefUseTable(); //use currentInfo to update defUseTable
-            updateReachingDefA(jj, OVERLAP_B_COVER_A); //update reachingDefs of A
+            int retCode = updateReachingDefA(jj, OVERLAP_B_COVER_A); //update reachingDefs of A
+            if (retCode < 0)
+                return -1;
             isMerged = true;
             hasAlias = true;
             if(typeB == LowOpndRegType_gp) {
@@ -1006,21 +1078,29 @@ int mergeEntry2(BasicBlock_O1* bb) {
             bb->infoBasicBlock[jj].accessType = mergeAccess2(bb->infoBasicBlock[jj].accessType, currentInfo.accessType,
                                                              isBPartiallyOverlapA);
 #ifdef DEBUG_MERGE_ENTRY
-            ALOGI("update accessType in case 2: VR %d %d accessType %d", regA, typeA, bb->infoBasicBlock[jj].accessType);
+            ALOGI("Update accessType in case 2: VR %d %d accessType %d", regA, typeA, bb->infoBasicBlock[jj].accessType);
 #endif
             hasAlias = true;
             if(currentInfo.accessType == REGACCESS_U || currentInfo.accessType == REGACCESS_UD) {
                 /* update currentInfo.reachingDefs */
-                updateReachingDefB1(jj);
-                updateReachingDefB2();
+                int retCode = updateReachingDefB1(jj);
+                if (retCode < 0)
+                    return retCode;
+                retCode = updateReachingDefB2();
+                if (retCode < 0)
+                    return retCode;
             }
-            updateReachingDefA(jj, isBPartiallyOverlapA);
+            int retCode = updateReachingDefA(jj, isBPartiallyOverlapA);
+            if (retCode < 0)
+                return retCode;
         }
         else {
             //even if B does not overlap with A, B can affect the reaching defs of A
             //for example, B is a def of "v0", A is "v1"
             //  B can kill some reaching defs of A or affect the accessType of a reaching def
-            updateReachingDefA(jj, OVERLAP_NO); //update reachingDefs of A
+            int retCode = updateReachingDefA(jj, OVERLAP_NO); //update reachingDefs of A
+            if (retCode < 0)
+                return -1;
         }
     }//for each variable A in infoBasicBlock
     if(!isMerged) {
@@ -1032,7 +1112,7 @@ int mergeEntry2(BasicBlock_O1* bb) {
         else
             bb->infoBasicBlock[bb->num_regs].accessType = currentInfo.accessType;
 #ifdef DEBUG_MERGE_ENTRY
-        ALOGI("update accessType in case 3: VR %d %d accessType %d", regB, typeB, bb->infoBasicBlock[bb->num_regs].accessType);
+        ALOGI("Update accessType in case 3: VR %d %d accessType %d", regB, typeB, bb->infoBasicBlock[bb->num_regs].accessType);
 #endif
         bb->infoBasicBlock[bb->num_regs].regNum = regB;
         for(k = 0; k < 8; k++)
@@ -1048,7 +1128,7 @@ int mergeEntry2(BasicBlock_O1* bb) {
         for(k = 0; k < currentInfo.num_reaching_defs; k++)
             bb->infoBasicBlock[bb->num_regs].reachingDefs[k] = currentInfo.reachingDefs[k];
 #ifdef DEBUG_MERGE_ENTRY
-        ALOGI("try to update reaching defs for VR %d %d", regB, typeB);
+        ALOGI("Try to update reaching defs for VR %d %d", regB, typeB);
         for(k = 0; k < bb->infoBasicBlock[bb->num_regs].num_reaching_defs; k++)
             ALOGI("reaching def %d @ %d for VR %d %d access %d", k, currentInfo.reachingDefs[k].offsetPC,
                   currentInfo.reachingDefs[k].regNum, currentInfo.reachingDefs[k].physicalType,
@@ -1056,23 +1136,25 @@ int mergeEntry2(BasicBlock_O1* bb) {
 #endif
         bb->num_regs++;
         if(bb->num_regs >= MAX_REG_PER_BASICBLOCK) {
-            ALOGE("too many VRs in a basic block");
-            dvmAbort();
+            ALOGE("JIT_ERROR: Number of VRs (%d) in a basic block, exceed maximum (%d)\n", bb->num_regs, MAX_REG_PER_BASICBLOCK);
+            SET_JIT_ERROR(kJitErrorMaxVR);
+            return -1;
         }
-        return -1;
     }
     return 0;
 }
 
-//!update reaching defs for infoBasicBlock[indexToA]
-
-//!use currentInfo.reachingDefs to update reaching defs for variable A
-void updateReachingDefA(int indexToA, OverlapCase isBPartiallyOverlapA) {
-    if(indexToA < 0) return;
+//! \brief update reaching defs for infoBasicBlock[indexToA]
+//! \detail use currentInfo.reachingDefs to update reaching defs for variable A
+//! \param indexToA Index of variable A
+//! \param isBPartiallyOverlapA the type of overlap
+//! \return -1 if error, 0 otherwise
+static int updateReachingDefA(int indexToA, OverlapCase isBPartiallyOverlapA) {
+    if(indexToA < 0) return 0;
     int k, k2;
     OverlapCase isBPartiallyOverlapDef;
     if(currentInfo.accessType == REGACCESS_U) {
-        return; //no update to reachingDefs of the VR
+        return 0; //no update to reachingDefs of the VR
     }
     /* access in currentInfo is DU, D, or UD */
     if(isBPartiallyOverlapA == OVERLAP_B_COVER_A) {
@@ -1083,9 +1165,9 @@ void updateReachingDefA(int indexToA, OverlapCase isBPartiallyOverlapA) {
         currentBB->infoBasicBlock[indexToA].reachingDefs[0].physicalType = currentInfo.physicalType;
         currentBB->infoBasicBlock[indexToA].reachingDefs[0].accessType = REGACCESS_D;
 #ifdef DEBUG_REACHING_DEF
-        ALOGI("single reaching def @ %d for VR %d %d", offsetPC, currentInfo.regNum, currentInfo.physicalType);
+        ALOGI("Single reaching def @ %d for VR %d %d", offsetPC, currentInfo.regNum, currentInfo.physicalType);
 #endif
-        return;
+        return 0;
     }
     /* update reachingDefs for variable A to get rid of dead defs */
     /* Bug fix: it is possible that more than one reaching defs need to be removed
@@ -1154,7 +1236,9 @@ void updateReachingDefA(int indexToA, OverlapCase isBPartiallyOverlapA) {
         //insert the def to variable @ currentInfo
         k = currentBB->infoBasicBlock[indexToA].num_reaching_defs;
         if(k >= 3) {
-          ALOGE("more than 3 reaching defs");
+            ALOGE("JIT_ERROR: more than 3 reaching defs at updateReachingDefA");
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            return -1;
         }
         currentBB->infoBasicBlock[indexToA].reachingDefs[k].offsetPC = offsetPC;
         currentBB->infoBasicBlock[indexToA].reachingDefs[k].regNum = currentInfo.regNum;
@@ -1166,20 +1250,23 @@ void updateReachingDefA(int indexToA, OverlapCase isBPartiallyOverlapA) {
     ALOGI("IN updateReachingDefA for VR %d %d", currentBB->infoBasicBlock[indexToA].regNum,
           currentBB->infoBasicBlock[indexToA].physicalType);
     for(k = 0; k < currentBB->infoBasicBlock[indexToA].num_reaching_defs; k++)
-        ALOGI("reaching def %d @ %d for VR %d %d access %d", k,
+        ALOGI("Reaching def %d @ %d for VR %d %d access %d", k,
               currentBB->infoBasicBlock[indexToA].reachingDefs[k].offsetPC,
               currentBB->infoBasicBlock[indexToA].reachingDefs[k].regNum,
               currentBB->infoBasicBlock[indexToA].reachingDefs[k].physicalType,
               currentBB->infoBasicBlock[indexToA].reachingDefs[k].accessType);
 #endif
+    return 0;
 }
 
-/** Given a variable B @currentInfo,
-    updates its reaching defs by checking reaching defs of variable A @currentBB->infoBasicBlock[indexToA]
-    The result is stored in tmpInfo.reachingDefs
-*/
-void updateReachingDefB1(int indexToA) {
-    if(indexToA < 0) return;
+//! \brief updateReachingDefB1
+//! \detail Given a variable B @currentInfo, updates its reaching defs
+//! by checking reaching defs of variable A @currentBB->infoBasicBlock[indexToA]
+//! The result is stored in tmpInfo.reachingDefs
+//! \param indexToA Index of variable A
+//! \return -1 if error, 0 otherwise
+static int updateReachingDefB1(int indexToA) {
+    if(indexToA < 0) return 0;
     int k;
     tmpInfo.num_reaching_defs = 0;
     for(k = 0; k < currentBB->infoBasicBlock[indexToA].num_reaching_defs; k++) {
@@ -1216,21 +1303,26 @@ void updateReachingDefB1(int indexToA) {
         }
         if(insert1) {
             if(tmpInfo.num_reaching_defs >= 3) {
-                ALOGE("more than 3 reaching defs for tmpInfo");
+                ALOGE("JIT_ERROR: more than 3 reaching defs for tmpInfo at updateReachingDefB1");
+                SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                return -1;
             }
             tmpInfo.reachingDefs[tmpInfo.num_reaching_defs] = currentBB->infoBasicBlock[indexToA].reachingDefs[k];
             tmpInfo.num_reaching_defs++;
 #ifdef DEBUG_REACHING_DEF2
-            ALOGI("insert from entry %d %d: index %d", currentBB->infoBasicBlock[indexToA].regNum,
+            ALOGI("Insert from entry %d %d: index %d", currentBB->infoBasicBlock[indexToA].regNum,
                   currentBB->infoBasicBlock[indexToA].physicalType, k);
 #endif
         }
     }
+    return 0;
 }
 
-/** update currentInfo.reachingDefs by merging currentInfo.reachingDefs with tmpInfo.reachingDefs
-*/
-void updateReachingDefB2() {
+//! \brief updateReachingDefB2
+//! \details update currentInfo.reachingDefs by merging
+//! currentInfo.reachingDefs with tmpInfo.reachingDefs
+//! \return -1 if error, 0 otherwise
+static int updateReachingDefB2(void) {
     int k, k2;
     for(k2 = 0; k2 < tmpInfo.num_reaching_defs; k2++ ) {
         bool merged = false;
@@ -1240,24 +1332,32 @@ void updateReachingDefB2() {
                currentInfo.reachingDefs[k].physicalType == tmpInfo.reachingDefs[k2].physicalType) {
                 merged = true;
                 if(currentInfo.reachingDefs[k].offsetPC != tmpInfo.reachingDefs[k2].offsetPC) {
-                    ALOGE("defs on the same VR %d %d with different offsetPC %d vs %d",
+                    ALOGE("JIT_ERROR: defs on the same VR %d %d with different offsetPC %d vs %d",
                           currentInfo.reachingDefs[k].regNum, currentInfo.reachingDefs[k].physicalType,
                           currentInfo.reachingDefs[k].offsetPC, tmpInfo.reachingDefs[k2].offsetPC);
+                    SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                    return -1;
                 }
-                if(currentInfo.reachingDefs[k].accessType != tmpInfo.reachingDefs[k2].accessType)
-                    ALOGE("defs on the same VR %d %d with different accessType",
+                if(currentInfo.reachingDefs[k].accessType != tmpInfo.reachingDefs[k2].accessType) {
+                    ALOGE("JIT_ERROR: defs on the same VR %d %d with different accessType\n",
                           currentInfo.reachingDefs[k].regNum, currentInfo.reachingDefs[k].physicalType);
+                    SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                    return -1;
+                }
                 break;
             }
         }
         if(!merged) {
             if(currentInfo.num_reaching_defs >= 3) {
-               ALOGE("more than 3 reaching defs for currentInfo");
+                ALOGE("JIT_ERROR: more than 3 reaching defs for currentInfo at updateReachingDefB2\n");
+                SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                return -1;
             }
             currentInfo.reachingDefs[currentInfo.num_reaching_defs] = tmpInfo.reachingDefs[k2];
             currentInfo.num_reaching_defs++;
         }
     }
+    return 0;
 }
 
 //!update currentInfo.reachingDefs with currentInfo if variable is defined in currentInfo
@@ -1318,13 +1418,18 @@ void updateDefUseTable() {
     }
 }
 
-//! insert a use at offsetPC of given variable at end of DefUsePair
-
-//!
+//! \brief insertAUse
+//! \detail Insert a use at offsetPC of given variable at end of DefUsePair
+//! \param ptr The DefUsePair
+//! \param offsetPC
+//! \param regNum
+//! \param physicalType
+//! \return useType
 RegAccessType insertAUse(DefUsePair* ptr, int offsetPC, int regNum, LowOpndRegType physicalType) {
     DefOrUseLink* tLink = (DefOrUseLink*)malloc(sizeof(DefOrUseLink));
     if(tLink == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertAUse");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return REGACCESS_UNKNOWN;
     }
     tLink->offsetPC = offsetPC;
@@ -1347,13 +1452,19 @@ RegAccessType insertAUse(DefUsePair* ptr, int offsetPC, int regNum, LowOpndRegTy
     return useType;
 }
 
-//! insert a def to currentBB->defUseTable
-
+//! \brief insertADef
+//! \detailsinsert a def to currentBB->defUseTable
 //! update currentBB->defUseTail if necessary
+//! \param offsetPC
+//! \param regNum
+//! \param pType Physical type
+//! \param rType Register access type
+//! \return DefUsePair
 DefUsePair* insertADef(int offsetPC, int regNum, LowOpndRegType pType, RegAccessType rType) {
     DefUsePair* ptr = (DefUsePair*)malloc(sizeof(DefUsePair));
     if(ptr == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertADef");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return NULL;
     }
     ptr->next = NULL;
@@ -1372,7 +1483,7 @@ DefUsePair* insertADef(int offsetPC, int regNum, LowOpndRegType pType, RegAccess
         currentBB->defUseTable = ptr;
     currentBB->num_defs++;
 #ifdef DEBUG_REACHING_DEF
-    ALOGI("insert a def at %d to defUseTable for VR %d %d", offsetPC,
+    ALOGI("Insert a def at %d to defUseTable for VR %d %d", offsetPC,
           regNum, pType);
 #endif
     return ptr;
@@ -1410,10 +1521,15 @@ RegAccessType insertDefUsePair(int reachingDefIndex) {
     return useType;
 }
 
-//! insert a XFER_MEM_TO_XMM to currentBB->xferPoints
-
-//!
-void insertLoadXfer(int offset, int regNum, LowOpndRegType pType) {
+/* @brief insert a XFER_MEM_TO_XMM to currentBB->xferPoints
+ *
+ * @params offset offsetPC of the transfer location
+ * @params regNum Register number
+ * @params pType Physical type of the reg
+ *
+ * @return -1 if error occurred, 0 otherwise
+ */
+static int insertLoadXfer(int offset, int regNum, LowOpndRegType pType) {
     //check whether it is already in currentBB->xferPoints
     int k;
     for(k = 0; k < currentBB->num_xfer_points; k++) {
@@ -1421,20 +1537,22 @@ void insertLoadXfer(int offset, int regNum, LowOpndRegType pType) {
            currentBB->xferPoints[k].offsetPC == offset &&
            currentBB->xferPoints[k].regNum == regNum &&
            currentBB->xferPoints[k].physicalType == pType)
-            return;
+            return 0;
     }
     currentBB->xferPoints[currentBB->num_xfer_points].xtype = XFER_MEM_TO_XMM;
     currentBB->xferPoints[currentBB->num_xfer_points].regNum = regNum;
     currentBB->xferPoints[currentBB->num_xfer_points].offsetPC = offset;
     currentBB->xferPoints[currentBB->num_xfer_points].physicalType = pType;
 #ifdef DEBUG_XFER_POINTS
-    ALOGI("insert to xferPoints %d: XFER_MEM_TO_XMM of VR %d %d at %d", currentBB->num_xfer_points, regNum, pType, offset);
+    ALOGI("Insert to xferPoints %d: XFER_MEM_TO_XMM of VR %d %d at %d", currentBB->num_xfer_points, regNum, pType, offset);
 #endif
     currentBB->num_xfer_points++;
     if(currentBB->num_xfer_points >= MAX_XFER_PER_BB) {
-        ALOGE("too many xfer points");
-        dvmAbort();
+        ALOGE("JIT_ERROR: Number of transfer points (%d) exceed maximum (%d)", currentBB->num_xfer_points, MAX_XFER_PER_BB);
+        SET_JIT_ERROR(kJitErrorMaxXferPoints);
+        return -1;
     }
+    return 0;
 }
 
 /** update defUseTable by assuming a fake usage at END of a basic block for variable @ currentInfo
@@ -1464,8 +1582,12 @@ int fakeUsageAtEndOfBB(BasicBlock_O1* bb) {
         else if(isBPartiallyOverlapA != OVERLAP_NO) {
             /* B overlaps with A */
             /* update reaching defs of variable B by checking reaching defs of bb->infoBasicBlock[jj] */
-            updateReachingDefB1(jj);
-            updateReachingDefB2(); //merge currentInfo with tmpInfo
+            int retCode = updateReachingDefB1(jj);
+            if (retCode < 0)
+                return retCode;
+            retCode = updateReachingDefB2(); //merge currentInfo with tmpInfo
+            if (retCode < 0)
+                return retCode;
         }
     }
     /* update defUseTable by checking currentInfo */
@@ -1510,8 +1632,10 @@ int updateXferPoints() {
                    ptrUse->physicalType == LowOpndRegType_ss) {
                     /* if a 32-bit definition reaches a xmm usage or a SS usage,
                        insert a XFER_MEM_TO_XMM */
-                    insertLoadXfer(ptrUse->offsetPC,
+                    int retCode = insertLoadXfer(ptrUse->offsetPC,
                                    ptrUse->regNum, LowOpndRegType_xmm);
+                    if (retCode < 0)
+                        return retCode;
                 }
                 ptrUse = ptrUse->next;
             }
@@ -1534,12 +1658,13 @@ int updateXferPoints() {
                 }
                 currentBB->xferPoints[currentBB->num_xfer_points].tableIndex = k;
 #ifdef DEBUG_XFER_POINTS
-                ALOGI("insert XFER %d at def %d: V%d %d", currentBB->num_xfer_points, ptr->def.offsetPC, ptr->def.regNum, defType);
+                ALOGI("Insert XFER %d at def %d: V%d %d", currentBB->num_xfer_points, ptr->def.offsetPC, ptr->def.regNum, defType);
 #endif
                 currentBB->num_xfer_points++;
                 if(currentBB->num_xfer_points >= MAX_XFER_PER_BB) {
-                    ALOGE("too many xfer points");
-                    dvmAbort();
+                    ALOGE("JIT_ERROR: Number of transfer points (%d) exceed maximum (%d)", currentBB->num_xfer_points, MAX_XFER_PER_BB);
+                    SET_JIT_ERROR(kJitErrorMaxXferPoints);
+                    return -1;
                 }
             }
         }
@@ -1570,9 +1695,12 @@ int updateXferPoints() {
                    ptrUse->regNum == ptr->def.regNum) {
                     hasAligned = true;
                     /* if def is on FS and use is on XMM, insert a XFER_MEM_TO_XMM */
-                    if(defType == LowOpndRegType_fs)
-                        insertLoadXfer(ptrUse->offsetPC,
+                    if(defType == LowOpndRegType_fs) {
+                        int retCode = insertLoadXfer(ptrUse->offsetPC,
                                        ptrUse->regNum, LowOpndRegType_xmm);
+                        if (retCode < 0)
+                            return retCode;
+                    }
                 }
                 if(ptrUse->physicalType == LowOpndRegType_fs ||
                    ptrUse->physicalType == LowOpndRegType_fs_s)
@@ -1581,14 +1709,18 @@ int updateXferPoints() {
                    ptrUse->regNum != ptr->def.regNum) {
                     hasMisaligned = true;
                     /* if use is on XMM and use and def are misaligned, insert a XFER_MEM_TO_XMM */
-                    insertLoadXfer(ptrUse->offsetPC,
+                    int retCode = insertLoadXfer(ptrUse->offsetPC,
                                    ptrUse->regNum, LowOpndRegType_xmm);
+                    if (retCode < 0)
+                        return retCode;
                 }
                 if(ptrUse->physicalType == LowOpndRegType_ss) {
                     hasSSUsage = true;
                     /* if use is on SS, insert a XFER_MEM_TO_XMM */
-                    insertLoadXfer(ptrUse->offsetPC,
+                    int retCode = insertLoadXfer(ptrUse->offsetPC,
                                    ptrUse->regNum, LowOpndRegType_ss);
+                    if (retCode < 0)
+                        return retCode;
                 }
                 ptrUse = ptrUse->next;
             }
@@ -1615,12 +1747,13 @@ int updateXferPoints() {
             if(hasAligned) currentBB->xferPoints[currentBB->num_xfer_points].dumpToXmm = true;
             currentBB->xferPoints[currentBB->num_xfer_points].tableIndex = k;
 #ifdef DEBUG_XFER_POINTS
-            ALOGI("insert XFER %d at def %d: V%d %d", currentBB->num_xfer_points, ptr->def.offsetPC, ptr->def.regNum, defType);
+            ALOGI("Insert XFER %d at def %d: V%d %d", currentBB->num_xfer_points, ptr->def.offsetPC, ptr->def.regNum, defType);
 #endif
             currentBB->num_xfer_points++;
             if(currentBB->num_xfer_points >= MAX_XFER_PER_BB) {
-                ALOGE("too many xfer points");
-                dvmAbort();
+                ALOGE("JIT_ERROR: Number of transfer points (%d) exceed maximum (%d)", currentBB->num_xfer_points, MAX_XFER_PER_BB);
+                SET_JIT_ERROR(kJitErrorMaxXferPoints);
+                return -1;
             }
         }
         ptr = ptr->next;
@@ -1635,13 +1768,18 @@ int updateXferPoints() {
               currentBB->xferPoints[k].dumpToMem, currentBB->xferPoints[k].dumpToXmm);
     }
 #endif
-    return -1;
+    return 0;
 }
 
-//! update memVRTable[].ranges by browsing the defUseTable
-
-//! each virtual register has a list of live ranges, and each live range has a list of PCs that access the VR
-void updateLiveTable() {
+/* @brief update memVRTable[].ranges by browsing the defUseTable
+ *
+ * @detail each virtual register has a list of live ranges, and
+ * each live range has a list of PCs that access the VR
+ *
+ * @return -1 if error happened, 0 otherwise
+ */
+static int updateLiveTable(void) {
+    int retCode = 0;
     DefUsePair* ptr = currentBB->defUseTable;
     while(ptr != NULL) {
         bool updateUse = false;
@@ -1649,8 +1787,9 @@ void updateLiveTable() {
             ptr->num_uses = 1;
             ptr->uses = (DefOrUseLink*)malloc(sizeof(DefOrUseLink));
             if(ptr->uses == NULL) {
-                ALOGE("Memory allocation failed");
-                return;
+                ALOGE("JIT_ERROR: Memory allocation failed in updateLiveTable");
+                SET_JIT_ERROR(kJitErrorMallocFailed);
+                return -1;
             }
             ptr->uses->accessType = REGACCESS_D;
             ptr->uses->regNum = ptr->def.regNum;
@@ -1665,16 +1804,22 @@ void updateLiveTable() {
             RegAccessType useType = ptrUse->accessType;
             if(useType == REGACCESS_L || useType == REGACCESS_D) {
                 int indexL = searchMemTable(ptrUse->regNum);
-                if(indexL >= 0)
-                    mergeLiveRange(indexL, ptr->def.offsetPC,
+                if(indexL >= 0) {
+                    retCode = mergeLiveRange(indexL, ptr->def.offsetPC,
                                    ptrUse->offsetPC); //tableIndex, start PC, end PC
+                    if (retCode < 0)
+                        return retCode;
+                }
             }
             if(getRegSize(ptrUse->physicalType) == OpndSize_64 &&
                (useType == REGACCESS_H || useType == REGACCESS_D)) {
                 int indexH = searchMemTable(ptrUse->regNum+1);
-                if(indexH >= 0)
-                    mergeLiveRange(indexH, ptr->def.offsetPC,
+                if(indexH >= 0) {
+                    retCode = mergeLiveRange(indexH, ptr->def.offsetPC,
                                    ptrUse->offsetPC);
+                    if (retCode < 0)
+                        return retCode;
+                }
             }
             ptrUse = ptrUse->next;
         }//while ptrUse
@@ -1701,12 +1846,21 @@ void updateLiveTable() {
         ALOGI("");
     }
 #endif
+    return 0;
 }
 
-//!add a live range [rangeStart, rangeEnd] to ranges of memVRTable, merge to existing live ranges if necessary
-
-//!ranges are in increasing order of startPC
-void mergeLiveRange(int tableIndex, int rangeStart, int rangeEnd) {
+/* @brief Add a live range [rangeStart, rangeEnd] to ranges of memVRTable,
+ * merge to existing live ranges if necessary
+ *
+ * @detail ranges are in increasing order of startPC
+ *
+ * @param tableIndex index into memVRTable
+ * @param rangeStart start of live range
+ * @param rangeEnd end of live range
+ *
+ * @return -1 if error, 0 otherwise
+ */
+static int mergeLiveRange(int tableIndex, int rangeStart, int rangeEnd) {
     if(rangeStart == PC_FOR_START_OF_BB) rangeStart = currentBB->pc_start;
     if(rangeEnd == PC_FOR_END_OF_BB) rangeEnd = currentBB->pc_end;
 #ifdef DEBUG_LIVE_RANGE
@@ -1797,18 +1951,24 @@ void mergeLiveRange(int tableIndex, int rangeStart, int rangeEnd) {
 #ifdef DEBUG_LIVE_RANGE
         ALOGI("LIVERANGE insert one live range [%x %x] to tableIndex %d", rangeStart, rangeEnd, tableIndex);
 #endif
-        return;
+        return 0;
     }
     if(!endBeforeRange) { //here ptrEnd is not NULL
         endIndex++; //next
         ptrEnd_prev = ptrEnd; //ptrEnd_prev is not NULL
         ptrEnd = ptrEnd->next; //ptrEnd can be NULL
     }
-    if(endIndex < startIndex+1) ALOGE("mergeLiveRange endIndex %d startIndex %d", endIndex, startIndex);
+
+    if(endIndex < startIndex+1) {
+        ALOGE("JIT_ERROR: mergeLiveRange endIndex %d is less than startIndex %d\n", endIndex, startIndex);
+        SET_JIT_ERROR(kJitErrorMergeLiveRange);
+        return -1;
+    }
     ///////// use ptrStart & ptrEnd_prev
     if(ptrStart == NULL || ptrEnd_prev == NULL) {
-        ALOGE("mergeLiveRange ptr is NULL");
-        return;
+        ALOGE("JIT_ERROR: mergeLiveRange ptr is NULL\n");
+        SET_JIT_ERROR(kJitErrorMergeLiveRange);
+        return -1;
     }
     //endIndex > startIndex (merge the ranges between startIndex and endIndex-1)
     //update ptrStart
@@ -1820,7 +1980,10 @@ void mergeLiveRange(int tableIndex, int rangeStart, int rangeEnd) {
 #ifdef DEBUG_LIVE_RANGE
     ALOGI("LIVERANGE merge entries for tableIndex %d from %d to %d", tableIndex, startIndex+1, endIndex-1);
 #endif
-    if(ptrStart->num_access <= 0) ALOGE("mergeLiveRange number of access");
+    if(ptrStart->num_access <= 0) {
+        ALOGE("JIT_ERROR: mergeLiveRange number of access");
+        SET_JIT_ERROR(kJitErrorMergeLiveRange);
+    }
 #ifdef DEBUG_LIVE_RANGE
     ALOGI("LIVERANGE tableIndex %d startIndex %d num_access %d (", tableIndex, startIndex, ptrStart->num_access);
     for(k = 0; k < ptrStart->num_access; k++)
@@ -1854,7 +2017,9 @@ void mergeLiveRange(int tableIndex, int rangeStart, int rangeEnd) {
 #ifdef DEBUG_LIVE_RANGE
     ALOGI("num_ranges for VR %d: %d", memVRTable[tableIndex].regNum, memVRTable[tableIndex].num_ranges);
 #endif
+    return 0;
 }
+
 //! insert an access to a given live range, in order
 
 //!
@@ -2236,7 +2401,8 @@ int updateVirtualReg(int reg, LowOpndRegType pType) {
                 //def at xmm: content of misaligned xmm is out-dated
                 //invalidateXmmVR(currentBB->xferPoints[k].tableIndex);
 #ifdef DEBUG_XFER_POINTS
-                if(currentBB->xferPoints[k].dumpToXmm) ALOGI("XFER set_virtual_reg to xmm: xmm VR %d", reg);
+                if(currentBB->xferPoints[k].dumpToXmm)
+                    ALOGI("XFER set_virtual_reg to xmm: xmm VR %d", reg);
 #endif
                 if(pType == LowOpndRegType_xmm)  {
 #ifdef DEBUG_XFER_POINTS
@@ -2304,7 +2470,8 @@ int registerAlloc(int type, int reg, bool isPhysical, bool updateRefCount) {
     if(newType & LowOpndRegType_scratch) reg = reg - PhysicalReg_SCRATCH_1 + 1;
     int tIndex = searchCompileTable(newType, reg);
     if(tIndex < 0) {
-      ALOGE("reg %d type %d not found in registerAlloc", reg, newType);
+      ALOGE("JIT_ERROR: reg %d type %d not found in registerAlloc\n", reg, newType);
+      SET_JIT_ERROR(kJitErrorRegAllocFailed);
       return PhysicalReg_Null;
     }
 
@@ -2366,8 +2533,11 @@ int registerAlloc(int type, int reg, bool isPhysical, bool updateRefCount) {
 
 //!This is used when MOVE_OPT is on, it tries to alias a virtual register with a temporary to remove a move
 int registerAllocMove(int reg, int type, bool isPhysical, int srcReg) {
-    if(srcReg == PhysicalReg_EDI || srcReg == PhysicalReg_ESP || srcReg == PhysicalReg_EBP)
-        ALOGE("can't move from srcReg EDI or ESP or EBP");
+    if(srcReg == PhysicalReg_EDI || srcReg == PhysicalReg_ESP || srcReg == PhysicalReg_EBP) {
+        ALOGE("JIT_ERROR: Cannot move from srcReg EDI or ESP or EBP");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
+    }
 #ifdef DEBUG_REGALLOC
     ALOGI("in registerAllocMove: reg %d type %d srcReg %d", reg, type, srcReg);
 #endif
@@ -2375,7 +2545,8 @@ int registerAllocMove(int reg, int type, bool isPhysical, int srcReg) {
     if(newType & LowOpndRegType_scratch) reg = reg - PhysicalReg_SCRATCH_1 + 1;
     int index = searchCompileTable(newType, reg);
     if(index < 0) {
-        ALOGE("reg %d type %d not found in registerAllocMove", reg, newType);
+        ALOGE("JIT_ERROR: reg %d type %d not found in registerAllocMove", reg, newType);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return -1;
     }
 
@@ -2427,9 +2598,11 @@ int getFreeReg(int type, int reg, int indexToCompileTable) {
 
         int index = searchVirtualInfoOfBB((LowOpndRegType)(type&MASK_FOR_TYPE), reg, currentBB);
         if(index < 0) {
-            ALOGE("VR %d %d not found in infoBasicBlock of currentBB %d (num of VRs %d)",
+            ALOGE("JIT_ERROR: VR %d %d not found in infoBasicBlock of currentBB %d (num of VRs %d)",
                   reg, type, currentBB->bb_index, currentBB->num_regs);
-            dvmAbort();
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            //Error trickles down to dvmCompilerMIR2LIR, trace is rejected
+            return -1;
         }
 
         /* check allocConstraints for this VR,
@@ -2477,18 +2650,22 @@ int getFreeReg(int type, int reg, int indexToCompileTable) {
         if(vr_num >= 0) {
             int index3 = searchCompileTable(LowOpndRegType_gp | LowOpndRegType_virtual, vr_num);
             if(index3 < 0) {
-                ALOGE("2 in tracing linkage to VR %d", vr_num);
-                dvmAbort();
+                ALOGE("JIT_ERROR: Inavlid linkage VR for temporary register %d", vr_num);
+                SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                //Error trickles down to dvmCompilerMIR2LIR, trace is rejected
+                return -1;
             }
 
             if(compileTable[index3].physicalReg == PhysicalReg_Null) {
                 int index2 = searchVirtualInfoOfBB(LowOpndRegType_gp, vr_num, currentBB);
                 if(index2 < 0) {
-                    ALOGE("1 in tracing linkage to VR %d", vr_num);
-                    dvmAbort();
+                    ALOGE("JIT_ERROR: In tracing linkage to VR %d", vr_num);
+                    SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                    //Error trickles down to dvmCompilerMIR2LIR, trace is rejected
+                    return -1;
                 }
 #ifdef DEBUG_REGALLOC
-                ALOGI("in getFreeReg for temporary reg %d, trace the linkage to VR %d",
+                ALOGI("In getFreeReg for temporary reg %d, trace the linkage to VR %d",
                      reg, vr_num);
 #endif
 
@@ -2682,8 +2859,10 @@ PhysicalReg spillForLogicalReg(int type, int reg, int indexToCompileTable) {
     }
     if(index < 0) {
         dumpCompileTable();
-        ALOGE("no register to spill for logical %d %d", reg, type);
-        dvmAbort();
+        ALOGE("JIT_ERROR: no register to spill for logical %d %d\n", reg, type);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        //Error trickles down to dvmCompilerMIR2LIR, trace is rejected
+        return PhysicalReg_Null;
     }
     allocR = (PhysicalReg)spillLogicalReg(index, true);
 #ifdef DEBUG_REGALLOC
@@ -2699,8 +2878,10 @@ PhysicalReg spillForLogicalReg(int type, int reg, int indexToCompileTable) {
 //!Return the physical register that was allocated to the variable
 int spillLogicalReg(int spill_index, bool updateTable) {
     if((compileTable[spill_index].physicalType & LowOpndRegType_hard) != 0) {
-        ALOGE("can't spill a hard-coded register");
-        dvmAbort();
+        ALOGE("JIT_ERROR: can't spill a hard-coded register");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        //Error trickles down to dvmCompilerMIR2LIR, trace is rejected
+        return -1;
     }
     int physicalReg = compileTable[spill_index].physicalReg;
     if(!canSpillReg[physicalReg]) {
@@ -2770,7 +2951,8 @@ int unspillLogicalReg(int spill_index, int physicalReg) {
 int spillVirtualReg(int vrNum, LowOpndRegType type, bool updateTable) {
     int index = searchCompileTable(type | LowOpndRegType_virtual, vrNum);
     if(index < 0) {
-        ALOGE("can't find VR %d %d in spillVirtualReg", vrNum, type);
+        ALOGE("JIT_ERROR: Cannot find VR %d %d in spillVirtualReg", vrNum, type);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return -1;
     }
     //check whether it is const
@@ -2822,7 +3004,9 @@ int spillForHardReg(int regNum, int type) {
 //! allocConstraints specify how many times a hardcoded register is used in this basic block
 void updateCurrentBBWithConstraints(PhysicalReg reg) {
     if(reg > PhysicalReg_EBP) {
-        ALOGE("register %d out of range in updateCurrentBBWithConstraints", reg);
+        ALOGE("JIT_ERROR: Register %d out of range in updateCurrentBBWithConstraints\n", reg);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
     }
     currentBB->allocConstraints[reg].count++;
 }
@@ -2880,14 +3064,18 @@ int sortAllocConstraint(RegAllocConstraint* allocConstraints,
 #endif
     return 0;
 }
-//! find the entry for a given virtual register in compileTable
 
-//!
-int findVirtualRegInTable(u2 vA, LowOpndRegType type, bool printError) {
+//! \brief find the entry for a given virtual register in compileTable
+//! \param vA The VR to search for
+//! \param type Register type
+//! \return the virtual reg if found, else -1 as error.
+int findVirtualRegInTable(u2 vA, LowOpndRegType type) {
     int k = searchCompileTable(type | LowOpndRegType_virtual, vA);
-    if(k < 0 && printError) {
-        ALOGE("findVirtualRegInTable virtual register %d type %d", vA, type);
-        dvmAbort();
+    if(k < 0) {
+        ALOGE("JIT_ERROR: Couldn't find virtual register %d type %d in compiler table\n", vA, type);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        //Error trickles down to dvmCompilerMIR2LIR, trace is rejected
+        return -1;
     }
     return k;
 }
@@ -2932,7 +3120,11 @@ int isVirtualRegConstant(int regNum, LowOpndRegType type, int* valuePtr, bool up
     if((isConstL && size == OpndSize_32) || (isConstL && isConstH)) {
         if(updateRefCount) {
             int indexOrig = searchCompileTable(type | LowOpndRegType_virtual, regNum);
-            if(indexOrig < 0) ALOGE("can't find VR in isVirtualRegConstant num %d type %d", regNum, type);
+            if(indexOrig < 0) {
+                ALOGE("JIT_ERROR: Cannot find VR in isVirtualRegConstant num %d type %d\n", regNum, type);
+                SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                return -1;
+            }
             decreaseRefCount(indexOrig);
         }
 #ifdef DEBUG_CONST
@@ -3146,29 +3338,27 @@ int updateVRAtUse(int reg, LowOpndRegType pType, int regAll) {
 #define MAX_NUM_DEAD_PC_IN_BB 40
 int deadPCs[MAX_NUM_DEAD_PC_IN_BB];
 int num_dead_pc = 0;
-//! collect all PCs that can be removed
 
-//! traverse each byte code in the current basic block and check whether it can be removed, if yes, update deadPCs
-void getDeadStmts() {
+//! \brief collect all PCs that can be removed
+//!
+//! \details traverse each byte code in the current basic block and check whether it can be removed, if yes, update deadPCs
+//! \return -1 if error happened, 0 otherwise
+static int getDeadStmts() {
     BasicBlock_O1* bb = currentBB;
     int k;
     num_dead_pc = 0;
     //traverse each bytecode in the basic block
     //update offsetPC, rPC & inst
-    u2* rPC_start = (u2*)currentMethod->insns;
-    MIR* mir;
-    for(mir = bb->jitBasicBlock->firstMIRInsn; mir; mir = mir->next) {
+    for(MIR * mir = bb->jitBasicBlock->firstMIRInsn; mir; mir = mir->next) {
         offsetPC = mir->seqNum;
-        rPC = rPC_start + mir->offset;
         if(mir->dalvikInsn.opcode >= kNumPackedOpcodes) continue;
 #ifdef DEBUG_DSE
         ALOGI("DSE: offsetPC %x", offsetPC);
 #endif
-        inst = FETCH(0);
         bool isDeadStmt = true;
-        getVirtualRegInfo(infoByteCode);
-        u2 inst_op = INST_INST(inst);
-	//skip bytecodes with side effect
+        getVirtualRegInfo(infoByteCode, mir);
+        u2 inst_op = mir->dalvikInsn.opcode;
+        //skip bytecodes with side effect
         if(inst_op != OP_CONST_STRING && inst_op != OP_CONST_STRING_JUMBO &&
            inst_op != OP_MOVE && inst_op != OP_MOVE_OBJECT &&
            inst_op != OP_MOVE_FROM16 && inst_op != OP_MOVE_OBJECT_FROM16 &&
@@ -3187,9 +3377,10 @@ void getDeadStmts() {
                 num_defs++;
                 DefUsePair* indexT = searchDefUseTable(offsetPC, infoByteCode[k].regNum, infoByteCode[k].physicalType);
                 if(indexT == NULL) {
-                    ALOGE("def at %x of VR %d %d not in table",
-                           offsetPC, infoByteCode[k].regNum, infoByteCode[k].physicalType);
-                    return;
+                    ALOGE("JIT_ERROR: Def at %x of VR %d %d not in table\n",
+                        offsetPC, infoByteCode[k].regNum, infoByteCode[k].physicalType);
+                    SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                    return -1;
                 }
                 if(indexT->num_uses > 0) {
                     isDeadStmt = false;
@@ -3212,20 +3403,26 @@ void getDeadStmts() {
     } //for offsetPC
 #ifdef DEBUG_DSE
     ALOGI("Dead Stmts: ");
-    for(k = 0; k < num_dead_pc; k++) ALOGI("%x ", deadPCs[k]);
-    ALOGI("");
+    for(k = 0; k < num_dead_pc; k++)
+        ALOGI("%x ", deadPCs[k]);
 #endif
+    return 0;
 }
-//! entry point to remove dead statements
-
-//! recursively call getDeadStmts and remove uses in defUseTable that are from a dead PC
+//! \brief entry point to remove dead statements
+//!
+//! \details recursively call getDeadStmts and remove uses in defUseTable that are from a dead PC
 //! until there is no change to number of dead PCs
-void removeDeadDefs() {
+//! \return -1 if error happened, 0 otherwise
+static int removeDeadDefs() {
     int k;
     int deadPCs_2[MAX_NUM_DEAD_PC_IN_BB];
     int num_dead_pc_2 = 0;
-    getDeadStmts();
-    if(num_dead_pc == 0) return;
+    int retCode = 0;
+    retCode = getDeadStmts();
+    if (retCode < 0)
+        return retCode;
+    if(num_dead_pc == 0)
+        return 0;
     DefUsePair* ptr = NULL;
     DefOrUseLink* ptrUse = NULL;
     DefOrUseLink* ptrUse_prev = NULL;
@@ -3268,13 +3465,15 @@ void removeDeadDefs() {
             }//while ptrUse
             ptr = ptr->next;
         }//while ptr
-	//save deadPCs in deadPCs_2
+        //save deadPCs in deadPCs_2
         num_dead_pc_2 = num_dead_pc;
         for(k = 0; k < num_dead_pc_2; k++)
             deadPCs_2[k] = deadPCs[k];
-	//update deadPCs
-        getDeadStmts();
-	//if no change to number of dead PCs, break out of the while loop
+        //update deadPCs
+        retCode = getDeadStmts();
+        if (retCode < 0)
+            return retCode;
+        //if no change to number of dead PCs, break out of the while loop
         if(num_dead_pc_2 == num_dead_pc) break;
     }//while
 #ifdef DEBUG_DSE
@@ -3282,8 +3481,8 @@ void removeDeadDefs() {
     for(k = 0; k < num_dead_pc; k++) {
         ALOGI("%d ", deadPCs[k]);
     }
-    ALOGI("");
 #endif
+    return 0;
 }
 /////////////////////////////////////////////////////////////
 //!search memVRTable for a given virtual register
@@ -3322,13 +3521,15 @@ void setVRToMemory(int regNum, OpndSize size) {
     int indexH = -1;
     if(size == OpndSize_64) indexH = searchMemTable(regNum+1);
     if(indexL < 0) {
-        ALOGE("VR %d not in memVRTable", regNum);
+        ALOGE("JIT_ERROR: VR %d not in memVRTable at setVRToMemory", regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return;
     }
     memVRTable[indexL].inMemory = true;
     if(size == OpndSize_64) {
         if(indexH < 0) {
-            ALOGE("VR %d not in memVRTable", regNum+1);
+            ALOGE("JIT_ERROR: VR %d not in memVRTabl at setVRToMemory for upper 64-bits", regNum+1);
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
             return;
         }
         memVRTable[indexH].inMemory = true;
@@ -3339,12 +3540,14 @@ void setVRToMemory(int regNum, OpndSize size) {
 //!
 bool isVRNullCheck(int regNum, OpndSize size) {
     if(size != OpndSize_32) {
-        ALOGE("isVRNullCheck size should be 32");
-        dvmAbort();
+        ALOGE("JIT_ERROR: isVRNullCheck size is not 32 for register %d", regNum);
+        SET_JIT_ERROR(kJitErrorNullBoundCheckFailed);
+        return false;
     }
     int indexL = searchMemTable(regNum);
     if(indexL < 0) {
-        ALOGE("VR %d not in memVRTable", regNum);
+        ALOGE("JIT_ERROR: VR %d not in memVRTable at isVRNullCheck", regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return false;
     }
     return memVRTable[indexL].nullCheckDone;
@@ -3352,32 +3555,40 @@ bool isVRNullCheck(int regNum, OpndSize size) {
 bool isVRBoundCheck(int vr_array, int vr_index) {
     int indexL = searchMemTable(vr_array);
     if(indexL < 0) {
-        ALOGE("isVRBoundCheck: VR %d not in memVRTable", vr_array);
+        ALOGE("JIT_ERROR: VR %d not in memVRTable at isVRBoundCheck", vr_array);
+        SET_JIT_ERROR(kJitErrorNullBoundCheckFailed);
         return false;
     }
     if(memVRTable[indexL].boundCheck.indexVR == vr_index)
         return memVRTable[indexL].boundCheck.checkDone;
     return false;
 }
-//! set nullCheckDone in memVRTable to true
-
+//! \brief set nullCheckDone in memVRTable to true
 //!
-void setVRNullCheck(int regNum, OpndSize size) {
+//! \param regNum the register number
+//! \param size the register size
+//!
+//! \return -1 if error happened, 0 otherwise
+int setVRNullCheck(int regNum, OpndSize size) {
     if(size != OpndSize_32) {
-        ALOGE("setVRNullCheck size should be 32");
-        dvmAbort();
+        ALOGE("JIT_ERROR: setVRNullCheck size should be 32\n");
+        SET_JIT_ERROR(kJitErrorNullBoundCheckFailed);
+        return -1;
     }
     int indexL = searchMemTable(regNum);
     if(indexL < 0) {
-        ALOGE("VR %d not in memVRTable", regNum);
-        return;
+        ALOGE("JIT_ERROR: VR %d not in memVRTable at setVRNullCheck", regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
     }
     memVRTable[indexL].nullCheckDone = true;
+    return 0;
 }
 void setVRBoundCheck(int vr_array, int vr_index) {
     int indexL = searchMemTable(vr_array);
     if(indexL < 0) {
-        ALOGE("setVRBoundCheck: VR %d not in memVRTable", vr_array);
+        ALOGE("JIT_ERROR: VR %d not in memVRTable at setVRBoundCheck", vr_array);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return;
     }
     memVRTable[indexL].boundCheck.indexVR = vr_index;
@@ -3444,7 +3655,9 @@ int requestVRFreeDelay(int regNum, u4 reason) {
     if(indexL >= 0) {
         memVRTable[indexL].delayFreeFlags |= reason;
     } else {
-        ALOGE("requestVRFreeDelay: VR %d not in memVRTable", regNum);
+        ALOGE("JIT_ERROR: At requestVRFreeDelay: VR %d not in memVRTable", regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
     }
     return indexL;
 }
@@ -3554,6 +3767,9 @@ bool matchType(int typeA, int typeB) {
        (typeB & MASK_FOR_TYPE) == LowOpndRegType_ss) return true;
     return false;
 }
+
+#if 0 /* This code is dead. If reenabling, need to pass proper parameters
+         to getVirtualRegInfo */
 //!check whether a virtual register is used in the current bytecode
 
 //!
@@ -3566,6 +3782,7 @@ bool isUsedInByteCode(int regNum, int type) {
     }
     return false;
 }
+#endif
 //! obsolete
 bool defineFirst(int atype) {
     if(atype == REGACCESS_D || atype == REGACCESS_L || atype == REGACCESS_H || atype == REGACCESS_DU)
@@ -3603,7 +3820,8 @@ int getSpillIndex(bool isGLUE, OpndSize size) {
             return k;
         }
     }
-    ALOGE("can't find spill position in spillLogicalReg");
+    ALOGE("JIT_ERROR: Cannot find spill position in spillLogicalReg\n");
+    SET_JIT_ERROR(kJitErrorRegAllocFailed);
     return -1;
 }
 //!this is called before generating a native code, it sets entries in array canSpillReg to true
@@ -3717,7 +3935,7 @@ int beforeCall(const char* target) { //spill all live registers
        (!strcmp(target, "dvmAllocArrayByClass")) ||
        (!strcmp(target, "dvmAllocPrimitiveArray")) ||
        (!strcmp(target, "dvmInterpHandleFillArrayData")) ||
-       (!strcmp(target, "dvmFindInterfaceMethodInCache")) ||
+       (!strcmp(target, "dvmFindInterfaceMethodInCache2")) ||
        (!strcmp(target, "dvmNcgHandlePackedSwitch")) ||
        (!strcmp(target, "dvmNcgHandleSparseSwitch")) ||
        (!strcmp(target, "dvmCanPutArrayElement")) ||
@@ -3907,7 +4125,8 @@ bool isTemp8Bit(int type, int reg) {
             return infoByteCodeTemp[k].is8Bit;
         }
     }
-    ALOGE("isTemp8Bit %d %d", type, reg);
+    ALOGE("JIT_ERROR: Could not find reg %d type %d at isTemp8Bit", reg, type);
+    SET_JIT_ERROR(kJitErrorRegAllocFailed);
     return false;
 }
 
@@ -3920,7 +4139,8 @@ bool isTemp8Bit(int type, int reg) {
 bool isVRLive(int vA) {
     int index = searchMemTable(vA);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", vA);
+        ALOGE("JIT_ERROR: Could not find VR %d in memTable at isVRLive", vA);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return false;
     }
     LiveRange* ptr = memVRTable[index].ranges;
@@ -3943,7 +4163,8 @@ bool isLastByteCodeOfLiveRange(int compileIndex) {
         /* check live ranges for the VR */
         index = searchMemTable(compileTable[k].regNum);
         if(index < 0) {
-            ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum);
+            ALOGE("JIT_ERROR: Could not find 32-bit VR %d in memTable at isLastByteCodeOfLiveRange", compileTable[k].regNum);
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
             return false;
         }
         ptr = memVRTable[index].ranges;
@@ -3958,7 +4179,8 @@ bool isLastByteCodeOfLiveRange(int compileIndex) {
     index = searchMemTable(compileTable[k].regNum);
     bool tmpB = false;
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum);
+        ALOGE("JIT_ERROR: Could not find 64-bit VR %d (lower 32) in memTable at isLastByteCodeOfLiveRange", compileTable[k].regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return false;
     }
     ptr = memVRTable[index].ranges;
@@ -3973,7 +4195,8 @@ bool isLastByteCodeOfLiveRange(int compileIndex) {
     /* check live ranges of the high half */
     index = searchMemTable(compileTable[k].regNum+1);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum+1);
+        ALOGE("JIT_ERROR: Could not find 64-bit VR %d (upper 32) in memTable at isLastByteCodeOfLiveRange", compileTable[k].regNum+1);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return false;
     }
     ptr = memVRTable[index].ranges;
@@ -3986,6 +4209,40 @@ bool isLastByteCodeOfLiveRange(int compileIndex) {
     return false;
 }
 
+// check if virtual register has loop independent dependence
+bool loopIndepUse(int compileIndex) {
+    int k = compileIndex;
+    OpndSize tSize = getRegSize(compileTable[k].physicalType);
+    int index;
+    bool retCode = false;
+
+    /* check live ranges of the low half */
+    index = searchMemTable(compileTable[k].regNum);
+    if(index < 0) {
+        ALOGE("JIT_ERROR: Could not find 32-bit VR %d in memTable at loopIndepUse", compileTable[k].regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return false;
+    }
+    LiveRange* ptr = memVRTable[index].ranges;
+    if (ptr != NULL && ptr->start > 0)
+        retCode = true;
+    if(!retCode) return false;
+    if(tSize == OpndSize_32) return true;
+
+    /* check for the high half */
+    index = searchMemTable(compileTable[k].regNum+1);
+    if(index < 0) {
+        ALOGE("JIT_ERROR: Could not find 64-bit VR %d in memTable at loopIndepUse", compileTable[k].regNum+1);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return false;
+    }
+    ptr = memVRTable[index].ranges;
+    if (ptr != NULL && ptr->start > 0)
+       return true;
+    return false;
+}
+
+
 //! check whether the current bytecode is in a live range that extends to end of a basic block
 
 //!for 64 bit, return true if true for both low half and high half
@@ -3997,7 +4254,8 @@ bool reachEndOfBB(int compileIndex) {
     /* check live ranges of the low half */
     index = searchMemTable(compileTable[k].regNum);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum);
+        ALOGE("JIT_ERROR: Could not find 32-bit VR %d in memTable at reachEndOfBB", compileTable[k].regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return false;
     }
     LiveRange* ptr = memVRTable[index].ranges;
@@ -4016,7 +4274,8 @@ bool reachEndOfBB(int compileIndex) {
     /* check live ranges of the high half */
     index = searchMemTable(compileTable[k].regNum+1);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum+1);
+        ALOGE("JIT_ERROR: Could not find 64-bit VR %d in memTable at reachEndOfBB", compileTable[k].regNum+1);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return false;
     }
     ptr = memVRTable[index].ranges;
@@ -4045,7 +4304,8 @@ bool isNextToLastAccess(int compileIndex) {
     bool retCode = false;
     index = searchMemTable(compileTable[k].regNum);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum);
+        ALOGE("JIT_ERROR: Could not find 32-bit VR %d in memTable at isNextToLastAccess", compileTable[k].regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return false;
     }
     LiveRange* ptr = memVRTable[index].ranges;
@@ -4068,7 +4328,8 @@ bool isNextToLastAccess(int compileIndex) {
     /* check live ranges for the high half */
     index = searchMemTable(compileTable[k].regNum+1);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum+1);
+        ALOGE("JIT_ERROR: Could not find 64-bit VR %d in memTable at isNextToLastAccess", compileTable[k].regNum+1);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return false;
     }
     ptr = memVRTable[index].ranges;
@@ -4098,7 +4359,8 @@ int getNextLiveRange(int compileIndex) {
     int index;
     index = searchMemTable(compileTable[k].regNum);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum);
+        ALOGE("JIT_ERROR: Could not find 32-bit VR %d in memTable at getNextLiveRange", compileTable[k].regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return offsetPC;
     }
     bool found = false;
@@ -4119,7 +4381,8 @@ int getNextLiveRange(int compileIndex) {
     found = false;
     index = searchMemTable(compileTable[k].regNum+1);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum+1);
+        ALOGE("JIT_ERROR: Could not find 64-bit VR %d in memTable at getNextLiveRange", compileTable[k].regNum+1);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return offsetPC;
     }
     int nextUse2 = offsetPC;
@@ -4148,7 +4411,8 @@ int getNextAccess(int compileIndex) {
     /* check live ranges of the low half */
     index = searchMemTable(compileTable[k].regNum);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum);
+        ALOGE("JIT_ERROR: Could not find 32-bit VR %d in memTable at getNextAccess", compileTable[k].regNum);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return offsetPC;
     }
     bool found = false;
@@ -4179,7 +4443,8 @@ int getNextAccess(int compileIndex) {
     found = false;
     index = searchMemTable(compileTable[k].regNum+1);
     if(index < 0) {
-        ALOGE("couldn't find VR %d in memTable", compileTable[k].regNum+1);
+        ALOGE("JIT_ERROR: Could not find 64-bit VR %d in memTable at getNextAccess", compileTable[k].regNum+1);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return offsetPC;
     }
     int nextUse2 = offsetPC;
@@ -4218,6 +4483,8 @@ int freeReg(bool spillGL) {
             /* check entries with reference count of zero and is mapped to a physical register */
             bool typeA = !isVirtualReg(compileTable[k].physicalType);
             bool freeCrit = true, delayFreeing = false;
+            bool loopIndep64 = false;
+            OpndSize tSize = getRegSize(compileTable[k].physicalType);
             bool typeC = false, typeB = false, reachEnd = false;
             if(isVirtualReg(compileTable[k].physicalType)) {
                 /* VRs in the compile table */
@@ -4255,8 +4522,9 @@ int freeReg(bool spillGL) {
                        or
                        last bytecode of a live range reaching end of BB if not counting the fake usage at end
                 */
+                loopIndep64 = (traceMode == kJitLoop) && (tSize == OpndSize_64) && loopIndepUse(k) && !branchInLoop;
                 typeB = (freeCrit || boolB) &&
-                        (compileTable[k].gType != GLOBALTYPE_GG) &&
+                        (compileTable[k].gType != GLOBALTYPE_GG) && !loopIndep64 &&
                         !delayFreeing;
             }
             if(typeA || typeB || typeC) {
@@ -4300,7 +4568,9 @@ int freeReg(bool spillGL) {
                     /* update spill info for temporaries */
                     spillIndexUsed[compileTable[k].spill_loc_index >> 2] = 0;
                     compileTable[k].spill_loc_index = -1;
-                    ALOGE("free a temporary register with TRSTATE_SPILLED");
+                    ALOGE("JIT_ERROR: free a temporary register with TRSTATE_SPILLED\n");
+                    SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                    return -1;
                 }
             }
         }
@@ -4319,8 +4589,10 @@ void decreaseRefCount(int index) {
 #endif
     compileTable[index].refCount--;
     if(compileTable[index].refCount < 0) {
-        ALOGE("refCount is negative for REG %d %d", compileTable[index].regNum, compileTable[index].physicalType);
-        dvmAbort();
+        ALOGE("JIT_ERROR: refCount is negative for REG %d %d at decreaseRefCount",
+                compileTable[index].regNum, compileTable[index].physicalType);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
     }
 }
 //! reduce the reference count of a VR by 1
@@ -4330,7 +4602,8 @@ int updateRefCount(int reg, LowOpndRegType type) {
     if(currentBB == NULL) return 0;
     int index = searchCompileTable(LowOpndRegType_virtual | type, reg);
     if(index < 0) {
-        ALOGE("virtual reg %d type %d not found in updateRefCount", reg, type);
+        ALOGE("JIT_ERROR: virtual reg %d type %d not found in updateRefCount\n", reg, type);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return -1;
     }
     decreaseRefCount(index);
@@ -4345,7 +4618,8 @@ int updateRefCount2(int reg, int type, bool isPhysical) {
     if(newType & LowOpndRegType_scratch) reg = reg - PhysicalReg_SCRATCH_1 + 1;
     int index = searchCompileTable(newType, reg);
     if(index < 0) {
-        ALOGE("reg %d type %d not found in updateRefCount", reg, newType);
+        ALOGE("JIT_ERROR: reg %d type %d not found in updateRefCount\n", reg, newType);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return -1;
     }
     decreaseRefCount(index);
@@ -4358,7 +4632,8 @@ bool isGlueHandled(int glue_reg) {
     if(currentBB == NULL) return false;
     int index = searchCompileTable(LowOpndRegType_gp, glue_reg);
     if(index < 0) {
-        ALOGE("glue reg %d not found in isGlueHandled", glue_reg);
+        ALOGE("JIT_ERROR: glue reg %d not found in isGlueHandled\n", glue_reg);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return -1;
     }
     if(compileTable[index].spill_loc_index >= 0 ||
@@ -4373,15 +4648,22 @@ bool isGlueHandled(int glue_reg) {
 #endif
     return false;
 }
-//! reset the state of a glue variable to not existant (not in physical register nor spilled)
 
+//! \brief reset the state of a glue variable to not existent
 //!
-void resetGlue(int glue_reg) {
-    if(currentBB == NULL) return;
+//! \details reset the state of a glue variable to not existent
+//!  (not in physical register nor spilled)
+//! \param reg
+//!
+//! \return -1 if error happened, 0 otherwise
+int resetGlue(int glue_reg) {
+    if(currentBB == NULL)
+        return 0;
     int index = searchCompileTable(LowOpndRegType_gp, glue_reg);
     if(index < 0) {
-        ALOGE("glue reg %d not found in resetGlue", glue_reg);
-        return;
+        ALOGE("JIT_ERROR: glue reg %d not found in resetGlue\n", glue_reg);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
     }
 #ifdef DEBUG_GLUE
     ALOGI("GLUE reset for %d", glue_reg);
@@ -4390,30 +4672,41 @@ void resetGlue(int glue_reg) {
     if(compileTable[index].spill_loc_index >= 0)
         spillIndexUsed[compileTable[index].spill_loc_index >> 2] = 0;
     compileTable[index].spill_loc_index = -1;
+    return 0;
 }
-//! set a glue variable in a physical register allocated for a variable
 
-//! Variable is using lowering module's naming convention
-void updateGlue(int reg, bool isPhysical, int glue_reg) {
-    if(currentBB == NULL) return;
+//! \brief set a glue variable in a physical register allocated for a variable
+//!
+//! \details Variable is using lowering module's naming convention
+//! \param reg
+//! \param isPhysical whether reg is physical
+//! \param glue_reg
+//!
+//! \return -1 if error happened, 0 otherwise
+int updateGlue(int reg, bool isPhysical, int glue_reg) {
+    if(currentBB == NULL)
+        return 0;
     int index = searchCompileTable(LowOpndRegType_gp, glue_reg);
     if(index < 0) {
-        ALOGE("glue reg %d not found in updateGlue", glue_reg);
-        return;
+        ALOGE("JIT_ERROR: updateGlue reg %d type %d\n", reg, glue_reg);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
     }
     /* find the compileTable entry for variable <reg, isPhysical> */
     int newType = convertType(LowOpndRegType_gp, reg, isPhysical);
     if(newType & LowOpndRegType_scratch) reg = reg - PhysicalReg_SCRATCH_1 + 1;
     int index2 = searchCompileTable(newType, reg);
     if(index2 < 0 || compileTable[index2].physicalReg == PhysicalReg_Null) {
-        ALOGE("updateGlue reg %d type %d", reg, newType);
-        return;
+        ALOGE("JIT_ERROR: updateGlue reg %d type %d for index2", reg, newType);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
     }
 #ifdef DEBUG_GLUE
     ALOGI("physical register for GLUE %d set to %d", glue_reg, compileTable[index2].physicalReg);
 #endif
     compileTable[index].physicalReg = compileTable[index2].physicalReg;
     compileTable[index].spill_loc_index = -1;
+    return 0;
 }
 
 //! check whether a virtual register is in a physical register
@@ -4425,7 +4718,8 @@ int checkVirtualReg(int reg, LowOpndRegType type, int updateRefCount) {
     if(currentBB == NULL) return PhysicalReg_Null;
     int index = searchCompileTable(LowOpndRegType_virtual | type, reg);
     if(index < 0) {
-        ALOGE("virtual reg %d type %d not found in checkVirtualReg", reg, type);
+        ALOGE("JIT_ERROR: virtual reg %d type %d not found in checkVirtualReg\n", reg, type);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return PhysicalReg_Null;
     }
     //reduce reference count
@@ -4440,9 +4734,18 @@ int checkVirtualReg(int reg, LowOpndRegType type, int updateRefCount) {
 
 //!This is called in get_virtual_reg
 //!If this function returns false, new register will be allocated for this temporary
-bool checkTempReg2(int reg, int type, bool isPhysical, int physicalRegForVR) {
+bool checkTempReg2(int reg, int type, bool isPhysical, int physicalRegForVR, u2 vB) {
     if(currentBB == NULL) return false;
     if(isPhysical) return false;
+    int index = -1;
+    for(int k = 0; k < num_compile_entries; k++) {
+        if (isVirtualReg(compileTable[k].physicalType) && compileTable[k].regNum == vB) {
+            if (isLastByteCodeOfLiveRange(k) || (reachEndOfBB(k) && isNextToLastAccess(k))) {
+                index = k;
+            }
+            break;
+        }
+    }
 
     int newType = convertType(type, reg, isPhysical);
     if(newType & LowOpndRegType_scratch) reg = reg - PhysicalReg_SCRATCH_1 + 1;
@@ -4454,18 +4757,16 @@ bool checkTempReg2(int reg, int type, bool isPhysical, int physicalRegForVR) {
             ALOGI("MOVE_OPT checkTempRegs for %d %d returns %d %d",
                    reg, newType, infoByteCodeTemp[k].shareWithVR, infoByteCodeTemp[k].is8Bit);
 #endif
-            if(!infoByteCodeTemp[k].is8Bit) return infoByteCodeTemp[k].shareWithVR;
-            //is8Bit true for gp type only
-            if(!infoByteCodeTemp[k].shareWithVR) return false;
-            //both true
-            if(physicalRegForVR >= PhysicalReg_EAX && physicalRegForVR <= PhysicalReg_EDX) return true;
-#ifdef DEBUG_MOVE_OPT
-            ALOGI("MOVE_OPT registerAllocMove not used for 8-bit register");
-#endif
-            return false;
+            if(!infoByteCodeTemp[k].is8Bit || (physicalRegForVR >= PhysicalReg_EAX && physicalRegForVR <= PhysicalReg_EDX)) {
+                if (index >= 0 && infoByteCodeTemp[k].shareRegWithLivenessInfo) return true;
+                return infoByteCodeTemp[k].shareWithVR;
+            }
+            else
+                return false;
         }
     }
-    ALOGE("checkTempReg2 %d %d", reg, newType);
+    ALOGE("JIT_ERROR: in checkTempReg2 %d %d\n", reg, newType);
+    SET_JIT_ERROR(kJitErrorRegAllocFailed);
     return false;
 }
 //!check whether a temporary can share the same physical register with a VR
@@ -4478,7 +4779,8 @@ int checkTempReg(int reg, int type, bool isPhysical, int vrNum) {
     if(newType & LowOpndRegType_scratch) reg = reg - PhysicalReg_SCRATCH_1 + 1;
     int index = searchCompileTable(newType, reg);
     if(index < 0) {
-        ALOGE("temp reg %d type %d not found in checkTempReg", reg, newType);
+        ALOGE("JIT_ERROR: temp reg %d type %d not found in checkTempReg\n", reg, newType);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return PhysicalReg_Null;
     }
 
@@ -4577,10 +4879,47 @@ void constVREndOfBB() {
     }
 }
 
-//!handles GG VRs at end of a basic block
+// check if it's needed to store VR at the exit of the loop
+bool hasVRStoreExitOfLoop() {
+    int k;
+    for(k=0; k < num_compile_entries; k++)
+       if(isVirtualReg(compileTable[k].physicalType) &&
+          compileTable[k].refCount == 0 &&
+          compileTable[k].physicalReg != PhysicalReg_Null &&
+          compileTable[k].gType != GLOBALTYPE_GG &&
+          loopIndepUse(k))
+           return true;
+    return false;
+}
 
-//!make sure all GG VRs are in pre-defined physical registers
-void globalVREndOfBB(const Method* method) {
+/*
+  Dump VR back to memory at the loop exit branch
+*/
+void storeVRExitOfLoop() {
+    int k;
+    for(k=0; k < num_compile_entries; k++) {
+       if(isVirtualReg(compileTable[k].physicalType) &&
+          compileTable[k].refCount == 0 &&
+          compileTable[k].physicalReg != PhysicalReg_Null &&
+          compileTable[k].gType != GLOBALTYPE_GG &&
+          loopIndepUse(k)) {
+#ifdef DEBUG_ENDOFBB
+           ALOGI("EXITOFLOOP SPILL VR %d %d\n", compileTable[k].regNum, compileTable[k].physicalType);
+#endif
+           spillLogicalReg(k, true);
+       }
+    }
+    syncAllRegs();
+}
+
+//! \brief handles GG VRs at end of a basic block
+//!
+//! \details make sure all GG VRs are in pre-defined physical registers
+//!
+//! \param method The enclosing method
+//!
+//! \return -1 on error, 0 otherwise
+int globalVREndOfBB(const Method* method) {
     //fix: freeReg first to write LL VR back to memory to avoid it gets overwritten by GG VRs
     freeReg(true);
     int k;
@@ -4615,7 +4954,9 @@ void globalVREndOfBB(const Method* method) {
 #endif
                 compileTable[k].physicalReg = compileTable[k].physicalReg_prev;
                 if(allRegs[compileTable[k].physicalReg_prev].isUsed) {
-                    ALOGE("physical register for GG VR is still used");
+                    ALOGE("JIT_ERROR: Physical register for GG VR is still used\n");
+                    SET_JIT_ERROR(kJitErrorRegAllocFailed);
+                    return -1;
                 }
                 get_virtual_reg_noalloc(compileTable[k].regNum,
                                         getRegSize(compileTable[k].physicalType),
@@ -4628,6 +4969,7 @@ void globalVREndOfBB(const Method* method) {
         compileTable[indexForGlue].physicalReg == PhysicalReg_Null) {
         unspillLogicalReg(indexForGlue, PhysicalReg_EBP); //load %ebp
     }
+    return 0;
 }
 
 //! get ready for the next version of a hard-coded register
@@ -4635,8 +4977,11 @@ void globalVREndOfBB(const Method* method) {
 //!set its physicalReg to Null and update its reference count
 int nextVersionOfHardReg(PhysicalReg pReg, int refCount) {
     int indexT = searchCompileTable(LowOpndRegType_gp | LowOpndRegType_hard, pReg);
-    if(indexT < 0)
+    if(indexT < 0) {
+        ALOGE("JIT_ERROR: Physical reg not found at nextVersionOfHardReg");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
         return -1;
+    }
     compileTable[indexT].physicalReg = PhysicalReg_Null;
 #ifdef DEBUG_REFCOUNT
     ALOGI("REFCOUNT: to %d in nextVersionOfHardReg %d", refCount, pReg);
@@ -4645,9 +4990,13 @@ int nextVersionOfHardReg(PhysicalReg pReg, int refCount) {
     return 0;
 }
 
-/** update compileTable with bb->infoBasicBlock[k]
-*/
-void insertFromVirtualInfo(BasicBlock_O1* bb, int k) {
+//! \brief update compileTable with bb->infoBasicBlock[k]
+//!
+//! \param bb basic block
+//! \param k index
+//!
+//! \return -1 on error, 0 otherwise
+int insertFromVirtualInfo(BasicBlock_O1* bb, int k) {
     int index = searchCompileTable(LowOpndRegType_virtual | bb->infoBasicBlock[k].physicalType, bb->infoBasicBlock[k].regNum);
     if(index < 0) {
         /* the virtual register is not in compileTable, insert it */
@@ -4661,8 +5010,9 @@ void insertFromVirtualInfo(BasicBlock_O1* bb, int k) {
         compileTable[num_compile_entries].gType = bb->infoBasicBlock[k].gType;
         num_compile_entries++;
         if(num_compile_entries >= COMPILE_TABLE_SIZE) {
-            ALOGE("compileTable overflow");
-            dvmAbort();
+            ALOGE("JIT_ERROR: compileTable overflow at insertFromVirtualInfo");
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            return -1;
         }
     }
     /* re-set reference count of all VRs */
@@ -4670,11 +5020,15 @@ void insertFromVirtualInfo(BasicBlock_O1* bb, int k) {
     compileTable[index].accessType = bb->infoBasicBlock[k].accessType;
     if(compileTable[index].gType == GLOBALTYPE_GG)
         compileTable[index].physicalReg_prev = bb->infoBasicBlock[k].physicalReg_GG;
+    return 0;
 }
 
-/** update compileTable with infoByteCodeTemp[k]
-*/
-void insertFromTempInfo(int k) {
+//! \brief update compileTable with infoByteCodeTemp[k]
+//!
+//! \param k index
+//!
+//! \return -1 on error, 0 otherwise
+int insertFromTempInfo(int k) {
     int index = searchCompileTable(infoByteCodeTemp[k].physicalType, infoByteCodeTemp[k].regNum);
     if(index < 0) {
         /* the temporary is not in compileTable, insert it */
@@ -4683,8 +5037,9 @@ void insertFromTempInfo(int k) {
         compileTable[num_compile_entries].regNum = infoByteCodeTemp[k].regNum;
         num_compile_entries++;
         if(num_compile_entries >= COMPILE_TABLE_SIZE) {
-            ALOGE("compileTable overflow");
-            dvmAbort();
+            ALOGE("JIT_ERROR: compileTable overflow at insertFromTempInfo");
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            return -1;
         }
     }
     compileTable[index].physicalReg = PhysicalReg_Null;
@@ -4692,6 +5047,7 @@ void insertFromTempInfo(int k) {
     compileTable[index].linkageToVR = infoByteCodeTemp[k].linkageToVR;
     compileTable[index].gType = GLOBALTYPE_L;
     compileTable[index].spill_loc_index = -1;
+    return 0;
 }
 
 /* insert a glue-related register GLUE_DVMDEX to compileTable */
@@ -4708,8 +5064,9 @@ void insertGlueReg() {
 
     num_compile_entries++;
     if(num_compile_entries >= COMPILE_TABLE_SIZE) {
-        ALOGE("compileTable overflow");
-        dvmAbort();
+        ALOGE("JIT_ERROR: compileTable overflow at insertGlueReg");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
     }
 }
 
@@ -4728,7 +5085,6 @@ void dumpVirtualInfoOfBasicBlock(BasicBlock_O1* bb) {
                    bb->infoBasicBlock[jj].reachingDefs[k].regNum,
                    bb->infoBasicBlock[jj].reachingDefs[k].physicalType,
                    bb->infoBasicBlock[jj].reachingDefs[k].accessType);
-        ALOGI("");
     }
 }
 
@@ -4761,7 +5117,8 @@ bool isFirstOfHandler(BasicBlock_O1* bb) {
 BasicBlock_O1* createBasicBlock(int src_pc, int end_pc) {
     BasicBlock_O1* bb = (BasicBlock_O1*)malloc(sizeof(BasicBlock_O1));
     if(bb == NULL) {
-        ALOGE("out of memory");
+        ALOGE("JIT_ERROR: Out of memory when trying to alloc basic block for pc %d\n", src_pc);
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return NULL;
     }
     bb->pc_start = src_pc;
@@ -4786,8 +5143,9 @@ BasicBlock_O1* createBasicBlock(int src_pc, int end_pc) {
     }
     num_bbs_for_method++;
     if(num_bbs_for_method >= MAX_NUM_BBS_PER_METHOD) {
-        ALOGE("too many basic blocks");
-        dvmAbort();
+        ALOGE("JIT_ERROR: Exceeded maximum number of basic blocks\n");
+        SET_JIT_ERROR(kJitErrorTraceFormation);
+        return NULL;
     }
     return bb;
 }
@@ -4818,7 +5176,11 @@ void rememberState(int stateNum) {
             stateTable1_4[k].physicalReg = compileTable[k].physicalReg;
             stateTable1_4[k].spill_loc_index = compileTable[k].spill_loc_index;
         }
-        else ALOGE("state table overflow");
+        else {
+            ALOGE("JIT_ERROR: state table overflow at rememberState for compileTable");
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            return;
+        }
 #ifdef DEBUG_STATE
         ALOGI("logical reg %d %d mapped to physical reg %d with spill index %d refCount %d",
                compileTable[k].regNum, compileTable[k].physicalType, compileTable[k].physicalReg,
@@ -4842,7 +5204,11 @@ void rememberState(int stateNum) {
             stateTable2_4[k].regNum = memVRTable[k].regNum;
             stateTable2_4[k].inMemory = memVRTable[k].inMemory;
         }
-        else ALOGE("state table overflow");
+        else {
+            ALOGE("JIT_ERROR: state table overflow at goToState for compileTable\n");
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            return;
+        }
 #ifdef DEBUG_STATE
         ALOGI("virtual reg %d in memory %d", memVRTable[k].regNum, memVRTable[k].inMemory);
 #endif
@@ -4874,9 +5240,15 @@ void goToState(int stateNum) {
             compileTable[k].physicalReg = stateTable1_4[k].physicalReg;
             compileTable[k].spill_loc_index = stateTable1_4[k].spill_loc_index;
         }
-        else ALOGE("state table overflow");
+        else {
+            ALOGE("JIT_ERROR: State table overflow at goToState");
+            SET_JIT_ERROR(kJitErrorStateTransfer);
+            return;
+        }
     }
-    updateSpillIndexUsed();
+    int retCode = updateSpillIndexUsed();
+    if (retCode < 0)
+        return;
     syncAllRegs(); //to sync up allRegs CAN'T call freeReg here
     //since it will change the state!!!
     for(k = 0; k < num_memory_vr; k++) {
@@ -4896,7 +5268,11 @@ void goToState(int stateNum) {
             memVRTable[k].regNum = stateTable2_4[k].regNum;
             memVRTable[k].inMemory = stateTable2_4[k].inMemory;
         }
-        else ALOGE("state table overflow");
+        else {
+            ALOGE("JIT_ERROR: state table overflow at goToState for memVRTable\n");
+            SET_JIT_ERROR(kJitErrorRegAllocFailed);
+            return;
+        }
     }
 }
 typedef struct TransferOrder {
@@ -4920,27 +5296,35 @@ SourceReg srcRegs[MAX_NUM_DEST];
 bool handledSrc[MAX_NUM_DEST];
 //! in what order should the source registers be handled
 int handledOrder[MAX_NUM_DEST];
-//! insert a source register with a single destination
 
+//! \brief insert a source register with a single destination
 //!
-void insertSrcReg(int srcPhysical, int targetReg, int targetSpill, int index) {
+//! \param srcPhysical
+//! \param targetReg
+//! \param targetSpill
+//! \param index
+//!
+//! \return -1 on error, 0 otherwise
+int insertSrcReg(int srcPhysical, int targetReg, int targetSpill, int index) {
     int k = 0;
     for(k = 0; k < num_src_regs; k++) {
         if(srcRegs[k].physicalReg == srcPhysical) { //increase num_dests
             if(srcRegs[k].num_dests >= MAX_NUM_DEST) {
-                ALOGE("exceed number dst regs for a source reg");
-                dvmAbort();
+                ALOGE("JIT_ERROR: Exceed number dst regs for a source reg\n");
+                SET_JIT_ERROR(kJitErrorMaxDestRegPerSource);
+                return -1;
             }
             srcRegs[k].dsts[srcRegs[k].num_dests].targetReg = targetReg;
             srcRegs[k].dsts[srcRegs[k].num_dests].targetSpill = targetSpill;
             srcRegs[k].dsts[srcRegs[k].num_dests].compileIndex = index;
             srcRegs[k].num_dests++;
-            return;
+            return 0;
         }
     }
     if(num_src_regs >= MAX_NUM_DEST) {
-        ALOGE("exceed number of source regs");
-        dvmAbort();
+        ALOGE("JIT_ERROR: Exceed number of source regs\n");
+        SET_JIT_ERROR(kJitErrorMaxDestRegPerSource);
+        return -1;
     }
     srcRegs[num_src_regs].physicalReg = srcPhysical;
     srcRegs[num_src_regs].num_dests = 1;
@@ -4948,7 +5332,9 @@ void insertSrcReg(int srcPhysical, int targetReg, int targetSpill, int index) {
     srcRegs[num_src_regs].dsts[0].targetSpill = targetSpill;
     srcRegs[num_src_regs].dsts[0].compileIndex = index;
     num_src_regs++;
+    return 0;
 }
+
 //! check whether a register is a source and the source is not yet handled
 
 //!
@@ -5067,7 +5453,8 @@ void constructSrcRegs(int stateNum) {
             if(compileTable[k].physicalReg == PhysicalReg_Null && targetReg != PhysicalReg_Null) {
                 /* handles VR for case I:
                    insert a xfer order from PhysicalReg_Null to targetReg */
-                insertSrcReg(PhysicalReg_Null, targetReg, targetSpill, k);
+                 if (insertSrcReg(PhysicalReg_Null, targetReg, targetSpill, k) == -1)
+                     return;
 #ifdef DEBUG_STATE
                 ALOGI("insert for VR Null %d %d %d", targetReg, targetSpill, k);
 #endif
@@ -5076,13 +5463,15 @@ void constructSrcRegs(int stateNum) {
             if(compileTable[k].physicalReg != PhysicalReg_Null && targetReg != PhysicalReg_Null) {
                 /* handles VR for case III
                    insert a xfer order from srcReg to targetReg */
-                insertSrcReg(compileTable[k].physicalReg, targetReg, targetSpill, k);
+                if (insertSrcReg(compileTable[k].physicalReg, targetReg, targetSpill, k) == -1)
+                    return;
             }
 
             if(compileTable[k].physicalReg != PhysicalReg_Null && targetReg == PhysicalReg_Null) {
                 /* handles VR for case II
                    insert a xfer order from srcReg to memory */
-                insertSrcReg(compileTable[k].physicalReg, targetReg, targetSpill, k);
+                if (insertSrcReg(compileTable[k].physicalReg, targetReg, targetSpill, k) == -1)
+                    return;
             }
         }
 
@@ -5102,14 +5491,16 @@ void constructSrcRegs(int stateNum) {
 #ifdef DEBUG_STATE
                     ALOGI("insert Null %d %d %d", targetReg, targetSpill, k);
 #endif
-                    insertSrcReg(PhysicalReg_Null, targetReg, targetSpill, k);
+                    if (insertSrcReg(PhysicalReg_Null, targetReg, targetSpill, k) == -1)
+                        return;
                 }
             }
 
             if(compileTable[k].physicalReg != PhysicalReg_Null && targetReg != PhysicalReg_Null) {
                 /* handles non-VR for case III
                    insert a xfer order from srcReg to targetReg */
-                insertSrcReg(compileTable[k].physicalReg, targetReg, targetSpill, k);
+                if (insertSrcReg(compileTable[k].physicalReg, targetReg, targetSpill, k) == -1)
+                    return;
             }
 
             if(compileTable[k].physicalReg != PhysicalReg_Null && targetReg == PhysicalReg_Null) {
@@ -5121,7 +5512,8 @@ void constructSrcRegs(int stateNum) {
 #endif
                 } else {
                     /* insert a xfer order from srcReg to memory */
-                    insertSrcReg(compileTable[k].physicalReg, targetReg, targetSpill, k);
+                    if (insertSrcReg(compileTable[k].physicalReg, targetReg, targetSpill, k) == -1)
+                        return;
                 }
             }
 
@@ -5173,8 +5565,9 @@ void constructSrcRegs(int stateNum) {
             }
         } //for k
         if(num_handled == prev_handled) {
-            ALOGE("no progress in selecting order");
-            dvmAbort();
+            ALOGE("JIT_ERROR: No progress in selecting order while in constructSrcReg");
+            SET_JIT_ERROR(kJitErrorStateTransfer);
+            return;
         }
     } //while
     for(k = 0; k < num_src_regs; k++) {
@@ -5184,15 +5577,15 @@ void constructSrcRegs(int stateNum) {
         }
     }
     if(num_in_order != num_src_regs) {
-        ALOGE("num_in_order != num_src_regs");
-        dvmAbort();
+        ALOGE("JIT_ERROR: num_in_order != num_src_regs while in constructSrcReg");
+        SET_JIT_ERROR(kJitErrorStateTransfer);
+        return;
     }
 #ifdef DEBUG_STATE
     ALOGI("ORDER: ");
     for(k = 0; k < num_src_regs; k++) {
         ALOGI("%d ", handledOrder[k]);
     }
-    ALOGI("");
 #endif
 }
 //! transfer the state of register allocator to a state specified in a state table
@@ -5204,7 +5597,11 @@ void transferToState(int stateNum) {
 #ifdef DEBUG_STATE
     ALOGI("STATE: transfer to state %d", stateNum);
 #endif
-    if(stateNum > 4 || stateNum < 1) ALOGE("state table overflow");
+    if(stateNum > 4 || stateNum < 1) {
+        ALOGE("JIT_ERROR: State table overflow at transferToState");
+        SET_JIT_ERROR(kJitErrorStateTransfer);
+        return;
+    }
     constructSrcRegs(stateNum);
     int k4, k3;
     for(k4 = 0; k4 < num_src_regs; k4++) {
@@ -5275,8 +5672,11 @@ void transferToState(int stateNum) {
             targetReg = stateTable2_4[k].regNum;
             targetBool = stateTable2_4[k].inMemory;
         }
-        if(targetReg != memVRTable[k].regNum)
-            ALOGE("regNum mismatch in transferToState");
+        if(targetReg != memVRTable[k].regNum) {
+            ALOGE("JIT_ERROR: regNum mismatch in transferToState");
+            SET_JIT_ERROR(kJitErrorStateTransfer);
+            return;
+        }
         if(targetBool && (!memVRTable[k].inMemory)) {
             //dump to memory, check entries in compileTable: vA gp vA xmm vA ss
 #ifdef DEBUG_STATE

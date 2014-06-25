@@ -28,15 +28,15 @@
 #include <linux/fs.h>
 #include <cutils/fs.h>
 #include <unistd.h>
-#ifdef HAVE_ANDROID_OS
-#include <sys/prctl.h>
-#endif
 
 #include "Dalvik.h"
 #include "test/Test.h"
 #include "mterp/Mterp.h"
 #include "Hash.h"
-#include "JniConstants.h"
+
+#ifdef ARCH_IA32
+#include "compiler/CompilerUtility.h"
+#endif
 
 #if defined(WITH_JIT)
 #include "compiler/codegen/Optimizer.h"
@@ -121,6 +121,8 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xzygote\n");
     dvmFprintf(stderr, "  -Xdexopt:{none,verified,all,full}\n");
     dvmFprintf(stderr, "  -Xnoquithandler\n");
+    dvmFprintf(stderr,
+                "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
     dvmFprintf(stderr, "  -Xjnitrace:substring (eg NativeClass or nativeMethod)\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
@@ -139,7 +141,8 @@ static void usage(const char* progName)
                        "[,hexopvalue[-endvalue]]*\n");
     dvmFprintf(stderr, "  -Xincludeselectedmethod\n");
     dvmFprintf(stderr, "  -Xjitthreshold:decimalvalue\n");
-    dvmFprintf(stderr, "  -Xjitcodecachesize:decimalvalueofkbytes\n");
+    dvmFprintf(stderr, "  -Xjittablesize:decimalvalue\n");
+    dvmFprintf(stderr, "  -Xjitcodecachesize:decimalvalue\n");
     dvmFprintf(stderr, "  -Xjitblocking\n");
     dvmFprintf(stderr, "  -Xjitmethod:signature[,signature]* "
                        "(eg Ljava/lang/String\\;replace)\n");
@@ -148,6 +151,13 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xjitconfig:filename\n");
     dvmFprintf(stderr, "  -Xjitcheckcg\n");
     dvmFprintf(stderr, "  -Xjitverbose\n");
+    dvmFprintf(stderr, "  -Xjit[no]scheduling (Turn on/off Atom Instruction Scheduling)\n");
+    dvmFprintf(stderr, "  -Xjitarenatrimstyle:<none|onlyOne|average|user> select arena triming style\n");
+    dvmFprintf(stderr, "  -Xjitarenatrimvalue:<value> the value for the user based arena trim style\n");
+#if defined(VTUNE_DALVIK)
+    dvmFprintf(stderr, "  -Xjitsepdalvik\n");
+    dvmFprintf(stderr, "  -Xjitvtuneinfo:{none,jit,dex,src}\n");
+#endif
     dvmFprintf(stderr, "  -Xjitprofile\n");
     dvmFprintf(stderr, "  -Xjitdisableopt\n");
     dvmFprintf(stderr, "  -Xjitsuspendpoll\n");
@@ -940,8 +950,6 @@ static int processOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Invalid -XX:HeapMaxFree option '%s'\n", argv[i]);
                 return -1;
             }
-        } else if (strcmp(argv[i], "-XX:LowMemoryMode") == 0) {
-          gDvm.lowMemoryMode = true;
         } else if (strncmp(argv[i], "-XX:HeapTargetUtilization=", 26) == 0) {
             const char* start = argv[i] + 26;
             const char* end = start;
@@ -1077,7 +1085,13 @@ static int processOptions(int argc, const char* const argv[],
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xjnigreflimit:", 15) == 0) {
-            // Ignored for backwards compatibility.
+            int lim = atoi(argv[i] + 15);
+            if (lim < 200 || (lim % 100) != 0) {
+                dvmFprintf(stderr, "Bad value for -Xjnigreflimit: '%s'\n",
+                    argv[i]+15);
+                return -1;
+            }
+            gDvm.jniGrefLimit = lim;
         } else if (strncmp(argv[i], "-Xjnitrace:", 11) == 0) {
             gDvm.jniTrace = strdup(argv[i] + 11);
         } else if (strcmp(argv[i], "-Xlog-stdio") == 0) {
@@ -1118,28 +1132,93 @@ static int processOptions(int argc, const char* const argv[],
         } else if (strncmp(argv[i], "-Xjitconfig:", 12) == 0) {
             processXjitconfig(argv[i] + strlen("-Xjitconfig:"));
         } else if (strncmp(argv[i], "-Xjitblocking", 13) == 0) {
-          gDvmJit.blockingMode = true;
+            gDvmJit.blockingMode = true;
         } else if (strncmp(argv[i], "-Xjitthreshold:", 15) == 0) {
-          gDvmJit.threshold = atoi(argv[i] + 15);
+            gDvmJit.threshold = atoi(argv[i] + 15);
+        } else if (strncmp(argv[i], "-Xjittablesize:", 15) == 0) {
+            gDvmJit.jitTableSize = atoi(argv[i] + 15);
         } else if (strncmp(argv[i], "-Xjitcodecachesize:", 19) == 0) {
-          gDvmJit.codeCacheSize = atoi(argv[i] + 19) * 1024;
-          if (gDvmJit.codeCacheSize == 0) {
-            gDvm.executionMode = kExecutionModeInterpFast;
-          }
+            gDvmJit.codeCacheSize = atoi(argv[i] + 19);
         } else if (strncmp(argv[i], "-Xincludeselectedop", 19) == 0) {
-          gDvmJit.includeSelectedOp = true;
+            gDvmJit.includeSelectedOp = true;
         } else if (strncmp(argv[i], "-Xincludeselectedmethod", 23) == 0) {
-          gDvmJit.includeSelectedMethod = true;
+            gDvmJit.includeSelectedMethod = true;
         } else if (strncmp(argv[i], "-Xjitcheckcg", 12) == 0) {
-          gDvmJit.checkCallGraph = true;
-          /* Need to enable blocking mode due to stack crawling */
-          gDvmJit.blockingMode = true;
+            gDvmJit.checkCallGraph = true;
+            /* Need to enable blocking mode due to stack crawling */
+            gDvmJit.blockingMode = true;
         } else if (strncmp(argv[i], "-Xjitdumpbin", 12) == 0) {
-          gDvmJit.printBinary = true;
+            gDvmJit.printBinary = true;
         } else if (strncmp(argv[i], "-Xjitverbose", 12) == 0) {
-          gDvmJit.printMe = true;
+            gDvmJit.printMe = true;
+        } else if (strncmp(argv[i], "-Xjitscheduling", 15) == 0) {
+            gDvmJit.scheduling = true;
+        } else if (strncmp(argv[i], "-Xjitnoscheduling", 17) == 0) {
+            gDvmJit.scheduling = false;
+        } else if (strncmp (argv[i], "-Xjitarenatrimstyle:", 20) == 0) {
+            const char *style = argv[i] + 20;
+            const char *acceptedStyles[] = {"none", "onlyOne", "average", "user"};
+            unsigned int nbr = sizeof (acceptedStyles) / sizeof (acceptedStyles[0]);
+            unsigned int idx;
+
+            for (idx = 0; idx < nbr; idx++)
+            {
+                //We use strlen on our elements, never trust a user input
+                if (strncmp (acceptedStyles[idx], style, strlen (acceptedStyles[idx])) == 0)
+                {
+                    //The char* array is mapped to the enum
+                    ArenaTrimStyle elem = static_cast<ArenaTrimStyle> (idx);
+
+                    dvmFprintf (stderr, "Setting Arena Style to: %s", acceptedStyles[idx]);
+                    setArenaTrimStyle (elem);
+                    break;
+                }
+            }
+
+            //Error message:
+            if (idx == nbr)
+            {
+                dvmFprintf (stderr, "Unknown value for option %s, accepted values are:", argv[i]);
+
+                for (idx = 0; idx < nbr; idx++)
+                {
+                    dvmFprintf (stderr, "\t- %s\n", acceptedStyles[idx]);
+                }
+            }
+        } else if (strncmp (argv[i], "-Xjitarenatrimvalue:", 20) == 0) {
+            char *endptr = NULL;
+            //Get requested style
+            long res = strtol (argv[i] + 20, &endptr, 0);
+
+            //Error checking: basic ones first
+            if (endptr != NULL && *endptr == '\0' && res != LONG_MIN && res != LONG_MAX && res > 0)
+            {
+                dvmFprintf (stderr, "Setting Arena value to: %ld\n", res);
+                setArenaTrimUserValue (res);
+            }
+            else
+            {
+                dvmFprintf (stderr, "Refusing option for %s, it is not a valid number: must be only a strictly positive number\n", argv[i]);
+            }
+#if defined(VTUNE_DALVIK)
+        } else if (strncmp(argv[i], "-Xjitsepdalvik", 14) == 0) {
+            gDvmJit.vtuneInfo = kVTuneInfoNativeCode;
+        } else if (strncmp(argv[i], "-Xjitvtuneinfo:", 15) == 0) {
+            if (strcmp(argv[i] + 15, "none") == 0)
+                gDvmJit.vtuneInfo = kVTuneInfoDisabled;
+            else if (strcmp(argv[i] + 15, "dex") == 0)
+                gDvmJit.vtuneInfo = kVTuneInfoByteCode;
+            else if (strcmp(argv[i] + 15, "src") == 0)
+                gDvmJit.vtuneInfo = kVTuneInfoJavaCode;
+            else if (strcmp(argv[i] + 15, "jit") == 0)
+                gDvmJit.vtuneInfo = kVTuneInfoNativeCode;
+            else {
+                dvmFprintf(stderr, "Unrecognized option '%s'\n", argv[i]);
+                return -1;
+            }
+#endif
         } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
-          gDvmJit.profileMode = kTraceProfilingContinuous;
+            gDvmJit.profileMode = kTraceProfilingContinuous;
         } else if (strncmp(argv[i], "-Xjitdisableopt", 15) == 0) {
           /* Disable selected optimizations */
           if (argv[i][15] == ':') {
@@ -1202,6 +1281,11 @@ static int processOptions(int argc, const char* const argv[],
         } else if (strcmp(argv[i], "-Xprofile:dualclock") == 0) {
             gDvm.profilerClockSource = kProfilerClockSourceDual;
 
+#ifdef WITH_REGION_GC
+        } else if (strcmp(argv[i], "-XnoRegionGC") == 0) {
+            gDvm.enableRegionGC = false;
+
+#endif
         } else {
             if (!ignoreUnrecognized) {
                 dvmFprintf(stderr, "Unrecognized option '%s'\n", argv[i]);
@@ -1241,7 +1325,6 @@ static void setCommandLineDefaults()
     gDvm.heapStartingSize = 2 * 1024 * 1024;  // Spec says 16MB; too big for us.
     gDvm.heapMaximumSize = 16 * 1024 * 1024;  // Spec says 75% physical mem
     gDvm.heapGrowthLimit = 0;  // 0 means no growth limit
-    gDvm.lowMemoryMode = false;
     gDvm.stackSize = kDefaultStackSize;
     gDvm.mainThreadStackSize = kDefaultStackSize;
     // When the heap is less than the maximum or growth limited size,
@@ -1277,15 +1360,22 @@ static void setCommandLineDefaults()
      */
 #if defined(WITH_JIT)
     gDvm.executionMode = kExecutionModeJit;
+#if defined(ARCH_IA32)
     gDvmJit.num_entries_pcTable = 0;
-    gDvmJit.includeSelectedMethod = false;
+    gDvmJit.scheduling = true;
+    gDvmJit.includeSelectedMethod = false; //uninitialized variable may not be zero
     gDvmJit.includeSelectedOffset = false;
     gDvmJit.methodTable = NULL;
     gDvmJit.classTable = NULL;
-    gDvmJit.codeCacheSize = DEFAULT_CODE_CACHE_SIZE;
+
+    gDvmJit.threshold = 0;
+    gDvmJit.jitTableSize = 0;
+    gDvmJit.codeCacheSize = 0;
 
     gDvm.constInit = false;
     gDvm.commonInit = false;
+    gDvmJit.disableOpt = 1<<kMethodJit;
+#endif
 #else
     gDvm.executionMode = kExecutionModeInterpFast;
 #endif
@@ -1300,6 +1390,14 @@ static void setCommandLineDefaults()
      * Default profiler configuration.
      */
     gDvm.profilerClockSource = kProfilerClockSourceDual;
+
+#ifdef WITH_REGION_GC
+    /*
+     * Region GC is enabled by default.
+     * Use -XnoRegionGC to disable Region GC.
+     */
+    gDvm.enableRegionGC = true;
+#endif
 }
 
 
@@ -1339,7 +1437,7 @@ static void blockSignals()
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
     sigaddset(&mask, SIGUSR2);      // used to investigate JIT internals
 #endif
-    sigaddset(&mask, SIGPIPE);
+    //sigaddset(&mask, SIGPIPE);
     cc = sigprocmask(SIG_BLOCK, &mask, NULL);
     assert(cc == 0);
 
@@ -1624,23 +1722,6 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     // Must set this before allowing JNI-based method registration.
     self->status = THREAD_NATIVE;
 
-    // First set up JniConstants, which is used by libcore.
-    JniConstants::init(pEnv);
-
-    // Set up our single JNI method.
-    // TODO: factor this out if we add more.
-    jclass c = pEnv->FindClass("java/lang/Class");
-    if (c == NULL) {
-        dvmAbort();
-    }
-    JNIEXPORT jobject JNICALL Java_java_lang_Class_getDex(JNIEnv* env, jclass javaClass);
-    const JNINativeMethod Java_java_lang_Class[] = {
-        { "getDex", "()Lcom/android/dex/Dex;", (void*) Java_java_lang_Class_getDex },
-    };
-    if (pEnv->RegisterNatives(c, Java_java_lang_Class, 1) != JNI_OK) {
-        dvmAbort();
-    }
-
     // Most JNI libraries can just use System.loadLibrary, but you can't
     // if you're the library that implements System.loadLibrary!
     loadJniLibrary("javacore");
@@ -1652,33 +1733,6 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     return true;
 }
 
-/*
- * Copied and modified slightly from system/core/toolbox/mount.c
- */
-static std::string getMountsDevDir(const char *arg)
-{
-    char mount_dev[256];
-    char mount_dir[256];
-    int match;
-
-    FILE *fp = fopen("/proc/self/mounts", "r");
-    if (fp == NULL) {
-        ALOGE("Could not open /proc/self/mounts: %s", strerror(errno));
-        return "";
-    }
-
-    while ((match = fscanf(fp, "%255s %255s %*s %*s %*d %*d\n", mount_dev, mount_dir)) != EOF) {
-        mount_dev[255] = 0;
-        mount_dir[255] = 0;
-        if (match == 2 && (strcmp(arg, mount_dir) == 0)) {
-            fclose(fp);
-            return mount_dev;
-        }
-    }
-
-    fclose(fp);
-    return "";
-}
 
 /*
  * Do zygote-mode-only initialization.
@@ -1708,42 +1762,11 @@ static bool initZygote()
     const char* target_base = getenv("EMULATED_STORAGE_TARGET");
     if (target_base != NULL) {
         if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
-                "uid=0,gid=1028,mode=0751") == -1) {
+                "uid=0,gid=1028,mode=0050") == -1) {
             SLOGE("Failed to mount tmpfs to %s: %s", target_base, strerror(errno));
             return -1;
         }
     }
-
-    // Mark /system as NOSUID | NODEV
-    const char* android_root = getenv("ANDROID_ROOT");
-
-    if (android_root == NULL) {
-        SLOGE("environment variable ANDROID_ROOT does not exist?!?!");
-        return -1;
-    }
-
-    std::string mountDev(getMountsDevDir(android_root));
-    if (mountDev.empty()) {
-        SLOGE("Unable to find mount point for %s", android_root);
-        return -1;
-    }
-
-    if (mount(mountDev.c_str(), android_root, "none",
-            MS_REMOUNT | MS_NOSUID | MS_NODEV | MS_RDONLY | MS_BIND, NULL) == -1) {
-        SLOGE("Remount of %s failed: %s", android_root, strerror(errno));
-        return -1;
-    }
-
-#ifdef HAVE_ANDROID_OS
-    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
-        // Older kernels don't understand PR_SET_NO_NEW_PRIVS and return
-        // EINVAL. Don't die on such kernels.
-        if (errno != EINVAL) {
-            SLOGE("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
-            return -1;
-        }
-    }
-#endif
 
     return true;
 }
@@ -2159,6 +2182,17 @@ void dvmAbort()
      */
     dvmPrintNativeBackTrace();
 
+    /*
+     * If we call abort(), all threads in the process receives a SIBABRT.
+     * debuggerd dumps the stack trace of the main thread, whether or not
+     * that was the thread that failed.
+     *
+     * By stuffing a value into a bogus address, we cause a segmentation
+     * fault in the current thread, and get a useful log from debuggerd.
+     * We can also trivially tell the difference between a VM crash and
+     * a deliberate abort by looking at the fault address.
+     */
+    *((char*)0xdeadd00d) = result;
     abort();
 
     /* notreached */

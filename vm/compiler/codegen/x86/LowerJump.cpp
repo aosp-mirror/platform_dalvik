@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2010-2013 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,12 @@
 #include "enc_wrapper.h"
 #include "interp/InterpDefs.h"
 #include "NcgHelper.h"
+#include "Scheduler.h"
+#include "Singleton.h"
+
+#if defined VTUNE_DALVIK
+#include "compiler/JitProfiling.h"
+#endif
 
 LabelMap* globalMap;
 LabelMap* globalShortMap;//make sure for each bytecode, there is no duplicated label
@@ -84,17 +90,19 @@ int updateJumpInst(char* jumpInst, OpndSize immSize, int relativeNCG) {
 #endif
     if(immSize == OpndSize_8) { //-128 to 127
         if(relativeNCG >= 128 || relativeNCG < -128) {
-            ALOGE("pre-allocated space for a forward jump is not big enough");
-            dvmAbort();
+            ALOGE("JIT_ERROR: Pre-allocated space for a forward jump is not big enough\n");
+            SET_JIT_ERROR(kJitErrorShortJumpOffset);
+            return -1;
         }
     }
     if(immSize == OpndSize_16) { //-2^16 to 2^16-1
         if(relativeNCG >= 32768 || relativeNCG < -32768) {
-            ALOGE("pre-allocated space for a forward jump is not big enough");
-            dvmAbort();
+            ALOGE("JIT_ERROR: Pre-allocated space (16-bit) for a forward jump is not big enough\n");
+            SET_JIT_ERROR(kJitErrorShortJumpOffset);
+            return -1;
         }
     }
-    encoder_update_imm(relativeNCG, jumpInst);
+    dump_imm_update(relativeNCG, jumpInst, false);
     return 0;
 }
 
@@ -106,10 +114,17 @@ otherwise, an entry is created in globalMap.
 */
 int insertLabel(const char* label, bool checkDup) {
     LabelMap* item = NULL;
+
+    // We are inserting a label. Someone might want to jump to it
+    // so flush scheduler's queue
+    if (gDvmJit.scheduling)
+        singletonPtr<Scheduler>()->signalEndOfNativeBasicBlock();
+
     if(!checkDup) {
         item = (LabelMap*)malloc(sizeof(LabelMap));
         if(item == NULL) {
-            ALOGE("Memory allocation failed");
+            ALOGE("JIT_ERROR: Memory allocation failed at insertLabel with checkDup false");
+            SET_JIT_ERROR(kJitErrorMallocFailed);
             return -1;
         }
         snprintf(item->label, LABEL_SIZE, "%s", label);
@@ -125,7 +140,8 @@ int insertLabel(const char* label, bool checkDup) {
 
     item = (LabelMap*)malloc(sizeof(LabelMap));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertLabel with checkDup true");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     snprintf(item->label, LABEL_SIZE, "%s", label);
@@ -133,7 +149,7 @@ int insertLabel(const char* label, bool checkDup) {
     item->nextItem = globalShortMap;
     globalShortMap = item;
 #ifdef DEBUG_NCG
-    ALOGI("insert short-term label %s %p", label, stream);
+    ALOGI("Insert short-term label %s %p", label, stream);
 #endif
     LabelMap* ptr = globalShortWorklist;
     LabelMap* ptr_prevItem = NULL;
@@ -144,9 +160,17 @@ int insertLabel(const char* label, bool checkDup) {
             unsigned instSize = encoder_get_inst_size(ptr->codePtr);
             relativeNCG -= instSize; //size of the instruction
 #ifdef DEBUG_NCG
-            ALOGI("perform work short-term %p for label %s relative %d", ptr->codePtr, label, relativeNCG);
+            ALOGI("Perform work short-term %p for label %s relative %d\n", ptr->codePtr, label, relativeNCG);
 #endif
-            updateJumpInst(ptr->codePtr, ptr->size, relativeNCG);
+            int retval = updateJumpInst(ptr->codePtr, ptr->size, relativeNCG);
+            //If this fails, the jump offset was not big enough. Raise the corresponding error flag
+            //We may decide to re-compiler the trace with a large jump offset later
+            if (retval == -1){
+                ALOGE("JIT_ERROR: Label \"%s\" too far away from jump location", label);
+                SET_JIT_ERROR(kJitErrorShortJumpOffset);
+                return retval;
+            }
+
             //remove work
             if(ptr_prevItem == NULL) {
                 globalShortWorklist = ptr->nextItem;
@@ -197,7 +221,8 @@ char* findCodeForShortLabel(const char* label) {
 int insertLabelWorklist(const char* label, OpndSize immSize) {
     LabelMap* item = (LabelMap*)malloc(sizeof(LabelMap));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertLabelWorklist");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     snprintf(item->label, LABEL_SIZE, "%s", label);
@@ -206,7 +231,7 @@ int insertLabelWorklist(const char* label, OpndSize immSize) {
     item->nextItem = globalWorklist;
     globalWorklist = item;
 #ifdef DEBUG_NCG
-    ALOGI("insert globalWorklist: %s %p", label, stream);
+    ALOGI("Insert globalWorklist: %s %p", label, stream);
 #endif
     return 0;
 }
@@ -214,7 +239,8 @@ int insertLabelWorklist(const char* label, OpndSize immSize) {
 int insertShortWorklist(const char* label, OpndSize immSize) {
     LabelMap* item = (LabelMap*)malloc(sizeof(LabelMap));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertShortWorklist");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     snprintf(item->label, LABEL_SIZE, "%s", label);
@@ -223,7 +249,7 @@ int insertShortWorklist(const char* label, OpndSize immSize) {
     item->nextItem = globalShortWorklist;
     globalShortWorklist = item;
 #ifdef DEBUG_NCG
-    ALOGI("insert globalShortWorklist: %s %p", label, stream);
+    ALOGI("Insert globalShortWorklist: %s %p", label, stream);
 #endif
     return 0;
 }
@@ -257,7 +283,8 @@ int insertGlobalPCWorklist(char * offset, char * codeStart)
 {
     LabelMap* item = (LabelMap*)malloc(sizeof(LabelMap));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertGlobalPCWorklist");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     snprintf(item->label, LABEL_SIZE, "%s", "export_pc");
@@ -269,7 +296,7 @@ int insertGlobalPCWorklist(char * offset, char * codeStart)
     globalPCWorklistNum ++;
 
 #ifdef DEBUG_NCG
-    ALOGI("insert globalPCWorklist: %p %p %p %x %p", globalDvmNcg->streamCode,  codeStart, streamCode, item->addend, item->codePtr);
+    ALOGI("Insert globalPCWorklist: %p %p %p %x %p", globalDvmNcg->streamCode,  codeStart, streamCode, item->addend, item->codePtr);
 #endif
     return 0;
 }
@@ -278,7 +305,8 @@ int insertChainingWorklist(int bbId, char * codeStart)
 {
     LabelMap* item = (LabelMap*)malloc(sizeof(LabelMap));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertChainingWorklist");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     item->size = OpndSize_32;
@@ -288,7 +316,7 @@ int insertChainingWorklist(int bbId, char * codeStart)
     chainingWorklist = item;
 
 #ifdef DEBUG_NCG
-    ALOGI("insertChainingWorklist: %p basic block %d", codeStart, bbId);
+    ALOGI("InsertChainingWorklist: %p basic block %d", codeStart, bbId);
 #endif
     return 0;
 }
@@ -297,7 +325,8 @@ int insertGlobalDataWorklist(char * offset, const char* label)
 {
     LabelMap* item = (LabelMap*)malloc(sizeof(LabelMap));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertGlobalDataWorklist");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     snprintf(item->label, LABEL_SIZE, "%s", label);
@@ -308,7 +337,7 @@ int insertGlobalDataWorklist(char * offset, const char* label)
     globalDataWorklistNum ++;
 
 #ifdef DEBUG_NCG
-    ALOGI("insert globalDataWorklist: %s %p", label, offset);
+    ALOGI("Insert globalDataWorklist: %s %p", label, offset);
 #endif
 
     return 0;
@@ -318,7 +347,8 @@ int insertVMAPIWorklist(char * offset, const char* label)
 {
     LabelMap* item = (LabelMap*)malloc(sizeof(LabelMap));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertVMAPIWorklist");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     snprintf(item->label, LABEL_SIZE, "%s", label);
@@ -331,7 +361,7 @@ int insertVMAPIWorklist(char * offset, const char* label)
     VMAPIWorklistNum ++;
 
 #ifdef DEBUG_NCG
-    ALOGI("insert VMAPIWorklist: %s %p", label, offset);
+    ALOGI("Insert VMAPIWorklist: %s %p", label, offset);
 #endif
     return 0;
 }
@@ -365,7 +395,7 @@ void performLabelWorklist() {
     LabelMap* ptr = globalWorklist;
     while(ptr != NULL) {
 #ifdef DEBUG_NCG
-        ALOGI("perform work global %p for label %s", ptr->codePtr, ptr->label);
+        ALOGI("Perform work global %p for label %s", ptr->codePtr, ptr->label);
 #endif
         char* targetCode = findCodeForLabel(ptr->label);
         assert(targetCode != NULL);
@@ -394,9 +424,9 @@ void freeLabelWorklist() {
 */
 int updateImmRMInst(char* moveInst, const char* label, int relativeNCG) {
 #ifdef DEBUG_NCG
-    ALOGI("perform work ImmRM inst @ %p for label %s with %d", moveInst, label, relativeNCG);
+    ALOGI("Perform work ImmRM inst @ %p for label %s with %d", moveInst, label, relativeNCG);
 #endif
-    encoder_update_imm_rm(relativeNCG, moveInst);
+    dump_imm_update(relativeNCG, moveInst, true);
     return 0;
 }
 //! maximum instruction size for jump,jcc,call: 6 for jcc rel32
@@ -447,19 +477,32 @@ unsigned getJmpCallInstSize(OpndSize size, JmpCall_type type) {
     }
     return 0;
 }
-/*!
-\brief check whether a branch target is already handled, if yes, return the size of the immediate; otherwise, call insertShortWorklist or insertLabelWorklist.
-
-If the branch target is not handled, call insertShortWorklist or insertLabelWorklist depending on isShortTerm, unknown is set to true, immSize is set to 32 if isShortTerm is false, set to 32 if isShortTerm is true and target is check_cast_null, set to 8 otherwise.
-
-If the branch target is handled, call estOpndSizeFromImm to set immSize for jump instruction, returns the value of the immediate
-*/
+//! \brief Get the offset given a jump target
+//!
+//! \detail check whether a branch target is already handled if yes, return the
+//! size of the immediate; otherwise, call insertShortWorklist or insertLabelWorklist.
+//!
+//! If the branch target is not handled, call insertShortWorklist or insertLabelWorklist
+//! depending on isShortTerm, unknown is set to true, immSize is set to 32 if isShortTerm
+//! is false, set to 32 if isShortTerm is true and target is check_cast_null, set to 8 otherwise.
+//!
+//! If the branch target is handled, call estOpndSizeFromImm to set immSize for jump
+//! instruction, returns the value of the immediate
+//!
+//! \param target the target of the jump
+//! \param isShortTerm whether this is a short term jump
+//! \param type Call or Jmp
+//! \param unknown target known or not
+//! \param immSize size of the jump offset
+//!
+//! \return jump offset (can also return error value, but caller cannot distinguish)
 int getRelativeOffset(const char* target, bool isShortTerm, JmpCall_type type, bool* unknown, OpndSize* immSize) {
     char* targetPtrInStream = NULL;
     if(isShortTerm) targetPtrInStream = findCodeForShortLabel(target);
     else targetPtrInStream = findCodeForLabel(target);
 
     int relOffset;
+    int retCode = 0;
     *unknown = false;
     if(targetPtrInStream == NULL) {
         //branch target is not handled yet
@@ -470,13 +513,17 @@ int getRelativeOffset(const char* target, bool isShortTerm, JmpCall_type type, b
                since the lable is only used within a single bytecode, we assume OpndSize_8 is big enough
                but there are special cases where we should use 32 bit offset
             */
-            if(!strcmp(target, ".check_cast_null") || !strcmp(target, ".stackOverflow") ||
-               !strcmp(target, ".invokeChain") ||
-               !strcmp(target, ".new_instance_done") ||
-               !strcmp(target, ".new_array_done") ||
-               !strcmp(target, ".fill_array_data_done") ||
-               !strcmp(target, ".inlined_string_compare_done") ||
-               !strncmp(target, "after_exception", 15)) {
+            //Check if we have failed with 8-bit offset previously. Use 32-bit offsets if so.
+            if (gDvmJit.disableOpt & (1 << kShortJumpOffset)){
+                *immSize = OpndSize_32;
+            }
+            //Check if it is a special case:
+            //These labels are known to be far off from the jump location
+            //Safe to set them to large offset by default
+            else if(!strcmp(target, ".stackOverflow") ||
+                    !strcmp(target, ".invokeChain") ||
+                    !strcmp(target, "after_exception_1") ||
+                    !strncmp(target, "exception_restore_state_", 24)) {
 #ifdef SUPPORT_IMM_16
                 *immSize = OpndSize_16;
 #else
@@ -486,9 +533,14 @@ int getRelativeOffset(const char* target, bool isShortTerm, JmpCall_type type, b
                 *immSize = OpndSize_8;
             }
 #ifdef DEBUG_NCG_JUMP
-            ALOGI("insert to short worklist %s %d", target, *immSize);
+            ALOGI("Insert to short worklist %s %d", target, *immSize);
 #endif
-            insertShortWorklist(target, *immSize);
+            retCode = insertShortWorklist(target, *immSize);
+            //NOTE: Returning negative value here cannot indicate an error
+            //The caller accepts any value as correct. Only the premature
+            //return matters here.
+            if (retCode < 0)
+                return retCode;
         }
         else {
 #ifdef SUPPORT_IMM_16
@@ -496,7 +548,12 @@ int getRelativeOffset(const char* target, bool isShortTerm, JmpCall_type type, b
 #else
             *immSize = OpndSize_32;
 #endif
-            insertLabelWorklist(target, *immSize);
+            retCode = insertLabelWorklist(target, *immSize);
+            //NOTE: Returning negative value here cannot indicate an error
+            //The caller accepts any value as correct. Only the premature
+            //return matters here.
+            if (retCode < 0)
+                return retCode;
         }
         if(type == JmpCall_call) { //call sz16 does not work in gdb
             *immSize = OpndSize_32;
@@ -509,11 +566,13 @@ int getRelativeOffset(const char* target, bool isShortTerm, JmpCall_type type, b
 #else
         *immSize = OpndSize_32;
 #endif
-        insertLabelWorklist(target, *immSize);
+        retCode = insertLabelWorklist(target, *immSize);
+        if (retCode < 0)
+            return retCode;
     }
 
 #ifdef DEBUG_NCG
-    ALOGI("backward branch @ %p for label %s", stream, target);
+    ALOGI("Backward branch @ %p for label %s", stream, target);
 #endif
     relOffset = targetPtrInStream - stream;
     if(type == JmpCall_call) *immSize = OpndSize_32;
@@ -535,18 +594,13 @@ void conditional_jump(ConditionCode cc, const char* target, bool isShortTerm) {
     }
     Mnemonic m = (Mnemonic)(Mnemonic_Jcc + cc);
     bool unknown;
-    OpndSize size;
+    OpndSize size = OpndSize_Null;
     int imm = 0;
-    imm = getRelativeOffset(target, isShortTerm, JmpCall_cond, &unknown, &size);
+    if(!gDvmJit.scheduling)
+        imm = getRelativeOffset(target, isShortTerm, JmpCall_cond, &unknown, &size);
     dump_label(m, size, imm, target, isShortTerm);
 }
-/*!
-\brief generate a single native instruction "jmp imm" to jump to ".invokeArgsDone"
 
-*/
-void goto_invokeArgsDone() {
-    unconditional_jump_global_API(".invokeArgsDone", false);
-}
 /*!
 \brief generate a single native instruction "jmp imm" to jump to a label
 
@@ -559,7 +613,7 @@ void unconditional_jump(const char* target, bool isShortTerm) {
     }
     Mnemonic m = Mnemonic_JMP;
     bool unknown;
-    OpndSize size;
+    OpndSize size = OpndSize_Null;
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         //for other three labels used by JIT: invokeArgsDone_formal, _native, _jit
         if(!strncmp(target, ".invokeArgsDone", 15)) {
@@ -572,7 +626,8 @@ void unconditional_jump(const char* target, bool isShortTerm) {
         }
     }
     int imm = 0;
-    imm = getRelativeOffset(target, isShortTerm, JmpCall_uncond, &unknown, &size);
+    if(!gDvmJit.scheduling)
+        imm = getRelativeOffset(target, isShortTerm, JmpCall_uncond, &unknown, &size);
     dump_label(m, size, imm, target, isShortTerm);
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         if(!strncmp(target, ".invokeArgsDone", 15)) {
@@ -586,7 +641,7 @@ void unconditional_jump(const char* target, bool isShortTerm) {
 */
 void conditional_jump_int(ConditionCode cc, int target, OpndSize size) {
     Mnemonic m = (Mnemonic)(Mnemonic_Jcc + cc);
-    dump_ncg(m, size, target);
+    dump_imm(m, size, target);
 }
 /*!
 \brief generate a single native instruction "jmp imm"
@@ -594,8 +649,28 @@ void conditional_jump_int(ConditionCode cc, int target, OpndSize size) {
 */
 void unconditional_jump_int(int target, OpndSize size) {
     Mnemonic m = Mnemonic_JMP;
-    dump_ncg(m, size, target);
+    dump_imm(m, size, target);
 }
+
+//! Used to generate a single native instruction for conditionally
+//! jumping to a block when the immediate is not yet known.
+//! This should only be used when instruction scheduling is enabled.
+//! \param cc type of conditional jump
+//! \param targetBlockId id of MIR basic block
+void conditional_jump_block(ConditionCode cc, int targetBlockId) {
+    Mnemonic m = (Mnemonic)(Mnemonic_Jcc + cc);
+    dump_blockid_imm(m, targetBlockId);
+}
+
+//! Used to generate a single native instruction for unconditionally
+//! jumping to a block when the immediate is not yet known.
+//! This should only be used when instruction scheduling is enabled.
+//! \param targetBlockId id of MIR basic block
+void unconditional_jump_block(int targetBlockId) {
+    Mnemonic m = Mnemonic_JMP;
+    dump_blockid_imm(m, targetBlockId);
+}
+
 /*!
 \brief generate a single native instruction "jmp reg"
 
@@ -615,9 +690,10 @@ void call(const char* target) {
     }
     Mnemonic m = Mnemonic_CALL;
     bool dummy;
-    OpndSize size;
+    OpndSize size = OpndSize_Null;
     int relOffset = 0;
-    relOffset = getRelativeOffset(target, false, JmpCall_call, &dummy, &size);
+    if(!gDvmJit.scheduling)
+        relOffset = getRelativeOffset(target, false, JmpCall_call, &dummy, &size);
     dump_label(m, size, relOffset, target, false);
     if(gDvm.executionMode == kExecutionModeNcgO1) {
         afterCall(target);
@@ -652,11 +728,12 @@ void call_mem(int disp, int reg, bool isPhysical) {
 int insertNCGWorklist(s4 relativePC, OpndSize immSize) {
     int offsetNCG2 = stream - streamMethodStart;
 #ifdef DEBUG_NCG
-    ALOGI("insert NCGWorklist (goto forward) @ %p offsetPC %x relativePC %x offsetNCG %x", stream, offsetPC, relativePC, offsetNCG2);
+    ALOGI("Insert NCGWorklist (goto forward) @ %p offsetPC %x relativePC %x offsetNCG %x", stream, offsetPC, relativePC, offsetNCG2);
 #endif
     NCGWorklist* item = (NCGWorklist*)malloc(sizeof(NCGWorklist));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertNCGWorklist");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     item->relativePC = relativePC;
@@ -682,7 +759,8 @@ int insertDataWorklist(s4 relativePC, char* codePtr1) {
     //insert according to offsetPC+relativePC, smallest at the head
     DataWorklist* item = (DataWorklist*)malloc(sizeof(DataWorklist));
     if(item == NULL) {
-        ALOGE("Memory allocation failed");
+        ALOGE("JIT_ERROR: Memory allocation failed at insertDataWorklist");
+        SET_JIT_ERROR(kJitErrorMallocFailed);
         return -1;
     }
     item->relativePC = relativePC;
@@ -716,7 +794,7 @@ int insertDataWorklist(s4 relativePC, char* codePtr1) {
 int performNCGWorklist() {
     NCGWorklist* ptr = globalNCGWorklist;
     while(ptr != NULL) {
-        ALOGV("perform NCG worklist: @ %p target block %d target NCG %x",
+        ALOGV("Perform NCG worklist: @ %p target block %d target NCG %x",
              ptr->codePtr, ptr->relativePC, traceLabelList[ptr->relativePC].lop.generic.offset);
         int tmpNCG = traceLabelList[ptr->relativePC].lop.generic.offset;
         assert(tmpNCG >= 0);
@@ -797,10 +875,10 @@ int performDataWorklist() {
             if ((stream + sz) < codeCacheEnd) {
                 memcpy(stream, (u2*)currentMethod->insns+tmpPC, sz);
 #ifdef DEBUG_NCG_CODE_SIZE
-                ALOGI("copy data section to stream %p: start at %d, %d bytes", stream, tmpPC, sz);
+                ALOGI("Copy data section to stream %p: start at %d, %d bytes", stream, tmpPC, sz);
 #endif
 #ifdef DEBUG_NCG
-                ALOGI("update data section at %p with %d", ptr->codePtr, stream-ptr->codePtr);
+                ALOGI("Update data section at %p with %d", ptr->codePtr, stream-ptr->codePtr);
 #endif
                 updateImmRMInst(ptr->codePtr, "", stream - ptr->codePtr);
                 stream += sz;
@@ -821,7 +899,7 @@ int performDataWorklist() {
                     //need stream, offsetPC,
                     int relativeNCG = getRelativeNCGForSwitch(relativePC+ptr->offsetPC, ptr->codePtr2);
 #ifdef DEBUG_NCG_CODE_SIZE
-                    ALOGI("convert target from %d to %d", relativePC+ptr->offsetPC, relativeNCG);
+                    ALOGI("Convert target from %d to %d", relativePC+ptr->offsetPC, relativeNCG);
 #endif
                     *((s4*)stream) = relativeNCG;
                     stream += 4;
@@ -896,7 +974,7 @@ int getRelativeNCG(s4 tmp, JmpCall_type type, bool* unknown, OpndSize* size) {//
     }
     int offsetNCG2 = stream - streamMethodStart;
 #ifdef DEBUG_NCG
-    ALOGI("goto backward @ %p offsetPC %d relativePC %d offsetNCG %d relativeNCG %d", stream, offsetPC, tmp, offsetNCG2, tmpNCG-offsetNCG2);
+    ALOGI("Goto backward @ %p offsetPC %d relativePC %d offsetNCG %d relativeNCG %d", stream, offsetPC, tmp, offsetNCG2, tmpNCG-offsetNCG2);
 #endif
     int relativeOff = tmpNCG - offsetNCG2;
     *size = estOpndSizeFromImm(relativeOff);
@@ -908,60 +986,240 @@ int getRelativeNCG(s4 tmp, JmpCall_type type, bool* unknown, OpndSize* size) {//
 input: jump target in %eax; at end of the function, jump to %eax
 */
 int common_backwardBranch() {
-    insertLabel("common_backwardBranch", false);
+    if (insertLabel("common_backwardBranch", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+     int startStreamPtr = (int)stream;
+#endif
+
     spill_reg(PhysicalReg_EAX, true);
     call("common_periodicChecks_entry");
     unspill_reg(PhysicalReg_EAX, true);
     unconditional_jump_reg(PhysicalReg_EAX, true);
+
+#if defined(VTUNE_DALVIK)
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_backwardBranch");
+    }
+#endif
     return 0;
 }
-//when this is called from JIT, there is no need to check GC
-int common_goto(s4 tmp) { //tmp: target basic block id
+#if !defined(WITH_JIT)
+/*!
+\brief common code to handle GOTO
+
+If it is a backward branch, call common_periodicChecks4 to handle GC request.
+Since this is the end of a basic block, constVREndOfBB and globalVREndOfBB are called right before the jump instruction.
+*/
+int common_goto(s4 tmp) { //tmp: relativePC
+    int retCode = 0;
+    if(tmp < 0) {
+#ifdef ENABLE_TRACING
+#if !defined(TRACING_OPTION2)
+        insertMapWorklist(offsetPC + tmp, mapFromBCtoNCG[offsetPC+tmp], 1);
+#endif
+        //(target offsetPC * 2)
+        move_imm_to_reg(OpndSize_32, 2*(offsetPC+tmp), PhysicalReg_EDX, true);
+#endif
+        //call( ... ) will dump VRs to memory first
+        //potential garbage collection will work as designed
+        call_helper_API("common_periodicChecks4");
+    }
+    constVREndOfBB();
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     bool unknown;
+    OpndSize size;
+    int relativeNCG = tmp;
+    if(!gDvmJit.scheduling)
+        relativeNCG = getRelativeNCG(tmp, JmpCall_uncond, &unknown, &size);
+    unconditional_jump_int(relativeNCG, size);
+    return 0;
+}
+//the common code to lower a if bytecode
+int common_if(s4 tmp, ConditionCode cc_next, ConditionCode cc_taken) {
+    if(tmp < 0) { //backward
+        conditional_jump(cc_next, ".if_next", true);
+        common_goto(tmp);
+        if (insertLabel(".if_next", true) == -1)
+            return -1;
+    }
+    else {
+        //if(tmp < 0) ALOGI("skip periodicCheck for if");
+        bool unknown;
+        OpndSize size;
+        int relativeNCG = tmp;
+        if(!gDvmJit.scheduling)
+            relativeNCG = getRelativeNCG(tmp, JmpCall_cond, &unknown, &size); //must be known
+        conditional_jump_int(cc_taken, relativeNCG, size); //CHECK
+    }
+    return 0;
+}
+#else
+
+//! \brief common code to handle GOTO
+//!
+//! \details If it is a backward branch, call common_periodicChecks4
+//! to handle GC request.
+//! Since this is the end of a basic block, constVREndOfBB and
+//! globalVREndOfBB are called right before the jump instruction.
+//! when this is called from JIT, there is no need to check GC
+//!
+//! \param targetBlockId
+//!
+//! \return -1 if error
+int common_goto(s4 targetBlockId) {
+    bool unknown;
+    int retCode = 0;
     OpndSize size;
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
 
-    int relativeNCG = tmp;
-    relativeNCG = getRelativeNCG(tmp, JmpCall_uncond, &unknown, &size);
-    unconditional_jump_int(relativeNCG, size);
+    if(gDvmJit.scheduling) {
+        unconditional_jump_block((int)targetBlockId);
+    } else {
+        int relativeNCG = getRelativeNCG(targetBlockId, JmpCall_uncond, &unknown, &size);
+        unconditional_jump_int(relativeNCG, size);
+    }
     return 1;
 }
+
 int common_if(s4 tmp, ConditionCode cc_next, ConditionCode cc) {
     bool unknown;
-    OpndSize size;
-    int relativeNCG = traceCurrentBB->taken ? traceCurrentBB->taken->id : 0;
+    OpndSize size = OpndSize_Null;
+    int relativeNCG;
 
-    if(traceCurrentBB->taken)
-        relativeNCG = getRelativeNCG(traceCurrentBB->taken->id, JmpCall_cond, &unknown, &size);
-    conditional_jump_int(cc, relativeNCG, size);
-    relativeNCG = traceCurrentBB->fallThrough ? traceCurrentBB->fallThrough->id : 0;
-    if(traceCurrentBB->fallThrough)
-        relativeNCG = getRelativeNCG(traceCurrentBB->fallThrough->id, JmpCall_uncond, &unknown, &size);
-    unconditional_jump_int(relativeNCG, size);
+    if (traceMode == kJitLoop && !branchInLoop && hasVRStoreExitOfLoop()) {
+        if (traceCurrentBB->taken && traceCurrentBB->taken->blockType == kChainingCellNormal) {
+            conditional_jump(cc, ".vr_store_at_loop_exit", true);
+
+            if(gDvmJit.scheduling && traceCurrentBB->fallThrough) {
+                unconditional_jump_block(traceCurrentBB->fallThrough->id);
+            } else {
+                relativeNCG = traceCurrentBB->fallThrough ? traceCurrentBB->fallThrough->id : 0;
+                if(traceCurrentBB->fallThrough)
+                    relativeNCG = getRelativeNCG(traceCurrentBB->fallThrough->id, JmpCall_uncond, &unknown, &size);
+                unconditional_jump_int(relativeNCG, size);
+            }
+
+            if (insertLabel(".vr_store_at_loop_exit", true) == -1)
+                return -1;
+            storeVRExitOfLoop();
+
+            if(gDvmJit.scheduling && traceCurrentBB->taken) {
+                unconditional_jump_block(traceCurrentBB->taken->id);
+            } else {
+                relativeNCG = traceCurrentBB->taken ? traceCurrentBB->taken->id : 0;
+                if(traceCurrentBB->taken)
+                    relativeNCG = getRelativeNCG(traceCurrentBB->taken->id, JmpCall_uncond, &unknown, &size);
+                unconditional_jump_int(relativeNCG, size);
+            }
+        }
+        else if (traceCurrentBB->fallThrough && traceCurrentBB->fallThrough->blockType == kChainingCellNormal) {
+            conditional_jump(cc_next, ".vr_store_at_loop_exit", true);
+
+            if(gDvmJit.scheduling && traceCurrentBB->taken) {
+                unconditional_jump_block(traceCurrentBB->taken->id);
+            } else {
+                relativeNCG = traceCurrentBB->taken ? traceCurrentBB->taken->id : 0;
+                if(traceCurrentBB->taken)
+                    relativeNCG = getRelativeNCG(traceCurrentBB->taken->id, JmpCall_uncond, &unknown, &size);
+                unconditional_jump_int(relativeNCG, size);
+            }
+
+            if (insertLabel(".vr_store_at_loop_exit", true) == -1)
+                return -1;
+            storeVRExitOfLoop();
+
+            if(gDvmJit.scheduling && traceCurrentBB->fallThrough) {
+                unconditional_jump_block(traceCurrentBB->fallThrough->id);
+            } else {
+                relativeNCG = traceCurrentBB->fallThrough ? traceCurrentBB->fallThrough->id : 0;
+                if(traceCurrentBB->fallThrough)
+                    relativeNCG = getRelativeNCG(traceCurrentBB->fallThrough->id, JmpCall_uncond, &unknown, &size);
+                unconditional_jump_int(relativeNCG, size);
+            }
+        }
+        else {
+           ALOGE("JIT_ERROR: Invalid branch type in common_if\n");
+           SET_JIT_ERROR(kJitErrorTraceFormation);
+           return -1;
+        }
+    }
+    else {
+        if(gDvmJit.scheduling) {
+            if(traceCurrentBB->taken)
+                conditional_jump_block(cc, traceCurrentBB->taken->id);
+            if(traceCurrentBB->fallThrough)
+                unconditional_jump_block(traceCurrentBB->fallThrough->id);
+        } else {
+            relativeNCG = traceCurrentBB->taken ? traceCurrentBB->taken->id : 0;
+            if(traceCurrentBB->taken)
+                relativeNCG = getRelativeNCG(traceCurrentBB->taken->id, JmpCall_cond, &unknown, &size);
+            conditional_jump_int(cc, relativeNCG, size);
+
+            relativeNCG = traceCurrentBB->fallThrough ? traceCurrentBB->fallThrough->id : 0;
+            if(traceCurrentBB->fallThrough)
+                relativeNCG = getRelativeNCG(traceCurrentBB->fallThrough->id, JmpCall_uncond, &unknown, &size);
+            unconditional_jump_int(relativeNCG, size);
+        }
+    }
     return 2;
 }
+#endif
 
 /*!
 \brief helper function to handle null object error
 
 */
 int common_errNullObject() {
-    insertLabel("common_errNullObject", false);
+    if (insertLabel("common_errNullObject", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
+
     move_imm_to_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
-    move_imm_to_reg(OpndSize_32, LstrNullPointerException, PhysicalReg_ECX, true);
+    move_imm_to_reg(OpndSize_32, (int) gDvm.exNullPointerException, PhysicalReg_ECX, true);
     unconditional_jump("common_throw", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_errNullObject");
+    }
+#endif
+
     return 0;
 }
 /*!
 \brief helper function to handle string index error
 
 */
-int common_StringIndexOutOfBounds() {
-    insertLabel("common_StringIndexOutOfBounds", false);
+int common_errStringIndexOutOfBounds() {
+    if (insertLabel("common_errStringIndexOutOfBounds", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
+
     move_imm_to_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
-    move_imm_to_reg(OpndSize_32, LstrStringIndexOutOfBoundsException, PhysicalReg_ECX, true);
+    move_imm_to_reg(OpndSize_32, (int)gDvm.exStringIndexOutOfBoundsException, PhysicalReg_ECX, true);
     unconditional_jump("common_throw", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_errStringIndexOutOfBounds");
+    }
+#endif
     return 0;
 }
 
@@ -970,10 +1228,22 @@ int common_StringIndexOutOfBounds() {
 
 */
 int common_errArrayIndex() {
-    insertLabel("common_errArrayIndex", false);
+    if (insertLabel("common_errArrayIndex", false) == -1)
+        return -1;
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
+
     move_imm_to_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
     move_imm_to_reg(OpndSize_32, LstrArrayIndexException, PhysicalReg_ECX, true);
     unconditional_jump("common_throw", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_errArrayIndex");
+    }
+#endif
     return 0;
 }
 /*!
@@ -981,10 +1251,22 @@ int common_errArrayIndex() {
 
 */
 int common_errArrayStore() {
-    insertLabel("common_errArrayStore", false);
+    if (insertLabel("common_errArrayStore", false) == -1)
+        return -1;
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
+
     move_imm_to_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
     move_imm_to_reg(OpndSize_32, LstrArrayStoreException, PhysicalReg_ECX, true);
     unconditional_jump("common_throw", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_errArrayStore");
+    }
+#endif
     return 0;
 }
 /*!
@@ -992,10 +1274,22 @@ int common_errArrayStore() {
 
 */
 int common_errNegArraySize() {
-    insertLabel("common_errNegArraySize", false);
+    if (insertLabel("common_errNegArraySize", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
     move_imm_to_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
     move_imm_to_reg(OpndSize_32, LstrNegativeArraySizeException, PhysicalReg_ECX, true);
     unconditional_jump("common_throw", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_errNegArraySize");
+    }
+#endif
     return 0;
 }
 /*!
@@ -1003,10 +1297,22 @@ int common_errNegArraySize() {
 
 */
 int common_errDivideByZero() {
-    insertLabel("common_errDivideByZero", false);
+    if (insertLabel("common_errDivideByZero", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
     move_imm_to_reg(OpndSize_32, LstrDivideByZero, PhysicalReg_EAX, true);
     move_imm_to_reg(OpndSize_32, LstrArithmeticException, PhysicalReg_ECX, true);
     unconditional_jump("common_throw", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_errDivideByZero");
+    }
+#endif
     return 0;
 }
 /*!
@@ -1014,10 +1320,22 @@ int common_errDivideByZero() {
 
 */
 int common_errNoSuchMethod() {
-    insertLabel("common_errNoSuchMethod", false);
+    if (insertLabel("common_errNoSuchMethod", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
     move_imm_to_reg(OpndSize_32, 0, PhysicalReg_EAX, true);
     move_imm_to_reg(OpndSize_32, LstrNoSuchMethodError, PhysicalReg_ECX, true);
     unconditional_jump("common_throw", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_errNoSuchMethod");
+    }
+#endif
     return 0;
 }
 int call_dvmFindCatchBlock();
@@ -1030,11 +1348,22 @@ int call_dvmFindCatchBlock();
 
 */
 int common_exceptionThrown() {
-    insertLabel("common_exceptionThrown", false);
+    if (insertLabel("common_exceptionThrown", false) == -1)
+        return -1;
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
     typedef void (*vmHelper)(int);
     vmHelper funcPtr = dvmJitToExceptionThrown;
     move_imm_to_reg(OpndSize_32, (int)funcPtr, C_SCRATCH_1, isScratchPhysical);
     unconditional_jump_reg(C_SCRATCH_1, isScratchPhysical);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_exceptionThrown");
+    }
+#endif
     return 0;
 }
 #undef P_GPR_1
@@ -1050,7 +1379,12 @@ OUTPUT: no
 */
 int throw_exception_message(int exceptionPtrReg, int obj_reg, bool isPhysical,
                             int startLR/*logical register index*/, bool startPhysical) {
-    insertLabel("common_throw_message", false);
+    if (insertLabel("common_throw_message", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+ #endif
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EDX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
 
@@ -1062,6 +1396,13 @@ int throw_exception_message(int exceptionPtrReg, int obj_reg, bool isPhysical,
     call_dvmThrowWithMessage();
     load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     unconditional_jump("common_exceptionThrown", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_throw_message");
+    }
+#endif
     return 0;
 }
 /*!
@@ -1071,7 +1412,13 @@ scratch: C_SCRATCH_1(%edx)
 */
 int throw_exception(int exceptionPtrReg, int immReg,
                     int startLR/*logical register index*/, bool startPhysical) {
-    insertLabel("common_throw", false);
+    if (insertLabel("common_throw", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
+
     scratchRegs[0] = PhysicalReg_EDX; scratchRegs[1] = PhysicalReg_Null;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
 
@@ -1081,51 +1428,85 @@ int throw_exception(int exceptionPtrReg, int immReg,
     call_dvmThrow();
     load_effective_addr(8, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     unconditional_jump("common_exceptionThrown", false);
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_throw");
+    }
+#endif
     return 0;
 }
 
-//! lower bytecode GOTO
-
-//!
-int op_goto() {
+/**
+ * @brief Generate native code for bytecode goto
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_goto(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_GOTO);
+#if !defined(WITH_JIT)
+    u2 tt = INST_AA(inst);
+    s2 tmp = (s2)((s2)tt << 8) >> 8; //00AA --> AA00 --> xxAA
+#else
     s2 tmp = traceCurrentBB->taken->id;
+#endif
     int retval = common_goto(tmp);
-    rPC += 1;
     return retval;
 }
-//! lower bytecode GOTO_16
 
-//!
-int op_goto_16() {
+/**
+ * @brief Generate native code for bytecode goto/16
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_goto_16(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_GOTO_16);
+#if !defined(WITH_JIT)
+    s2 tmp = (s2)FETCH(1);
+#else
     s2 tmp = traceCurrentBB->taken->id;
+#endif
     int retval = common_goto(tmp);
-    rPC += 2;
     return retval;
 }
-//! lower bytecode GOTO_32
 
-//!
-int op_goto_32() {
+/**
+ * @brief Generate native code for bytecode goto/32
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_goto_32(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_GOTO_32);
+#if !defined(WITH_JIT)
+    u4 tmp = (u4)FETCH(1);
+    tmp |= (u4)FETCH(2) << 16;
+#else
     s2 tmp = traceCurrentBB->taken->id;
+#endif
     int retval = common_goto((s4)tmp);
-    rPC += 3;
     return retval;
 }
 #define P_GPR_1 PhysicalReg_EBX
-//! lower bytecode PACKED_SWITCH
 
-//!
-int op_packed_switch() {
-    u4 tmp = (u4)FETCH(1);
-    tmp |= (u4)FETCH(2) << 16;
-    u2 vA = INST_AA(inst);
+/**
+ * @brief Generate native code for bytecode packed-switch
+ * @param mir bytecode representation
+ * @param dalvikPC program counter for Dalvik bytecode
+ * @return value >= 0 when handled
+ */
+int op_packed_switch(const MIR * mir, const u2 * dalvikPC) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_PACKED_SWITCH);
+    u2 vA = mir->dalvikInsn.vA;
+    u4 tmp = mir->dalvikInsn.vB;
 
 #ifdef DEBUG_EACH_BYTECODE
     u2 tSize = 0;
     s4 firstKey = 0;
     s4* entries = NULL;
 #else
-    u2* switchData = rPC + (s4)tmp;
+    u2* switchData = const_cast<u2 *>(dalvikPC) + (s4)tmp;
     if (*switchData++ != kPackedSwitchSignature) {
         /* should have been caught by verifier */
         dvmThrowInternalError(
@@ -1159,9 +1540,11 @@ int op_packed_switch() {
     //TODO: eax should be absolute address, call globalVREndOfBB, constVREndOfBB
     //conditional_jump_global_API(Condition_LE, "common_backwardBranch", false);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod); //update GG VRs
+    retCode = globalVREndOfBB(currentMethod); //update GG VRs
+    if (retCode < 0)
+        return retCode;
     //get rPC, %eax has the relative PC offset
-    alu_binary_imm_reg(OpndSize_32, add_opc, (int)rPC, PhysicalReg_EAX, true);
+    alu_binary_imm_reg(OpndSize_32, add_opc, (int)dalvikPC, PhysicalReg_EAX, true);
     scratchRegs[0] = PhysicalReg_SCRATCH_2;
 #if defined(WITH_JIT_TUNING)
     /* Fall back to interpreter after resolving address of switch target.
@@ -1171,25 +1554,29 @@ int op_packed_switch() {
     move_imm_to_mem(OpndSize_32, kSwitchOverflow, 0, PhysicalReg_ESP, true);
 #endif
     jumpToInterpNoChain();
-    rPC += 3;
     return 0;
 }
 #undef P_GPR_1
 
 #define P_GPR_1 PhysicalReg_EBX
-//! lower bytecode SPARSE_SWITCH
 
-//!
-int op_sparse_switch() {
-    u4 tmp = (u4)FETCH(1);
-    tmp |= (u4)FETCH(2) << 16;
-    u2 vA = INST_AA(inst);
+/**
+ * @brief Generate native code for bytecode sparse-switch
+ * @param mir bytecode representation
+ * @param dalvikPC program counter for Dalvik bytecode
+ * @return value >= 0 when handled
+ */
+int op_sparse_switch(const MIR * mir, const u2 * dalvikPC) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_SPARSE_SWITCH);
+    u2 vA = mir->dalvikInsn.vA;
+    u4 tmp = mir->dalvikInsn.vB;
 #ifdef DEBUG_EACH_BYTECODE
     u2 tSize = 0;
     const s4* keys = NULL;
     s4* entries = NULL;
 #else
-    u2* switchData = rPC + (s4)tmp;
+    u2* switchData = const_cast<u2 *>(dalvikPC) + (s4)tmp;
 
     if (*switchData++ != kSparseSwitchSignature) {
         /* should have been caught by verifier */
@@ -1223,9 +1610,11 @@ int op_sparse_switch() {
     //TODO: eax should be absolute address, call globalVREndOfBB constVREndOfBB
     //conditional_jump_global_API(Condition_LE, "common_backwardBranch", false);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     //get rPC, %eax has the relative PC offset
-    alu_binary_imm_reg(OpndSize_32, add_opc, (int)rPC, PhysicalReg_EAX, true);
+    alu_binary_imm_reg(OpndSize_32, add_opc, (int)dalvikPC, PhysicalReg_EAX, true);
     scratchRegs[0] = PhysicalReg_SCRATCH_2;
 #if defined(WITH_JIT_TUNING)
     /* Fall back to interpreter after resolving address of switch target.
@@ -1235,186 +1624,251 @@ int op_sparse_switch() {
     move_imm_to_mem(OpndSize_32, kSwitchOverflow, 0, PhysicalReg_ESP, true);
 #endif
     jumpToInterpNoChain();
-    rPC += 3;
     return 0;
 }
 
 #undef P_GPR_1
 
 #define P_GPR_1 PhysicalReg_EBX
-//! lower bytecode IF_EQ
 
-//!
-int op_if_eq() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    s2 tmp = (s2)FETCH(1);
+/**
+ * @brief Generate native code for bytecode if-eq
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_eq(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_EQ);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    s2 tmp = mir->dalvikInsn.vC;
     get_virtual_reg(vA, OpndSize_32, 1, false);
     compare_VR_reg(OpndSize_32, vB, 1, false);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_NE, Condition_E);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_NE
 
-//!
-int op_if_ne() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    s2 tmp = (s2)FETCH(1);
+/**
+ * @brief Generate native code for bytecode if-ne
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_ne(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_NE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    s2 tmp = mir->dalvikInsn.vC;
     get_virtual_reg(vA, OpndSize_32, 1, false);
     compare_VR_reg(OpndSize_32, vB, 1, false);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_E, Condition_NE);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_LT
 
-//!
-int op_if_lt() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    s2 tmp = (s2)FETCH(1);
+/**
+ * @brief Generate native code for bytecode if-lt
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_lt(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_LT);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    s2 tmp = mir->dalvikInsn.vC;
     get_virtual_reg(vA, OpndSize_32, 1, false);
     compare_VR_reg(OpndSize_32, vB, 1, false);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_GE, Condition_L);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_GE
 
-//!
-int op_if_ge() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    s2 tmp = (s2)FETCH(1);
+/**
+ * @brief Generate native code for bytecode if-ge
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_ge(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_GE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    s2 tmp = mir->dalvikInsn.vC;
     get_virtual_reg(vA, OpndSize_32, 1, false);
     compare_VR_reg(OpndSize_32, vB, 1, false);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_L, Condition_GE);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_GT
 
-//!
-int op_if_gt() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    s2 tmp = (s2)FETCH(1);
+/**
+ * @brief Generate native code for bytecode if-gt
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_gt(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_GT);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    s2 tmp = mir->dalvikInsn.vC;
     get_virtual_reg(vA, OpndSize_32, 1, false);
     compare_VR_reg(OpndSize_32, vB, 1, false);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_LE, Condition_G);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_LE
 
-//!
-int op_if_le() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    s2 tmp = (s2)FETCH(1);
+/**
+ * @brief Generate native code for bytecode if-le
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_le(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_LE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    s2 tmp = mir->dalvikInsn.vC;
     get_virtual_reg(vA, OpndSize_32, 1, false);
     compare_VR_reg(OpndSize_32, vB, 1, false);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_G, Condition_LE);
-    rPC += 2;
     return 0;
 }
 #undef P_GPR_1
-//! lower bytecode IF_EQZ
 
-//!
-int op_if_eqz() {
-    u2 vA = INST_AA(inst);
-    s2 tmp = (s2)FETCH(1);
-    compare_imm_VR(OpndSize_32,
-                                  0, vA);
+/**
+ * @brief Generate native code for bytecode if-eqz
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_eqz(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_EQZ);
+    u2 vA = mir->dalvikInsn.vA;
+    s2 tmp = mir->dalvikInsn.vB;
+    compare_imm_VR(OpndSize_32, 0, vA);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_NE, Condition_E);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_NEZ
 
-//!
-int op_if_nez() {
-    u2 vA = INST_AA(inst);
-    s2 tmp = (s2)FETCH(1);
-    compare_imm_VR(OpndSize_32,
-                                  0, vA);
+/**
+ * @brief Generate native code for bytecode if-nez
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_nez(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_NEZ);
+    u2 vA = mir->dalvikInsn.vA;
+    s2 tmp = mir->dalvikInsn.vB;
+    compare_imm_VR(OpndSize_32, 0, vA);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_E, Condition_NE);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_LTZ
 
-//!
-int op_if_ltz() {
-    u2 vA = INST_AA(inst);
-    s2 tmp = (s2)FETCH(1);
-    compare_imm_VR(OpndSize_32,
-                                  0, vA);
+/**
+ * @brief Generate native code for bytecode if-ltz
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_ltz(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_LTZ);
+    u2 vA = mir->dalvikInsn.vA;
+    s2 tmp = mir->dalvikInsn.vB;
+    compare_imm_VR(OpndSize_32, 0, vA);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_GE, Condition_L);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_GEZ
 
-//!
-int op_if_gez() {
-    u2 vA = INST_AA(inst);
-    s2 tmp = (s2)FETCH(1);
-    compare_imm_VR(OpndSize_32,
-                                  0, vA);
+/**
+ * @brief Generate native code for bytecode if-gez
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_gez(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_GEZ);
+    u2 vA = mir->dalvikInsn.vA;
+    s2 tmp = mir->dalvikInsn.vB;
+    compare_imm_VR(OpndSize_32, 0, vA);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_L, Condition_GE);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_GTZ
 
-//!
-int op_if_gtz() {
-    u2 vA = INST_AA(inst);
-    s2 tmp = (s2)FETCH(1);
-    compare_imm_VR(OpndSize_32,
-                                  0, vA);
+/**
+ * @brief Generate native code for bytecode if-gtz
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_gtz(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_GTZ);
+    u2 vA = mir->dalvikInsn.vA;
+    s2 tmp = mir->dalvikInsn.vB;
+    compare_imm_VR(OpndSize_32, 0, vA);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_LE, Condition_G);
-    rPC += 2;
     return 0;
 }
-//! lower bytecode IF_LEZ
 
-//!
-int op_if_lez() {
-    u2 vA = INST_AA(inst);
-    s2 tmp = (s2)FETCH(1);
-    compare_imm_VR(OpndSize_32,
-                                  0, vA);
+/**
+ * @brief Generate native code for bytecode if-lez
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_if_lez(const MIR * mir) {
+    int retCode = 0;
+    assert(mir->dalvikInsn.opcode == OP_IF_LEZ);
+    u2 vA = mir->dalvikInsn.vA;
+    s2 tmp = mir->dalvikInsn.vB;
+    compare_imm_VR(OpndSize_32, 0, vA);
     constVREndOfBB();
-    globalVREndOfBB(currentMethod);
+    retCode = globalVREndOfBB(currentMethod);
+    if (retCode < 0)
+        return retCode;
     common_if(tmp, Condition_G, Condition_LE);
-    rPC += 2;
     return 0;
 }
 
@@ -1425,7 +1879,13 @@ int op_if_lez() {
 BCOffset in %edx
 */
 int common_periodicChecks4() {
-    insertLabel("common_periodicChecks4", false);
+    if (insertLabel("common_periodicChecks4", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
+
 #if (!defined(ENABLE_TRACING))
     get_self_pointer(PhysicalReg_ECX, true);
     move_mem_to_reg(OpndSize_32, offsetof(Thread, suspendCount), PhysicalReg_ECX, true, PhysicalReg_EAX, true);
@@ -1433,7 +1893,8 @@ int common_periodicChecks4() {
     conditional_jump(Condition_NE, "common_handleSuspend4", true); //called once
     x86_return();
 
-    insertLabel("common_handleSuspend4", true);
+    if (insertLabel("common_handleSuspend4", true) == -1)
+        return -1;
     push_reg_to_stack(OpndSize_32, PhysicalReg_ECX, true);
     call_dvmCheckSuspendPending();
     load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
@@ -1455,19 +1916,28 @@ int common_periodicChecks4() {
     //recover registers and return
     x86_return();
 
-    insertLabel("common_handleSuspend4_1", true);
+    if (insertLabel("common_handleSuspend4_1", true) == -1)
+        return -1;
     push_mem_to_stack(OpndSize_32, offGlue_self, PhysicalReg_Glue, true);
     call_dvmCheckSuspendPending();
     load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     x86_return();
 
-    insertLabel("common_debuggerActive4", true);
+    if (insertLabel("common_debuggerActive4", true) == -1)
+        return -1;
     //%edx: offsetBC (at run time, get method->insns_bytecode, then calculate BCPointer)
     move_mem_to_reg(OpndSize_32, offGlue_method, PhysicalReg_Glue, true, P_GPR_1, true);
     move_mem_to_reg(OpndSize_32, offMethod_insns_bytecode, P_GPR_1, true, P_GPR_2, true);
     alu_binary_reg_reg(OpndSize_32, add_opc, P_GPR_2, true, PhysicalReg_EDX, true);
     move_imm_to_mem(OpndSize_32, 0, offGlue_entryPoint, PhysicalReg_Glue, true);
     unconditional_jump("common_gotoBail", false); //update glue->rPC with edx
+#endif
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_periodicChecks4");
+    }
 #endif
     return 0;
 }
@@ -1478,7 +1948,11 @@ int common_periodicChecks4() {
 
 */
 int common_periodicChecks_entry() {
-    insertLabel("common_periodicChecks_entry", false);
+    if (insertLabel("common_periodicChecks_entry", false) == -1)
+        return -1;
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
     scratchRegs[0] = PhysicalReg_ESI; scratchRegs[1] = PhysicalReg_EAX;
     scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
     get_suspendCount(P_GPR_1, true);
@@ -1500,7 +1974,8 @@ int common_periodicChecks_entry() {
 
     //recover registers and return
     x86_return();
-    insertLabel("common_handleSuspend", true);
+    if (insertLabel("common_handleSuspend", true) == -1)
+        return -1;
     get_self_pointer(P_GPR_1, true);
     load_effective_addr(-4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     move_reg_to_mem(OpndSize_32, P_GPR_1, true, 0, PhysicalReg_ESP, true);
@@ -1508,11 +1983,20 @@ int common_periodicChecks_entry() {
     load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     x86_return();
 #ifdef NCG_DEBUG
-    insertLabel("common_debuggerActive", true);
+    if (insertLabel("common_debuggerActive", true) == -1)
+        return -1;
     //adjust PC!!! use 0(%esp) TODO
     set_glue_entryPoint_imm(0); //kInterpEntryInstr);
     unconditional_jump("common_gotoBail", false);
 #endif
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_periodicChecks_entry");
+    }
+#endif
+
     return 0;
 }
 #undef P_GPR_1
@@ -1522,8 +2006,14 @@ int common_periodicChecks_entry() {
   input: %edx: BCPointer %esi: Glue
   set %eax to 1 (switch interpreter = true), recover the callee-saved registers and return
 */
-int common_gotoBail() {
-    insertLabel("common_gotoBail", false);
+int common_gotoBail(void) {
+    if (insertLabel("common_gotoBail", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
+
     //scratchRegs[0] = PhysicalReg_EDX; scratchRegs[1] = PhysicalReg_ESI;
     //scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
     //save_pc_fp_to_glue();
@@ -1542,6 +2032,13 @@ int common_gotoBail() {
     move_mem_to_reg(OpndSize_32, 0, PhysicalReg_ESP, true, PhysicalReg_EBP, true);
     load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     x86_return();
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_gotoBail");
+    }
+#endif
     return 0;
 }
 /*!
@@ -1549,8 +2046,13 @@ int common_gotoBail() {
 
   set %eax to 0, recover the callee-saved registers and return
 */
-int common_gotoBail_0() {
-    insertLabel("common_gotoBail_0", false);
+int common_gotoBail_0(void) {
+    if (insertLabel("common_gotoBail_0", false) == -1)
+        return -1;
+
+#if defined VTUNE_DALVIK
+    int startStreamPtr = (int)stream;
+#endif
 
     get_self_pointer(PhysicalReg_EAX, true);
     move_reg_to_mem(OpndSize_32, PhysicalReg_FP, true, offsetof(Thread, interpSave.curFrame), PhysicalReg_EAX, true);
@@ -1578,5 +2080,12 @@ int common_gotoBail_0() {
     move_mem_to_reg(OpndSize_32, 0, PhysicalReg_ESP, true, PhysicalReg_EBP, true);
     load_effective_addr(4, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
     x86_return();
+
+#if defined VTUNE_DALVIK
+    if(gDvmJit.vtuneInfo != kVTuneInfoDisabled) {
+        int endStreamPtr = (int)stream;
+        sendLabelInfoToVTune(startStreamPtr, endStreamPtr, "common_gotoBail_0");
+    }
+#endif
     return 0;
 }

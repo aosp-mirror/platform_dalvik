@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2010-2013 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,23 @@
 #define P_GPR_2 PhysicalReg_ECX
 #define P_GPR_3 PhysicalReg_ESI
 #define P_GPR_4 PhysicalReg_EDX
-//! LOWER bytecode AGET without usage of helper function
 
-//! It has null check and length check
-int aget_common_nohelper(int flag, u2 vA, u2 vref, u2 vindex) {
+/**
+ * @brief Common function for generating native code for aget variants
+ * @details Includes null check and bound check.
+ * @param flag
+ * @param vA destination VR
+ * @param vref VR holding reference
+ * @param vindex VR holding index
+ * @param mirOptFlags optimization flags for current bytecode
+ * @return value >= 0 when handled
+ */
+int aget_common_nohelper(ArrayAccess flag, u2 vA, u2 vref, u2 vindex, int mirOptFlags) {
     ////////////////////////////
     // Request VR free delays before register allocation for the temporaries
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_NULL_CHECK))
+    if(!(mirOptFlags & MIR_IGNORE_NULL_CHECK))
         requestVRFreeDelay(vref,VRDELAY_NULLCHECK);
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+    if(!(mirOptFlags & MIR_IGNORE_RANGE_CHECK)) {
         requestVRFreeDelay(vref,VRDELAY_BOUNDCHECK);
         requestVRFreeDelay(vindex,VRDELAY_BOUNDCHECK);
     }
@@ -44,7 +52,7 @@ int aget_common_nohelper(int flag, u2 vA, u2 vref, u2 vindex) {
     get_virtual_reg(vref, OpndSize_32, 1, false); //array
     get_virtual_reg(vindex, OpndSize_32, 2, false); //index
 
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_NULL_CHECK)) {
+    if(!(mirOptFlags & MIR_IGNORE_NULL_CHECK)) {
         //last argument is the exception number for this bytecode
         nullCheck(1, false, 1, vref); //maybe optimized away, if not, call
         cancelVRFreeDelayRequest(vref,VRDELAY_NULLCHECK);
@@ -52,7 +60,7 @@ int aget_common_nohelper(int flag, u2 vA, u2 vref, u2 vindex) {
         updateRefCount2(1, LowOpndRegType_gp, false); //update reference count for tmp1
     }
 
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+    if(!(mirOptFlags & MIR_IGNORE_RANGE_CHECK)) {
         boundCheck(vref, 1, false,
                              vindex, 2, false,
                              2);
@@ -90,86 +98,118 @@ int aget_common_nohelper(int flag, u2 vA, u2 vref, u2 vindex) {
     //////////////////////////////////
     return 0;
 }
+#if 0 /* Code is deprecated. If reenabled, needs additional parameter
+         for optimization flags*/
 //! wrapper to call either aget_common_helper or aget_common_nohelper
 
 //!
 int aget_common(int flag, u2 vA, u2 vref, u2 vindex) {
     return aget_common_nohelper(flag, vA, vref, vindex);
 }
+#endif
 #undef P_GPR_1
 #undef P_GPR_2
 #undef P_GPR_3
 #undef P_GPR_4
-//! lower bytecode AGET by calling aget_common
 
-//!
-int op_aget() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aget_common(AGET, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aget and aget-object
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aget(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_AGET
+            || mir->dalvikInsn.opcode == OP_AGET_OBJECT);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aget_common_nohelper(AGET, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode AGET_WIDE by calling aget_common
 
-//!
-int op_aget_wide() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aget_common(AGET_WIDE, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aget-wide
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aget_wide(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_AGET_WIDE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aget_common_nohelper(AGET_WIDE, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode AGET_OBJECT by calling aget_common
 
-//!
-int op_aget_object() {
-    return op_aget();
+/**
+ * @brief Generate native code for bytecode aget-object
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aget_object(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_AGET_OBJECT);
+    return op_aget(mir);
 }
-//! lower bytecode BOOLEAN by calling aget_common
 
-//!
-int op_aget_boolean() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aget_common(AGET_BOOLEAN, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aget-boolean
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aget_boolean(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_AGET_BOOLEAN);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aget_common_nohelper(AGET_BOOLEAN, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode AGET_BYTE by calling aget_common
 
-//!
-int op_aget_byte() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aget_common(AGET_BYTE, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aget-byte
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aget_byte(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_AGET_BYTE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aget_common_nohelper(AGET_BYTE, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode AGET_CHAR by calling aget_common
 
-//!
-int op_aget_char() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aget_common(AGET_CHAR, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aget-char
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aget_char(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_AGET_CHAR);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aget_common_nohelper(AGET_CHAR, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode AGET_SHORT by calling aget_common
 
-//!
-int op_aget_short() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aget_common(AGET_SHORT, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aget-short
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aget_short(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_AGET_SHORT);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aget_common_nohelper(AGET_SHORT, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
 
@@ -177,17 +217,25 @@ int op_aget_short() {
 #define P_GPR_2 PhysicalReg_ECX
 #define P_GPR_3 PhysicalReg_ESI
 #define P_GPR_4 PhysicalReg_EDX
-//! LOWER bytecode APUT without usage of helper function
 
-//! It has null check and length check
-int aput_common_nohelper(int flag, u2 vA, u2 vref, u2 vindex) {
+/**
+ * @brief Common function for generating native code for aput variants
+ * @details Includes null check and bound check.
+ * @param flag
+ * @param vA destination VR
+ * @param vref VR holding reference
+ * @param vindex VR holding index
+ * @param mirOptFlags optimization flags for current bytecode
+ * @return value >= 0 when handled
+ */
+int aput_common_nohelper(ArrayAccess flag, u2 vA, u2 vref, u2 vindex, int mirOptFlags) {
     //////////////////////////////////////
     // Request VR free delays before register allocation for the temporaries.
     // No need to request delay for vA since it will be transferred to temporary
     // after the null check and bound check.
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_NULL_CHECK))
+    if(!(mirOptFlags & MIR_IGNORE_NULL_CHECK))
         requestVRFreeDelay(vref,VRDELAY_NULLCHECK);
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+    if(!(mirOptFlags & MIR_IGNORE_RANGE_CHECK)) {
         requestVRFreeDelay(vref,VRDELAY_BOUNDCHECK);
         requestVRFreeDelay(vindex,VRDELAY_BOUNDCHECK);
     }
@@ -195,7 +243,7 @@ int aput_common_nohelper(int flag, u2 vA, u2 vref, u2 vindex) {
     get_virtual_reg(vref, OpndSize_32, 1, false); //array
     get_virtual_reg(vindex, OpndSize_32, 2, false); //index
 
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_NULL_CHECK)) {
+    if(!(mirOptFlags & MIR_IGNORE_NULL_CHECK)) {
         //last argument is the exception number for this bytecode
         nullCheck(1, false, 1, vref); //maybe optimized away, if not, call
         cancelVRFreeDelayRequest(vref,VRDELAY_NULLCHECK);
@@ -203,7 +251,7 @@ int aput_common_nohelper(int flag, u2 vA, u2 vref, u2 vindex) {
         updateRefCount2(1, LowOpndRegType_gp, false); //update reference count for tmp1
     }
 
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+    if(!(mirOptFlags & MIR_IGNORE_RANGE_CHECK)) {
         boundCheck(vref, 1, false,
                              vindex, 2, false,
                              2);
@@ -231,80 +279,107 @@ int aput_common_nohelper(int flag, u2 vA, u2 vref, u2 vindex) {
     //////////////////////////////////
     return 0;
 }
+#if 0 /* Code is deprecated. If reenabled, needs additional parameter
+         for optimization flags*/
 //! wrapper to call either aput_common_helper or aput_common_nohelper
 
 //!
 int aput_common(int flag, u2 vA, u2 vref, u2 vindex) {
     return aput_common_nohelper(flag, vA, vref, vindex);
 }
+#endif
 #undef P_GPR_1
 #undef P_GPR_2
 #undef P_GPR_3
 #undef P_GPR_4
-//! lower bytecode APUT by calling aput_common
 
-//!
-int op_aput() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aput_common(APUT, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aput
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aput(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_APUT);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aput_common_nohelper(APUT, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode APUT_WIDE by calling aput_common
 
-//!
-int op_aput_wide() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aput_common(APUT_WIDE, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aput-wide
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aput_wide(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_APUT_WIDE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aput_common_nohelper(APUT_WIDE, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode APUT_BOOLEAN by calling aput_common
 
-//!
-int op_aput_boolean() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aput_common(APUT_BOOLEAN, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aput-boolean
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aput_boolean(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_APUT_BOOLEAN);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aput_common_nohelper(APUT_BOOLEAN, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode APUT_BYTE by calling aput_common
 
-//!
-int op_aput_byte() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aput_common(APUT_BYTE, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aput-byte
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aput_byte(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_APUT_BYTE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aput_common_nohelper(APUT_BYTE, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode APUT_CHAR by calling aput_common
 
-//!
-int op_aput_char() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aput_common(APUT_CHAR, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aput-char
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aput_char(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_APUT_CHAR);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aput_common_nohelper(APUT_CHAR, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
-//! lower bytecode APUT_SHORT by calling aput_common
 
-//!
-int op_aput_short() {
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-    int retval = aput_common(APUT_SHORT, vA, vref, vindex);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecode aput-short
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aput_short(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_APUT_SHORT);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+    int retval = aput_common_nohelper(APUT_SHORT, vA, vref, vindex,
+            mir->OptimizationFlags);
     return retval;
 }
 
@@ -317,46 +392,63 @@ int op_aput_short() {
 
 void markCard_notNull(int tgtAddrReg, int scratchReg, bool isPhysical);
 
-//! lower bytecode APUT_OBJECT
+/**
+ * @brief Generate native code for bytecode aput-object
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_aput_object(const MIR * mir) { //type checking
+    assert(mir->dalvikInsn.opcode == OP_APUT_OBJECT);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vref = mir->dalvikInsn.vB;
+    u2 vindex = mir->dalvikInsn.vC;
+#ifdef INC_NCG_O0
+    if(gDvm.helper_switch[6]) {
+        export_pc(); //use %edx
+        move_imm_to_reg(OpndSize_32, vA, P_SCRATCH_1, true);
+        move_imm_to_reg(OpndSize_32, vref, P_SCRATCH_2, true);
+        move_imm_to_reg(OpndSize_32, vindex, P_GPR_2, true);
 
-//! Lower the bytecode using helper function ".aput_obj_helper" if helper switch is on
-int op_aput_object() { //type checking
-    u2 vA = INST_AA(inst);
-    u2 vref = FETCH(1) & 0xff;
-    u2 vindex = FETCH(1) >> 8;
-
-    ///////////////////////////
-    // Request VR free delays before register allocation for the temporaries
-    // No need to request delay for vA since it will be transferred to temporary
-    // after the null check and bound check.
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_NULL_CHECK))
-        requestVRFreeDelay(vref,VRDELAY_NULLCHECK);
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
-        requestVRFreeDelay(vref,VRDELAY_BOUNDCHECK);
-        requestVRFreeDelay(vindex,VRDELAY_BOUNDCHECK);
+        spillVirtualReg(vref, LowOpndRegType_gp, true);
+        spillVirtualReg(vindex, LowOpndRegType_gp, true);
+        spillVirtualReg(vA, LowOpndRegType_gp, true);
+        call_helper_API(".aput_obj_helper");
     }
+    else
+#endif
+    {
+        ///////////////////////////
+        // Request VR free delays before register allocation for the temporaries
+        // No need to request delay for vA since it will be transferred to temporary
+        // after the null check and bound check.
+        if(!(mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK))
+            requestVRFreeDelay(vref,VRDELAY_NULLCHECK);
+        if(!(mir->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+            requestVRFreeDelay(vref,VRDELAY_BOUNDCHECK);
+            requestVRFreeDelay(vindex,VRDELAY_BOUNDCHECK);
+        }
 
-    get_virtual_reg(vref, OpndSize_32, 1, false); //array
-    export_pc(); //use %edx
+        get_virtual_reg(vref, OpndSize_32, 1, false); //array
+        export_pc(); //use %edx
 
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_NULL_CHECK)) {
-        compare_imm_reg(OpndSize_32, 0, 1, false);
-        conditional_jump_global_API(Condition_E, "common_errNullObject", false);
-        cancelVRFreeDelayRequest(vref,VRDELAY_NULLCHECK);
-    } else {
-        updateRefCount2(1, LowOpndRegType_gp, false); //update reference count for tmp1
-    }
+        if(!(mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK)) {
+            compare_imm_reg(OpndSize_32, 0, 1, false);
+            conditional_jump_global_API(Condition_E, "common_errNullObject", false);
+            cancelVRFreeDelayRequest(vref,VRDELAY_NULLCHECK);
+        } else {
+            updateRefCount2(1, LowOpndRegType_gp, false); //update reference count for tmp1
+        }
 
-    get_virtual_reg(vindex, OpndSize_32, 2, false); //index
-    if(!(traceCurrentMIR->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
-        compare_mem_reg(OpndSize_32, offArrayObject_length, 1, false, 2, false);
-        conditional_jump_global_API(Condition_NC, "common_errArrayIndex", false);
-        cancelVRFreeDelayRequest(vref,VRDELAY_BOUNDCHECK);
-        cancelVRFreeDelayRequest(vindex,VRDELAY_BOUNDCHECK);
-    } else {
-        updateRefCount2(1, LowOpndRegType_gp, false); //update reference count for tmp1
-        updateRefCount2(2, LowOpndRegType_gp, false); //update reference count for tmp2
-    }
+        get_virtual_reg(vindex, OpndSize_32, 2, false); //index
+        if(!(mir->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+            compare_mem_reg(OpndSize_32, offArrayObject_length, 1, false, 2, false);
+            conditional_jump_global_API(Condition_NC, "common_errArrayIndex", false);
+            cancelVRFreeDelayRequest(vref,VRDELAY_BOUNDCHECK);
+            cancelVRFreeDelayRequest(vindex,VRDELAY_BOUNDCHECK);
+        } else {
+            updateRefCount2(1, LowOpndRegType_gp, false); //update reference count for tmp1
+            updateRefCount2(2, LowOpndRegType_gp, false); //update reference count for tmp2
+        }
 
     get_virtual_reg(vA, OpndSize_32, 4, false);
     compare_imm_reg(OpndSize_32, 0, 4, false);
@@ -381,16 +473,18 @@ int op_aput_object() { //type checking
     ////TODO NCG O1 + code cache
     unconditional_jump(".aput_object_after_check", true);
 
-    insertLabel(".aput_object_skip_check", true);
+    if (insertLabel(".aput_object_skip_check", true) == -1)
+        return -1;
     goToState(1);
     //NOTE: "2, false" is live through function call
     move_reg_to_mem_disp_scale(OpndSize_32, 4, false, 1, false, offArrayObject_contents, 2, false, 4);
 
     transferToState(2);
-    insertLabel(".aput_object_after_check", true);
+    if (insertLabel(".aput_object_after_check", true) == -1)
+        return -1;
     ///////////////////////////////
-    rPC += 2;
-    return 0;
+  }
+  return 0;
 }
 #undef P_GPR_1
 #undef P_GPR_2
@@ -422,7 +516,9 @@ void markCard(int valReg, int tgtAddrReg, bool targetPhysical, int scratchReg, b
    conditional_jump(Condition_E, ".markCard_skip", true);
    alu_binary_imm_reg(OpndSize_32, shr_opc, GC_CARD_SHIFT, tgtAddrReg, targetPhysical);
    move_reg_to_mem_disp_scale(OpndSize_8, scratchReg, isPhysical, scratchReg, isPhysical, 0, tgtAddrReg, targetPhysical, 1);
-   insertLabel(".markCard_skip", true);
+   if (insertLabel(".markCard_skip", true) == -1) {
+       return;
+   }
 }
 
 void markCard_notNull(int tgtAddrReg, int scratchReg, bool isPhysical) {
@@ -438,31 +534,76 @@ void markCard_filled(int tgtAddrReg, bool isTgtPhysical, int scratchReg, bool is
    alu_binary_imm_reg(OpndSize_32, shr_opc, GC_CARD_SHIFT, tgtAddrReg, isTgtPhysical);
    move_reg_to_mem_disp_scale(OpndSize_8, scratchReg, isScratchPhysical, scratchReg, isScratchPhysical, 0, tgtAddrReg, isTgtPhysical, 1);
 }
-//! LOWER bytecode IGET,IPUT without usage of helper function
 
-//! It has null check and calls assembly function inst_field_resolve
-int iget_iput_common_nohelper(int tmp, int flag, u2 vA, u2 vB, int isObj, bool isVolatile) {
+/**
+ * @brief Common function for generating native code for iget and iput variants
+ * @details Includes null check
+ * @param referenceIndex instance field index
+ * @param flag type of instance access
+ * @param vA value register
+ * @param vB object register
+ * @param isObj true iff mnemonic is object variant
+ * @param isVolatile iff mnemonic is volatile variant
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int iget_iput_common_nohelper(u2 referenceIndex, InstanceAccess flag, u2 vA,
+        u2 vB, bool isObj, bool isVolatile, const MIR * mir) {
+#if !defined(WITH_JIT)
+    ///////////////////////////////
+    scratchRegs[2] = PhysicalReg_Null; scratchRegs[3] = PhysicalReg_Null;
+    scratchRegs[0] = PhysicalReg_SCRATCH_1; scratchRegs[1] = PhysicalReg_SCRATCH_2;
+    get_res_fields(3, false);
+    //move_mem_to_reg(OpndSize_32, referenceIndex*4, 3, false, 4, false);
+    compare_imm_mem(OpndSize_32, 0, referenceIndex*4, 3, false);
+    move_mem_to_reg(OpndSize_32, referenceIndex*4, 3, false, PhysicalReg_EAX, true);
+    /*********************************
+    compare_imm_reg(OpndSize_32, 0, 4, false);
+    **********************************/
+    export_pc(); //use %edx
+    conditional_jump(Condition_NE, ".iget_iput_resolved", true);
+    rememberState(1);
+    move_imm_to_reg(OpndSize_32, referenceIndex, PhysicalReg_EAX, true);
+    call_helper_API(".inst_field_resolve");
+    transferToState(1);
+    if (insertLabel(".iget_iput_resolved", true) == -1)
+        return -1;
+#else
 #ifdef WITH_JIT_INLINING
-    const Method *method = (traceCurrentMIR->OptimizationFlags & MIR_CALLEE) ?
-        traceCurrentMIR->meta.calleeMethod : currentMethod;
-    InstField *pInstField = (InstField *)
-            method->clazz->pDvmDex->pResFields[tmp];
+    const Method *method =
+            (mir->OptimizationFlags & MIR_CALLEE) ?
+                    mir->meta.calleeMethod : currentMethod;
+    InstField *pInstField =
+            (InstField *) method->clazz->pDvmDex->pResFields[referenceIndex];
 #else
     InstField *pInstField = (InstField *)
-            currentMethod->clazz->pDvmDex->pResFields[tmp];
+            currentMethod->clazz->pDvmDex->pResFields[referenceIndex];
 #endif
     int fieldOffset;
 
     assert(pInstField != NULL);
     fieldOffset = pInstField->byteOffset;
     move_imm_to_reg(OpndSize_32, fieldOffset, 8, false);
+#endif
+
     // Request VR delay before transfer to temporary. Only vB needs delay.
     // vA will have non-zero reference count since transfer to temporary for
     // it happens after null check, thus no delay is needed.
-    requestVRFreeDelay(vB,VRDELAY_NULLCHECK);
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        requestVRFreeDelay(vB,VRDELAY_NULLCHECK);
+    }
     get_virtual_reg(vB, OpndSize_32, 7, false);
-    nullCheck(7, false, 2, vB); //maybe optimized away, if not, call
-    cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
+    //If we can't ignore the NULL check
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        nullCheck(7, false, 2, vB); //maybe optimized away, if not, call
+        cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
+    }
+
+#if !defined(WITH_JIT)
+    move_mem_to_reg(OpndSize_32, offInstField_byteOffset, PhysicalReg_EAX, true, 8, false); //byte offest
+#endif
     if(flag == IGET) {
         move_mem_scale_to_reg(OpndSize_32, 7, false, 8, false, 1, 9, false);
         set_virtual_reg(vA, OpndSize_32, 9, false);
@@ -472,7 +613,7 @@ int iget_iput_common_nohelper(int tmp, int flag, u2 vA, u2 vB, int isObj, bool i
             load_effective_addr(-16, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
             move_reg_to_mem(OpndSize_32, 9, false, 12, PhysicalReg_ESP, true); //field
             move_reg_to_mem(OpndSize_32, 7, false, 8, PhysicalReg_ESP, true); //object
-            move_imm_to_mem(OpndSize_32, tmp, 4, PhysicalReg_ESP, true); //field
+            move_imm_to_mem(OpndSize_32, referenceIndex, 4, PhysicalReg_ESP, true); //field
             move_imm_to_mem(OpndSize_32, 0, 0, PhysicalReg_ESP, true); //iget
             call_dvmDebugIgetIput();
             load_effective_addr(16, PhysicalReg_ESP, true, PhysicalReg_ESP, true);
@@ -522,164 +663,281 @@ int iget_iput_common_nohelper(int tmp, int flag, u2 vA, u2 vB, int isObj, bool i
     ///////////////////////////
     return 0;
 }
+
+#if 0 /* Code is deprecated. If reenabled, needs additional parameter
+         for optimization flags*/
 //! wrapper to call either iget_iput_common_helper or iget_iput_common_nohelper
 
 //!
 int iget_iput_common(int tmp, int flag, u2 vA, u2 vB, int isObj, bool isVolatile) {
     return iget_iput_common_nohelper(tmp, flag, vA, vB, isObj, isVolatile);
 }
+#endif
 #undef P_GPR_1
 #undef P_GPR_2
 #undef P_GPR_3
 #undef P_SCRATCH_1
-//! lower bytecode IGET by calling iget_iput_common
 
-//!
-int op_iget() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    u2 tmp = FETCH(1);
-    int retval = iget_iput_common(tmp, IGET, vA, vB, 0, false);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes iget, iget-boolean,
+ * iget-byte, iget-char, iget-short, and iget/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET
+            || mir->dalvikInsn.opcode == OP_IGET_BOOLEAN
+            || mir->dalvikInsn.opcode == OP_IGET_BYTE
+            || mir->dalvikInsn.opcode == OP_IGET_CHAR
+            || mir->dalvikInsn.opcode == OP_IGET_SHORT
+            || mir->dalvikInsn.opcode == OP_IGET_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    u2 referenceIndex = mir->dalvikInsn.vC;
+    int retval = iget_iput_common_nohelper(referenceIndex, IGET, vA, vB, false,
+            false, mir);
     return retval;
 }
-//! lower bytecode IGET_WIDE by calling iget_iput_common
 
-//!
-int op_iget_wide(bool isVolatile) {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    u2 tmp = FETCH(1);
-    int retval = iget_iput_common(tmp, IGET_WIDE, vA, vB, 0, isVolatile);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes iget-wide
+ * and iget-wide/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_wide(const MIR * mir, bool isVolatile) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_WIDE
+            || mir->dalvikInsn.opcode == OP_IGET_WIDE_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    u2 referenceIndex = mir->dalvikInsn.vC;
+    int retval = iget_iput_common_nohelper(referenceIndex, IGET_WIDE, vA, vB,
+            false, isVolatile, mir);
     return retval;
 }
-//! lower bytecode IGET_OBJECT by calling iget_iput_common
 
-//!
-int op_iget_object() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    u2 tmp = FETCH(1);
-    int retval = iget_iput_common(tmp, IGET, vA, vB, 1, false);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes iget-object
+ * and iget-object/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_object(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_OBJECT
+            || mir->dalvikInsn.opcode == OP_IGET_OBJECT_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    u2 referenceIndex = mir->dalvikInsn.vC;
+    int retval = iget_iput_common_nohelper(referenceIndex, IGET, vA, vB, true,
+            false, mir);
     return retval;
 }
-//! lower bytecode IGET_BOOLEAN by calling iget_iput_common
 
-//!
-int op_iget_boolean() {
-    return op_iget();
+/**
+ * @brief Generate native code for bytecode iget-boolean
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_boolean(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_BOOLEAN);
+    return op_iget(mir);
 }
-//! lower bytecode IGET_BYTE by calling iget_iput_common
 
-//!
-int op_iget_byte() {
-    return op_iget();
+/**
+ * @brief Generate native code for bytecode iget-byte
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_byte(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_BYTE);
+    return op_iget(mir);
 }
-//! lower bytecode IGET_CHAR by calling iget_iput_common
 
-//!
-int op_iget_char() {
-    return op_iget();
+/**
+ * @brief Generate native code for bytecode iget-char
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_char(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_CHAR);
+    return op_iget(mir);
 }
-//! lower bytecode IGET_SHORT by calling iget_iput_common
 
-//!
-int op_iget_short() {
-    return op_iget();
+/**
+ * @brief Generate native code for bytecode iget-short
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_short(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_SHORT);
+    return op_iget(mir);
 }
-//! lower bytecode IPUT by calling iget_iput_common
 
-//!
-int op_iput() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    u2 tmp = FETCH(1);
-    int retval = iget_iput_common(tmp, IPUT, vA, vB, 0, false);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes iput, iput-boolean,
+ * iput-byte, iput-char, iput-short, and iput/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT
+            || mir->dalvikInsn.opcode == OP_IPUT_BOOLEAN
+            || mir->dalvikInsn.opcode == OP_IPUT_BYTE
+            || mir->dalvikInsn.opcode == OP_IPUT_CHAR
+            || mir->dalvikInsn.opcode == OP_IPUT_SHORT
+            || mir->dalvikInsn.opcode == OP_IPUT_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    u2 referenceIndex = mir->dalvikInsn.vC;
+    int retval = iget_iput_common_nohelper(referenceIndex, IPUT, vA, vB, false,
+            false, mir);
     return retval;
 }
-//! lower bytecode IPUT_WIDE by calling iget_iput_common
 
-//!
-int op_iput_wide(bool isVolatile) {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    u2 tmp = FETCH(1);
-    int retval = iget_iput_common(tmp, IPUT_WIDE, vA, vB, 0, isVolatile);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes iput-wide
+ * and iput-wide/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_wide(const MIR * mir, bool isVolatile) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_WIDE
+            || mir->dalvikInsn.opcode == OP_IPUT_WIDE_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    u2 referenceIndex = mir->dalvikInsn.vC;
+    int retval = iget_iput_common_nohelper(referenceIndex, IPUT_WIDE, vA, vB,
+            false, isVolatile, mir);
     return retval;
 }
-//! lower bytecode IPUT_OBJECT by calling iget_iput_common
 
-//!
-int op_iput_object() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst);
-    u2 tmp = FETCH(1);
-    int retval = iget_iput_common(tmp, IPUT, vA, vB, 1, false);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes iput-object
+ * and iput-object/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_object(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_OBJECT
+            || mir->dalvikInsn.opcode == OP_IPUT_OBJECT_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB;
+    u2 referenceIndex = mir->dalvikInsn.vC;
+    int retval = iget_iput_common_nohelper(referenceIndex, IPUT, vA, vB, true,
+            false, mir);
     return retval;
 }
-//! lower bytecode IPUT_BOOLEAN by calling iget_iput_common
 
-//!
-int op_iput_boolean() {
-    return op_iput();
+/**
+ * @brief Generate native code for bytecode iput-boolean
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_boolean(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_BOOLEAN);
+    return op_iput(mir);
 }
-//! lower bytecode IPUT_BYTE by calling iget_iput_common
 
-//!
-int op_iput_byte() {
-    return op_iput();
+/**
+ * @brief Generate native code for bytecode iput-byte
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_byte(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_BYTE);
+    return op_iput(mir);
 }
-//! lower bytecode IPUT_CHAR by calling iget_iput_common
 
-//!
-int op_iput_char() {
-    return op_iput();
+/**
+ * @brief Generate native code for bytecode iput-char
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_char(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_CHAR);
+    return op_iput(mir);
 }
-//! lower bytecode IPUT_SHORT by calling iget_iput_common
 
-//!
-int op_iput_short() {
-    return op_iput();
+/**
+ * @brief Generate native code for bytecode iput-short
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_short(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_SHORT);
+    return op_iput(mir);
 }
 
 #define P_GPR_1 PhysicalReg_EBX
 #define P_GPR_2 PhysicalReg_ECX
 #define P_GPR_3 PhysicalReg_EDX //used by helper only
 
-//! common section to lower IGET & IPUT
+/**
+ * @brief Common function for generating native code for sget and sput variants
+ * @details Includes null check
+ * @param flag type of static access
+ * @param vA value register
+ * @param referenceIndex static field index
+ * @param isObj true iff mnemonic is object variant
+ * @param isVolatile iff mnemonic is volatile variant
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int sget_sput_common(StaticAccess flag, u2 vA, u2 referenceIndex, bool isObj,
+        bool isVolatile, const MIR * mir) {
+#ifdef INC_NCG_O0
+    if(gDvm.helper_switch[5]) {
+        return sget_sput_common_helper(flag, vA, referenceIndex, isObj);
+    }
+    else
+#endif
+    {
+        //call assembly static_field_resolve
+        //no exception
+        //glue: get_res_fields
+        //hard-coded: eax (one version?)
+        //////////////////////////////////////////
+#if !defined(WITH_JIT)
+        scratchRegs[2] = PhysicalReg_EDX; scratchRegs[3] = PhysicalReg_Null;
+        scratchRegs[0] = PhysicalReg_SCRATCH_1; scratchRegs[1] = PhysicalReg_SCRATCH_2;
+        get_res_fields(3, false);
+        move_mem_to_reg(OpndSize_32, referenceIndex*4, 3, false, PhysicalReg_EAX, true);
+        compare_imm_reg(OpndSize_32, 0, PhysicalReg_EAX, true); //InstanceField
+        conditional_jump(Condition_NE, ".sget_sput_resolved", true);
+        rememberState(1);
+        move_imm_to_reg(OpndSize_32, referenceIndex, PhysicalReg_EAX, true);
 
-//! It will use helper function sget_helper if the switch is on
-int sget_sput_common(int flag, u2 vA, u2 tmp, bool isObj, bool isVolatile) {
-    //call assembly static_field_resolve
-    //no exception
-    //glue: get_res_fields
-    //hard-coded: eax (one version?)
-    //////////////////////////////////////////
-#ifdef WITH_JIT_INLINING
-    const Method *method = (traceCurrentMIR->OptimizationFlags & MIR_CALLEE) ? traceCurrentMIR->meta.calleeMethod : currentMethod;
-    void *fieldPtr = (void*)
-        (method->clazz->pDvmDex->pResFields[tmp]);
+        export_pc(); //use %edx
+        call_helper_API(".static_field_resolve");
+        transferToState(1);
+        if (insertLabel(".sget_sput_resolved", true) == -1)
+            return -1;
 #else
-    void *fieldPtr = (void*)
-        (currentMethod->clazz->pDvmDex->pResFields[tmp]);
+#ifdef WITH_JIT_INLINING
+        const Method *method =
+                (mir->OptimizationFlags & MIR_CALLEE) ?
+                        mir->meta.calleeMethod : currentMethod;
+        void *fieldPtr =
+                (void*) (method->clazz->pDvmDex->pResFields[referenceIndex]);
+#else
+        void *fieldPtr = (void*)
+              (currentMethod->clazz->pDvmDex->pResFields[referenceIndex]);
 #endif
 
-    /* Usually, fieldPtr should not be null. The interpreter should resolve
-     * it before we come here, or not allow this opcode in a trace. However,
-     * we can be in a loop trace and this opcode might have been picked up
-     * by exhaustTrace. Sending a -1 here will terminate the loop formation
-     * and fall back to normal trace, which will not have this opcode.
-     */
-    if (!fieldPtr) {
-        return -1;
-    }
+        /* Usually, fieldPtr should not be null. The interpreter should resolve
+         * it before we come here, or not allow this opcode in a trace. However,
+         * we can be in a loop trace and this opcode might have been picked up
+         * by exhaustTrace. Sending a -1 here will terminate the loop formation
+         * and fall back to normal trace, which will not have this opcode.
+         */
+        if (!fieldPtr) {
+            ALOGE("JIT_ERROR: Unresolved fieldPtr at sget_sput_common");
+            SET_JIT_ERROR(kJitErrorUnresolvedField);
+            return -1;
+        }
 
     move_imm_to_reg(OpndSize_32, (int)fieldPtr, PhysicalReg_EAX, true);
+#endif
     if(flag == SGET) {
         move_mem_to_reg(OpndSize_32, offStaticField_value, PhysicalReg_EAX, true, 7, false); //access field
         set_virtual_reg(vA, OpndSize_32, 7, false);
@@ -727,217 +985,359 @@ int sget_sput_common(int flag, u2 vA, u2 tmp, bool isObj, bool isVolatile) {
         }
     }
     //////////////////////////////////////////////
-    return 0;
+  }
+  return 0;
 }
 #undef P_GPR_1
 #undef P_GPR_2
 #undef P_GPR_3
-//! lower bytecode SGET by calling sget_sput_common
 
-//!
-int op_sget() {
-    u2 vA = INST_AA(inst);
-    u2 tmp = FETCH(1);
-    int retval = sget_sput_common(SGET, vA, tmp, false, false);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes sget, sget-boolean,
+ * sget-byte, sget-char, sget-object, sget-short, sget/volatile and sget-object/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sget(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SGET
+            || mir->dalvikInsn.opcode == OP_SGET_BOOLEAN
+            || mir->dalvikInsn.opcode == OP_SGET_BYTE
+            || mir->dalvikInsn.opcode == OP_SGET_CHAR
+            || mir->dalvikInsn.opcode == OP_SGET_OBJECT
+            || mir->dalvikInsn.opcode == OP_SGET_SHORT
+            || mir->dalvikInsn.opcode == OP_SGET_VOLATILE
+            || mir->dalvikInsn.opcode == OP_SGET_OBJECT_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 referenceIndex = mir->dalvikInsn.vB;
+    int retval = sget_sput_common(SGET, vA, referenceIndex, false, false, mir);
     return retval;
 }
-//! lower bytecode SGET_WIDE by calling sget_sput_common
 
-//!
-int op_sget_wide(bool isVolatile) {
-    u2 vA = INST_AA(inst);
-    u2 tmp = FETCH(1);
-    int retval = sget_sput_common(SGET_WIDE, vA, tmp, false, isVolatile);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes sget-wide
+ * and sget-wide/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sget_wide(const MIR * mir, bool isVolatile) {
+    assert(mir->dalvikInsn.opcode == OP_SGET_WIDE
+            || mir->dalvikInsn.opcode == OP_SGET_WIDE_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 referenceIndex = mir->dalvikInsn.vB;
+    int retval = sget_sput_common(SGET_WIDE, vA, referenceIndex, false,
+            isVolatile, mir);
     return retval;
 }
-//! lower bytecode SGET_OBJECT by calling sget_sput_common
 
-//!
-int op_sget_object() {
-    return op_sget();
+/**
+ * @brief Generate native code for bytecodes sget-object and
+ * sget-object/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sget_object(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SGET_OBJECT
+            || mir->dalvikInsn.opcode == OP_SGET_OBJECT_VOLATILE);
+    return op_sget(mir);
 }
-//! lower bytecode SGET_BOOLEAN by calling sget_sput_common
 
-//!
-int op_sget_boolean() {
-    return op_sget();
+/**
+ * @brief Generate native code for bytecode sget-boolean
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sget_boolean(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SGET_BOOLEAN);
+    return op_sget(mir);
 }
-//! lower bytecode SGET_BYTE by calling sget_sput_common
 
-//!
-int op_sget_byte() {
-    return op_sget();
+/**
+ * @brief Generate native code for bytecode sget-byte
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sget_byte(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SGET_BYTE);
+    return op_sget(mir);
 }
-//! lower bytecode SGET_CHAR by calling sget_sput_common
 
-//!
-int op_sget_char() {
-    return op_sget();
+/**
+ * @brief Generate native code for bytecode sget-char
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sget_char(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SGET_CHAR);
+    return op_sget(mir);
 }
-//! lower bytecode SGET_SHORT by calling sget_sput_common
 
-//!
-int op_sget_short() {
-    return op_sget();
+/**
+ * @brief Generate native code for bytecode sget-short
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sget_short(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SGET_SHORT);
+    return op_sget(mir);
 }
-//! lower bytecode SPUT by calling sget_sput_common
 
-//!
-int op_sput(bool isObj) {
-    u2 vA = INST_AA(inst);
-    u2 tmp = FETCH(1);
-    int retval = sget_sput_common(SPUT, vA, tmp, isObj, false);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes sput, sput-boolean,
+ * sput-byte, sput-char, sput-object, sput-short, sput/volatile and sput-object/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sput(const MIR * mir, bool isObj) {
+    assert(mir->dalvikInsn.opcode == OP_SPUT
+            || mir->dalvikInsn.opcode == OP_SPUT_BOOLEAN
+            || mir->dalvikInsn.opcode == OP_SPUT_BYTE
+            || mir->dalvikInsn.opcode == OP_SPUT_CHAR
+            || mir->dalvikInsn.opcode == OP_SPUT_OBJECT
+            || mir->dalvikInsn.opcode == OP_SPUT_SHORT
+            || mir->dalvikInsn.opcode == OP_SPUT_VOLATILE
+            || mir->dalvikInsn.opcode == OP_SPUT_OBJECT_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 referenceIndex = mir->dalvikInsn.vB;
+    int retval = sget_sput_common(SPUT, vA, referenceIndex, isObj, false, mir);
     return retval;
 }
-//! lower bytecode SPUT_WIDE by calling sget_sput_common
 
-//!
-int op_sput_wide(bool isVolatile) {
-    u2 vA = INST_AA(inst);
-    u2 tmp = FETCH(1);
-    int retval = sget_sput_common(SPUT_WIDE, vA, tmp, false, isVolatile);
-    rPC += 2;
+/**
+ * @brief Generate native code for bytecodes sput-wide
+ * and sput-wide/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sput_wide(const MIR * mir, bool isVolatile) {
+    assert(mir->dalvikInsn.opcode == OP_SPUT_WIDE
+            || mir->dalvikInsn.opcode == OP_SPUT_WIDE_VOLATILE);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 referenceIndex = mir->dalvikInsn.vB;
+    int retval = sget_sput_common(SPUT_WIDE, vA, referenceIndex, false,
+            isVolatile, mir);
     return retval;
 }
-//! lower bytecode SPUT_OBJECT by calling sget_sput_common
 
-//!
-int op_sput_object() {
-    return op_sput(true);
+/**
+ * @brief Generate native code for bytecodes sput-object and
+ * sput-object/volatile
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sput_object(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SPUT_OBJECT
+            || mir->dalvikInsn.opcode == OP_SPUT_OBJECT_VOLATILE);
+    return op_sput(mir, true /*isObj*/);
 }
-//! lower bytecode SPUT_OBJECT by calling sget_sput_common
 
-//!
-int op_sput_boolean() {
-    return op_sput(false);
+/**
+ * @brief Generate native code for bytecode sput-boolean
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sput_boolean(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SPUT_BOOLEAN);
+    return op_sput(mir, false /*isObj*/);
 }
-//! lower bytecode SPUT_BOOLEAN by calling sget_sput_common
 
-//!
-int op_sput_byte() {
-    return op_sput(false);
+/**
+ * @brief Generate native code for bytecode sput-byte
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sput_byte(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SPUT_BYTE);
+    return op_sput(mir, false /*isObj*/);
 }
-//! lower bytecode SPUT_BYTE by calling sget_sput_common
 
-//!
-int op_sput_char() {
-    return op_sput(false);
+/**
+ * @brief Generate native code for bytecode sput-char
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sput_char(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SPUT_CHAR);
+    return op_sput(mir, false /*isObj*/);
 }
-//! lower bytecode SPUT_SHORT by calling sget_sput_common
 
-//!
-int op_sput_short() {
-    return op_sput(false);
+/**
+ * @brief Generate native code for bytecode sput-short
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_sput_short(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_SPUT_SHORT);
+    return op_sput(mir, false /*isObj*/);
 }
 #define P_GPR_1 PhysicalReg_EBX
 #define P_GPR_2 PhysicalReg_ECX
-//! lower bytecode IGET_QUICK
 
-//!
-int op_iget_quick() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst); //object
-    u2 tmp = FETCH(1);
+/**
+ * @brief Generate native code for bytecodes iget-quick and iget-object-quick
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_quick(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_QUICK
+            || mir->dalvikInsn.opcode == OP_IGET_OBJECT_QUICK);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB; //object
+    u2 fieldByteOffset = mir->dalvikInsn.vC;
 
-    requestVRFreeDelay(vB,VRDELAY_NULLCHECK); // Request VR delay before transfer to temporary
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        requestVRFreeDelay(vB,VRDELAY_NULLCHECK); // Request VR delay before transfer to temporary
+    }
+
     get_virtual_reg(vB, OpndSize_32, 1, false);
-    nullCheck(1, false, 1, vB); //maybe optimized away, if not, call
-    cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
 
-    move_mem_to_reg(OpndSize_32, tmp, 1, false, 2, false);
+    //If we can't ignore the NULL check
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        nullCheck(1, false, 1, vB); //maybe optimized away, if not, call
+        cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
+    }
+
+    move_mem_to_reg(OpndSize_32, fieldByteOffset, 1, false, 2, false);
     set_virtual_reg(vA, OpndSize_32, 2, false);
-    rPC += 2;
     return 0;
 }
 #undef P_GPR_1
 #undef P_GPR_2
 #define P_GPR_1 PhysicalReg_EBX
-//! lower bytecode IGET_WIDE_QUICK
 
-//!
-int op_iget_wide_quick() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst); //object
-    u2 tmp = FETCH(1);
+/**
+ * @brief Generate native code for bytecode
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_wide_quick(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_WIDE_QUICK);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB; //object
+    u2 fieldByteOffset = mir->dalvikInsn.vC;
 
-    requestVRFreeDelay(vB,VRDELAY_NULLCHECK); // Request VR delay before transfer to temporary
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        requestVRFreeDelay(vB,VRDELAY_NULLCHECK); // Request VR delay before transfer to temporary
+    }
+
     get_virtual_reg(vB, OpndSize_32, 1, false);
-    nullCheck(1, false, 1, vB); //maybe optimized away, if not, call
-    cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
 
-    move_mem_to_reg(OpndSize_64, tmp, 1, false, 1, false);
+    //If we can't ignore the NULL check
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        nullCheck(1, false, 1, vB); //maybe optimized away, if not, call
+        cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
+    }
+
+    move_mem_to_reg(OpndSize_64, fieldByteOffset, 1, false, 1, false);
     set_virtual_reg(vA, OpndSize_64, 1, false);
-    rPC += 2;
     return 0;
 }
 #undef P_GPR_1
-//! lower bytecode IGET_OBJECT_QUICK
 
-//!
-int op_iget_object_quick() {
-    return op_iget_quick();
+/**
+ * @brief Generate native code for bytecode
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iget_object_quick(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IGET_OBJECT_QUICK);
+    return op_iget_quick(mir);
 }
 #define P_GPR_1 PhysicalReg_EBX
 #define P_GPR_2 PhysicalReg_ECX
-//! lower bytecode IPUT_QUICK
 
-//!
-int iput_quick_common(bool isObj) {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst); //object
-    u2 tmp = FETCH(1);
+/**
+ *
+ * @param mir
+ * @param isObj
+ * @return
+ */
+int iput_quick_common(const MIR * mir, bool isObj) {
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB; //object
+    u2 fieldByteOffset = mir->dalvikInsn.vC;
 
     // Request VR delay before transfer to temporary. Only vB needs delay.
     // vA will have non-zero reference count since transfer to temporary for
     // it happens after null check, thus no delay is needed.
-    requestVRFreeDelay(vB,VRDELAY_NULLCHECK);
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        requestVRFreeDelay(vB,VRDELAY_NULLCHECK);
+    }
+
     get_virtual_reg(vB, OpndSize_32, 1, false);
-    nullCheck(1, false, 1, vB); //maybe optimized away, if not, call
-    cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
+
+    //If we can't ignore the NULL check
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        nullCheck(1, false, 1, vB); //maybe optimized away, if not, call
+        cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
+    }
 
     get_virtual_reg(vA, OpndSize_32, 2, false);
-    move_reg_to_mem(OpndSize_32, 2, false, tmp, 1, false);
+    move_reg_to_mem(OpndSize_32, 2, false, fieldByteOffset, 1, false);
     if(isObj) {
         markCard(2/*valReg*/, 1, false, 11, false);
     }
-    rPC += 2;
     return 0;
 }
-int op_iput_quick() {
-    return iput_quick_common(false);
+/**
+ * @brief Generate native code for bytecode
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_quick(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_QUICK);
+    return iput_quick_common(mir, false /*isObj*/);
 }
 #undef P_GPR_1
 #undef P_GPR_2
 #define P_GPR_1 PhysicalReg_EBX
-//! lower bytecode IPUT_WIDE_QUICK
 
-//!
-int op_iput_wide_quick() {
-    u2 vA = INST_A(inst);
-    u2 vB = INST_B(inst); //object
-    u2 tmp = FETCH(1); //byte offset
+/**
+ * @brief Generate native code for bytecode
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_wide_quick(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_WIDE_QUICK);
+    u2 vA = mir->dalvikInsn.vA;
+    u2 vB = mir->dalvikInsn.vB; //object
+    u2 fieldByteOffset = mir->dalvikInsn.vC;
 
     // Request VR delay before transfer to temporary. Only vB needs delay.
     // vA will have non-zero reference count since transfer to temporary for
     // it happens after null check, thus no delay is needed.
-    requestVRFreeDelay(vB,VRDELAY_NULLCHECK);
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        requestVRFreeDelay(vB,VRDELAY_NULLCHECK);
+    }
+
     get_virtual_reg(vB, OpndSize_32, 1, false);
-    nullCheck(1, false, 1, vB); //maybe optimized away, if not, call
-    cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
+
+    //If we can't ignore the NULL check
+    if((mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK) == 0)
+    {
+        nullCheck(1, false, 1, vB); //maybe optimized away, if not, call
+        cancelVRFreeDelayRequest(vB,VRDELAY_NULLCHECK);
+    }
 
     get_virtual_reg(vA, OpndSize_64, 1, false);
-    move_reg_to_mem(OpndSize_64, 1, false, tmp, 1, false);
-    rPC += 2;
+    move_reg_to_mem(OpndSize_64, 1, false, fieldByteOffset, 1, false);
     return 0;
 }
 #undef P_GPR_1
-//! lower bytecode IPUT_OBJECT_QUICK
 
-//!
-int op_iput_object_quick() {
-    return iput_quick_common(true);
+/**
+ * @brief Generate native code for bytecode
+ * @param mir bytecode representation
+ * @return value >= 0 when handled
+ */
+int op_iput_object_quick(const MIR * mir) {
+    assert(mir->dalvikInsn.opcode == OP_IPUT_OBJECT_QUICK);
+    return iput_quick_common(mir, true /*isObj*/);
 }
 

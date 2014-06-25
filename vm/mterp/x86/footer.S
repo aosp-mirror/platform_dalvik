@@ -299,12 +299,12 @@ common_Profile:
     movl   $$kJitTSelectRequest,%eax
     # On entry, eax<- jitState, rPC valid
 common_selectTrace:
-    mov         %ebx, EBX_SPILL(%ebp)
+    SPILL_TMP1(%ebx)
     movl        rSELF, %ebx
     movzwl      offThread_subMode(%ebx), %ecx
     and         $$(kSubModeJitTraceBuild | kSubModeJitSV), %ecx
     jne         3f                     # already doing JIT work, continue
-    movl        %eax, offThread_jitState(%ebx)
+    movb        %al, offThread_jitState(%ebx)
     movl        rSELF, %eax
     movl       %eax, OUT_ARG0(%esp)
 
@@ -318,7 +318,7 @@ common_selectTrace:
    SAVE_PC_FP_TO_SELF %ecx
    call dvmJitCheckTraceRequest
 3:
-   mov          EBX_SPILL(%ebp), %ebx
+   UNSPILL_TMP1(%ebx)
    FETCH_INST
    movl rSELF, %ecx
    movl offThread_curHandlerTable(%ecx), rIBASE
@@ -326,12 +326,12 @@ common_selectTrace:
    GOTO_NEXT
 
 common_selectTrace2:
-    mov         %ebx, EBX_SPILL(%ebp)
+    SPILL_TMP1(%ebx)
     movl        rSELF, %ebx
     movl        %ebx, OUT_ARG0(%esp)
-    movl        %eax, offThread_jitState(%ebx)
+    movb        %al, offThread_jitState(%ebx)
     movzwl      offThread_subMode(%ebx), %ecx
-    mov         EBX_SPILL(%ebp), %ebx
+    UNSPILL_TMP1(%ebx)
     and         (kSubModeJitTraceBuild | kSubModeJitSV), %ecx
     jne         3f                     # already doing JIT work, continue
 
@@ -358,7 +358,8 @@ common_selectTrace2:
 /*
  * For the invoke codes we need to know what register holds the "this" pointer. However
  * it seems the this pointer is assigned consistently most times it is in %ecx but other
- * times it is in OP_INVOKE_INTERFACE, OP_INVOKE_SUPER_QUICK, or OP_INVOKE_VIRTUAL_QUICK.
+ * times it is in OP_INVOKE_INTERFACE_JUMBO OP_INVOKE_INTERFACE OP_INVOKE_SUPER_QUICK and
+ * OP_INVOKE_VIRTUAL_QUICK
 */
 
 /*
@@ -546,7 +547,7 @@ common_invokeMethodNoRange:
     movl        %eax, offThread_method(%ecx) # self->method<- methodToCall
     movl        %edx, offThread_methodClassDex(%ecx) # self->methodClassDex<- method->clazz->pDvmDex
     movl        offMethod_insns(%eax), rPC # rPC<- methodToCall->insns
-    movl        $$1, offThread_debugIsMethodEntry(%ecx)
+    movb        $$1, offThread_debugIsMethodEntry(%ecx)
     movl        LOCAL1_OFFSET(%ebp), rFP # rFP<- newFP
     movl        rFP, offThread_curFrame(%ecx) # curFrame<-newFP
     movl        offThread_curHandlerTable(%ecx),rIBASE
@@ -650,58 +651,50 @@ common_invokeMethodNoRange:
 /*
  * Common code for handling a return instruction
  */
+    .balign 16
 common_returnFromMethod:
     movl    rSELF, %ecx
     SAVEAREA_FROM_FP %eax                       # %eax<- saveArea(old)
     cmpw    $$0, offThread_subMode(%ecx)          # special action needed?
-    jne     19f                                   # go if so
-14:
+    jne     .common_returnFromMethod_submodeHandler # go if so
+    // othewise fall through
 
-    movl        offStackSaveArea_prevFrame(%eax), rFP # rFP<- saveArea->PrevFrame
-    movl        (offStackSaveArea_method - sizeofStackSaveArea)(rFP), rINST # rINST<- method we are returning to
-    cmpl        $$0, rINST               # check for break frame
-    je          common_gotoBail         # bail if break frame
-    movl        offThread_curHandlerTable(%ecx),rIBASE
+    // When we get to this point, %ecx must hold self Thread pointer
+    // and %eax must hold the save area
+.common_returnFromMethod_resume:
+    movl        (offStackSaveArea_prevFrame - sizeofStackSaveArea)(rFP), rFP # rFP<- saveArea->PrevFrame
     movl        offStackSaveArea_savedPc(%eax), rPC # rPC<- saveAreaOld->savedPc
 #if defined(WITH_JIT)
-    movl        offStackSaveArea_returnAddr(%eax), %ecx
+    movl        offStackSaveArea_returnAddr(%eax), %eax
 #endif
-    movl        rSELF, %eax
-    movl        rINST, offThread_method(%eax) # glue->method<- newSave->method
+    movl        (offStackSaveArea_method - sizeofStackSaveArea)(rFP), rINST # rINST<- method we are returning to
+    movl        rFP, offThread_curFrame(%ecx) # glue->self->curFrame<- rFP
+    testl       rINST, rINST               # check for break frame
+    je          common_gotoBail         # bail if break frame
+
+    movl        rINST, offThread_method(%ecx) # glue->method<- newSave->method
     movl        offMethod_clazz(rINST), rINST # rINST<- method->clazz
-    movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- rFP
 #if defined(WITH_JIT)
-    //update self->offThread_inJitCodeCache
-    movl        %ecx, offThread_inJitCodeCache(%eax)
+    movl        %eax, offThread_inJitCodeCache(%ecx)
 #endif
     movl        offClassObject_pDvmDex(rINST), rINST # rINST<- method->clazz->pDvmDex
-    movl        rINST, offThread_methodClassDex(%eax) # glue->pDvmDex<- method->clazz->pDvmDex
+    movl        rINST, offThread_methodClassDex(%ecx) # glue->pDvmDex<- method->clazz->pDvmDex
 #if defined(WITH_JIT)
-    cmp         $$0, %ecx
-    je          .returnToBC
-    movl        %ecx, %eax
+    testl       %eax, %eax
+    je          .common_returnFromMethod_startInterpreting
     jmp         *%eax
 #endif
+    // fallthrough so we can execute next bytecode
 
-.returnToBC:
-
-#if defined(WITH_JIT)
-    FETCH_INST_OPCODE  3, %ecx                 # %eax<- next instruction hi; fetch, advance
-    // %ecx has the opcode
-    addl         $$6, rPC               # 3*2 = 6
-    SPILL_TMP1   (%ecx)
-    movl         rSELF, %ecx
-    FETCH_INST
-    UNSPILL_TMP1   (%ecx)
-    movzbl      1(rPC), rINST
-    jmp     *(rIBASE,%ecx,4)
-#else
-    FETCH_INST_WORD 3
+.common_returnFromMethod_startInterpreting:
+    // Restore handler table
+    movl        offThread_curHandlerTable(%ecx),rIBASE
+    // Step over the invoke
+    FETCH_INST_OPCODE 3 %eax
     ADVANCE_PC 3
-    GOTO_NEXT
-#endif
+    GOTO_NEXT_R %eax
 
-19:
+.common_returnFromMethod_submodeHandler:
     /*
      * Handle special subMode actions
      * On entry, rFP: prevFP, %ecx: self, %eax: saveArea
@@ -713,9 +706,111 @@ common_returnFromMethod:
     movl     %ecx, OUT_ARG0(%esp)             # parameter self
     call     dvmReportReturn                  # (self)
     UNSPILL_TMP1(%ebx)
-    movl     rSELF, %ecx                      # restore self
     SAVEAREA_FROM_FP %eax                     # restore saveArea
-    jmp      14b
+    movl     rSELF, %ecx                      # restore self
+    jmp      .common_returnFromMethod_resume   # Resume returning from method
+
+#if defined(WITH_JIT)
+    .balign 16
+    // This implementation is a superset of implementation of .common_returnFromMethod_resume
+    .global dvmJitHelper_returnFromMethod
+dvmJitHelper_returnFromMethod:
+    // When we get to this point, %ecx must hold self Thread pointer
+    // %edx must hold the save area, and rFP must hold previous frame.
+
+    // Update thread's current frame
+    movl     rFP, offThread_curFrame(%ecx)
+    // Since we have updated the frame pointer, we must use edx now to
+    // access the old save area
+    movl     offStackSaveArea_returnAddr(%edx), %eax
+    // Put the method we are return to in rINST
+    movl     (offStackSaveArea_method - sizeofStackSaveArea)(rFP), rINST
+
+    // Check for break frame and bail if necessary
+    testl    rINST, rINST
+    jz       .jitHelper_returnFromMethod_bail
+
+    // Finish up return bookkeeping
+    movl     rINST, offThread_method(%ecx) # self->method <- newSave->method
+    movl     offMethod_clazz(rINST), rINST # rINST <- method->clazz
+    // Update PC with the invoke bytecode only after bailing
+    movl     offStackSaveArea_savedPc(%edx), rPC # rPC <- saveAreaOld->savedPc
+    movl     %eax, offThread_inJitCodeCache(%ecx) # self->inJitCodeCache <- returnAddr
+    movl     offClassObject_pDvmDex(rINST), rINST # rINST <- method->clazz->pDvmDex
+    movl     rINST, offThread_methodClassDex(%ecx) # self->methodClassDex <- method->clazz->pDvmDex
+
+    // Technically here we should check break flags, but x86 JIT doesn't
+    // support single step. Break flags are always set to kInterpSafePoint
+    // when Thread.suspendCount is non-zero, thus this check is okay.
+    cmpl     $$0,offThread_suspendCount(%ecx)
+    // If suspend count is non-zero, we should chain to native trace
+    // directly. However, in order to stay consistent with ARM implementation
+    // which jumps to dvmJitToInterpNoChainNoProfile even if break flags are
+    // non-zero, look for a native trace head before deciding to interpret.
+    jnz      .jitHelper_returnFromMethod_lookForNativeTrace
+
+    // Do we have a native trace to return to?
+    testl    %eax, %eax
+#ifndef WITH_SELF_VERIFICATION
+    // At this point, if return address is zero, we can look for a native trace.
+    jz       .jitHelper_returnFromMethod_lookForNativeTrace
+#else
+    // If we have self verification, we need to go to interpreter.
+    // Technically, we shouldn't even consider returning to native trace.
+    // However, since testing for SV was done by still allowing returning
+    // to native address and since the effects of method inlining on SV
+    // are not clear, let's still allow the return to native trace. However,
+    // if return address is zero, instead of going to interpreter to start
+    // interpreting, go to special SV handler.
+    jz       .jitHelper_returnFromMethod_SVHandler
+#endif
+    jmp      *%eax
+
+.jitHelper_returnFromMethod_lookForNativeTrace:
+    // We know that our return address is zero, but we can still
+    // look for a native trace
+    leal     6(rPC),%edx              # Compute PC that skips over the invoke
+    movl     %edx,OUT_ARG0(%esp)
+    movl     %ecx,OUT_ARG1(%esp)      # Move self as parameter
+    call     dvmJitGetTraceAddrThread  # (pc, self)
+    movl     rSELF,%ecx                # Restore self
+    testl    %eax, %eax
+    movl     %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
+    jz       .jitHelper_returnFromMethod_startInterpreting
+    jmp      *%eax
+
+.jitHelper_returnFromMethod_startInterpreting:
+    // When we get here, ecx must hold thread pointer
+#ifdef WITH_JIT_TUNING
+    movl     $$kCallsiteInterpreted,OUT_ARG0(%esp)
+    call     dvmBumpNoChain
+    movl     rSELF,%ecx                # Restore self
+#endif
+    // Since we start interpreting, we are no longer in JITed code
+    movl     $$0, offThread_inJitCodeCache(%ecx)
+    // Restore handler table
+    movl     offThread_curHandlerTable(%ecx),rIBASE
+    // Step over the invoke
+    FETCH_INST_OPCODE 3 %eax
+    ADVANCE_PC 3
+    GOTO_NEXT_R %eax
+
+.jitHelper_returnFromMethod_bail:
+    movl     $$0, offThread_inJitCodeCache(%ecx) # If we bail, we are no longer in jit code cache
+    // PC should be that of the return bytecode before bailing
+    jmp      common_gotoBail         # bail if break frame
+
+#ifdef WITH_SELF_VERIFICATION
+// Handler for self verification
+.jitHelper_returnFromMethod_SVHandler:
+    // When we get here, the PC hasn't been updated to skip over the invoke.
+    // So we put it in eax because that's where dvmJitToInterpNoChainNoProfile
+    // expects it.
+    leal     6(rPC),%eax
+    jmp      dvmJitToInterpNoChainNoProfile
+#endif
+#endif
+
 
 
 /*
@@ -892,7 +987,7 @@ common_exceptionThrown:
     call       dvmAddTrackedAlloc      # don't let the exception be GCed
     UNSPILL_TMP1(%edx)
     movl       rSELF, %ecx
-    movl       offThread_subMode(%ecx), %eax    # get subMode flags
+    movzwl     offThread_subMode(%ecx), %eax    # get subMode flags
     movl       $$0, offThread_exception(%ecx)
 
     # Special subMode?
@@ -924,6 +1019,7 @@ common_exceptionThrown:
 
     movl       offThread_method(%ecx), %eax # %eax = self->method
     movl       offMethod_insns(%eax), %eax  # %eax = self->method->insn
+    # ldrh    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags  # TODO
     movl       rPC, %ecx
     subl       %eax, %ecx              # %ecx = pc - self->method->insn
     sar        $$1, %ecx                # adjust %ecx for code offset
@@ -936,7 +1032,7 @@ common_exceptionThrown:
 
     /* fix earlier stack overflow if necessary; may trash rFP */
     movl       rSELF, %ecx
-    cmpl       $$0, offThread_stackOverflowed(%ecx) # did we overflow?
+    cmpb       $$0, offThread_stackOverflowed(%ecx) # did we overflow?
     je         1f                         # no, skip ahead
     movl       %eax, rFP                  # save relPc result in rFP
     movl       %ecx, OUT_ARG0(%esp)       # Arg 0 = self
@@ -985,7 +1081,7 @@ common_exceptionThrown:
 .LnotCaughtLocally: # %edx = exception
     /* fix stack overflow if necessary */
     movl       rSELF, %ecx
-    movl       offThread_stackOverflowed(%ecx), %eax
+    movzbl     offThread_stackOverflowed(%ecx), %eax
     cmpl       $$0, %eax                   # did we overflow earlier?
     je         1f
     movl       %ecx, OUT_ARG0(%esp)

@@ -802,7 +802,7 @@ void dvmCheckJit(const u2* pc, Thread* self)
             /* Only add JIT support opcode to trace. End the trace if
              * this opcode is not supported.
              */
-            if (!dvmIsOpcodeSupportedByJit(decInsn.opcode)) {
+            if (!dvmIsOpcodeSupportedByJit(decInsn)) {
                 self->jitState = kJitTSelectEnd;
                 break;
             }

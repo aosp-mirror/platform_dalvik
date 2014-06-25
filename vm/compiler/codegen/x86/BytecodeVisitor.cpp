@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2010-2013 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@
 #include "Lower.h"
 #include "AnalysisO1.h"
 
+#if 0 /* This is dead code and has been disabled. If reenabling,
+         the MIR or opcode must be passed in as a parameter */
 //! Returns size of the current bytecode in u2 unit
 
 //!
@@ -409,36 +411,57 @@ int getByteCodeSize() { //uses inst, unit in u2
         return 2;
     }
 #endif
+    default:
+        ALOGE("JIT_ERROR: JIT does not support getting size of bytecode 0x%hx\n",
+                currentMIR->dalvikInsn.opcode);
+        SET_JIT_ERROR(kJitErrorUnsupportedBytecode);
+        assert(false && "All opcodes should be supported.");
+        break;
     }
     return -1;
 }
-//! reduces refCount of a virtual register
+#endif
 
+//! \brief reduces refCount of a virtual register
 //!
-void touchOneVR(u2 vA, LowOpndRegType type) {
+//! \param vA
+//! \param type
+//!
+//! \return -1 on error, 0 otherwise
+static int touchOneVR(u2 vA, LowOpndRegType type) {
     int index = searchCompileTable(LowOpndRegType_virtual | type, vA);
     if(index < 0) {
-        ALOGE("virtual reg %d type %d not found in touchOneVR", vA, type);
-        return;
+        ALOGE("JIT_ERROR: virtual reg %d type %d not found in touchOneVR\n", vA, type);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
     }
     compileTable[index].refCount--;
+    return 0;
 }
-//! reduces refCount of two virtual registers
 
+//! \brief reduces refCount of two virtual registers
 //!
-void touchTwoVRs(u2 vA, u2 vB, LowOpndRegType type) {
+//! \param vA
+//! \param vB
+//! \param type
+//!
+//! \return -1 if error, 0 otherwise
+static int touchTwoVRs(u2 vA, u2 vB, LowOpndRegType type) {
     int index = searchCompileTable(LowOpndRegType_virtual | type, vA);
     if(index < 0) {
-        ALOGE("virtual reg vA %d type %d not found in touchTwoVRs", vA, type);
-        return;
+        ALOGE("JIT_ERROR: virtual reg %d type %d not found in touchTwoVRs\n", vA, type);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
     }
     compileTable[index].refCount--;
     index = searchCompileTable(LowOpndRegType_virtual | type, vB);
     if(index < 0) {
-        ALOGE("virtual reg vB %d type %d not found in touchTwoVRs", vB, type);
-        return;
+        ALOGE("JIT_ERROR: virtual reg %d type %d not found in touchTwoVRs\n", vB, type);
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return -1;
     }
     compileTable[index].refCount--;
+    return 0;
 }
 int num_const_worklist;
 //! worklist to update constVRTable later
@@ -505,7 +528,11 @@ void setVRToConst(int regNum, OpndSize size, int* tmpValue) {
         constVRTable[indexH].isConst = true;
         constVRTable[indexH].value = tmpValue[1];
     }
-    if(num_const_vr > MAX_CONST_REG) ALOGE("constVRTable overflows");
+    if(num_const_vr > MAX_CONST_REG) {
+        ALOGE("JIT_ERROR: constVRTable overflows at setVRToConst");
+        SET_JIT_ERROR(kJitErrorRegAllocFailed);
+        return;
+    }
     invalidateVRDueToConst(regNum, size);
 }
 
@@ -523,13 +550,23 @@ void updateConstInfo(BasicBlock_O1* bb) {
         setVRToNonConst(constWorklist[k], OpndSize_32);
     }
 }
-//! check whether the current bytecode generates a const
 
-//! if yes, update constVRTable; otherwise, update constWorklist
-//! if a bytecode uses vA (const), and updates vA to non const, getConstInfo will return false and update constWorklist to make sure when lowering the bytecode, vA is treated as constant
-bool getConstInfo(BasicBlock_O1* bb) {
+//! \brief check whether the current bytecode generates a const
+//!
+//! \details if yes, update constVRTable; otherwise, update constWorklist
+//! if a bytecode uses vA (const), and updates vA to non const, getConstInfo
+//! will return 0 and update constWorklist to make sure when lowering the
+//! bytecode, vA is treated as constant
+//!
+//! \param bb the BasicBlock_O1 to analyze
+//! \param currentMIR
+//!
+//! \return 1 if the bytecode generates a const, 0 otherwise, and -1 if an
+//! error occured.
+int getConstInfo(BasicBlock_O1* bb, const MIR * currentMIR) {
+    int retCode = 0;
     compileTableEntry* infoArray = compileTable;
-    u2 inst_op = INST_INST(inst);
+    Opcode inst_op = currentMIR->dalvikInsn.opcode;
     u2 vA = 0, vB = 0, v1, v2;
     u2 BBBB;
     u2 tmp_u2;
@@ -537,6 +574,13 @@ bool getConstInfo(BasicBlock_O1* bb) {
     u4 tmp_u4;
     int entry, tmpValue[2], tmpValue2[2];
     num_const_worklist = 0;
+
+#ifdef WITH_JIT_INLINING
+    /* A bytecode with the MIR_INLINED op will be treated as
+     * no-op during codegen */
+    if (currentMIR->OptimizationFlags & MIR_INLINED)
+        return 0; // does NOT generate a constant
+#endif
 
     switch(inst_op) {
         //for other opcode, if update the register, set isConst to false
@@ -546,59 +590,47 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_MOVE_OBJECT_FROM16:
     case OP_MOVE_16:
     case OP_MOVE_OBJECT_16:
-        if(inst_op == OP_MOVE || inst_op == OP_MOVE_OBJECT) {
-            vA = INST_A(inst);
-            vB = INST_B(inst);
-        }
-        else if(inst_op == OP_MOVE_FROM16 || inst_op == OP_MOVE_OBJECT_FROM16) {
-            vA = INST_AA(inst);
-            vB = FETCH(1);
-        }
-        else if(inst_op == OP_MOVE_16 || inst_op == OP_MOVE_OBJECT_16) {
-            vA = FETCH(1);
-            vB = FETCH(2);
-        }
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         if(isVirtualRegConstant(vB, LowOpndRegType_gp, tmpValue, false) == 3) {
-            entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+            entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+            if (entry < 0)
+                return -1;
             setVRToConst(vA, OpndSize_32, tmpValue);
             infoArray[entry].isConst = true;
             infoArray[entry].value[0] = tmpValue[0];
             compileTable[entry].refCount--;
-            touchOneVR(vB, LowOpndRegType_gp);
-            return true;
+            retCode = touchOneVR(vB, LowOpndRegType_gp);
+            if (retCode < 0)
+                return retCode;
+            return 1;
         } else {
             constWorklist[num_const_worklist] = vA;
             num_const_worklist++;
         }
-        return false;
+        return 0;
     case OP_MOVE_WIDE:
     case OP_MOVE_WIDE_FROM16:
     case OP_MOVE_WIDE_16:
-        if(inst_op == OP_MOVE_WIDE) {
-            vA = INST_A(inst);
-            vB = INST_B(inst);
-        }
-        else if(inst_op == OP_MOVE_WIDE_FROM16) {
-            vA = INST_AA(inst);
-            vB = FETCH(1);
-        }
-        else if(inst_op == OP_MOVE_WIDE_16) {
-            vA = FETCH(1);
-            vB = FETCH(2);
-        }
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         if(isVirtualRegConstant(vB, LowOpndRegType_xmm, tmpValue, false) == 3) {
-            entry = findVirtualRegInTable(vA, LowOpndRegType_xmm, true);
+            entry = findVirtualRegInTable(vA, LowOpndRegType_xmm);
+            if (entry < 0)
+                return -1;
             setVRToConst(vA, OpndSize_64, tmpValue);
             compileTable[entry].refCount--;
-            touchOneVR(vB, LowOpndRegType_xmm);
-            return true;
+            retCode = touchOneVR(vB, LowOpndRegType_xmm);
+            if (retCode < 0)
+                return retCode;
+            return 1;
         } else {
             constWorklist[num_const_worklist] = vA;
             num_const_worklist++;
             constWorklist[num_const_worklist] = vA+1;
             num_const_worklist++;
         }
-        return false;
+        return 0;
     case OP_MOVE_RESULT:
     case OP_MOVE_RESULT_OBJECT:
     case OP_MOVE_EXCEPTION:
@@ -624,20 +656,20 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_SGET_BYTE:
     case OP_SGET_CHAR:
     case OP_SGET_SHORT:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_MOVE_RESULT_WIDE:
     case OP_AGET_WIDE:
     case OP_SGET_WIDE:
     case OP_SGET_WIDE_VOLATILE:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_INSTANCE_OF:
     case OP_ARRAY_LENGTH:
     case OP_NEW_ARRAY:
@@ -651,40 +683,40 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_IGET_SHORT:
     case OP_IGET_QUICK:
     case OP_IGET_OBJECT_QUICK:
-        vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_IGET_WIDE:
     case OP_IGET_WIDE_VOLATILE:
     case OP_IGET_WIDE_QUICK:
-        vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
         //TODO: constant folding for float/double/long ALU
     case OP_ADD_FLOAT:
     case OP_SUB_FLOAT:
     case OP_MUL_FLOAT:
     case OP_DIV_FLOAT:
     case OP_REM_FLOAT:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_ADD_DOUBLE:
     case OP_SUB_DOUBLE:
     case OP_MUL_DOUBLE:
     case OP_DIV_DOUBLE:
     case OP_REM_DOUBLE:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_NEG_FLOAT:
     case OP_INT_TO_FLOAT:
     case OP_LONG_TO_FLOAT:
@@ -696,19 +728,19 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_DIV_FLOAT_2ADDR:
     case OP_REM_FLOAT_2ADDR:
     case OP_DOUBLE_TO_FLOAT:
-        vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA; //change constWorklist to point to vA TODO
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_FLOAT_TO_LONG:
     case OP_DOUBLE_TO_LONG:
     case OP_FLOAT_TO_DOUBLE:
-        vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_NEG_DOUBLE:
     case OP_INT_TO_DOUBLE: //fp stack
     case OP_LONG_TO_DOUBLE:
@@ -718,22 +750,24 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_DIV_DOUBLE_2ADDR:
     case OP_REM_DOUBLE_2ADDR:
         //ops on float, double
-        vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_NEG_INT:
     case OP_NOT_INT:
     case OP_LONG_TO_INT:
     case OP_INT_TO_BYTE:
     case OP_INT_TO_CHAR:
     case OP_INT_TO_SHORT:
-        vA = INST_A(inst);
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         if(isVirtualRegConstant(vB, LowOpndRegType_gp, tmpValue, false) == 3) {
-            entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+            entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+            if (entry < 0)
+                return -1;
             infoArray[entry].isConst = true;
             if(inst_op == OP_NEG_INT)
                 infoArray[entry].value[0] = -tmpValue[0];
@@ -750,26 +784,28 @@ bool getConstInfo(BasicBlock_O1* bb) {
             tmpValue[0] = infoArray[entry].value[0];
             setVRToConst(vA, OpndSize_32, tmpValue);
             compileTable[entry].refCount--;
-            touchOneVR(vB, LowOpndRegType_gp);
+            retCode = touchOneVR(vB, LowOpndRegType_gp);
+            if (retCode < 0)
+                return retCode;
 #ifdef DEBUG_CONST
-            LOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
+            ALOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
 #endif
-            return true;
+            return 1;
         }
         else {
             constWorklist[num_const_worklist] = vA;
             num_const_worklist++;
-            return false;
+            return 0;
         }
     case OP_NEG_LONG:
     case OP_NOT_LONG:
     case OP_INT_TO_LONG:
-        vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1; //fixed on 10/15/2009
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_DIV_INT_2ADDR:
     case OP_REM_INT_2ADDR:
     case OP_REM_INT_LIT16:
@@ -778,14 +814,10 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_DIV_INT_LIT8:
     case OP_DIV_INT:
     case OP_REM_INT:
-        if(inst_op == OP_DIV_INT || inst_op == OP_DIV_INT_LIT8 ||
-           inst_op == OP_REM_INT || inst_op == OP_REM_INT_LIT8)
-            vA = INST_AA(inst);
-        else
-            vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_ADD_INT_2ADDR:
     case OP_SUB_INT_2ADDR:
     case OP_MUL_INT_2ADDR:
@@ -795,11 +827,13 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_SHL_INT_2ADDR:
     case OP_SHR_INT_2ADDR:
     case OP_USHR_INT_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         if(isVirtualRegConstant(vA, LowOpndRegType_gp, tmpValue, false) == 3 &&
            isVirtualRegConstant(v2, LowOpndRegType_gp, tmpValue2, false) == 3) {
-            entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+            entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+            if (entry < 0)
+                return -1;
             infoArray[entry].isConst = true;
             if(inst_op == OP_ADD_INT_2ADDR)
                 infoArray[entry].value[0] = tmpValue[0] + tmpValue2[0];
@@ -826,16 +860,18 @@ bool getConstInfo(BasicBlock_O1* bb) {
             tmpValue[0] = infoArray[entry].value[0];
             setVRToConst(vA, OpndSize_32, tmpValue);
             compileTable[entry].refCount--;
-            touchOneVR(v2, LowOpndRegType_gp);
+            retCode = touchOneVR(v2, LowOpndRegType_gp);
+            if (retCode < 0)
+                return retCode;
 #ifdef DEBUG_CONST
-            LOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
+            ALOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
 #endif
-            return true;
+            return 1;
         }
         else {
             constWorklist[num_const_worklist] = vA;
             num_const_worklist++;
-            return false;
+            return 0;
         }
     case OP_ADD_INT_LIT16:
     case OP_RSUB_INT:
@@ -843,11 +879,13 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_AND_INT_LIT16:
     case OP_OR_INT_LIT16:
     case OP_XOR_INT_LIT16:
-        vA = INST_A(inst);
-        vB = INST_B(inst);
-        tmp_s4 = (s2)FETCH(1);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
+        tmp_s4 = currentMIR->dalvikInsn.vC;
         if(isVirtualRegConstant(vB, LowOpndRegType_gp, tmpValue, false) == 3) {
-            entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+            entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+            if (entry < 0)
+                return -1;
             infoArray[entry].isConst = true;
             if(inst_op == OP_ADD_INT_LIT16)
                 infoArray[entry].value[0] = tmpValue[0] + tmp_s4;
@@ -868,16 +906,18 @@ bool getConstInfo(BasicBlock_O1* bb) {
             tmpValue[0] = infoArray[entry].value[0];
             setVRToConst(vA, OpndSize_32, tmpValue);
             compileTable[entry].refCount--;
-            touchOneVR(vB, LowOpndRegType_gp);
+            retCode = touchOneVR(vB, LowOpndRegType_gp);
+            if (retCode < 0)
+                return retCode;
 #ifdef DEBUG_CONST
-            LOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
+            ALOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
 #endif
-            return true;
+            return 1;
         }
         else {
             constWorklist[num_const_worklist] = vA;
             num_const_worklist++;
-            return false;
+            return 0;
         }
     case OP_ADD_INT:
     case OP_SUB_INT:
@@ -888,12 +928,14 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_SHL_INT:
     case OP_SHR_INT:
     case OP_USHR_INT:
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         if(isVirtualRegConstant(v1, LowOpndRegType_gp, tmpValue, false) == 3 &&
            isVirtualRegConstant(v2, LowOpndRegType_gp, tmpValue2, false) == 3) {
-            entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+            entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+            if (entry < 0)
+                return -1;
             infoArray[entry].isConst = true;
             if(inst_op == OP_ADD_INT)
                 infoArray[entry].value[0] = tmpValue[0] + tmpValue2[0];
@@ -920,17 +962,21 @@ bool getConstInfo(BasicBlock_O1* bb) {
             tmpValue[0] = infoArray[entry].value[0];
             setVRToConst(vA, OpndSize_32, tmpValue);
             compileTable[entry].refCount--;
-            touchOneVR(v1, LowOpndRegType_gp);
-            touchOneVR(v2, LowOpndRegType_gp);
+            retCode = touchOneVR(v1, LowOpndRegType_gp);
+            if (retCode < 0)
+                return retCode;
+            retCode = touchOneVR(v2, LowOpndRegType_gp);
+            if (retCode < 0)
+                return retCode;
 #ifdef DEBUG_CONST
-            LOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
+            ALOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
 #endif
-            return true;
+            return 1;
         }
         else {
             constWorklist[num_const_worklist] = vA;
             num_const_worklist++;
-            return false;
+            return 0;
         }
     case OP_ADD_INT_LIT8: //INST_AA
     case OP_RSUB_INT_LIT8:
@@ -941,11 +987,13 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_SHL_INT_LIT8:
     case OP_SHR_INT_LIT8:
     case OP_USHR_INT_LIT8:
-        vA = INST_AA(inst);
-        vB = (u2)FETCH(1) & 0xff;
-        tmp_s4 = (s2)FETCH(1) >> 8;
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
+        tmp_s4 = currentMIR->dalvikInsn.vC;
         if(isVirtualRegConstant(vB, LowOpndRegType_gp, tmpValue, false) == 3) {
-            entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+            entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+            if (entry < 0)
+                return -1;
             infoArray[entry].isConst = true;
             if(inst_op == OP_ADD_INT_LIT8)
                 infoArray[entry].value[0] = tmpValue[0] + tmp_s4;
@@ -972,16 +1020,18 @@ bool getConstInfo(BasicBlock_O1* bb) {
             tmpValue[0] = infoArray[entry].value[0];
             setVRToConst(vA, OpndSize_32, tmpValue);
             compileTable[entry].refCount--;
-            touchOneVR(vB, LowOpndRegType_gp);
+            retCode = touchOneVR(vB, LowOpndRegType_gp);
+            if (retCode < 0)
+                return retCode;
 #ifdef DEBUG_CONST
-            LOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
+            ALOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
 #endif
-            return true;
+            return 1;
         }
         else {
             constWorklist[num_const_worklist] = vA;
             num_const_worklist++;
-            return false;
+            return 0;
         }
     case OP_ADD_LONG:
     case OP_SUB_LONG:
@@ -996,17 +1046,17 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_USHR_LONG:
         //TODO bytecode is not going to update state registers
         //constant folding
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_CMP_LONG:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_ADD_LONG_2ADDR:
     case OP_SUB_LONG_2ADDR:
     case OP_AND_LONG_2ADDR:
@@ -1018,157 +1068,177 @@ bool getConstInfo(BasicBlock_O1* bb) {
     case OP_SHL_LONG_2ADDR:
     case OP_SHR_LONG_2ADDR:
     case OP_USHR_LONG_2ADDR:
-        vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_CONST_4:
-        vA = INST_A(inst);
-        tmp_s4 = (s4) (INST_B(inst) << 28) >> 28;
-        entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+        vA = currentMIR->dalvikInsn.vA;
+        tmp_s4 = currentMIR->dalvikInsn.vB;
+        entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
         infoArray[entry].value[0] = tmp_s4;
         tmpValue[0] = infoArray[entry].value[0];
         setVRToConst(vA, OpndSize_32, tmpValue);
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %d", vA, tmp_s4);
+        ALOGD("getConstInfo: set VR %d to %d", vA, tmp_s4);
 #endif
-        return true;
+        return 1;
     case OP_CONST_16:
-        BBBB = FETCH(1);
-        vA = INST_AA(inst);
-        entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+        BBBB = currentMIR->dalvikInsn.vB;
+        vA = currentMIR->dalvikInsn.vA;
+        entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
         infoArray[entry].value[0] = (s2)BBBB;
         tmpValue[0] = infoArray[entry].value[0];
         setVRToConst(vA, OpndSize_32, tmpValue);
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
 #endif
-        return true;
+        return 1;
     case OP_CONST:
-        vA = INST_AA(inst);
-        tmp_u4 = FETCH(1);
-        tmp_u4 |= (u4)FETCH(2) << 16;
-        entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+        vA = currentMIR->dalvikInsn.vA;
+        tmp_u4 = currentMIR->dalvikInsn.vB;
+        entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
         infoArray[entry].value[0] = (s4)tmp_u4;
         tmpValue[0] = infoArray[entry].value[0];
         setVRToConst(vA, OpndSize_32, tmpValue);
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
 #endif
-        return true;
+        return 1;
     case OP_CONST_HIGH16:
-        vA = INST_AA(inst);
-        tmp_u2 = FETCH(1);
-        entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+        vA = currentMIR->dalvikInsn.vA;
+        tmp_u2 = currentMIR->dalvikInsn.vB;
+        entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
-        infoArray[entry].value[0] = (s4)tmp_u2<<16;
+        infoArray[entry].value[0] = ((s4)tmp_u2)<<16;
         tmpValue[0] = infoArray[entry].value[0];
         setVRToConst(vA, OpndSize_32, tmpValue);
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %d", vA, infoArray[entry].value[0]);
 #endif
-        return true;
+        return 1;
     case OP_CONST_WIDE_16:
-        vA = INST_AA(inst);
-        tmp_u2 = FETCH(1);
-        entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+        vA = currentMIR->dalvikInsn.vA;
+        tmp_u2 = currentMIR->dalvikInsn.vB;
+        entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
         infoArray[entry].value[0] = (s2)tmp_u2;
         tmpValue[0] = infoArray[entry].value[0];
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %x", vA, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %x", vA, infoArray[entry].value[0]);
 #endif
 
-        entry = findVirtualRegInTable(vA+1, LowOpndRegType_gp, true);
+        entry = findVirtualRegInTable(vA+1, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
-        infoArray[entry].value[0] = (s2)tmp_u2>>31;
+        infoArray[entry].value[0] = ((s2)tmp_u2)>>31;
         tmpValue[1] = infoArray[entry].value[0];
         setVRToConst(vA, OpndSize_64, tmpValue);
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %x", vA+1, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %x", vA+1, infoArray[entry].value[0]);
 #endif
-        return true;
+        return 1;
     case OP_CONST_WIDE_32:
-        vA = INST_AA(inst);
-        tmp_u4 = FETCH(1);
-        tmp_u4 |= (u4)FETCH(2) << 16;
-        entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+        vA = currentMIR->dalvikInsn.vA;
+        tmp_u4 = currentMIR->dalvikInsn.vB;
+        entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
         infoArray[entry].value[0] = (s4)tmp_u4;
         tmpValue[0] = infoArray[entry].value[0];
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %x", vA, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %x", vA, infoArray[entry].value[0]);
 #endif
 
-        entry = findVirtualRegInTable(vA+1, LowOpndRegType_gp, true);
+        entry = findVirtualRegInTable(vA+1, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
-        infoArray[entry].value[0] = (s4)tmp_u4>>31;
+        infoArray[entry].value[0] = ((s4)tmp_u4)>>31;
         tmpValue[1] = infoArray[entry].value[0];
         setVRToConst(vA, OpndSize_64, tmpValue);
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %x", vA+1, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %x", vA+1, infoArray[entry].value[0]);
 #endif
-        return true;
+        return 1;
     case OP_CONST_WIDE:
-        vA = INST_AA(inst);
-        tmp_u4 = FETCH(1);
-        tmp_u4 |= (u8)FETCH(2) << 16;
-        entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+        vA = currentMIR->dalvikInsn.vA;
+        tmp_u4 = (s4)currentMIR->dalvikInsn.vB_wide;
+        entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
         infoArray[entry].value[0] = (s4)tmp_u4;
         tmpValue[0] = infoArray[entry].value[0];
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %x", vA, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %x", vA, infoArray[entry].value[0]);
 #endif
 
-        tmp_u4 = (u8)FETCH(3);
-        tmp_u4 |= (u8)FETCH(4) << 16;
-        entry = findVirtualRegInTable(vA+1, LowOpndRegType_gp, true);
+        tmp_u4 = (s4)(currentMIR->dalvikInsn.vB_wide >> 32);
+        entry = findVirtualRegInTable(vA+1, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
         infoArray[entry].value[0] = (s4)tmp_u4;
         tmpValue[1] = infoArray[entry].value[0];
         setVRToConst(vA, OpndSize_64, tmpValue);
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %x", vA+1, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %x", vA+1, infoArray[entry].value[0]);
 #endif
-        return true;
+        return 1;
     case OP_CONST_WIDE_HIGH16:
-        vA = INST_AA(inst);
-        tmp_u2 = FETCH(1);
-        entry = findVirtualRegInTable(vA, LowOpndRegType_gp, true);
+        vA = currentMIR->dalvikInsn.vA;
+        tmp_u2 = currentMIR->dalvikInsn.vB;
+        entry = findVirtualRegInTable(vA, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
         infoArray[entry].value[0] = 0;
         tmpValue[0] = infoArray[entry].value[0];
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %x", vA, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %x", vA, infoArray[entry].value[0]);
 #endif
 
-        entry = findVirtualRegInTable(vA+1, LowOpndRegType_gp, true);
+        entry = findVirtualRegInTable(vA+1, LowOpndRegType_gp);
+        if (entry < 0)
+            return -1;
         infoArray[entry].isConst = true;
-        infoArray[entry].value[0] = (s4)tmp_u2<<16;
+        infoArray[entry].value[0] = ((s4)tmp_u2)<<16;
         tmpValue[1] = infoArray[entry].value[0];
         setVRToConst(vA, OpndSize_64, tmpValue);
         compileTable[entry].refCount--;
 #ifdef DEBUG_CONST
-        LOGD("getConstInfo: set VR %d to %x", vA+1, infoArray[entry].value[0]);
+        ALOGD("getConstInfo: set VR %d to %x", vA+1, infoArray[entry].value[0]);
 #endif
-        return true;
+        return 1;
 #ifdef SUPPORT_HLO
     case OP_X_AGET_QUICK:
     case OP_X_AGET_OBJECT_QUICK:
@@ -1179,14 +1249,14 @@ bool getConstInfo(BasicBlock_O1* bb) {
         vA = FETCH(1) & 0xff;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_X_AGET_WIDE_QUICK:
         vA = FETCH(1) & 0xff;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_X_DEREF_GET:
     case OP_X_DEREF_GET_OBJECT:
     case OP_X_DEREF_GET_BOOLEAN:
@@ -1196,31 +1266,32 @@ bool getConstInfo(BasicBlock_O1* bb) {
         vA = FETCH(1) & 0xff;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
-        return false;
+        return 0;
     case OP_X_DEREF_GET_WIDE:
         vA = FETCH(1) & 0xff;
         constWorklist[num_const_worklist] = vA;
         num_const_worklist++;
         constWorklist[num_const_worklist] = vA+1;
         num_const_worklist++;
-        return false;
+        return 0;
 #endif
+    default:
+        // Bytecode does not generate a const
+        break;
     }
-    return false;
+    return 0;
 }
 
 //! This function updates infoArray with virtual registers accessed when lowering the bytecode, and returns size of the bytecode in unit of u2
 
 //! uses of virtual registers are added to infoArray first
-int getVirtualRegInfo(VirtualRegInfo* infoArray) {
-    u2 inst_op = INST_INST(inst);
+int getVirtualRegInfo(VirtualRegInfo* infoArray, const MIR * currentMIR) {
+    u2 inst_op = currentMIR->dalvikInsn.opcode;
     u2 vA = 0, vB = 0, vref, vindex;
     u2 v1, v2, length, vD, vG, vE, vF, count;
     u4 v1_u4, v2_u4;
     int kk, num, num_entry;
-    s4 tmp_s4;
     s2 tmp_s2;
-    u4 tmp_u4;
     int codeSize = 0;
     num_regs_per_bytecode = 0;
     //update infoArray[xx].allocConstraints
@@ -1230,6 +1301,13 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
             infoArray[num].allocConstraints[kk].count = 0;
         }
     }
+
+#ifdef WITH_JIT_INLINING
+    /* A bytecode with the MIR_INLINED op will be treated as
+     * no-op during codegen */
+    if (currentMIR->OptimizationFlags & MIR_INLINED)
+        return currentMIR->width;
+#endif
 
     switch (inst_op) {
     case OP_NOP:
@@ -1242,18 +1320,18 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_MOVE_16:
     case OP_MOVE_OBJECT_16:
         if(inst_op == OP_MOVE || inst_op == OP_MOVE_OBJECT) {
-            vA = INST_A(inst);
-            vB = INST_B(inst);
+            vA = currentMIR->dalvikInsn.vA;
+            vB = currentMIR->dalvikInsn.vB;
             codeSize = 1;
         }
         else if(inst_op == OP_MOVE_FROM16 || inst_op == OP_MOVE_OBJECT_FROM16) {
-            vA = INST_AA(inst);
-            vB = FETCH(1);
+            vA = currentMIR->dalvikInsn.vA;
+            vB = currentMIR->dalvikInsn.vB;
             codeSize = 2;
         }
         else if(inst_op == OP_MOVE_16 || inst_op == OP_MOVE_OBJECT_16) {
-            vA = FETCH(1);
-            vB = FETCH(2);
+            vA = currentMIR->dalvikInsn.vA;
+            vB = currentMIR->dalvikInsn.vB;
             codeSize = 3;
         }
         infoArray[1].regNum = vA; //dst
@@ -1270,18 +1348,18 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_MOVE_WIDE_FROM16:
     case OP_MOVE_WIDE_16:
         if(inst_op == OP_MOVE_WIDE) {
-            vA = INST_A(inst);
-            vB = INST_B(inst);
+            vA = currentMIR->dalvikInsn.vA;
+            vB = currentMIR->dalvikInsn.vB;
             codeSize = 1;
         }
         else if(inst_op == OP_MOVE_WIDE_FROM16) {
-            vA = INST_AA(inst);
-            vB = FETCH(1);
+            vA = currentMIR->dalvikInsn.vA;
+            vB = currentMIR->dalvikInsn.vB;
             codeSize = 2;
         }
         else if(inst_op == OP_MOVE_WIDE_16) {
-            vA = FETCH(1);
-            vB = FETCH(2);
+            vA = currentMIR->dalvikInsn.vA;
+            vB = currentMIR->dalvikInsn.vB;
             codeSize = 3;
         }
         infoArray[1].regNum = vA; //dst
@@ -1296,7 +1374,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_MOVE_RESULT: //access memory
     case OP_MOVE_RESULT_OBJECT:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1305,7 +1383,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 1;
         break;
     case OP_MOVE_RESULT_WIDE: //note: 2 destinations
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1314,7 +1392,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 1;
         break;
     case OP_MOVE_EXCEPTION: //access memory
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1330,7 +1408,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_RETURN:
     case OP_RETURN_OBJECT:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         codeSize = 1;
         infoArray[0].regNum = vA; //src
         infoArray[0].refCount = 1;
@@ -1340,7 +1418,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 1;
         break;
     case OP_RETURN_WIDE:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //src
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -1349,8 +1427,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 1;
         break;
     case OP_CONST_4:
-        vA = INST_A(inst);
-        tmp_s4 = (s4) (INST_B(inst) << 28) >> 28;
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1359,7 +1436,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 1;
         break;
     case OP_CONST_16:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1368,9 +1445,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 2;
         break;
     case OP_CONST:
-        vA = INST_AA(inst);
-        tmp_u4 = FETCH(1);
-        tmp_u4 |= (u4)FETCH(2) << 16;
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1379,7 +1454,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 3;
         break;
     case OP_CONST_HIGH16:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1388,7 +1463,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 2;
         break;
     case OP_CONST_WIDE_16:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1401,9 +1476,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_CONST_WIDE_32:
-        vA = INST_AA(inst);
-        tmp_u4 = FETCH(1);
-        tmp_u4 |= (u4)FETCH(2) << 16;
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1416,15 +1489,11 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 3;
         break;
     case OP_CONST_WIDE:
-        vA = INST_AA(inst);
-        tmp_u4 = FETCH(1);
-        tmp_u4 |= (u8)FETCH(2) << 16;
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
         infoArray[0].physicalType = LowOpndRegType_gp;
-        tmp_u4 = (u8)FETCH(3);
-        tmp_u4 |= (u8)FETCH(4) << 16;
         infoArray[1].regNum = vA+1;
         infoArray[1].refCount = 1;
         infoArray[1].accessType = REGACCESS_D;
@@ -1433,7 +1502,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_CONST_WIDE_HIGH16:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1448,7 +1517,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_CONST_STRING:
     case OP_CONST_STRING_JUMBO:
     case OP_CONST_CLASS:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         if(inst_op == OP_CONST_STRING || inst_op == OP_CONST_CLASS)
             codeSize = 2;
         else if(inst_op == OP_CONST_STRING_JUMBO)
@@ -1462,7 +1531,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 1;
         break;
     case OP_MONITOR_ENTER:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         codeSize = 1;
         infoArray[0].regNum = vA; //src
         infoArray[0].refCount = 1;
@@ -1471,7 +1540,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 1;
         break;
     case OP_MONITOR_EXIT:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         codeSize = 1;
         infoArray[0].regNum = vA; //src
         infoArray[0].refCount = 1;
@@ -1483,7 +1552,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_CHECK_CAST:
         codeSize = 2;
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //src
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -1495,8 +1564,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_INSTANCE_OF:
         codeSize = 2;
-        vA = INST_A(inst);
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = vB; //src
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -1509,8 +1578,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_ARRAY_LENGTH:
-        vA = INST_A(inst);
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[0].regNum = vB; //src
         infoArray[0].refCount = 1;
@@ -1525,7 +1594,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_NEW_INSTANCE:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //dst
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_D;
@@ -1538,8 +1607,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 2;
         break;
     case OP_NEW_ARRAY:
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst); //length
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB; //length
         infoArray[0].regNum = vB; //src
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -1556,13 +1625,12 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_FILLED_NEW_ARRAY: {//update return value
         //can use up to 5 registers to fill the content of array
-        length = INST_B(inst);
-        u2 vv = FETCH(2);
-        v1 = vv & 0xf;
-        v2 = (vv >> 4) & 0xf;
-        u2 v3 = (vv >> 8) & 0xf;
-        u2 v4 = (vv >> 12) & 0xf;
-        u2 v5 = INST_A(inst);
+        length = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.arg[0];
+        v2 = currentMIR->dalvikInsn.arg[1];
+        u2 v3 = currentMIR->dalvikInsn.arg[2];
+        u2 v4 = currentMIR->dalvikInsn.arg[3];
+        u2 v5 = currentMIR->dalvikInsn.arg[4];
         if(length >= 1) {
             infoArray[0].regNum = v1; //src
             infoArray[0].refCount = 1;
@@ -1600,8 +1668,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     }
     case OP_FILLED_NEW_ARRAY_RANGE: {//use "length" virtual registers
-        length = INST_AA(inst);
-        u4 vC = (u4)FETCH(2);
+        length = currentMIR->dalvikInsn.vA;
+        u4 vC = currentMIR->dalvikInsn.vC;
         for(kk = 0; kk < length; kk++) {
             infoArray[kk].regNum = vC+kk; //src
             infoArray[kk].refCount = 1;
@@ -1615,7 +1683,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     }
     case OP_FILL_ARRAY_DATA: //update content of array, read memory
-        vA = INST_AA(inst); //use virtual register, but has side-effect, update memory
+        vA = currentMIR->dalvikInsn.vA; //use virtual register, but has side-effect, update memory
         infoArray[0].regNum = vA; //use
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -1626,7 +1694,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 3;
         break;
     case OP_THROW: //update glue->exception
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //use
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -1653,7 +1721,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_PACKED_SWITCH:
     case OP_SPARSE_SWITCH:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         codeSize = 3;
         infoArray[0].regNum = vA; //use
         infoArray[0].refCount = 1;
@@ -1667,9 +1735,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_CMPL_FLOAT: //move 32 bits from memory to lower part of XMM register
     case OP_CMPG_FLOAT:
         codeSize = 2;
-        vA = INST_AA(inst);
-        v1_u4 = FETCH(1) & 0xff;
-        v2_u4 = FETCH(1) >> 8;
+        vA = currentMIR->dalvikInsn.vA;
+        v1_u4 = currentMIR->dalvikInsn.vB;
+        v2_u4 = currentMIR->dalvikInsn.vC;
         num_regs_per_bytecode = 1;
         infoArray[0].regNum = v1_u4; //use ss or sd CHECK
         infoArray[0].refCount = 1;
@@ -1690,9 +1758,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_CMPG_DOUBLE:
     case OP_CMP_LONG: //load v1, v1+1, v2, v2+1 to gpr
         codeSize = 2;
-        vA = INST_AA(inst);
-        v1_u4 = FETCH(1) & 0xff;
-        v2_u4 = FETCH(1) >> 8;
+        vA = currentMIR->dalvikInsn.vA;
+        v1_u4 = currentMIR->dalvikInsn.vB;
+        v2_u4 = currentMIR->dalvikInsn.vC;
         num_regs_per_bytecode = 1;
         if(inst_op == OP_CMP_LONG) {
             infoArray[0].regNum = v1_u4; //use
@@ -1714,7 +1782,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
             num_regs_per_bytecode = 5;
             num_entry = 4;
             infoArray[num_entry].regNum = vA; //define
-            infoArray[num_entry].refCount = 2;
+            infoArray[num_entry].refCount = 5;
             infoArray[num_entry].accessType = REGACCESS_D;
             infoArray[num_entry].physicalType = LowOpndRegType_gp;
         }
@@ -1741,8 +1809,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_IF_GE:
     case OP_IF_GT:
     case OP_IF_LE:
-        vA = INST_A(inst);
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = vA; //use
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -1760,7 +1828,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_IF_GEZ:
     case OP_IF_GTZ:
     case OP_IF_LEZ:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = vA; //use
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -1769,22 +1837,16 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 2;
         break;
     case OP_AGET:
-        codeSize = 2;
     case OP_AGET_WIDE:
-        codeSize = 2;
     case OP_AGET_OBJECT:
-        codeSize = 2;
     case OP_AGET_BOOLEAN: //movez 8
-        codeSize = 2;
     case OP_AGET_BYTE: //moves 8
-        codeSize = 2;
     case OP_AGET_CHAR: //movez 16
-        codeSize = 2;
     case OP_AGET_SHORT: //moves 16
         codeSize = 2;
-        vA = INST_AA(inst);
-        vref = FETCH(1) & 0xff;
-        vindex = FETCH(1) >> 8;
+        vA = currentMIR->dalvikInsn.vA;
+        vref = currentMIR->dalvikInsn.vB;
+        vindex = currentMIR->dalvikInsn.vC;
         if(inst_op == OP_AGET_WIDE) {
             infoArray[2].regNum = vA;
             infoArray[2].refCount = 1;
@@ -1813,9 +1875,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_APUT_BYTE:
     case OP_APUT_CHAR:
     case OP_APUT_SHORT:
-        vA = INST_AA(inst);
-        vref = FETCH(1) & 0xff;
-        vindex = FETCH(1) >> 8;
+        vA = currentMIR->dalvikInsn.vA;
+        vref = currentMIR->dalvikInsn.vB;
+        vindex = currentMIR->dalvikInsn.vC;
         codeSize = 2;
         if(inst_op == OP_APUT_WIDE) {
             infoArray[0].regNum = vA;
@@ -1856,8 +1918,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_IGET_QUICK:
     case OP_IGET_WIDE_QUICK:
     case OP_IGET_OBJECT_QUICK:
-        vA = INST_A(inst);
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 2;
         if(inst_op == OP_IGET_WIDE || inst_op == OP_IGET_WIDE_QUICK) {
             infoArray[1].regNum = vA;
@@ -1903,8 +1965,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_IPUT_QUICK:
     case OP_IPUT_WIDE_QUICK:
     case OP_IPUT_OBJECT_QUICK:
-        vA = INST_A(inst);
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 2;
         if(inst_op == OP_IPUT_WIDE || inst_op == OP_IPUT_WIDE_QUICK || inst_op == OP_IPUT_WIDE_VOLATILE) {
             infoArray[0].regNum = vA;
@@ -1935,7 +1997,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SGET_BYTE:
     case OP_SGET_CHAR:
     case OP_SGET_SHORT:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         codeSize = 2;
         if(inst_op == OP_SGET_WIDE) {
             infoArray[0].regNum = vA;
@@ -1973,7 +2035,7 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SPUT_BYTE:
     case OP_SPUT_CHAR:
     case OP_SPUT_SHORT:
-        vA = INST_AA(inst);
+        vA = currentMIR->dalvikInsn.vA;
         codeSize = 2;
         if(inst_op == OP_SPUT_WIDE || inst_op == OP_SPUT_WIDE_VOLATILE) {
             infoArray[0].regNum = vA;
@@ -1998,12 +2060,12 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_INVOKE_VIRTUAL_QUICK:
     case OP_INVOKE_SUPER_QUICK:
         codeSize = 3;
-        vD = FETCH(2) & 0xf; //object for virtual,direct & interface
-        count = INST_B(inst);
-        vE = (FETCH(2) >> 4) & 0xf;
-        vF = (FETCH(2) >> 8) & 0xf;
-        vG = (FETCH(2) >> 12) & 0xf;
-        vA = INST_A(inst); //5th argument
+        vD = currentMIR->dalvikInsn.arg[0]; //object for virtual,direct & interface
+        count = currentMIR->dalvikInsn.vA;
+        vE = currentMIR->dalvikInsn.arg[1];
+        vF = currentMIR->dalvikInsn.arg[2];
+        vG = currentMIR->dalvikInsn.arg[3];
+        vA = currentMIR->dalvikInsn.arg[4]; //5th argument
         if(count == 0) {
             if(inst_op == OP_INVOKE_VIRTUAL || inst_op == OP_INVOKE_DIRECT ||
                inst_op == OP_INVOKE_INTERFACE || inst_op == OP_INVOKE_VIRTUAL_QUICK ||
@@ -2067,8 +2129,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_INVOKE_VIRTUAL_QUICK_RANGE:
     case OP_INVOKE_SUPER_QUICK_RANGE:
         codeSize = 3;
-        vD = FETCH(2);
-        count = INST_AA(inst);
+        vD = currentMIR->dalvikInsn.vC;
+        count = currentMIR->dalvikInsn.vA;
         if(count == 0) {
             if(inst_op == OP_INVOKE_VIRTUAL_RANGE || inst_op == OP_INVOKE_DIRECT_RANGE ||
                inst_op == OP_INVOKE_INTERFACE_RANGE || inst_op == OP_INVOKE_VIRTUAL_QUICK_RANGE ||
@@ -2104,8 +2166,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_NEG_INT:
     case OP_NOT_INT:
     case OP_NEG_FLOAT:
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 1;
         infoArray[1].accessType = REGACCESS_D;
@@ -2120,8 +2182,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_NEG_LONG:
     case OP_NOT_LONG:
     case OP_NEG_DOUBLE:
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 1;
@@ -2134,8 +2196,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_INT_TO_LONG: //hard-coded registers
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 1;
@@ -2162,28 +2224,32 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_LONG_TO_DOUBLE: //64 to 64
     case OP_FLOAT_TO_DOUBLE: //32 to 64
     case OP_DOUBLE_TO_FLOAT: //64 to 32
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 1;
         infoArray[1].accessType = REGACCESS_D;
-        if(inst_op == OP_INT_TO_DOUBLE || inst_op == OP_LONG_TO_DOUBLE || inst_op == OP_FLOAT_TO_DOUBLE)
+        if(inst_op == OP_LONG_TO_DOUBLE || inst_op == OP_FLOAT_TO_DOUBLE)
             infoArray[1].physicalType = LowOpndRegType_fs;
+        else if (inst_op == OP_INT_TO_DOUBLE)
+            infoArray[1].physicalType = LowOpndRegType_xmm;
         else
             infoArray[1].physicalType = LowOpndRegType_fs_s;
         infoArray[0].regNum = vB;
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
-        if(inst_op == OP_INT_TO_FLOAT || inst_op == OP_INT_TO_DOUBLE || inst_op == OP_FLOAT_TO_DOUBLE)
+        if(inst_op == OP_INT_TO_FLOAT || inst_op == OP_FLOAT_TO_DOUBLE)
             infoArray[0].physicalType = LowOpndRegType_fs_s; //float
+        else if (inst_op == OP_INT_TO_DOUBLE)
+            infoArray[0].physicalType = LowOpndRegType_gp;
         else
             infoArray[0].physicalType = LowOpndRegType_fs;
         num_regs_per_bytecode = 2;
         break;
     case OP_LONG_TO_INT:
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 1;
         infoArray[1].accessType = REGACCESS_D;
@@ -2197,8 +2263,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_FLOAT_TO_INT:
     case OP_DOUBLE_TO_INT: //for reaching-def analysis
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 3;
@@ -2219,8 +2285,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_FLOAT_TO_LONG:
     case OP_DOUBLE_TO_LONG:
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 3;
@@ -2242,8 +2308,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_INT_TO_BYTE:
     case OP_INT_TO_CHAR:
     case OP_INT_TO_SHORT:
-        vA = INST_A(inst); //destination
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA; //destination
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 1;
@@ -2262,9 +2328,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_AND_INT:
     case OP_OR_INT:
     case OP_XOR_INT:
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         codeSize = 2;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 1;
@@ -2282,9 +2348,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_DIV_INT:
     case OP_REM_INT:
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         codeSize = 2;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 2;
@@ -2310,9 +2376,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SHL_INT:
     case OP_SHR_INT:
     case OP_USHR_INT:
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         codeSize = 2;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 1;
@@ -2331,32 +2397,10 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 3;
         break;
     case OP_ADD_LONG:
-    case OP_SUB_LONG:
-    case OP_AND_LONG:
-    case OP_OR_LONG:
-    case OP_XOR_LONG:
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         codeSize = 2;
-        infoArray[2].regNum = vA;
-        infoArray[2].refCount = 1;
-        infoArray[2].accessType = REGACCESS_D;
-        infoArray[2].physicalType = LowOpndRegType_xmm;
-        infoArray[0].regNum = v1;
-        infoArray[0].refCount = 1;
-        infoArray[0].accessType = REGACCESS_U;
-        infoArray[0].physicalType = LowOpndRegType_xmm;
-        infoArray[1].regNum = v2;
-        infoArray[1].refCount = 1;
-        infoArray[1].accessType = REGACCESS_U;
-        infoArray[1].physicalType = LowOpndRegType_xmm;
-        num_regs_per_bytecode = 3;
-        break;
-    case OP_MUL_LONG: //used int
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
         infoArray[0].regNum = v1;
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -2382,13 +2426,67 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         infoArray[5].accessType = REGACCESS_D;
         infoArray[5].physicalType = LowOpndRegType_gp;
         num_regs_per_bytecode = 6;
+        break;
+    case OP_SUB_LONG:
+    case OP_AND_LONG:
+    case OP_OR_LONG:
+    case OP_XOR_LONG:
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
+        codeSize = 2;
+        infoArray[2].regNum = vA;
+        infoArray[2].refCount = 1;
+        infoArray[2].accessType = REGACCESS_D;
+        infoArray[2].physicalType = LowOpndRegType_xmm;
+        infoArray[0].regNum = v1;
+        infoArray[0].refCount = 1;
+        infoArray[0].accessType = REGACCESS_U;
+        infoArray[0].physicalType = LowOpndRegType_xmm;
+        infoArray[1].regNum = v2;
+        infoArray[1].refCount = 1;
+        infoArray[1].accessType = REGACCESS_U;
+        infoArray[1].physicalType = LowOpndRegType_xmm;
+        num_regs_per_bytecode = 3;
+        break;
+    case OP_MUL_LONG: //used int
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
+        infoArray[0].regNum = v1;
+        infoArray[0].refCount = 1;
+        infoArray[0].accessType = REGACCESS_U;
+        infoArray[0].physicalType = LowOpndRegType_gp;
+        infoArray[1].regNum = v1+1;
+        infoArray[1].refCount = 1;
+        infoArray[1].accessType = REGACCESS_U;
+        infoArray[1].physicalType = LowOpndRegType_gp;
+        infoArray[2].regNum = v2;
+        infoArray[2].refCount = 1;
+        infoArray[2].accessType = REGACCESS_U;
+        infoArray[2].physicalType = LowOpndRegType_gp;
+        infoArray[3].regNum = v2+1;
+        infoArray[3].refCount = 1;
+        infoArray[3].accessType = REGACCESS_U;
+        infoArray[3].physicalType = LowOpndRegType_gp;
+        infoArray[4].regNum = vA;
+        infoArray[4].refCount = 1;
+        infoArray[4].accessType = REGACCESS_D;
+        infoArray[4].physicalType = LowOpndRegType_gp;
+        infoArray[5].regNum = vA+1;
+        infoArray[5].refCount = 1;
+        infoArray[5].accessType = REGACCESS_D;
+        infoArray[5].physicalType = LowOpndRegType_gp;
+        updateCurrentBBWithConstraints(PhysicalReg_ECX);
+        updateCurrentBBWithConstraints(PhysicalReg_EAX);
+        num_regs_per_bytecode = 6;
         codeSize = 2;
         break;
     case OP_DIV_LONG: //v1: xmm v2,vA:
     case OP_REM_LONG:
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         infoArray[0].regNum = v1;
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -2413,9 +2511,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 2;
         break;
     case OP_SHL_LONG: //v2: 32, move_ss; v1,vA: xmm CHECK
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         infoArray[0].regNum = v1;
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -2432,9 +2530,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 2;
         break;
     case OP_SHR_LONG: //v2: 32, move_ss; v1,vA: xmm CHECK
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         infoArray[0].regNum = v1;
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -2455,9 +2553,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         codeSize = 2;
         break;
     case OP_USHR_LONG: //v2: move_ss; v1,vA: move_sd
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         infoArray[0].regNum = v1;
         infoArray[0].refCount = 1;
         infoArray[0].accessType = REGACCESS_U;
@@ -2477,9 +2575,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SUB_FLOAT:
     case OP_MUL_FLOAT:
     case OP_DIV_FLOAT:
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         codeSize = 2;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 1;
@@ -2496,9 +2594,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 3;
         break;
     case OP_REM_FLOAT: //32 bit GPR, fp_stack for output
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         codeSize = 2;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 1;
@@ -2518,9 +2616,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SUB_DOUBLE:
     case OP_MUL_DOUBLE:
     case OP_DIV_DOUBLE:
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         codeSize = 2;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 1;
@@ -2537,9 +2635,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 3;
         break;
     case OP_REM_DOUBLE: //64 bit XMM, fp_stack for output
-        vA = INST_AA(inst);
-        v1 = *((u1*)rPC + 2);
-        v2 = *((u1*)rPC + 3);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
         codeSize = 2;
         infoArray[2].regNum = vA;
         infoArray[2].refCount = 1;
@@ -2562,8 +2660,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_AND_INT_2ADDR:
     case OP_OR_INT_2ADDR:
     case OP_XOR_INT_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 2;
@@ -2577,8 +2675,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_DIV_INT_2ADDR:
     case OP_REM_INT_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 3;
@@ -2600,8 +2698,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SHL_INT_2ADDR:
     case OP_SHR_INT_2ADDR:
     case OP_USHR_INT_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 2;
@@ -2616,12 +2714,33 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_ADD_LONG_2ADDR:
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
+        codeSize = 1;
+        infoArray[1].regNum = vA;
+        infoArray[1].refCount = 2;
+        infoArray[1].accessType = REGACCESS_UD;
+        infoArray[1].physicalType = LowOpndRegType_gp;
+        infoArray[3].regNum = vA+1;
+        infoArray[3].refCount = 2;
+        infoArray[3].accessType = REGACCESS_UD;
+        infoArray[3].physicalType = LowOpndRegType_gp;
+        infoArray[0].regNum = v2;
+        infoArray[0].refCount = 1;
+        infoArray[0].accessType = REGACCESS_U;
+        infoArray[0].physicalType = LowOpndRegType_gp;
+        infoArray[2].regNum = v2+1;
+        infoArray[2].refCount = 1;
+        infoArray[2].accessType = REGACCESS_U;
+        infoArray[2].physicalType = LowOpndRegType_gp;
+        num_regs_per_bytecode = 4;
+        break;
     case OP_SUB_LONG_2ADDR:
     case OP_AND_LONG_2ADDR:
     case OP_OR_LONG_2ADDR:
     case OP_XOR_LONG_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 2;
@@ -2634,8 +2753,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_MUL_LONG_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         num_regs_per_bytecode = 4;
         infoArray[0].regNum = v2;
@@ -2654,11 +2773,13 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         infoArray[3].refCount = 2;
         infoArray[3].accessType = REGACCESS_UD;
         infoArray[3].physicalType = LowOpndRegType_gp;
+        updateCurrentBBWithConstraints(PhysicalReg_ECX);
+        updateCurrentBBWithConstraints(PhysicalReg_EAX);
         break;
     case OP_DIV_LONG_2ADDR: //vA used as xmm, then updated as gps
     case OP_REM_LONG_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         num_regs_per_bytecode = 5;
         codeSize = 1;
         infoArray[0].regNum = vA;
@@ -2683,8 +2804,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         infoArray[4].physicalType = LowOpndRegType_gp;
         break;
     case OP_SHL_LONG_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         num_regs_per_bytecode = 2;
         codeSize = 1;
         infoArray[0].regNum = v2; //ss
@@ -2697,8 +2818,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         infoArray[1].physicalType = LowOpndRegType_xmm;
         break;
     case OP_SHR_LONG_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         num_regs_per_bytecode = 3;
         codeSize = 1;
         infoArray[0].regNum = v2; //ss
@@ -2715,8 +2836,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         infoArray[2].physicalType = LowOpndRegType_xmm;
         break;
     case OP_USHR_LONG_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         num_regs_per_bytecode = 2;
         codeSize = 1;
         infoArray[0].regNum = v2;
@@ -2732,8 +2853,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SUB_FLOAT_2ADDR:
     case OP_MUL_FLOAT_2ADDR:
     case OP_DIV_FLOAT_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 2;
@@ -2746,8 +2867,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_REM_FLOAT_2ADDR: //load vA as GPR, store from fs
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 2;
@@ -2763,8 +2884,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SUB_DOUBLE_2ADDR:
     case OP_MUL_DOUBLE_2ADDR:
     case OP_DIV_DOUBLE_2ADDR:
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 2;
@@ -2777,8 +2898,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 2;
         break;
     case OP_REM_DOUBLE_2ADDR: //load to xmm, store from fs
-        vA = INST_A(inst);
-        v2 = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
         codeSize = 1;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 2;
@@ -2797,8 +2918,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_AND_INT_LIT16:
     case OP_OR_INT_LIT16:
     case OP_XOR_INT_LIT16:
-        vA = INST_A(inst);
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 2;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 1;
@@ -2812,11 +2933,10 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         break;
     case OP_DIV_INT_LIT16:
     case OP_REM_INT_LIT16:
-        vA = INST_A(inst);
-        vB = INST_B(inst);
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         codeSize = 2;
-        tmp_s4 = (s2)FETCH(1);
-        tmp_s2 = tmp_s4;
+        tmp_s2 = currentMIR->dalvikInsn.vC;
         if(tmp_s2 == 0) {
             num_regs_per_bytecode = 0;
             break;
@@ -2858,8 +2978,8 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_SHR_INT_LIT8:
     case OP_USHR_INT_LIT8:
         codeSize = 2;
-        vA = INST_AA(inst);
-        vB = (u2)FETCH(1) & 0xff;
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[1].regNum = vA;
         infoArray[1].refCount = 1;
         infoArray[1].accessType = REGACCESS_D;
@@ -2873,9 +2993,9 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_DIV_INT_LIT8:
     case OP_REM_INT_LIT8:
         codeSize = 2;
-        vA = INST_AA(inst);
-        vB = (u2)FETCH(1) & 0xff;
-        tmp_s2 = (s2)FETCH(1) >> 8;
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
+        tmp_s2 = currentMIR->dalvikInsn.vC;
         if(tmp_s2 == 0) {
             num_regs_per_bytecode = 0;
             break;
@@ -2912,17 +3032,17 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
     case OP_EXECUTE_INLINE: //update glue->retval
     case OP_EXECUTE_INLINE_RANGE:
         u4 vC;
-        if(inst_op == OP_EXECUTE_INLINE)
-            num = INST_B(inst);
-        else
-            num = INST_AA(inst);
+        num = currentMIR->dalvikInsn.vA;
         if(inst_op == OP_EXECUTE_INLINE) {
-            vC = FETCH(2) & 0xf;
-            vD = (FETCH(2) >> 4) & 0xf;
-            vE = (FETCH(2) >> 8) & 0xf;
-            vF = FETCH(2) >> 12;
+            // Note that vC, vD, vE, and vF might have bad values
+            // depending on count. The variable "num" should be
+            // checked before using any of these.
+            vC = currentMIR->dalvikInsn.arg[0];
+            vD = currentMIR->dalvikInsn.arg[1];
+            vE = currentMIR->dalvikInsn.arg[2];
+            vF = currentMIR->dalvikInsn.arg[3];
         } else {
-            vC = FETCH(2);
+            vC = currentMIR->dalvikInsn.vC;
             vD = vC + 1;
             vE = vC + 2;
             vF = vC + 3;
@@ -2962,16 +3082,21 @@ int getVirtualRegInfo(VirtualRegInfo* infoArray) {
         num_regs_per_bytecode = 0;
         break;
 #endif
+    default:
+        ALOGE("JIT_ERROR: JIT does not support bytecode 0x%hx when updating\n"
+                "VR accesses\n", currentMIR->dalvikInsn.opcode);
+        SET_JIT_ERROR(kJitErrorUnsupportedBytecode);
+        assert(false && "All opcodes should be supported.");
+        break;
     }
     return codeSize;
 }
 //! Updates infoArray(TempRegInfo) with temporaries accessed by INVOKE_NO_RANGE
 
 //!
-int updateInvokeNoRange(TempRegInfo* infoArray, int startInd) {
+int updateInvokeNoRange(TempRegInfo* infoArray, int startInd, const MIR * currentMIR) {
     int j = startInd;
-    //invokeMethodNoRange
-    int count = INST_B(inst);
+    int count = currentMIR->dalvikInsn.vA;
     if(count == 5) {
         infoArray[j].regNum = 22;
         infoArray[j].refCount = 2; //DU
@@ -3007,9 +3132,9 @@ int updateInvokeNoRange(TempRegInfo* infoArray, int startInd) {
 //! Updates infoArray(TempRegInfo) with temporaries accessed by INVOKE_RANGE
 
 //! LOOP_COUNT is used to indicate a variable is live through a loop
-int updateInvokeRange(TempRegInfo* infoArray, int startIndex) {
+int updateInvokeRange(TempRegInfo* infoArray, int startIndex, const MIR * currentMIR) {
     int j = startIndex;
-    int count = INST_AA(inst);
+    int count = currentMIR->dalvikInsn.vA;
     infoArray[j].regNum = 21;
     if(count <= 10) {
         infoArray[j].refCount = 1+count; //DU
@@ -3097,102 +3222,6 @@ int updateInvokeRange(TempRegInfo* infoArray, int startIndex) {
         j++;
     }
     return j;
-}
-
-/* update temporaries used by RETURN bytecodes
-   a temporary is represented by <number, type of the temporary>
-   */
-int updateReturnCommon(TempRegInfo* infoArray) {
-    int numTmps;
-    infoArray[0].regNum = 1;
-    infoArray[0].refCount = 4; //DU
-    infoArray[0].physicalType = LowOpndRegType_scratch;
-    infoArray[1].regNum = 2;
-    infoArray[1].refCount = 2; //DU
-    infoArray[1].physicalType = LowOpndRegType_scratch;
-    infoArray[2].regNum = PhysicalReg_EAX;
-    infoArray[2].refCount = 5; //DU
-    infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
-
-    infoArray[3].regNum = 1;
-#if defined(ENABLE_TRACING)//WITH_DEBUGGER is true WITH_PROFILER can be false
-    infoArray[3].refCount = 6+4;
-#else
-    infoArray[3].refCount = 6; //DU
-#endif
-    infoArray[3].physicalType = LowOpndRegType_gp;
-    infoArray[4].regNum = 2;
-    infoArray[4].refCount = 4; //DU
-    infoArray[4].physicalType = LowOpndRegType_gp;
-    infoArray[5].regNum = 5;
-    infoArray[5].refCount = 2; //DU
-    infoArray[5].physicalType = LowOpndRegType_gp;
-    infoArray[6].regNum = 10;
-    infoArray[6].refCount = 3;
-    infoArray[6].physicalType = LowOpndRegType_gp;
-    infoArray[7].regNum = 6;
-    infoArray[7].refCount = 4; //DU
-    infoArray[7].physicalType = LowOpndRegType_gp;
-    infoArray[8].regNum = 3;
-    infoArray[8].refCount = 3;
-    infoArray[8].physicalType = LowOpndRegType_gp;
-    infoArray[9].regNum = 7;
-    infoArray[9].refCount = 2; //DU
-    infoArray[9].physicalType = LowOpndRegType_gp;
-    numTmps = 12;
-#if defined(ENABLE_TRACING)
-    infoArray[12].regNum = 4;
-    infoArray[12].refCount = 3; //DU
-    infoArray[12].physicalType = LowOpndRegType_gp;
-    infoArray[13].regNum = 3;
-    infoArray[13].refCount = 2; //DU
-    infoArray[13].physicalType = LowOpndRegType_scratch;
-    infoArray[14].regNum = 15;
-    infoArray[14].refCount = 2; //DU
-    infoArray[14].physicalType = LowOpndRegType_gp;
-    infoArray[15].regNum = 16;
-    infoArray[15].refCount = 2; //DU
-    infoArray[15].physicalType = LowOpndRegType_gp;
-    infoArray[16].regNum = PhysicalReg_EDX;
-    infoArray[16].refCount = 2; //DU
-    infoArray[16].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
-    infoArray[17].regNum = 6;
-    infoArray[17].refCount = 2; //DU
-    infoArray[17].physicalType = LowOpndRegType_scratch;
-    numTmps = 18;
-#endif
-    infoArray[10].regNum = 14;
-    infoArray[10].refCount = 2; //DU
-    infoArray[10].physicalType = LowOpndRegType_gp;
-    infoArray[11].regNum = 4;
-    infoArray[11].refCount = 2; //DU
-    infoArray[11].physicalType = LowOpndRegType_scratch;
-#ifdef DEBUG_CALL_STACK
-    infoArray[numTmps].regNum = 5;
-    infoArray[numTmps].refCount = 2;
-    infoArray[numTmps].physicalType = LowOpndRegType_scratch;
-    numTmps++;
-#endif
-    infoArray[numTmps].regNum = PhysicalReg_EBX;
-    /* used to hold chaining cell
-       updated to be returnAddr
-       then conditionally updated to zero
-       used to update inJitCodeCache
-       compare against zero to determine whether to jump to native code
-       jump to native code (%ebx)
-    */
-    infoArray[numTmps].refCount = 3+1+1;
-    infoArray[numTmps].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
-    numTmps++;
-    infoArray[numTmps].regNum = 17;
-    infoArray[numTmps].refCount = 2; //DU
-    infoArray[numTmps].physicalType = LowOpndRegType_gp;
-    numTmps++;
-    infoArray[numTmps].regNum = 7;
-    infoArray[numTmps].refCount = 4; //DU
-    infoArray[numTmps].physicalType = LowOpndRegType_scratch;
-    numTmps++;
-    return numTmps;
 }
 
 /* update temporaries used by predicted INVOKE_VIRTUAL & INVOKE_INTERFACE */
@@ -3308,26 +3337,28 @@ int iget_obj_inst = -1;
 //! This function updates infoArray with temporaries accessed when lowering the bytecode
 
 //! returns the number of temporaries
-int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
+int getTempRegInfo(TempRegInfo* infoArray, const MIR * currentMIR) { //returns an array of TempRegInfo
     int k;
     int numTmps;
     for(k = 0; k < MAX_TEMP_REG_PER_BYTECODE; k++) {
         infoArray[k].linkageToVR = -1;
         infoArray[k].versionNum = 0;
         infoArray[k].shareWithVR = true;
+        infoArray[k].shareRegWithLivenessInfo = true;
         infoArray[k].is8Bit = false;
     }
-    u2 vA, v1, length, num, tmp;
-    u2 inst_op = INST_INST(inst);
+    u2 vA, vB, v1, v2, length, num, tmp;
+    Opcode inst_op = currentMIR->dalvikInsn.opcode;
     s2 tmp_s2;
-    s4 tmp_s4;
-    switch(inst_op) {
-    case OP_APUT_BYTE:
-        for(k = 0; k < MAX_TEMP_REG_PER_BYTECODE; k++)
-            infoArray[k].shareWithVR = true; //false;
-        break;
-    }
-    switch (INST_INST(inst)) {
+
+#ifdef WITH_JIT_INLINING
+    /* A bytecode with the MIR_INLINED op will be treated as
+     * no-op during codegen */
+    if (currentMIR->OptimizationFlags & MIR_INLINED)
+        return 0; // No temporaries accessed
+#endif
+
+    switch (inst_op) {
     case OP_NOP:
         return 0;
     case OP_MOVE:
@@ -3522,7 +3553,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         return 9;
 
     case OP_ARRAY_LENGTH:
-        vA = INST_A(inst);
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //DU
         infoArray[0].physicalType = LowOpndRegType_gp;
@@ -3605,7 +3636,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         return 8;
 
     case OP_FILLED_NEW_ARRAY:
-        length = INST_B(inst);
+        length = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = PhysicalReg_EAX;
         //4: class object
         //3: defined by C function, used twice (array object)
@@ -3667,7 +3698,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         return 9+length;
 
     case OP_FILLED_NEW_ARRAY_RANGE:
-        length = INST_AA(inst);
+        length = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = PhysicalReg_EAX;
         //4: class object
         //3: defined by C function, used twice (array object)
@@ -3867,7 +3898,21 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
     case OP_AGET_BYTE:
     case OP_AGET_CHAR:
     case OP_AGET_SHORT:
-        vA = INST_AA(inst);
+#ifdef INC_NCG_O0
+        if(gDvm.helper_switch[7]) {
+            infoArray[0].regNum = PhysicalReg_EBX;
+            infoArray[0].refCount = 2;
+            infoArray[0].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+            infoArray[1].regNum = PhysicalReg_ECX;
+            infoArray[1].refCount = 2;
+            infoArray[1].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+            infoArray[2].regNum = PhysicalReg_EDX;
+            infoArray[2].refCount = 2;
+            infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+            return 3;
+        }
+#endif
+        vA = currentMIR->dalvikInsn.vA;
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 4; //DU
         infoArray[0].physicalType = LowOpndRegType_gp;
@@ -3904,10 +3949,12 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[4].refCount = 2;
         infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
         return 5;
-
+    case OP_APUT_BYTE:
+        for(k = 0; k < MAX_TEMP_REG_PER_BYTECODE; k++)
+            infoArray[k].shareWithVR = true; //false;
+        // Intentional fall through
     case OP_APUT:
     case OP_APUT_BOOLEAN:
-    case OP_APUT_BYTE:
     case OP_APUT_CHAR:
     case OP_APUT_SHORT:
         infoArray[0].regNum = 1;
@@ -4011,7 +4058,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         {
 #if 0
           if(iget_obj_inst == 12) {
-            LOGD("increase count for instance %d of %s %s", iget_obj_inst, currentMethod->clazz->descriptor, currentMethod->name);
+            ALOGD("increase count for instance %d of %s %s", iget_obj_inst, currentMethod->clazz->descriptor, currentMethod->name);
             infoArray[5].refCount = 4; //DU
           }
           else
@@ -4267,33 +4314,36 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
 
     case OP_RETURN_VOID:
     case OP_RETURN_VOID_BARRIER:
-        return updateReturnCommon(infoArray);
+        infoArray[0].regNum = PhysicalReg_ECX;
+        infoArray[0].refCount = 2; //DU
+        infoArray[0].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[1].regNum = PhysicalReg_EDX;
+        infoArray[1].refCount = 1; //D
+        infoArray[1].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 2;
     case OP_RETURN:
     case OP_RETURN_OBJECT:
-        numTmps = updateReturnCommon(infoArray);
-
-        infoArray[numTmps].regNum = 21;
-        infoArray[numTmps].refCount = 2; //DU
-        infoArray[numTmps].physicalType = LowOpndRegType_gp;
-        numTmps++;
-        infoArray[numTmps].regNum = 22;
-        infoArray[numTmps].refCount = 2; //DU
-        infoArray[numTmps].physicalType = LowOpndRegType_gp;
-        numTmps++;
-        return numTmps;
+        infoArray[0].regNum = 1;
+        infoArray[0].refCount = 2; //DU
+        infoArray[0].physicalType = LowOpndRegType_gp;
+        infoArray[1].regNum = PhysicalReg_ECX;
+        infoArray[1].refCount = 2; //DU
+        infoArray[1].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[2].regNum = PhysicalReg_EDX;
+        infoArray[2].refCount = 1; //D
+        infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 3;
     case OP_RETURN_WIDE:
-        numTmps = updateReturnCommon(infoArray);
-
-        infoArray[numTmps].regNum = 10;
-        infoArray[numTmps].refCount = 2; //DU
-        infoArray[numTmps].physicalType = LowOpndRegType_scratch;
-        numTmps++;
-        infoArray[numTmps].regNum = 1;
-        infoArray[numTmps].refCount = 2; //DU
-        infoArray[numTmps].physicalType = LowOpndRegType_xmm;
-        numTmps++;
-        return numTmps;
-
+        infoArray[0].regNum = 1;
+        infoArray[0].refCount = 2; //DU
+        infoArray[0].physicalType = LowOpndRegType_xmm;
+        infoArray[1].regNum = PhysicalReg_ECX;
+        infoArray[1].refCount = 2; //DU
+        infoArray[1].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        infoArray[2].regNum = PhysicalReg_EDX;
+        infoArray[2].refCount = 1; //D
+        infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+        return 3;
     case OP_INVOKE_VIRTUAL:
     case OP_INVOKE_VIRTUAL_RANGE:
 #ifdef PREDICTED_CHAINING
@@ -4303,9 +4353,9 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[numTmps].physicalType = LowOpndRegType_gp;
         numTmps++;
         if(inst_op == OP_INVOKE_VIRTUAL)
-            k = updateInvokeNoRange(infoArray, numTmps);
+            k = updateInvokeNoRange(infoArray, numTmps, currentMIR);
         else
-            k = updateInvokeRange(infoArray, numTmps);
+            k = updateInvokeRange(infoArray, numTmps, currentMIR);
         return k;
 #else
         infoArray[0].regNum = 3;
@@ -4388,9 +4438,9 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[11].refCount = 2; //DU
         infoArray[11].physicalType = LowOpndRegType_scratch;
         if(inst_op == OP_INVOKE_SUPER)
-            k = updateInvokeNoRange(infoArray, 12);
+            k = updateInvokeNoRange(infoArray, 12, currentMIR);
         else
-            k = updateInvokeRange(infoArray, 12);
+            k = updateInvokeRange(infoArray, 12, currentMIR);
         return k;
     case OP_INVOKE_DIRECT:
     case OP_INVOKE_DIRECT_RANGE:
@@ -4418,9 +4468,9 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[6].refCount = 2; //DU
         infoArray[6].physicalType = LowOpndRegType_scratch;
         if(inst_op == OP_INVOKE_DIRECT)
-            k = updateInvokeNoRange(infoArray, 7);
+            k = updateInvokeNoRange(infoArray, 7, currentMIR);
         else
-            k = updateInvokeRange(infoArray, 7);
+            k = updateInvokeRange(infoArray, 7, currentMIR);
         return k;
     case OP_INVOKE_STATIC:
     case OP_INVOKE_STATIC_RANGE:
@@ -4445,9 +4495,9 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[5].refCount = 2; //DU
         infoArray[5].physicalType = LowOpndRegType_scratch;
         if(inst_op == OP_INVOKE_STATIC)
-            k = updateInvokeNoRange(infoArray, 6);
+            k = updateInvokeNoRange(infoArray, 6, currentMIR);
         else
-            k = updateInvokeRange(infoArray, 6);
+            k = updateInvokeRange(infoArray, 6, currentMIR);
         return k;
     case OP_INVOKE_INTERFACE:
     case OP_INVOKE_INTERFACE_RANGE:
@@ -4458,9 +4508,9 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[numTmps].physicalType = LowOpndRegType_gp;
         numTmps++;
         if(inst_op == OP_INVOKE_INTERFACE)
-            k = updateInvokeNoRange(infoArray, numTmps);
+            k = updateInvokeNoRange(infoArray, numTmps, currentMIR);
         else
-            k = updateInvokeRange(infoArray, numTmps);
+            k = updateInvokeRange(infoArray, numTmps, currentMIR);
         return k;
 #else
         infoArray[0].regNum = 1;
@@ -4504,10 +4554,13 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         ////////////////////////////////////////////// ALU
     case OP_NEG_INT:
     case OP_NOT_INT:
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_gp;
-        infoArray[0].shareWithVR = false;
+        if (vA != vB)
+            infoArray[0].shareWithVR = false;
         return 1;
     case OP_NEG_LONG:
         infoArray[0].regNum = 1;
@@ -4518,28 +4571,39 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[1].physicalType = LowOpndRegType_xmm;
         return 2;
     case OP_NOT_LONG:
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_xmm;
-        infoArray[0].shareWithVR = false;
+        if (vA != vB)
+            infoArray[0].shareWithVR = false;
         infoArray[1].regNum = 2;
         infoArray[1].refCount = 2;
         infoArray[1].physicalType = LowOpndRegType_xmm;
         return 2;
     case OP_NEG_FLOAT:
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_gp;
-        infoArray[0].shareWithVR = false;
+        if (vA != vB)
+            infoArray[0].shareWithVR = false;
         return 1;
     case OP_NEG_DOUBLE:
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = 1;
-        infoArray[0].refCount = 2; //define, use
+        infoArray[0].refCount = 3; //define, use
         infoArray[0].physicalType = LowOpndRegType_xmm;
         infoArray[1].regNum = 2;
-        infoArray[1].refCount = 3; //define, update, use
+        infoArray[1].refCount = 2; //define, update, use
         infoArray[1].physicalType = LowOpndRegType_xmm;
+        if (vA != vB)
+            infoArray[0].shareWithVR = false;
         return 2;
+
     case OP_INT_TO_LONG: //hard-code eax & edx
         infoArray[0].regNum = PhysicalReg_EAX;
         infoArray[0].refCount = 2+1;
@@ -4549,8 +4613,15 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[1].refCount = 1+1; //cdq accesses edx & eax
         infoArray[1].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
         return 2;
-    case OP_INT_TO_FLOAT:
     case OP_INT_TO_DOUBLE:
+        infoArray[0].regNum = 1;
+        infoArray[0].refCount = 2;
+        infoArray[0].physicalType = LowOpndRegType_gp;
+        infoArray[1].regNum = 2;
+        infoArray[1].refCount = 2;
+        infoArray[1].physicalType = LowOpndRegType_xmm;
+        return 2;
+    case OP_INT_TO_FLOAT:
     case OP_LONG_TO_FLOAT:
     case OP_LONG_TO_DOUBLE:
     case OP_FLOAT_TO_DOUBLE:
@@ -4579,10 +4650,15 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
     case OP_INT_TO_BYTE:
     case OP_INT_TO_CHAR:
     case OP_INT_TO_SHORT:
+        vA = currentMIR->dalvikInsn.vA;
+        vB = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 4; //define, update, update, use
         infoArray[0].physicalType = LowOpndRegType_gp;
-        infoArray[0].shareWithVR = false;
+        if (vA != vB)
+            infoArray[0].shareWithVR = false;
+        if (inst_op == OP_INT_TO_BYTE)
+            infoArray[0].is8Bit = true;
         return 1;
 
     case OP_ADD_INT:
@@ -4599,10 +4675,10 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
     case OP_XOR_INT_2ADDR:
         if(inst_op == OP_ADD_INT || inst_op == OP_SUB_INT || inst_op == OP_MUL_INT ||
            inst_op == OP_AND_INT || inst_op == OP_OR_INT || inst_op == OP_XOR_INT) {
-            vA = INST_AA(inst);
-            v1 = *((u1*)rPC + 2);
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = currentMIR->dalvikInsn.vB;
         } else {
-            vA = INST_A(inst);
+            vA = currentMIR->dalvikInsn.vA;
             v1 = vA;
         }
         infoArray[0].regNum = 1;
@@ -4619,10 +4695,10 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
     case OP_SHR_INT_2ADDR:
     case OP_USHR_INT_2ADDR: //use %cl or %ecx?
         if(inst_op == OP_SHL_INT || inst_op == OP_SHR_INT || inst_op == OP_USHR_INT) {
-            vA = INST_AA(inst);
-            v1 = *((u1*)rPC + 2);
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = currentMIR->dalvikInsn.vB;
         } else {
-            vA = INST_A(inst);
+            vA = currentMIR->dalvikInsn.vA;
             v1 = vA;
         }
         infoArray[0].regNum = 1;
@@ -4640,7 +4716,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
     case OP_DIV_INT_2ADDR:
     case OP_REM_INT_2ADDR: //hard-code %eax, %edx (dividend in edx:eax; quotient in eax; remainder in edx)
         infoArray[0].regNum = 2;
-        infoArray[0].refCount = 4; //define, update, use
+        infoArray[0].refCount = 7; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_gp;
         infoArray[1].regNum = PhysicalReg_EAX; //dividend, quotient
         infoArray[1].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
@@ -4650,14 +4726,20 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[3].regNum = 1;
         infoArray[3].refCount = 2; //define, use
         infoArray[3].physicalType = LowOpndRegType_scratch;
+        infoArray[4].regNum = 3;
+        infoArray[4].refCount = 4; //define, use
+        infoArray[4].physicalType = LowOpndRegType_gp;
+        infoArray[5].regNum = PhysicalReg_EBX;
+        infoArray[5].refCount = 2; //define, use
+        infoArray[5].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
         if(inst_op == OP_DIV_INT || inst_op == OP_DIV_INT_2ADDR) {
-            infoArray[1].refCount = 5;
-            infoArray[2].refCount = 4;
+            infoArray[1].refCount = 10;
+            infoArray[2].refCount = 8;
         } else {
-            infoArray[1].refCount = 4;
-            infoArray[2].refCount = 5;
+            infoArray[1].refCount = 9;
+            infoArray[2].refCount = 11;
         }
-        return 4;
+        return 6;
 
     case OP_ADD_INT_LIT16:
     case OP_MUL_INT_LIT16:
@@ -4672,14 +4754,8 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
     case OP_SHL_INT_LIT8:
     case OP_SHR_INT_LIT8:
     case OP_USHR_INT_LIT8:
-        if(inst_op == OP_ADD_INT_LIT16 || inst_op == OP_MUL_INT_LIT16 ||
-           inst_op == OP_AND_INT_LIT16 || inst_op == OP_OR_INT_LIT16 || inst_op == OP_XOR_INT_LIT16) {
-            vA = INST_A(inst);
-            v1 = INST_B(inst);
-        } else {
-            vA = INST_AA(inst);
-            v1 = (u2)FETCH(1) & 0xff;
-        }
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_gp;
@@ -4689,8 +4765,8 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
 
     case OP_RSUB_INT_LIT8:
     case OP_RSUB_INT:
-        vA = INST_AA(inst);
-        v1 = (inst_op == OP_RSUB_INT) ? INST_B(inst) : ((u2)FETCH(1) & 0xff);
+        vA = currentMIR->dalvikInsn.vA;
+        v1 = currentMIR->dalvikInsn.vB;
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 2;
         infoArray[0].physicalType = LowOpndRegType_gp;
@@ -4707,13 +4783,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
     case OP_REM_INT_LIT16:
     case OP_DIV_INT_LIT8:
     case OP_REM_INT_LIT8:
-        if(inst_op == OP_DIV_INT_LIT8 || inst_op == OP_REM_INT_LIT8) {
-            tmp_s2 = (s2)FETCH(1) >> 8;
-        }
-        else {
-            tmp_s4 = (s2)FETCH(1);
-            tmp_s2 = tmp_s4;
-        }
+        tmp_s2 = currentMIR->dalvikInsn.vC;
         if((inst_op == OP_DIV_INT_LIT8 || inst_op == OP_DIV_INT_LIT16)) {
             int power = isPowerOfTwo(tmp_s2);
             if(power >= 1) { /* divide by a power of 2 constant */
@@ -4758,19 +4828,39 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         return 3;
 
     case OP_ADD_LONG:
+    case OP_ADD_LONG_2ADDR:
+        infoArray[0].regNum = 1;
+        infoArray[0].refCount = 3; //define, update, use
+        infoArray[0].physicalType = LowOpndRegType_gp;
+        if (inst_op == OP_ADD_LONG)
+            infoArray[0].shareWithVR = false;
+        infoArray[1].regNum = 2;
+        infoArray[1].refCount = 3; //define, use
+        infoArray[1].physicalType = LowOpndRegType_gp;
+        if (inst_op == OP_ADD_LONG)
+            infoArray[1].shareWithVR = false;
+        return 2;
     case OP_SUB_LONG:
     case OP_AND_LONG:
     case OP_OR_LONG:
     case OP_XOR_LONG:
-    case OP_ADD_LONG_2ADDR:
     case OP_SUB_LONG_2ADDR:
     case OP_AND_LONG_2ADDR:
     case OP_OR_LONG_2ADDR:
     case OP_XOR_LONG_2ADDR:
+        if(inst_op == OP_ADD_LONG || inst_op == OP_SUB_LONG || inst_op == OP_AND_LONG ||
+           inst_op == OP_OR_LONG || inst_op == OP_XOR_LONG) {
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = currentMIR->dalvikInsn.vB;
+        } else {
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = vA;
+        }
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_xmm;
-        infoArray[0].shareWithVR = false;
+        if(vA != v1)
+            infoArray[0].shareWithVR = false;
         infoArray[1].regNum = 2;
         infoArray[1].refCount = 2; //define, use
         infoArray[1].physicalType = LowOpndRegType_xmm;
@@ -4778,10 +4868,18 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
 
     case OP_SHL_LONG:
     case OP_SHL_LONG_2ADDR:
+        if(inst_op == OP_SHL_LONG) {
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = currentMIR->dalvikInsn.vB;
+        } else {
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = vA;
+        }
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_xmm;
-        infoArray[0].shareWithVR = false;
+        if(vA != v1)
+            infoArray[0].shareWithVR = false;
         infoArray[1].regNum = 2;
         infoArray[1].refCount = 3; //define, update, use
         infoArray[1].physicalType = LowOpndRegType_xmm;
@@ -4793,10 +4891,18 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
 
     case OP_SHR_LONG:
     case OP_SHR_LONG_2ADDR:
+        if(inst_op == OP_SHR_LONG) {
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = currentMIR->dalvikInsn.vB;
+        } else {
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = vA;
+        }
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 4; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_xmm;
-        infoArray[0].shareWithVR = false;
+        if(vA != v1)
+            infoArray[0].shareWithVR = false;
         infoArray[1].regNum = 2;
         infoArray[1].refCount = 4; //define, update, use
         infoArray[1].physicalType = LowOpndRegType_xmm;
@@ -4814,10 +4920,18 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
 
     case OP_USHR_LONG:
     case OP_USHR_LONG_2ADDR:
+        if(inst_op == OP_USHR_LONG) {
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = currentMIR->dalvikInsn.vB;
+        } else {
+            vA = currentMIR->dalvikInsn.vA;
+            v1 = vA;
+        }
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 3; //define, update, use
         infoArray[0].physicalType = LowOpndRegType_xmm;
-        infoArray[0].shareWithVR = false;
+        if(vA != v1)
+            infoArray[0].shareWithVR = false;
         infoArray[1].regNum = 2;
         infoArray[1].refCount = 3; //define, update, use
         infoArray[1].physicalType = LowOpndRegType_xmm;
@@ -4828,24 +4942,75 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         return 3;
 
     case OP_MUL_LONG: //general purpose register
+        vA = currentMIR->dalvikInsn.vA;//INST_AA(inst);
+        v1 = currentMIR->dalvikInsn.vB;
+        v2 = currentMIR->dalvikInsn.vC;
+        if (v1 != v2){  // when the multuplicands are not the same
+           infoArray[0].regNum = 1;
+           infoArray[0].refCount = 6;
+           infoArray[0].physicalType = LowOpndRegType_gp;
+           infoArray[0].shareWithVR = false;
+           infoArray[1].regNum = 2;
+           infoArray[1].refCount = 3;
+           infoArray[1].physicalType = LowOpndRegType_gp;
+           infoArray[2].regNum = 3;
+           infoArray[2].refCount = 3;
+           infoArray[2].physicalType = LowOpndRegType_gp;
+           infoArray[3].regNum = PhysicalReg_EAX;
+           infoArray[3].refCount = 2+1; //for mul_opc
+           infoArray[3].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+           infoArray[4].regNum = PhysicalReg_EDX;
+           infoArray[4].refCount = 2; //for mul_opc
+           infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+           return 5;
+        } else {        // when square of a number is to be computed
+           infoArray[0].regNum = 1;
+           infoArray[0].refCount = 8;
+           infoArray[0].physicalType = LowOpndRegType_gp;
+           infoArray[0].shareWithVR = false;
+           infoArray[1].regNum = PhysicalReg_EAX;
+           infoArray[1].refCount = 2+1; //for mul_opc
+           infoArray[1].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+           infoArray[2].regNum = PhysicalReg_EDX;
+           infoArray[2].refCount = 3+1; //for mul_opc
+           infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+           return 3;
+         }
+
     case OP_MUL_LONG_2ADDR:
-        infoArray[0].regNum = 1;
-        infoArray[0].refCount = 6;
-        infoArray[0].physicalType = LowOpndRegType_gp;
-        infoArray[0].shareWithVR = false;
-        infoArray[1].regNum = 2;
-        infoArray[1].refCount = 3;
-        infoArray[1].physicalType = LowOpndRegType_gp;
-        infoArray[2].regNum = 3;
-        infoArray[2].refCount = 3;
-        infoArray[2].physicalType = LowOpndRegType_gp;
-        infoArray[3].regNum = PhysicalReg_EAX;
-        infoArray[3].refCount = 2+1; //for mul_opc
-        infoArray[3].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
-        infoArray[4].regNum = PhysicalReg_EDX;
-        infoArray[4].refCount = 2; //for mul_opc
-        infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
-        return 5;
+        v1 = currentMIR->dalvikInsn.vA;
+        v2 = currentMIR->dalvikInsn.vB;
+        if (v1 != v2){  // when the multuplicands are not the same
+          infoArray[0].regNum = 1;
+          infoArray[0].refCount = 6;
+          infoArray[0].physicalType = LowOpndRegType_gp;
+          infoArray[0].shareWithVR = false;
+          infoArray[1].regNum = 2;
+          infoArray[1].refCount = 3;
+          infoArray[1].physicalType = LowOpndRegType_gp;
+          infoArray[2].regNum = 3;
+          infoArray[2].refCount = 3;
+          infoArray[2].physicalType = LowOpndRegType_gp;
+          infoArray[3].regNum = PhysicalReg_EAX;
+          infoArray[3].refCount = 2+1; //for mul_opc
+          infoArray[3].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+          infoArray[4].regNum = PhysicalReg_EDX;
+          infoArray[4].refCount = 2; //for mul_opc
+          infoArray[4].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+          return 5;
+        } else {    // when square of a number is to be computed
+          infoArray[0].regNum = 1;
+          infoArray[0].refCount = 8;
+          infoArray[0].physicalType = LowOpndRegType_gp;
+          infoArray[0].shareWithVR = false;
+          infoArray[1].regNum = PhysicalReg_EAX;
+          infoArray[1].refCount = 2+1; //for mul_opc
+          infoArray[1].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+          infoArray[2].regNum = PhysicalReg_EDX;
+          infoArray[2].refCount = 3+1; //for mul_opc
+          infoArray[2].physicalType = LowOpndRegType_gp | LowOpndRegType_hard;
+          return 3;
+        }
 
     case OP_DIV_LONG:
     case OP_REM_LONG:
@@ -4903,6 +5068,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[1].refCount = 2;
         infoArray[1].physicalType = LowOpndRegType_xmm;
         return 2;
+
     case OP_REM_FLOAT:
     case OP_REM_FLOAT_2ADDR:
         infoArray[0].regNum = 1;
@@ -4985,27 +5151,13 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[1].regNum = 2;
         infoArray[1].refCount = 2;
         infoArray[1].physicalType = LowOpndRegType_gp;
-        infoArray[2].regNum = 3;
-        infoArray[2].refCount = 3;
-        infoArray[2].physicalType = LowOpndRegType_gp;
-        infoArray[3].regNum = 4;
-        infoArray[3].refCount = 3;
-        infoArray[3].physicalType = LowOpndRegType_gp;
-        infoArray[4].regNum = 5;
-        infoArray[4].refCount = 2;
-        infoArray[4].physicalType = LowOpndRegType_gp;
-        infoArray[5].regNum = 6;
-        infoArray[5].refCount = 7;
-        infoArray[5].physicalType = LowOpndRegType_gp;
-        return 6;
+        return 2;
 
     case OP_EXECUTE_INLINE:
     case OP_EXECUTE_INLINE_RANGE:
-        if(inst_op == OP_EXECUTE_INLINE)
-            num = INST_B(inst);
-        else
-            num = INST_AA(inst);
-        tmp = FETCH(1);
+        num = currentMIR->dalvikInsn.vA;
+#if defined(WITH_JIT)
+        tmp = currentMIR->dalvikInsn.vB;
         switch (tmp) {
             case INLINE_STRING_LENGTH:
                 infoArray[0].regNum = 1;
@@ -5032,6 +5184,19 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
                 infoArray[2].refCount = 2;
                 infoArray[2].physicalType = LowOpndRegType_scratch;
                 return 3;
+            case INLINE_STRING_CHARAT:
+                infoArray[0].regNum = 1;
+                infoArray[0].refCount = 7;
+                infoArray[0].physicalType = LowOpndRegType_gp;
+                infoArray[0].shareWithVR = false;
+                infoArray[1].regNum = 2;
+                infoArray[1].refCount = 7;
+                infoArray[1].physicalType = LowOpndRegType_gp;
+                infoArray[1].shareWithVR = false;
+                infoArray[2].regNum = 3;
+                infoArray[2].refCount = 2;
+                infoArray[2].physicalType = LowOpndRegType_gp;
+                return 3;
             case INLINE_STRING_FASTINDEXOF_II:
 #if defined(USE_GLOBAL_STRING_DEFS)
                 break;
@@ -5039,12 +5204,14 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
                 infoArray[0].regNum = 1;
                 infoArray[0].refCount = 14 * LOOP_COUNT;
                 infoArray[0].physicalType = LowOpndRegType_gp;
+                infoArray[0].shareWithVR = false;
                 infoArray[1].regNum = 2;
                 infoArray[1].refCount = 3 * LOOP_COUNT;
                 infoArray[1].physicalType = LowOpndRegType_gp;
                 infoArray[2].regNum = 3;
                 infoArray[2].refCount = 11 * LOOP_COUNT;
                 infoArray[2].physicalType = LowOpndRegType_gp;
+                infoArray[2].shareWithVR = false;
                 infoArray[3].regNum = 4;
                 infoArray[3].refCount = 3 * LOOP_COUNT;
                 infoArray[3].physicalType = LowOpndRegType_gp;
@@ -5066,6 +5233,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
                 infoArray[0].regNum = 1;
                 infoArray[0].refCount = 7;
                 infoArray[0].physicalType = LowOpndRegType_gp;
+                infoArray[0].shareWithVR = false;
                 infoArray[1].regNum = 2;
                 infoArray[1].refCount = 2;
                 infoArray[1].physicalType = LowOpndRegType_gp;
@@ -5086,6 +5254,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
                 infoArray[0].regNum = 1;
                 infoArray[0].refCount = 5;
                 infoArray[0].physicalType = LowOpndRegType_gp;
+                infoArray[0].shareWithVR = false;
                 infoArray[1].regNum = 2;
                 infoArray[1].refCount = 4;
                 infoArray[1].physicalType = LowOpndRegType_gp;
@@ -5097,6 +5266,19 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
                 infoArray[0].regNum = 1;
                 infoArray[0].refCount = 4;
                 infoArray[0].physicalType = LowOpndRegType_gp;
+                infoArray[0].shareWithVR = false;
+                infoArray[1].regNum = 2;
+                infoArray[1].refCount = 3;
+                infoArray[1].physicalType = LowOpndRegType_gp;
+                infoArray[2].regNum = 3;
+                infoArray[2].refCount = 2;
+                infoArray[2].physicalType = LowOpndRegType_gp;
+                return 3;
+            case INLINE_MATH_MIN_INT:
+                infoArray[0].regNum = 1;
+                infoArray[0].refCount = 4;
+                infoArray[0].physicalType = LowOpndRegType_gp;
+                infoArray[0].shareWithVR = false;
                 infoArray[1].regNum = 2;
                 infoArray[1].refCount = 3;
                 infoArray[1].physicalType = LowOpndRegType_gp;
@@ -5108,6 +5290,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
                 infoArray[0].regNum = 1;
                 infoArray[0].refCount = 3;
                 infoArray[0].physicalType = LowOpndRegType_gp;
+                infoArray[0].shareWithVR = false;
                 infoArray[1].regNum = 2;
                 infoArray[1].refCount = 2;
                 infoArray[1].physicalType = LowOpndRegType_gp;
@@ -5119,6 +5302,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
                 infoArray[1].regNum = 2;
                 infoArray[1].refCount = 3;
                 infoArray[1].physicalType = LowOpndRegType_gp;
+                infoArray[1].shareWithVR = false;
                 infoArray[2].regNum = 3;
                 infoArray[2].refCount = 3;
                 infoArray[2].physicalType = LowOpndRegType_gp;
@@ -5164,7 +5348,7 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
             default:
                 break;
         }
-
+#endif
         infoArray[0].regNum = 1;
         infoArray[0].refCount = 4;
         infoArray[0].physicalType = LowOpndRegType_gp;
@@ -5214,9 +5398,9 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[numTmps].physicalType = LowOpndRegType_gp;
         numTmps++;
         if(inst_op == OP_INVOKE_VIRTUAL_QUICK)
-            k = updateInvokeNoRange(infoArray, numTmps);
+            k = updateInvokeNoRange(infoArray, numTmps, currentMIR);
         else
-            k = updateInvokeRange(infoArray, numTmps);
+            k = updateInvokeRange(infoArray, numTmps, currentMIR);
         return k;
 #else
         infoArray[0].regNum = 1;
@@ -5267,9 +5451,9 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         infoArray[6].refCount = 2;
         infoArray[6].physicalType = LowOpndRegType_scratch;
         if(inst_op == OP_INVOKE_SUPER_QUICK_RANGE)
-            k = updateInvokeRange(infoArray, 7);
+            k = updateInvokeRange(infoArray, 7, currentMIR);
         else
-            k = updateInvokeNoRange(infoArray, 7);
+            k = updateInvokeNoRange(infoArray, 7, currentMIR);
         return k;
 #ifdef SUPPORT_HLO
     case kExtInstruction:
@@ -5463,6 +5647,12 @@ int getTempRegInfo(TempRegInfo* infoArray) { //returns an array of TempRegInfo
         return 7;
     }
 #endif
+    default:
+        ALOGE("JIT_ERROR: JIT does not support bytecode 0x%hx when updating\n"
+                "temp accesses\n", currentMIR->dalvikInsn.opcode);
+        SET_JIT_ERROR(kJitErrorUnsupportedBytecode);
+        assert(false && "All opcodes should be supported.");
+        break;
     }
     return -1;
 }
