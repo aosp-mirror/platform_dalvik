@@ -155,7 +155,7 @@ public final class RopTranslator {
         this.regCount = blocks.getRegCount()
                 + (paramsAreInOrder ? 0 : this.paramSize);
 
-        this.output = new OutputCollector(dexOptions, maxInsns, bsz * 3, regCount);
+        this.output = new OutputCollector(dexOptions, maxInsns, bsz * 3, regCount, paramSize);
 
         if (locals != null) {
             this.translationVisitor =

@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.dex.DexOptions;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.SourcePosition;
@@ -88,10 +89,34 @@ public final class HighRegisterPrefix extends VariableSizeInsn {
 
         insns = new SimpleInsn[sz];
 
-        for (int i = 0, outAt = 0; i < sz; i++) {
+        if (DexOptions.ALIGN_64BIT_REGS_SUPPORT) {
+          int outAt = 0;
+
+          // Insert mov instructions to transfer registers which are not compatible with an instruction
+          // into compatible registers. Compatible registers start at 0 until registers.getWordCount().
+          // 64-bit registers are low numbered in order to align them on even registers, and numbering
+          // of 32-bit registers start after the last number of 64-bit register.
+          for (int i = 0; i < sz; i++) {
+            RegisterSpec src = registers.get(i);
+            if (src.isCategory2()) {
+              insns[i] = moveInsnFor(src, outAt);
+              outAt += src.getCategory();
+            }
+          }
+
+          for (int i = 0; i < sz; i++) {
+            RegisterSpec src = registers.get(i);
+            if (src.isCategory1()) {
+              insns[i] = moveInsnFor(src, outAt);
+              outAt += src.getCategory();
+            }
+          }
+        } else {
+          for (int i = 0, outAt = 0; i < sz; i++) {
             RegisterSpec src = registers.get(i);
             insns[i] = moveInsnFor(src, outAt);
             outAt += src.getCategory();
+          }
         }
     }
 
