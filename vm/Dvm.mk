@@ -34,10 +34,10 @@ ifneq ($(strip $(LOCAL_CLANG)),true)
 LOCAL_CFLAGS += -fno-align-jumps
 endif
 
-ifeq ($(MALLOC_IMPL),jemalloc)
-LOCAL_CFLAGS += -DUSE_JEMALLOC
-else
+ifeq ($(MALLOC_IMPL),dlmalloc)
 LOCAL_CFLAGS += -DUSE_DLMALLOC
+else
+LOCAL_CFLAGS += -DUSE_JEMALLOC
 endif
 
 #
