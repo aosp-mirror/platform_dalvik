@@ -17,6 +17,7 @@
 package com.android.dx.merge;
 
 import com.android.dex.DexException;
+import com.android.dex.DexIndexOverflowException;
 import com.android.dx.io.CodeReader;
 import com.android.dx.io.Opcodes;
 import com.android.dx.io.instructions.DecodedInstruction;
@@ -105,7 +106,7 @@ final class InstructionTransformer {
 
     private static void jumboCheck(boolean isJumbo, int newIndex) {
         if (!isJumbo && (newIndex > 0xffff)) {
-            throw new DexException("Cannot merge new index " + newIndex +
+            throw new DexIndexOverflowException("Cannot merge new index " + newIndex +
                                    " into a non-jumbo instruction!");
         }
     }

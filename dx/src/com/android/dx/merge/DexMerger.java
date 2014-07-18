@@ -22,6 +22,7 @@ import com.android.dex.ClassDef;
 import com.android.dex.Code;
 import com.android.dex.Dex;
 import com.android.dex.DexException;
+import com.android.dex.DexIndexOverflowException;
 import com.android.dex.FieldId;
 import com.android.dex.MethodId;
 import com.android.dex.ProtoId;
@@ -409,7 +410,7 @@ public final class DexMerger {
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
                 if (newIndex < 0 || newIndex > 0xffff) {
-                    throw new IllegalArgumentException("type ID not in [0, 0xffff]: " + newIndex);
+                    throw new DexIndexOverflowException("type ID not in [0, 0xffff]: " + newIndex);
                 }
                 indexMap.typeIds[oldIndex] = (short) newIndex;
             }
@@ -452,7 +453,7 @@ public final class DexMerger {
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
                 if (newIndex < 0 || newIndex > 0xffff) {
-                    throw new IllegalArgumentException("proto ID not in [0, 0xffff]: " + newIndex);
+                    throw new DexIndexOverflowException("proto ID not in [0, 0xffff]: " + newIndex);
                 }
                 indexMap.protoIds[oldIndex] = (short) newIndex;
             }
@@ -475,7 +476,7 @@ public final class DexMerger {
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
                 if (newIndex < 0 || newIndex > 0xffff) {
-                    throw new IllegalArgumentException("field ID not in [0, 0xffff]: " + newIndex);
+                    throw new DexIndexOverflowException("field ID not in [0, 0xffff]: " + newIndex);
                 }
                 indexMap.fieldIds[oldIndex] = (short) newIndex;
             }
@@ -498,7 +499,8 @@ public final class DexMerger {
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
                 if (newIndex < 0 || newIndex > 0xffff) {
-                    throw new IllegalArgumentException("method ID not in [0, 0xffff]: " + newIndex);
+                    throw new DexIndexOverflowException(
+                        "method ID not in [0, 0xffff]: " + newIndex);
                 }
                 indexMap.methodIds[oldIndex] = (short) newIndex;
             }
