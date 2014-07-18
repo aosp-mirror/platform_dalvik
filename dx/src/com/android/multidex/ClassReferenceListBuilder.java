@@ -166,14 +166,13 @@ public class ClassReferenceListBuilder {
      * Returns a suitable content for the argument file given to dx with --main-dex-list.
      */
     public String getMainDexList() {
-        String lineSeparator = System.getProperty("line.separator", "\n");
         StringBuilder sb = new StringBuilder();
         for (String classDescriptor : toKeep) {
             sb.append(classDescriptor);
             sb.append(CLASS_EXTENSION);
-            sb.append(lineSeparator);
+            sb.append(EOL);
         }
-        return lineSeparator.toString();
+        return sb.toString();
     }
 
     private static void printUsage() {
