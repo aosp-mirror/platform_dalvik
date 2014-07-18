@@ -19,9 +19,11 @@ package com.android.dx.dex.code;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.SourcePosition;
+import com.android.dx.ssa.RegisterMapper;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 import com.android.dx.util.TwoColumnOutput;
+
 import java.util.BitSet;
 
 /**
@@ -378,6 +380,17 @@ public abstract class DalvInsn {
      */
     public final int getNextAddress() {
         return getAddress() + codeSize();
+    }
+
+    /**
+     * Returns an instance that is just like this one, except that the
+     * register list is mapped by using {@code mapper}.
+     *
+     * @param mapper {@code non-null;} used to map registers
+     * @return {@code non-null;} an appropriately-constructed instance
+     */
+    public DalvInsn withMapper(RegisterMapper mapper) {
+      return withRegisters(mapper.map(getRegisters()));
     }
 
     /**
