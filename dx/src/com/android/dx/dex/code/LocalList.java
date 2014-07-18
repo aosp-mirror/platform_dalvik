@@ -353,9 +353,6 @@ public final class LocalList extends FixedSizeList {
             } else if (insn instanceof LocalStart) {
                 RegisterSpec local = ((LocalStart) insn).getLocal();
                 state.startLocal(insn.getAddress(), local);
-            } else if (insn instanceof LocalEnd) {
-                RegisterSpec local = ((LocalEnd) insn).getLocal();
-                state.endLocal(insn.getAddress(), local);
             }
         }
 
