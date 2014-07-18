@@ -870,6 +870,8 @@ public final class OutputFinisher {
 
       for (int i = 0; i < insnSize; i++) {
         DalvInsn insn = insns.get(i);
+        // Since there is no need to replace CodeAddress since it does not use registers, skips it to
+        // avoid to update all TargetInsn that contain a reference to CodeAddress
         if (!(insn instanceof CodeAddress)) {
           insns.set(i, insn.withRegisterOffset(delta));
         }
@@ -892,8 +894,10 @@ public final class OutputFinisher {
 
       for (int i = 0; i < insnSize; i++) {
         DalvInsn insn = insns.get(i);
+        // Since there is no need to replace CodeAddress since it does not use registers, skips it to
+        // avoid to update all TargetInsn that contain a reference to CodeAddress
         if (!(insn instanceof CodeAddress)) {
-          insns.set(i, insn.withRegisters(mapper.map(insn.getRegisters())));
+          insns.set(i, insn.withMapper(mapper));
         }
       }
     }
