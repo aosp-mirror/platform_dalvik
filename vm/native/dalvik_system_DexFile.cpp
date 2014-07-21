@@ -130,7 +130,7 @@ static void addToDexFileTable(DexOrJar* pDexOrJar) {
 }
 
 /*
- * private static int openDexFileNative(String sourceName, String outputName,
+ * private static int openDexFile(String sourceName, String outputName,
  *     int flags) throws IOException
  *
  * Open a DEX file, returning a pointer to our internal data structure.
@@ -146,7 +146,7 @@ static void addToDexFileTable(DexOrJar* pDexOrJar) {
  * table and refCount them.  Requires atomic ops or adding "synchronized"
  * to the non-native code that calls here.
  */
-static void Dalvik_dalvik_system_DexFile_openDexFileNative(const u4* args,
+static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
     JValue* pResult)
 {
     StringObject* sourceNameObj = (StringObject*) args[0];
@@ -520,8 +520,8 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeededInternal(const u4* args,
 }
 
 const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
-    { "openDexFileNative",  "(Ljava/lang/String;Ljava/lang/String;I)J",
-        Dalvik_dalvik_system_DexFile_openDexFileNative },
+    { "openDexFile",  "(Ljava/lang/String;Ljava/lang/String;I)J",
+        Dalvik_dalvik_system_DexFile_openDexFile },
     { "openDexFile",        "([B)J",
         Dalvik_dalvik_system_DexFile_openDexFile_bytearray },
     { "closeDexFile",       "(J)V",
