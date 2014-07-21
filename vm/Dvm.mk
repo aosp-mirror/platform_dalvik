@@ -29,9 +29,11 @@ LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2
 LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-but-set-variable
 LOCAL_CFLAGS += -DARCH_VARIANT=\"$(dvm_arch_variant)\"
 LOCAL_CFLAGS += -D__STDC_LIMIT_MACROS
+LOCAL_CFLAGS += -Wno-unused-function -Wno-unused-variable -Wno-tautological-constant-out-of-range-compare -Wno-sometimes-initialized
 
 ifneq ($(strip $(LOCAL_CLANG)),true)
-LOCAL_CFLAGS += -fno-align-jumps
+#breaks with host clang, lazy WAR since will be deleted soon
+#LOCAL_CFLAGS += -fno-align-jumps
 endif
 
 ifeq ($(MALLOC_IMPL),dlmalloc)
