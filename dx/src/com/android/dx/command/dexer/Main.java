@@ -712,7 +712,10 @@ public class Main {
         int maxFieldIdsInDex = numFieldIds + constantPoolSize + cf.getFields().size() +
                 MAX_FIELD_ADDED_DURING_DEX_CREATION;
 
-        if (args.multiDex && ((maxMethodIdsInDex > args.maxNumberOfIdxPerDex) ||
+        if (args.multiDex
+            // Never switch to the next dex if current dex is already empty
+            && (outputDex.getClassDefs().items().size() > 0)
+            && ((maxMethodIdsInDex > args.maxNumberOfIdxPerDex) ||
                 (maxFieldIdsInDex > args.maxNumberOfIdxPerDex))) {
             DexFile completeDex = outputDex;
             createDexFile();
