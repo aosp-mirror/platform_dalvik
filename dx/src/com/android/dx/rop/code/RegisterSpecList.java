@@ -16,7 +16,6 @@
 
 package com.android.dx.rop.code;
 
-import com.android.dx.dex.DexOptions;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.FixedSizeList;
@@ -382,27 +381,8 @@ public final class RegisterSpecList
 
         Expander expander = new Expander(this, compatRegs, base, duplicateFirst);
 
-        if (DexOptions.ALIGN_64BIT_REGS_SUPPORT) {
-          // Numbering done into HighRegisterPrefix starts by allocating 64-bit registers and
-          // thereafter adding 32-bit registers. Since the number of the first 32-bit register is
-          // unknown, 64-bit registers must be managed first.
-          for (int regIdx = 0; regIdx < sz; regIdx++) {
-            RegisterSpec reg = (RegisterSpec) get0(regIdx);
-            if (reg.isCategory2()) {
-              expander.expandRegister(regIdx, reg);
-            }
-          }
-
-          for (int regIdx = 0; regIdx < sz; regIdx++) {
-            RegisterSpec reg = (RegisterSpec) get0(regIdx);
-            if (reg.isCategory1()) {
-              expander.expandRegister(regIdx, reg);
-            }
-          }
-        } else {
-          for (int regIdx = 0; regIdx < sz; regIdx++) {
-            expander.expandRegister(regIdx);
-          }
+        for (int regIdx = 0; regIdx < sz; regIdx++) {
+          expander.expandRegister(regIdx);
         }
 
         return expander.getResult();
