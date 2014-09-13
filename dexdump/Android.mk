@@ -43,6 +43,7 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
 LOCAL_MODULE_TAGS := optional
 LOCAL_LDLIBS +=
 LOCAL_32_BIT_ONLY := true
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
@@ -53,6 +54,7 @@ LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries)
 LOCAL_SHARED_LIBRARIES := libutils
 LOCAL_MODULE_TAGS := optional
 LOCAL_32_BIT_ONLY := true
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 include $(BUILD_STATIC_LIBRARY)
 
 endif # !SDK_ONLY
@@ -69,11 +71,12 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := $(dexdump_src_files)
 LOCAL_C_INCLUDES := $(dexdump_c_includes)
 LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries) liblog libutils
-
 ifneq ($(strip $(USE_MINGW)),)
 LOCAL_STATIC_LIBRARIES += libz
 else
 LOCAL_LDLIBS += -lpthread -lz
 endif
-
+# TODO: Move dexdump from libdex to libart and lose the 32-bit limitation.
+LOCAL_32_BIT_ONLY := true
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 include $(BUILD_HOST_EXECUTABLE)
