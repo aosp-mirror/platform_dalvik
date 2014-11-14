@@ -57,6 +57,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -326,7 +327,8 @@ public class Main {
         assert args.numThreads == 1;
 
         if (args.mainDexListFile != null) {
-            classesInMainDex = readPathsFromFile(args.mainDexListFile);
+            classesInMainDex = new HashSet<String>();
+            readPathsFromFile(args.mainDexListFile, classesInMainDex);
         }
 
         if (!processAllFiles()) {
@@ -380,8 +382,7 @@ public class Main {
         }
     }
 
-    private static Set<String> readPathsFromFile(String fileName) throws IOException {
-        Set<String> paths = new HashSet<String>();
+    private static void readPathsFromFile(String fileName, Collection<String> paths) throws IOException {
         BufferedReader bfr = null;
         try {
             FileReader fr = new FileReader(fileName);
@@ -398,7 +399,6 @@ public class Main {
                 bfr.close();
             }
         }
-        return paths;
     }
 
     /**
@@ -1290,7 +1290,7 @@ public class Main {
         public boolean minimalMainDex = false;
 
         /** Optional list containing inputs read in from a file. */
-        private Set<String> inputList = null;
+        private List<String> inputList = null;
 
         private int maxNumberOfIdxPerDex = DexFormat.MAX_MEMBER_IDX + 1;
 
@@ -1496,7 +1496,8 @@ public class Main {
                 } else if(parser.isArg(INPUT_LIST_OPTION + "=")) {
                     File inputListFile = new File(parser.getLastValue());
                     try{
-                        inputList = readPathsFromFile(inputListFile.getAbsolutePath());
+                        inputList = new ArrayList<String>();
+                        readPathsFromFile(inputListFile.getAbsolutePath(), inputList);
                     } catch(IOException e) {
                         System.err.println(
                             "Unable to read input list file: " + inputListFile.getName());
