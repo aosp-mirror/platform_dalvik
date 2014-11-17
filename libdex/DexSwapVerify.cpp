@@ -31,35 +31,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef __BYTE_ORDER
-# error "byte ordering not defined"
-#endif
-
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-# define SWAP2(_value)      (_value)
-# define SWAP4(_value)      (_value)
-# define SWAP8(_value)      (_value)
-#else
-# define SWAP2(_value)      endianSwapU2((_value))
-# define SWAP4(_value)      endianSwapU4((_value))
-# define SWAP8(_value)      endianSwapU8((_value))
-static u2 endianSwapU2(u2 value) {
-    return (value >> 8) | (value << 8);
-}
-static u4 endianSwapU4(u4 value) {
-    /* ABCD --> CDAB --> DCBA */
-    value = (value >> 16) | (value << 16);
-    return ((value & 0xff00ff00) >> 8) | ((value << 8) & 0xff00ff00);
-}
-static u8 endianSwapU8(u8 value) {
-    /* ABCDEFGH --> EFGHABCD --> GHEFCDAB --> HGFEDCBA */
-    value = (value >> 32) | (value << 32);
-    value = ((value & 0xffff0000ffff0000ULL) >> 16) |
-            ((value << 16) & 0xffff0000ffff0000ULL);
-    return ((value & 0xff00ff00ff00ff00ULL) >> 8) |
-           ((value << 8) & 0xff00ff00ff00ff00ULL);
-}
-#endif
+#define SWAP2(_value)      (_value)
+#define SWAP4(_value)      (_value)
+#define SWAP8(_value)      (_value)
 
 #define SWAP_FIELD2(_field) (_field) = SWAP2(_field)
 #define SWAP_FIELD4(_field) (_field) = SWAP4(_field)
