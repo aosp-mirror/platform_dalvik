@@ -93,12 +93,9 @@ A million repetitions of "a"
 # include <unistd.h>
 # include <stdlib.h>
 //# include <endian.h>
-
-#include "DexFile.h"    // want common byte ordering def
-
-# if __BYTE_ORDER == __LITTLE_ENDIAN
+//# if __BYTE_ORDER == __LITTLE_ENDIAN
 #  define X_LITTLE_ENDIAN
-# endif
+//# endif
 #endif
 #include <ctype.h>
 
