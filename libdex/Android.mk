@@ -49,6 +49,7 @@ include $(CLEAR_VARS)
 #LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1
 LOCAL_SRC_FILES := $(dex_src_files)
 LOCAL_C_INCLUDES += $(dex_include_files)
+LOCAL_CPPFLAGS := -std=gnu++11
 LOCAL_STATIC_LIBRARIES := liblog
 LOCAL_WHOLE_STATIC_LIBRARIES := libziparchive
 LOCAL_SHARED_LIBRARIES := libutils
@@ -69,6 +70,7 @@ endif # !SDK_ONLY
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(dex_src_files)
 LOCAL_C_INCLUDES += $(dex_include_files)
+LOCAL_CPPFLAGS := -std=gnu++11
 LOCAL_STATIC_LIBRARIES := liblog libutils
 LOCAL_WHOLE_STATIC_LIBRARIES := libziparchive-host
 LOCAL_MODULE_TAGS := optional
