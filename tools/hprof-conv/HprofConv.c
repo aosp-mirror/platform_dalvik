@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <assert.h>
+#include <unistd.h>
 
 //#define VERBOSE_DEBUG
 #ifdef VERBOSE_DEBUG
@@ -84,9 +85,17 @@ typedef enum HprofHeapTag {
     HPROF_PRIMITIVE_ARRAY_NODATA_DUMP   = 0xc3,
 } HprofHeapTag;
 
+typedef enum HprofHeapId {
+    HPROF_HEAP_DEFAULT = 0,
+    HPROF_HEAP_ZYGOTE = 'Z',
+    HPROF_HEAP_APP = 'A',
+    HPROF_HEAP_IMAGE = 'I',
+} HprofHeapId;
+
 #define kIdentSize  4
 #define kRecHdrLen  9
 
+#define kFlagAppOnly 1
 
 /*
  * ===========================================================================
@@ -423,13 +432,15 @@ static int computePrimitiveArrayDumpLen(const unsigned char* origBuf, int len)
  * Crunch through a heap dump record, writing the original or converted
  * data to "out".
  */
-static int processHeapDump(ExpandBuf* pBuf, FILE* out)
+static int processHeapDump(ExpandBuf* pBuf, FILE* out, int flags)
 {
     ExpandBuf* pOutBuf = ebAlloc();
     unsigned char* origBuf = ebGetBuffer(pBuf);
     unsigned char* buf = origBuf;
     int len = ebGetLength(pBuf);
     int result = -1;
+    int heapType = HPROF_HEAP_DEFAULT;
+    int heapIgnore = FALSE;
 
     pBuf = NULL;        /* we just use the raw pointer from here forward */
 
@@ -480,16 +491,31 @@ static int processHeapDump(ExpandBuf* pBuf, FILE* out)
             break;
         case HPROF_INSTANCE_DUMP:
             subLen = computeInstanceDumpLen(buf+1, len-1);
+            if (heapIgnore) {
+                justCopy = FALSE;
+            }
             break;
         case HPROF_OBJECT_ARRAY_DUMP:
             subLen = computeObjectArrayDumpLen(buf+1, len-1);
+            if (heapIgnore) {
+                justCopy = FALSE;
+            }
             break;
         case HPROF_PRIMITIVE_ARRAY_DUMP:
             subLen = computePrimitiveArrayDumpLen(buf+1, len-1);
+            if (heapIgnore) {
+                justCopy = FALSE;
+            }
             break;
-
         /* these were added for Android in 1.0.3 */
         case HPROF_HEAP_DUMP_INFO:
+            heapType = get4BE(buf+1);
+            if ((flags & kFlagAppOnly) != 0
+                    && (heapType == HPROF_HEAP_ZYGOTE || heapType == HPROF_HEAP_IMAGE)) {
+                heapIgnore = TRUE;
+            } else {
+                heapIgnore = FALSE;
+            }
             justCopy = FALSE;
             subLen = kIdentSize + 4;
             // no 1.0.2 equivalent for this
@@ -570,7 +596,7 @@ bail:
 /*
  * Filter an hprof data file.
  */
-static int filterData(FILE* in, FILE* out)
+static int filterData(FILE* in, FILE* out, int flags)
 {
     const char *magicString;
     ExpandBuf* pBuf;
@@ -645,12 +671,11 @@ static int filterData(FILE* in, FILE* out)
                 goto bail;
         }
 
-        if (type == HPROF_TAG_HEAP_DUMP ||
-            type == HPROF_TAG_HEAP_DUMP_SEGMENT)
-        {
+        if (type == HPROF_TAG_HEAP_DUMP
+                || type == HPROF_TAG_HEAP_DUMP_SEGMENT) {
             DBUG("Processing heap dump 0x%02x (%d bytes)\n",
                 type, length);
-            if (processHeapDump(pBuf, out) != 0)
+            if (processHeapDump(pBuf, out, flags) != 0)
                 goto bail;
             ebClear(pBuf);
         } else {
@@ -668,57 +693,75 @@ bail:
     return result;
 }
 
-/*
- * Get args.
- */
+static FILE* fopen_or_default(const char* path, const char* mode, FILE* def) {
+    if (!strcmp(path, "-")) {
+        return def;
+    } else {
+        return fopen(path, mode);
+    }
+}
+
 int main(int argc, char** argv)
 {
-    FILE* in = stdin;
-    FILE* out = stdout;
-    int cc;
+    FILE* in = NULL;
+    FILE* out = NULL;
+    int flags = 0;
+    int res = 1;
 
-    if (argc != 3) {
-        fprintf(stderr, "Usage: hprof-conf infile outfile\n\n");
-        fprintf(stderr,
-            "Specify '-' for either or both to use stdin/stdout.\n\n");
-
-        fprintf(stderr,
-            "Copyright (C) 2009 The Android Open Source Project\n\n"
-            "This software is built from source code licensed under the "
-            "Apache License,\n"
-            "Version 2.0 (the \"License\"). You may obtain a copy of the "
-            "License at\n\n"
-            "     http://www.apache.org/licenses/LICENSE-2.0\n\n"
-            "See the associated NOTICE file for this software for further "
-            "details.\n");
-
-        return 2;
-    }
-
-    if (strcmp(argv[1], "-") != 0) {
-        in = fopen(argv[1], "rb");
-        if (in == NULL) {
-            fprintf(stderr, "ERROR: failed to open input '%s': %s\n",
-                argv[1], strerror(errno));
-            return 1;
-        }
-    }
-    if (strcmp(argv[2], "-") != 0) {
-        out = fopen(argv[2], "wb");
-        if (out == NULL) {
-            fprintf(stderr, "ERROR: failed to open output '%s': %s\n",
-                argv[2], strerror(errno));
-            if (in != stdin)
-                fclose(in);
-            return 1;
+    int opt;
+    while ((opt = getopt(argc, argv, "z")) != -1) {
+        switch (opt) {
+            case 'z':
+                flags |= kFlagAppOnly;
+                break;
+            case '?':
+            default:
+                goto usage;
         }
     }
 
-    cc = filterData(in, out);
+    int i;
+    for (i = optind; i < argc; i++) {
+        char* arg = argv[i];
+        if (!in) {
+            in = fopen_or_default(arg, "rb", stdin);
+        } else if (!out) {
+            out = fopen_or_default(arg, "wb", stdout);
+        } else {
+            goto usage;
+        }
+    }
 
+    if (in == NULL || out == NULL) {
+        goto usage;
+    }
+
+    res = filterData(in, out, flags);
+    goto finish;
+
+usage:
+    fprintf(stderr, "Usage: hprof-conf [-z] infile outfile\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  -z: exclude non-app heaps, such as Zygote\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Specify '-' for either or both files to use stdin/stdout.\n");
+    fprintf(stderr, "\n");
+
+    fprintf(stderr,
+        "Copyright (C) 2009 The Android Open Source Project\n\n"
+        "This software is built from source code licensed under the "
+        "Apache License,\n"
+        "Version 2.0 (the \"License\"). You may obtain a copy of the "
+        "License at\n\n"
+        "     http://www.apache.org/licenses/LICENSE-2.0\n\n"
+        "See the associated NOTICE file for this software for further "
+        "details.\n");
+    res = 2;
+
+finish:
     if (in != stdin)
         fclose(in);
     if (out != stdout)
         fclose(out);
-    return (cc != 0);
+    return res;
 }
