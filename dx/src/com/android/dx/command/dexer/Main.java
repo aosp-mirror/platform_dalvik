@@ -224,6 +224,7 @@ public class Main {
      * @return 0 if success > 0 otherwise.
      */
     public static int run(Arguments arguments) throws IOException {
+
         // Reset the error count to start fresh.
         errors.set(0);
         // empty the list, so that  tools that load dx and keep it around
@@ -497,7 +498,7 @@ public class Main {
 
                 if (args.minimalMainDex) {
                     // start second pass directly in a secondary dex file.
-                    createDexFile();
+                    rotateDexFile();
                 }
 
                 // remaining files
@@ -572,15 +573,19 @@ public class Main {
     }
 
     private static void createDexFile() {
-        if (outputDex != null) {
-            dexOutputArrays.add(writeDex());
-        }
-
         outputDex = new DexFile(args.dexOptions);
 
         if (args.dumpWidth != 0) {
             outputDex.setDumpWidth(args.dumpWidth);
         }
+    }
+
+    private static void rotateDexFile() {
+        if (outputDex != null) {
+            dexOutputArrays.add(writeDex());
+        }
+
+        createDexFile();
     }
 
     /**
@@ -718,7 +723,7 @@ public class Main {
             && ((maxMethodIdsInDex > args.maxNumberOfIdxPerDex) ||
                 (maxFieldIdsInDex > args.maxNumberOfIdxPerDex))) {
             DexFile completeDex = outputDex;
-            createDexFile();
+            rotateDexFile();
             assert  (completeDex.getMethodIds().items().size() <= numMethodIds +
                     MAX_METHOD_ADDED_DURING_DEX_CREATION) &&
                     (completeDex.getFieldIds().items().size() <= numFieldIds +
