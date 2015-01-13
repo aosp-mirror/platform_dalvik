@@ -239,7 +239,7 @@ static int ebReadData(ExpandBuf* pBuf, FILE* in, size_t count, int eofExpected)
         if (eofExpected && feof(in) && !ferror(in)) {
             /* return without reporting an error */
         } else {
-            fprintf(stderr, "ERROR: read %d of %d bytes\n", actual, count);
+            fprintf(stderr, "ERROR: read %zu of %zu bytes\n", actual, count);
             return -1;
         }
     }
@@ -262,7 +262,7 @@ static int ebWriteData(ExpandBuf* pBuf, FILE* out)
 
     actual = fwrite(pBuf->storage, 1, pBuf->curLen, out);
     if (actual != pBuf->curLen) {
-        fprintf(stderr, "ERROR: write %d of %d bytes\n", actual, pBuf->curLen);
+        fprintf(stderr, "ERROR: write %zu of %zu bytes\n", actual, pBuf->curLen);
         return -1;
     }
 
@@ -559,8 +559,8 @@ static int processHeapDump(ExpandBuf* pBuf, FILE* out, int flags)
 
         /* shouldn't get here */
         default:
-            fprintf(stderr, "ERROR: unexpected subtype 0x%02x at offset %d\n",
-                subType, buf - origBuf);
+            fprintf(stderr, "ERROR: unexpected subtype 0x%02x at offset %zu\n",
+                subType, (size_t) (buf - origBuf));
             goto bail;
         }
 
