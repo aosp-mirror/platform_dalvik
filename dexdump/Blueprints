@@ -35,6 +35,7 @@ cc_binary {
     host_supported: true,
     static_libs: [
         "libdex",
+        "libbase",
     ],
     whole_static_libs: [
         "libdexdump_static",
