@@ -46,17 +46,6 @@ LOCAL_32_BIT_ONLY := true
 LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 include $(BUILD_EXECUTABLE)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := libdexdump_static
-LOCAL_SRC_FILES := $(dexdump_src_files)
-LOCAL_C_INCLUDES := $(dexdump_c_includes)
-LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries)
-LOCAL_SHARED_LIBRARIES := libutils
-LOCAL_MODULE_TAGS := optional
-LOCAL_32_BIT_ONLY := true
-LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
-include $(BUILD_STATIC_LIBRARY)
-
 endif # !SDK_ONLY
 
 
