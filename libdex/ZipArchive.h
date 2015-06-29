@@ -70,7 +70,7 @@ DEX_INLINE int dexZipGetArchiveFd(const ZipArchiveHandle pArchive) {
  */
 DEX_INLINE int  dexZipFindEntry(const ZipArchiveHandle pArchive,
     const char* entryName, ZipEntry* data) {
-    return FindEntry(pArchive, ZipEntryName(entryName), data);
+    return FindEntry(pArchive, ZipString(entryName), data);
 }
 
 /*
