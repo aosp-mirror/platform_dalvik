@@ -102,6 +102,10 @@ if [ ! -r "${proguard}" ]; then
 fi
 
 if [ ! -r "${proguard}" ]; then
+  proguard="${ANDROID_BUILD_TOP}"/external/proguard/bin/${proguardExec}
+fi
+
+if [ ! -r "${proguard}" ]; then
     proguard="`which proguard`"
 fi
 
