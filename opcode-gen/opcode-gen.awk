@@ -144,77 +144,6 @@ emission == "libcore-maximum-values" {
     printf("        MAXIMUM_PACKED_VALUE = %d;\n", MAX_PACKED_OPCODE);
 }
 
-emission == "libdex-maximum-values" {
-    emissionHandled = 1;
-
-    printf("#define kMaxOpcodeValue 0x%x\n", MAX_OPCODE);
-    printf("#define kNumPackedOpcodes 0x%x\n", MAX_PACKED_OPCODE + 1);
-}
-
-emission == "libdex-opcode-enum" {
-    emissionHandled = 1;
-
-    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
-        printf("    OP_%-28s = 0x%02x,\n", packedConstName[i], i);
-    }
-}
-
-emission == "libdex-goto-table" {
-    emissionHandled = 1;
-
-    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
-        content = sprintf("        H(OP_%s),", packedConstName[i]);
-        printf("%-78s\\\n", content);
-    }
-}
-
-emission == "libdex-opcode-names" {
-    emissionHandled = 1;
-
-    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
-        printf("    \"%s\",\n", packedName[i]);
-    }
-}
-
-emission == "libdex-widths" {
-    emissionHandled = 1;
-
-    col = 1;
-    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
-        value = sprintf("%d,", packedWidth[i]);
-        col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 16, 2, "    ");
-    }
-}
-
-emission == "libdex-flags" {
-    emissionHandled = 1;
-
-    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
-        value = flagsToC(packedFlags[i]);
-        printf("    %s,\n", value);
-    }
-}
-
-emission == "libdex-formats" {
-    emissionHandled = 1;
-
-    col = 1;
-    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
-        value = sprintf("kFmt%s,", packedFormat[i]);
-        col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 7, 9, "    ");
-    }
-}
-
-emission == "libdex-index-types" {
-    emissionHandled = 1;
-
-    col = 1;
-    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
-        value = sprintf("%s,", indexTypeValues[packedIndexType[i]]);
-        col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 3, 19, "    ");
-    }
-}
-
 # Handle the end of directive processing (must appear after the directive
 # clauses).
 emission != "" {
@@ -422,8 +351,6 @@ function createPackedTables(i, op) {
 
 # Given a packed opcode, returns the raw (unpacked) opcode value.
 function unpackOpcode(idx) {
-    # Note: This must be the inverse of the corresponding code in
-    # libdex/DexOpcodes.h.
     if (idx <= 255) {
         return idx;
     } else {
