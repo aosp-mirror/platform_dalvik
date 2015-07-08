@@ -24,7 +24,7 @@ If you want to add, delete, or change opcodes:
 
 * Run the regen-all script, in this directory. This will regenerate a
   number of tables, definitions, and declarations in the code, in
-  dalvik/dx, dalvik/libdex, and libcore/dalvik.
+  dalvik/dx and libcore/dalvik.
 
 * Implement/update the opcode in C in vm/mterp/c/...
   * Verify new code by running with "dalvik.vm.execution-mode = int:portable"
@@ -53,12 +53,6 @@ If you want to add, delete, or change instruction formats:
 This is a more manual affair than changing opcodes.
 
 * Update the file bytecode.txt, and run regen-all, as per above.
-
-* Update the instruction format list in libdex/InstrUtils.h.
-
-* Update dexDecodeInstruction() in libdex/InstrUtils.c.
-
-* Update dumpInstruction() and its helper code in dexdump/DexDump.c.
 
 * Update the switch inside dvmCompilerMIR2LIR() in
   vm/compiler/codegen/{arm,x86}/CodegenDriver.c. (There may be other
