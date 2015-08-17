@@ -473,6 +473,7 @@ public class Main {
 
         anyFilesProcessed = false;
         String[] fileNames = args.fileNames;
+        Arrays.sort(fileNames);
 
         if (args.numThreads > 1) {
             threadPool = Executors.newFixedThreadPool(args.numThreads);
@@ -594,7 +595,7 @@ public class Main {
     private static void processOne(String pathname, FileNameFilter filter) {
         ClassPathOpener opener;
 
-        opener = new ClassPathOpener(pathname, false, filter,
+        opener = new ClassPathOpener(pathname, true, filter,
                 new ClassPathOpener.Consumer() {
 
             @Override
