@@ -521,6 +521,7 @@ public class Main {
 
         anyFilesProcessed = false;
         String[] fileNames = args.fileNames;
+        Arrays.sort(fileNames);
 
         // translate classes in parallel
         classTranslatorPool = new ThreadPoolExecutor(args.numThreads,
@@ -667,7 +668,7 @@ public class Main {
     private static void processOne(String pathname, FileNameFilter filter) {
         ClassPathOpener opener;
 
-        opener = new ClassPathOpener(pathname, false, filter, new FileBytesConsumer());
+        opener = new ClassPathOpener(pathname, true, filter, new FileBytesConsumer());
 
         if (opener.process()) {
           updateStatus(true);
