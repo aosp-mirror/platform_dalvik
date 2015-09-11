@@ -1101,7 +1101,7 @@ public final class DexMerger {
 
         Dex[] dexes = new Dex[args.length - 1];
         for (int i = 1; i < args.length; i++) {
-            dexes[i] = new Dex(new File(args[i]));
+            dexes[i - 1] = new Dex(new File(args[i]));
         }
         Dex merged = new DexMerger(dexes, CollisionPolicy.KEEP_FIRST).merge();
         merged.writeTo(new File(args[0]));
