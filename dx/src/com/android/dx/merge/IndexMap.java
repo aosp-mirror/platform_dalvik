@@ -220,8 +220,7 @@ public final class IndexMap {
     }
 
     public SortableType adjust(SortableType sortableType) {
-        return new SortableType(sortableType.getDex(),
-                sortableType.getIndexMap(), adjust(sortableType.getClassDef()));
+        return new SortableType(sortableType.getDex(), adjust(sortableType.getClassDef()));
     }
 
     public EncodedValue adjustEncodedValue(EncodedValue encodedValue) {
