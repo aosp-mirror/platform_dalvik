@@ -24,13 +24,13 @@ import com.android.dx.io.instructions.DecodedInstruction;
 import com.android.dx.io.instructions.ShortArrayCodeOutput;
 
 final class InstructionTransformer {
+    private final IndexMap indexMap;
     private final CodeReader reader;
-
     private DecodedInstruction[] mappedInstructions;
     private int mappedAt;
-    private IndexMap indexMap;
 
-    public InstructionTransformer() {
+    public InstructionTransformer(IndexMap indexMap) {
+        this.indexMap = indexMap;
         this.reader = new CodeReader();
         this.reader.setAllVisitors(new GenericVisitor());
         this.reader.setStringVisitor(new StringVisitor());
@@ -39,12 +39,11 @@ final class InstructionTransformer {
         this.reader.setMethodVisitor(new MethodVisitor());
     }
 
-    public short[] transform(IndexMap indexMap, short[] encodedInstructions) throws DexException {
+    public short[] transform(short[] encodedInstructions) throws DexException {
         DecodedInstruction[] decodedInstructions =
             DecodedInstruction.decodeAll(encodedInstructions);
         int size = decodedInstructions.length;
 
-        this.indexMap = indexMap;
         mappedInstructions = new DecodedInstruction[size];
         mappedAt = 0;
         reader.visitAll(decodedInstructions);
@@ -56,7 +55,6 @@ final class InstructionTransformer {
             }
         }
 
-        this.indexMap = null;
         return out.getArray();
     }
 
