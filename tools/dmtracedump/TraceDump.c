@@ -32,6 +32,10 @@
 #include <errno.h>
 #include <assert.h>
 
+#ifndef __unused /* sys/cdefs.h not available on all platforms */
+# define __unused __attribute__((__unused__))
+#endif
+
 /* Version number in the key file.
  * Version 1 uses one byte for the thread id.
  * Version 2 uses two bytes for the thread ids.
@@ -1247,13 +1251,13 @@ void dumpTrace()
         }
 
 	if (method->methodName) {
-	    printf("%2d %s%c %8lld%c%s%s.%s %s\n", threadId,
+	    printf("%2d %s%c %8" PRIu64 "%c%s%s.%s %s\n", threadId,
 		   actionStr[action], mismatch ? '!' : ' ',
 		   elapsedTime, depthNote,
 		   spaces + (MAX_STACK_DEPTH - printDepth),
 		   method->className, method->methodName, method->signature);
 	} else {
-	    printf("%2d %s%c %8lld%c%s%s\n", threadId,
+	    printf("%2d %s%c %8" PRIu64 "%c%s%s\n", threadId,
 		   actionStr[action], mismatch ? '!' : ' ',
 		   elapsedTime, depthNote,
 		   spaces + (MAX_STACK_DEPTH - printDepth),
@@ -1443,14 +1447,15 @@ void printInclusiveMethod(MethodEntry *method, TimedMethod *list, int numCalls,
         if (relative->methodName) {
             if (flags & kIsRecursive) {
                 // Don't display percentages for recursive functions
-                printf("%6s %5s   %6s %s%6s%s %6d/%-6d %9llu %s.%s %s\n",
+                printf("%6s %5s   %6s %s%6s%s %6d/%-6d %9" PRIu64 " %s.%s %s\n",
                        "", "", "",
                        space_ptr, buf, anchor_close,
                        pTimed->numCalls, nCalls,
                        pTimed->elapsedInclusive,
                        className, methodName, signature);
             } else {
-                printf("%6s %5s   %5.1f%% %s%6s%s %6d/%-6d %9llu %s.%s %s\n",
+                printf("%6s %5s   %5.1f%% %s%6s%s %6d/%-6d %9" PRIu64
+                       " %s.%s %s\n",
                        "", "", per,
                        space_ptr, buf, anchor_close,
                        pTimed->numCalls, nCalls,
@@ -1460,14 +1465,14 @@ void printInclusiveMethod(MethodEntry *method, TimedMethod *list, int numCalls,
         } else {
             if (flags & kIsRecursive) {
                 // Don't display percentages for recursive functions
-                printf("%6s %5s   %6s %s%6s%s %6d/%-6d %9llu %s\n",
+                printf("%6s %5s   %6s %s%6s%s %6d/%-6d %9" PRIu64 " %s\n",
                        "", "", "",
                        space_ptr, buf, anchor_close,
                        pTimed->numCalls, nCalls,
                        pTimed->elapsedInclusive,
                        className);
             } else {
-                printf("%6s %5s   %5.1f%% %s%6s%s %6d/%-6d %9llu %s\n",
+                printf("%6s %5s   %5.1f%% %s%6s%s %6d/%-6d %9" PRIu64 " %s\n",
                        "", "", per,
                        space_ptr, buf, anchor_close,
                        pTimed->numCalls, nCalls,
@@ -1497,10 +1502,11 @@ void stackDump(CallStack *pStack, int top)
         MethodEntry *method = pStack->calls[ii].method;
         uint64_t entryTime = pStack->calls[ii].entryTime;
         if (method->methodName) {
-            fprintf(stderr, "  %2d: %8llu %s.%s %s\n", ii, entryTime,
+            fprintf(stderr, "  %2d: %8" PRIu64 " %s.%s %s\n", ii, entryTime,
                    method->className, method->methodName, method->signature);
         } else {
-            fprintf(stderr, "  %2d: %8llu %s\n", ii, entryTime, method->className);
+            fprintf(stderr, "  %2d: %8" PRIu64 " %s\n", ii, entryTime,
+                   method->className);
         }
     }
 }
@@ -1562,7 +1568,7 @@ void printExclusiveProfile(MethodEntry **pMethods, int numMethods,
     qsort(pMethods, numMethods, sizeof(MethodEntry*),
           compareElapsedExclusive);
 
-    printf("Total cycles: %llu\n\n", sumThreadTime);
+    printf("Total cycles: %" PRIu64 "\n\n", sumThreadTime);
     if (gOptions.outputHtml) {
         printf("<br><br>\n");
     }
@@ -1595,12 +1601,12 @@ void printExclusiveProfile(MethodEntry **pMethods, int numMethods,
             signature = htmlEscape(signature, signatureBuf, HTML_BUFSIZE);
         }
         if (method->methodName) {
-            printf("%9llu  %6.2f %6.2f  %s[%d]%s %s.%s %s\n",
+            printf("%9" PRIu64 "  %6.2f %6.2f  %s[%d]%s %s.%s %s\n",
                    method->elapsedExclusive, per, sum_per,
                    anchor_buf, method->index, anchor_close,
                    className, methodName, signature);
         } else {
-            printf("%9llu  %6.2f %6.2f  %s[%d]%s %s\n",
+            printf("%9" PRIu64 "  %6.2f %6.2f  %s[%d]%s %s\n",
                    method->elapsedExclusive, per, sum_per,
                    anchor_buf, method->index, anchor_close,
                    className);
@@ -1622,7 +1628,7 @@ int checkThreshold(MethodEntry* parent, MethodEntry* child)
 
 void createLabels(FILE* file, MethodEntry* method)
 {
-    fprintf(file, "node%d[label = \"[%d] %s.%s (%llu, %llu, %d)\"]\n",
+    fprintf(file, "node%d[label = \"[%d] %s.%s (%" PRIu64 ", %" PRIu64 ", %d)\"]\n",
              method->index, method->index, method->className, method->methodName,
              method->elapsedInclusive / 1000,
              method->elapsedExclusive / 1000,
@@ -1693,7 +1699,7 @@ void printInclusiveProfile(MethodEntry **pMethods, int numMethods,
 {
     int ii;
     MethodEntry* method;
-    double total, sum, per, sum_per;
+    double total, per;
     char classBuf[HTML_BUFSIZE], methodBuf[HTML_BUFSIZE];
     char signatureBuf[HTML_BUFSIZE];
     char anchor_buf[80];
@@ -1723,8 +1729,6 @@ void printInclusiveProfile(MethodEntry **pMethods, int numMethods,
 
     printf("index  %%/total %%/self  index     calls         usecs name\n");
     for (ii = 0; ii < numMethods; ++ii) {
-        int num;
-        TimedMethod *pTimed;
         double excl_per;
         char buf[40];
         char *className, *methodName, *signature;
@@ -1758,20 +1762,20 @@ void printInclusiveProfile(MethodEntry **pMethods, int numMethods,
         per = 100.0 * method->elapsedInclusive / total;
         sprintf(buf, "[%d]", ii);
         if (method->methodName) {
-            printf("%-6s %5.1f%%   %5s %6s %6d+%-6d %9llu %s.%s %s\n",
+            printf("%-6s %5.1f%%   %5s %6s %6d+%-6d %9" PRIu64 " %s.%s %s\n",
                    buf,
                    per, "", "", method->numCalls[0], method->numCalls[1],
                    method->elapsedInclusive,
                    className, methodName, signature);
         } else {
-            printf("%-6s %5.1f%%   %5s %6s %6d+%-6d %9llu %s\n",
+            printf("%-6s %5.1f%%   %5s %6s %6d+%-6d %9" PRIu64 " %s\n",
                    buf,
                    per, "", "", method->numCalls[0], method->numCalls[1],
                    method->elapsedInclusive,
                    className);
         }
         excl_per = 100.0 * method->topExclusive / method->elapsedInclusive;
-        printf("%6s %5s   %5.1f%% %6s %6s %6s %9llu\n",
+        printf("%6s %5s   %5.1f%% %6s %6s %6s %9" PRIu64 "\n",
                "", "", excl_per, "excl", "", "", method->topExclusive);
 
         /* Sort and print the children */
@@ -1977,7 +1981,7 @@ void printClassProfiles(TraceData* traceData, uint64_t sumThreadTime)
 
             className = htmlEscape(className, classBuf, HTML_BUFSIZE);
             printf("<div class=\"link\" onClick=\"javascript:toggle('d%d')\" onMouseOver=\"javascript:onMouseOver(this)\" onMouseOut=\"javascript:onMouseOut(this)\"><span class=\"parent\" id=\"xd%d\">+</span>", ii, ii);
-            sprintf(buf, "%llu", pClass->elapsedExclusive);
+            sprintf(buf, "%" PRIu64, pClass->elapsedExclusive);
             printHtmlField(buf, 9);
             printf(" ");
             sprintf(buf, "%.1f", per);
@@ -1997,7 +2001,7 @@ void printClassProfiles(TraceData* traceData, uint64_t sumThreadTime)
             printf("<div class=\"parent\" id=\"d%d\">\n", ii);
         } else {
             printf("---------------------------------------------\n");
-            printf("%9llu %7.1f %7.1f %6d+%-6d %s\n",
+            printf("%9" PRIu64 " %7.1f %7.1f %6d+%-6d %s\n",
                    pClass->elapsedExclusive, per, sum_per,
                    pClass->numCalls[0], pClass->numCalls[1],
                    className);
@@ -2019,10 +2023,10 @@ void printClassProfiles(TraceData* traceData, uint64_t sumThreadTime)
                 methodName = htmlEscape(methodName, methodBuf, HTML_BUFSIZE);
                 signature = htmlEscape(signature, signatureBuf, HTML_BUFSIZE);
                 printf("<div class=\"leaf\"><span class=\"leaf\">&nbsp;</span>");
-                sprintf(buf, "%llu", method->elapsedExclusive);
+                sprintf(buf, "%" PRIu64, method->elapsedExclusive);
                 printHtmlField(buf, 9);
                 printf("&nbsp;");
-                sprintf(buf, "%llu", method->elapsedInclusive);
+                sprintf(buf, "%" PRIu64, method->elapsedInclusive);
                 printHtmlField(buf, 9);
                 printf("&nbsp;");
                 sprintf(buf, "%.1f", per);
@@ -2041,7 +2045,7 @@ void printClassProfiles(TraceData* traceData, uint64_t sumThreadTime)
                        method->index, method->index, methodName, signature);
                 printf("</div>\n");
             } else {
-                printf("%9llu %9llu %7.1f %7.1f %6d+%-6d [%d] %s %s\n",
+                printf("%9" PRIu64 " %9" PRIu64 " %7.1f %7.1f %6d+%-6d [%d] %s %s\n",
                        method->elapsedExclusive,
                        method->elapsedInclusive,
                        per, sum_per,
@@ -2209,7 +2213,7 @@ void printMethodProfiles(TraceData* traceData, uint64_t sumThreadTime)
 
             methodName = htmlEscape(methodName, methodBuf, HTML_BUFSIZE);
             printf("<div class=\"link\" onClick=\"javascript:toggle('e%d')\" onMouseOver=\"javascript:onMouseOver(this)\" onMouseOut=\"javascript:onMouseOut(this)\"><span class=\"parent\" id=\"xe%d\">+</span>", ii, ii);
-            sprintf(buf, "%llu", pUnique->elapsedExclusive);
+            sprintf(buf, "%" PRIu64, pUnique->elapsedExclusive);
             printHtmlField(buf, 9);
             printf(" ");
             sprintf(buf, "%.1f", per);
@@ -2229,7 +2233,7 @@ void printMethodProfiles(TraceData* traceData, uint64_t sumThreadTime)
             printf("<div class=\"parent\" id=\"e%d\">\n", ii);
         } else {
             printf("---------------------------------------------\n");
-            printf("%9llu %7.1f %7.1f %6d+%-6d %s\n",
+            printf("%9" PRIu64 " %7.1f %7.1f %6d+%-6d %s\n",
                    pUnique->elapsedExclusive, per, sum_per,
                    pUnique->numCalls[0], pUnique->numCalls[1],
                    methodName);
@@ -2250,10 +2254,10 @@ void printMethodProfiles(TraceData* traceData, uint64_t sumThreadTime)
                 className = htmlEscape(className, classBuf, HTML_BUFSIZE);
                 signature = htmlEscape(signature, signatureBuf, HTML_BUFSIZE);
                 printf("<div class=\"leaf\"><span class=\"leaf\">&nbsp;</span>");
-                sprintf(buf, "%llu", method->elapsedExclusive);
+                sprintf(buf, "%" PRIu64, method->elapsedExclusive);
                 printHtmlField(buf, 9);
                 printf("&nbsp;");
-                sprintf(buf, "%llu", method->elapsedInclusive);
+                sprintf(buf, "%" PRIu64, method->elapsedInclusive);
                 printHtmlField(buf, 9);
                 printf("&nbsp;");
                 sprintf(buf, "%.1f", per);
@@ -2273,7 +2277,7 @@ void printMethodProfiles(TraceData* traceData, uint64_t sumThreadTime)
                        className, methodName, signature);
                 printf("</div>\n");
             } else {
-                printf("%9llu %9llu %7.1f %7.1f %6d+%-6d [%d] %s.%s %s\n",
+                printf("%9" PRIu64 " %9" PRIu64 " %7.1f %7.1f %6d+%-6d [%d] %s.%s %s\n",
                        method->elapsedExclusive,
                        method->elapsedInclusive,
                        per, sum_per,
@@ -2293,7 +2297,6 @@ void printMethodProfiles(TraceData* traceData, uint64_t sumThreadTime)
 DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName, uint64_t* threadTime)
 {
     DataKeys* dataKeys = NULL;
-    MethodEntry **pMethods = NULL;
     MethodEntry* method;
     FILE* dataFp = NULL;
     DataHeader dataHeader;
@@ -2565,8 +2568,6 @@ int findMatch(MethodEntry** methods, int size, MethodEntry* matchThis)
 
 int compareDiffEntriesExculsive(const void *a, const void *b)
 {
-    int result;
-
     const DiffEntry* entryA = (const DiffEntry*)a;
     const DiffEntry* entryB = (const DiffEntry*)b;
 
@@ -2581,8 +2582,6 @@ int compareDiffEntriesExculsive(const void *a, const void *b)
 
 int compareDiffEntriesInculsive(const void *a, const void *b)
 {
-    int result;
-
     const DiffEntry* entryA = (const DiffEntry*)a;
     const DiffEntry* entryB = (const DiffEntry*)b;
 
@@ -2610,10 +2609,10 @@ void printMissingMethod(MethodEntry* method)
     printf("%s.%s ", className, methodName);
     if (gOptions.outputHtml) printf("</td><td>");
 
-    printf("%lld ", method->elapsedExclusive);
+    printf("%" PRIu64 " ", method->elapsedExclusive);
     if (gOptions.outputHtml) printf("</td><td>");
 
-    printf("%lld ", method->elapsedInclusive);
+    printf("%" PRIu64 " ", method->elapsedInclusive);
     if (gOptions.outputHtml) printf("</td><td>");
 
     printf("%d\n", method->numCalls[0]);
@@ -2621,7 +2620,8 @@ void printMissingMethod(MethodEntry* method)
 }
 
 
-void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
+void createDiff(DataKeys* d1, uint64_t sum1 __unused,
+                DataKeys* d2, uint64_t sum2 __unused)
 {
     MethodEntry** methods1 = parseMethodEntries(d1);
     MethodEntry** methods2 = parseMethodEntries(d2);
@@ -2710,13 +2710,13 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
         printf("%s.%s ", className, methodName);
         if (gOptions.outputHtml) printf("</td><td>");
 
-        printf("%lld ", ptr->method1->elapsedExclusive);
+        printf("%" PRIu64 " ", ptr->method1->elapsedExclusive);
         if (gOptions.outputHtml) printf("</td><td>");
 
-        printf("%llu ", ptr->method2->elapsedExclusive);
+        printf("%" PRIu64 " ", ptr->method2->elapsedExclusive);
         if (gOptions.outputHtml) printf("</td><td>");
 
-        printf("%lld ", ptr->differenceExclusive);
+        printf("%" PRIu64 " ", ptr->differenceExclusive);
         if (gOptions.outputHtml) printf("</td><td>");
 
         printf("%.2f\n", ptr->differenceExclusivePercentage);
@@ -2753,13 +2753,13 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
         printf("%s.%s ", className, methodName);
         if (gOptions.outputHtml) printf("</td><td>");
 
-        printf("%lld ", ptr->method1->elapsedInclusive);
+        printf("%" PRIu64 " ", ptr->method1->elapsedInclusive);
         if (gOptions.outputHtml) printf("</td><td>");
 
-        printf("%llu ", ptr->method2->elapsedInclusive);
+        printf("%" PRIu64 " ", ptr->method2->elapsedInclusive);
         if (gOptions.outputHtml) printf("</td><td>");
 
-        printf("%lld ", ptr->differenceInclusive);
+        printf("%" PRIu64 " ", ptr->differenceInclusive);
         if (gOptions.outputHtml) printf("</td><td>");
 
         printf("%.2f\n", ptr->differenceInclusivePercentage);
