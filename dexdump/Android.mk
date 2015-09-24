@@ -42,8 +42,6 @@ LOCAL_SRC_FILES := $(dexdump_src_files)
 LOCAL_C_INCLUDES := $(dexdump_c_includes)
 LOCAL_SHARED_LIBRARIES := libz liblog libutils
 LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries_sdk)
-LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
-LOCAL_MODULE_TAGS := optional
 LOCAL_LDLIBS +=
 LOCAL_32_BIT_ONLY := true
 include $(BUILD_EXECUTABLE)
