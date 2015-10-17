@@ -595,7 +595,12 @@ public class Main {
                     // class translation and adding to dex.
                     int count = errors.incrementAndGet();
                     if (count < 10) {
-                        DxConsole.err.println("Uncaught translation error: " + ex.getCause());
+                        if (args.debug) {
+                            DxConsole.err.println("Uncaught translation error:");
+                            ex.getCause().printStackTrace(DxConsole.err);
+                        } else {
+                            DxConsole.err.println("Uncaught translation error: " + ex.getCause());
+                        }
                     } else {
                         throw new InterruptedException("Too many errors");
                     }
