@@ -16,4 +16,9 @@
 
 $JAVAC -g -d . Blort.java
 dx --debug --dex --positions=none --no-locals \
-    --dump-to=- --dump-method="Blort.test*" *.class
+    --dump-to=- --dump-method="Blort.test*" Blort.class
+
+bash multidimensional.sh > multidimensional.j
+jasmin -d . multidimensional.j >/dev/null
+dx --debug --dex --positions=none --no-locals \
+    --dump-to=- --dump-method="multidimensional.*" multidimensional.class
