@@ -24,7 +24,7 @@ mkdir out
 dx -JXmx1024m --dex --no-optimize --multi-dex --main-dex-list=main.list --minimal-main-dex --output=out classes
 
 
-dalvik -classpath test.jar com.android.dx.multidex.MainDexListTest > unit-out.txt
+art -classpath test.jar com.android.dx.multidex.MainDexListTest > unit-out.txt 2>&1
 
 if [ "$?" = "0" ]; then
     echo "Yay!"
