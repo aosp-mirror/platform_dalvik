@@ -14,7 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-dx --junit com.android.dx.util._tests._Bits > unit-out.txt
+prog=`which dx`
+progdir=`dirname "${prog}"`
+dxjar=$progdir/../framework/dx.jar
+dxtestsjar=$progdir/../framework/dx-tests.jar
+junitjar=$progdir/../framework/junit.jar
+
+java -cp $dxtestsjar:$dxjar:$junitjar junit.textui.TestRunner com.android.dx.util.BitsTest > unit-out.txt 2>&1
 
 if [ "$?" = "0" ]; then
     echo "Yay!"
