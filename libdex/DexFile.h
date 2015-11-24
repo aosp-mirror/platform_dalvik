@@ -436,7 +436,7 @@ struct DexMethodAnnotationsItem {
  */
 struct DexParameterAnnotationsItem {
     u4  methodIdx;
-    u4  annotationsOff;             /* offset to DexAnotationSetRefList */
+    u4  annotationsOff;             /* offset to DexAnnotationSetRefList */
 };
 
 /*
