@@ -19,6 +19,7 @@ package com.android.multidex;
 import com.android.dx.cf.direct.DirectClassFile;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.ConstantPool;
+import com.android.dx.rop.cst.CstBaseMethodRef;
 import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstType;
@@ -103,8 +104,8 @@ public class ClassReferenceListBuilder {
                 checkDescriptor(((CstType) constant).getClassType());
             } else if (constant instanceof CstFieldRef) {
                 checkDescriptor(((CstFieldRef) constant).getType());
-            } else if (constant instanceof CstMethodRef) {
-                Prototype proto = ((CstMethodRef) constant).getPrototype();
+            } else if (constant instanceof CstBaseMethodRef) {
+                Prototype proto = ((CstBaseMethodRef) constant).getPrototype();
                 checkDescriptor(proto.getReturnType());
                 StdTypeList args = proto.getParameterTypes();
                 for (int i = 0; i < args.size(); i++) {
