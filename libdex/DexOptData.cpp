@@ -83,8 +83,8 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
     /* Process chunks until we see the end marker. */
     while (*pOpt != kDexChunkEnd) {
         if (!isValidPointer(pOpt + 2, pOptStart, pOptEnd)) {
-            ALOGE("Bogus opt data content pointer at offset %u",
-                    ((const u1*) pOpt) - data);
+            const u4 offset = ((const u1*) pOpt) - data;
+            ALOGE("Bogus opt data content pointer at offset %u", offset);
             return false;
         }
 
@@ -99,8 +99,8 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
         const u4* pNextOpt = pOpt + (roundedSize / sizeof(u4));
 
         if (!isValidPointer(pNextOpt, pOptStart, pOptEnd)) {
-            ALOGE("Opt data area problem for chunk of size %u at offset %u",
-                    size, ((const u1*) pOpt) - data);
+            const u4 offset = ((const u1*) pOpt) - data;
+            ALOGE("Opt data area problem for chunk of size %u at offset %u", size, offset);
             return false;
         }
 
