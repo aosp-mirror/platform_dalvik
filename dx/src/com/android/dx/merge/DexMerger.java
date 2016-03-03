@@ -1057,8 +1057,9 @@ public final class DexMerger {
             } else {
                 // at most 1/4 of the bytes in a code section are uleb/sleb
                 code += (int) Math.ceil(contents.codes.byteCount * 1.25);
-                // at most 1/3 of the bytes in a class data section are uleb/sleb
-                classData += (int) Math.ceil(contents.classDatas.byteCount * 1.34);
+                // at most 2/3 of the bytes in a class data section are uleb/sleb that may change
+                // (assuming the worst case that section contains only methods and no fields)
+                classData += (int) Math.ceil(contents.classDatas.byteCount * 1.67);
                 // all of the bytes in an encoding arrays section may be uleb/sleb
                 encodedArray += contents.encodedArrays.byteCount * 2;
                 // all of the bytes in an annotations section may be uleb/sleb
