@@ -87,6 +87,11 @@ typedef int64_t             s8;
 /* DEX file magic number */
 #define DEX_MAGIC       "dex\n"
 
+/* The version for android N, encoded in 4 bytes of ASCII. This differentiates dex files that may
+ * use default methods.
+ */
+#define DEX_MAGIC_VERS_37  "037\0"
+
 /* current version, encoded in 4 bytes of ASCII */
 #define DEX_MAGIC_VERS  "036\0"
 
