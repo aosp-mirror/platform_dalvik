@@ -18,6 +18,7 @@ package com.android.dexdeps;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -66,8 +67,8 @@ public class DexData {
      * Verifies the given magic number.
      */
     private static boolean verifyMagic(byte[] magic) {
-        return Arrays.equals(magic, HeaderItem.DEX_FILE_MAGIC) ||
-            Arrays.equals(magic, HeaderItem.DEX_FILE_MAGIC_API_13);
+        return Arrays.equals(magic, HeaderItem.DEX_FILE_MAGIC_v035) ||
+            Arrays.equals(magic, HeaderItem.DEX_FILE_MAGIC_v037);
     }
 
     /**
@@ -538,10 +539,16 @@ public class DexData {
         public int classDefsSize, classDefsOff;
 
         /* expected magic values */
-        public static final byte[] DEX_FILE_MAGIC = {
-            0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x36, 0x00 };
-        public static final byte[] DEX_FILE_MAGIC_API_13 = {
-            0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x35, 0x00 };
+        public static final byte[] DEX_FILE_MAGIC_v035 =
+            "dex\n035\0".getBytes(StandardCharsets.US_ASCII);
+
+        // Dex version 036 skipped because of an old dalvik bug on some versions
+        // of android where dex files with that version number would erroneously
+        // be accepted and run. See: art/runtime/dex_file.cc
+
+        // V037 was introduced in API LEVEL 24
+        public static final byte[] DEX_FILE_MAGIC_v037 =
+            "dex\n037\0".getBytes(StandardCharsets.US_ASCII);
         public static final int ENDIAN_CONSTANT = 0x12345678;
         public static final int REVERSE_ENDIAN_CONSTANT = 0x78563412;
     }
