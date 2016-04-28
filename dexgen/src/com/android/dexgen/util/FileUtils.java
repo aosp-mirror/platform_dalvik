@@ -72,17 +72,21 @@ public final class FileUtils {
         byte[] result = new byte[length];
 
         try {
+            // convert to try-with-resources once dexgen uses an Android API 19+ which supports it
             FileInputStream in = new FileInputStream(file);
-            int at = 0;
-            while (length > 0) {
-                int amt = in.read(result, at, length);
-                if (amt == -1) {
-                    throw new RuntimeException(file + ": unexpected EOF");
+            try {
+                int at = 0;
+                while (length > 0) {
+                    int amt = in.read(result, at, length);
+                    if (amt == -1) {
+                        throw new RuntimeException(file + ": unexpected EOF");
+                    }
+                    at += amt;
+                    length -= amt;
                 }
-                at += amt;
-                length -= amt;
+            } finally {
+                in.close();
             }
-            in.close();
         } catch (IOException ex) {
             throw new RuntimeException(file + ": trouble reading", ex);
         }
