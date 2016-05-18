@@ -18,6 +18,7 @@ package com.android.dx.merge;
 
 import com.android.dex.ClassDef;
 import com.android.dex.Dex;
+import com.android.dex.DexException;
 import java.util.Comparator;
 
 /**
@@ -79,6 +80,10 @@ final class SortableType {
         int max;
         if (classDef.getSupertypeIndex() == ClassDef.NO_INDEX) {
             max = 0; // this is Object.class or an interface
+        } else if (classDef.getSupertypeIndex() == classDef.getTypeIndex()) {
+            // This is an invalid class extending itself.
+            throw new DexException("Class with type index " + classDef.getTypeIndex()
+                    + " extends itself");
         } else {
             SortableType sortableSupertype = types[classDef.getSupertypeIndex()];
             if (sortableSupertype == null) {
