@@ -332,7 +332,7 @@ enum Opcode {
  * an interpreter in C.
  */
 #define DEFINE_GOTO_TABLE(_name) \
-    static const void* _name[kNumPackedOpcodes] = {                      \
+    static const void* (_name)[kNumPackedOpcodes] = {                         \
         /* BEGIN(libdex-goto-table); GENERATED AUTOMATICALLY BY opcode-gen */ \
         H(OP_NOP),                                                            \
         H(OP_MOVE),                                                           \
