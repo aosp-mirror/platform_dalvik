@@ -709,9 +709,13 @@ const char* getClassDescriptor(DexFile* pDexFile, u4 classIdx)
  * this can be compared with the one passed in, to see if the result
  * needs to be free()d.
  */
-static char* indexString(DexFile* pDexFile,
-    const DecodedInstruction* pDecInsn, char* buf, size_t bufSize)
+static char* indexString(DexFile* pDexFile, const DecodedInstruction* pDecInsn, size_t bufSize)
 {
+    char* buf = (char*)malloc(bufSize);
+    if (buf == NULL) {
+      return NULL;
+    }
+
     int outSize;
     u4 index;
     u4 width;
@@ -833,12 +837,8 @@ static char* indexString(DexFile* pDexFile,
          * snprintf() doesn't count the '\0' as part of its returned
          * size, so we add explicit space for it here.
          */
-        outSize++;
-        buf = (char*)malloc(outSize);
-        if (buf == NULL) {
-            return NULL;
-        }
-        return indexString(pDexFile, pDecInsn, buf, outSize);
+        free(buf);
+        return indexString(pDexFile, pDecInsn, outSize + 1);
     } else {
         return buf;
     }
@@ -850,8 +850,6 @@ static char* indexString(DexFile* pDexFile,
 void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
     int insnWidth, const DecodedInstruction* pDecInsn)
 {
-    char indexBufChars[200];
-    char *indexBuf = indexBufChars;
     const u2* insns = pCode->insns;
     int i;
 
@@ -890,9 +888,11 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
         printf("|%04x: %s", insnIdx, dexGetOpcodeName(pDecInsn->opcode));
     }
 
+    // Provide an initial buffer that usually suffices, although indexString()
+    // may reallocate the buffer if more space is needed.
+    char* indexBuf = NULL;
     if (pDecInsn->indexType != kIndexNone) {
-        indexBuf = indexString(pDexFile, pDecInsn,
-                indexBufChars, sizeof(indexBufChars));
+        indexBuf = indexString(pDexFile, pDecInsn, 200);
     }
 
     switch (dexGetFormatFromOpcode(pDecInsn->opcode)) {
@@ -1049,9 +1049,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
 
     putchar('\n');
 
-    if (indexBuf != indexBufChars) {
-        free(indexBuf);
-    }
+    free(indexBuf);
 }
 
 /*
