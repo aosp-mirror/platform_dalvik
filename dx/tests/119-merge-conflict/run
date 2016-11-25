@@ -18,7 +18,7 @@
 prog=`which dx`
 progdir=`dirname "${prog}"`
 dxjar=$progdir/../framework/dx.jar
-junitjar=$progdir/../framework/junit.jar
+junitjar=$progdir/../framework/junit-host.jar
 junitdex=$progdir/../framework/junit-hostdex.jar
 
 javac -cp $dxjar:$junitjar `find . -name "*.java"`
