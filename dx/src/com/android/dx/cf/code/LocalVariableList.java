@@ -351,8 +351,7 @@ public final class LocalVariableList extends FixedSizeList {
          */
         public boolean matchesPcAndIndex(int pc, int index) {
             return (index == this.index) &&
-                // do not check that "pc >= startPc" because startPc may be later than the expected
-                // pc, if the bytecode has been modified, by Jacoco instrumentation for instance
+                (pc >= startPc) &&
                 (pc < (startPc + length));
         }
 
