@@ -20,7 +20,6 @@ import com.android.dx.rop.code.LocalItem;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 import com.android.dx.util.FixedSizeList;
-import java.util.Comparator;
 
 /**
  * List of "local variable" entries, which are the contents of
@@ -58,7 +57,6 @@ public final class LocalVariableList extends FixedSizeList {
             result.set(sz1 + i, list2.get(i));
         }
 
-        result.sort();
         result.setImmutable();
         return result;
     }
@@ -92,7 +90,6 @@ public final class LocalVariableList extends FixedSizeList {
             result.set(i, item);
         }
 
-        result.sort();
         result.setImmutable();
         return result;
     }
@@ -186,10 +183,6 @@ public final class LocalVariableList extends FixedSizeList {
      * {@code null} if none is known
      */
     public Item pcAndIndexToLocal(int pc, int index) {
-        if (!isSorted()) {
-          throw new AssertionError("local variable list should be sorted");
-        }
-
         int sz = size();
 
         for (int i = 0; i < sz; i++) {
@@ -201,20 +194,6 @@ public final class LocalVariableList extends FixedSizeList {
         }
 
         return null;
-    }
-
-    /**
-     * Sorts the "local variable" entries according to their start pc.
-     * The implementation assumes that all list elements are {@code non-null;}
-     */
-    public void sort() {
-        super.sort(new Comparator<Item>() {
-
-            @Override
-            public int compare(Item o1, Item o2) {
-                return o1.startPc - o2.startPc;
-            }
-        });
     }
 
     /**

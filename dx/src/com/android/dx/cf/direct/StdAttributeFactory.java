@@ -597,7 +597,6 @@ public class StdAttributeFactory
             throw new RuntimeException("shouldn't happen", ex);
         }
 
-        list.sort();
         list.setImmutable();
         return list;
     }
