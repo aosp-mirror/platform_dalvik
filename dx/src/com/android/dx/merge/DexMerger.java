@@ -29,6 +29,7 @@ import com.android.dex.ProtoId;
 import com.android.dex.SizeOf;
 import com.android.dex.TableOfContents;
 import com.android.dex.TypeList;
+import com.android.dx.command.dexer.DxContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +43,7 @@ public final class DexMerger {
     private final IndexMap[] indexMaps;
 
     private final CollisionPolicy collisionPolicy;
+    private final DxContext context;
     private final WriterSizes writerSizes;
 
     private final Dex dexOut;
@@ -84,15 +86,16 @@ public final class DexMerger {
     /** minimum number of wasted bytes before it's worthwhile to compact the result */
     private int compactWasteThreshold = 1024 * 1024; // 1MiB
 
-    public DexMerger(Dex[] dexes, CollisionPolicy collisionPolicy)
+    public DexMerger(Dex[] dexes, CollisionPolicy collisionPolicy, DxContext context)
             throws IOException {
-        this(dexes, collisionPolicy, new WriterSizes(dexes));
+        this(dexes, collisionPolicy, context, new WriterSizes(dexes));
     }
 
-    private DexMerger(Dex[] dexes, CollisionPolicy collisionPolicy,
+    private DexMerger(Dex[] dexes, CollisionPolicy collisionPolicy, DxContext context,
             WriterSizes writerSizes) throws IOException {
         this.dexes = dexes;
         this.collisionPolicy = collisionPolicy;
+        this.context = context;
         this.writerSizes = writerSizes;
 
         dexOut = new Dex(writerSizes.size());
@@ -196,9 +199,9 @@ public final class DexMerger {
         int wastedByteCount = writerSizes.size() - compactedSizes.size();
         if (wastedByteCount >  + compactWasteThreshold) {
             DexMerger compacter = new DexMerger(
-                    new Dex[] {dexOut, new Dex(0)}, CollisionPolicy.FAIL, compactedSizes);
+                    new Dex[] {dexOut, new Dex(0)}, CollisionPolicy.FAIL, context, compactedSizes);
             result = compacter.mergeDexes();
-            System.out.printf("Result compacted from %.1fKiB to %.1fKiB to save %.1fKiB%n",
+            context.out.printf("Result compacted from %.1fKiB to %.1fKiB to save %.1fKiB%n",
                     dexOut.getLength() / 1024f,
                     result.getLength() / 1024f,
                     wastedByteCount / 1024f);
@@ -206,12 +209,12 @@ public final class DexMerger {
 
         long elapsed = System.nanoTime() - start;
         for (int i = 0; i < dexes.length; i++) {
-            System.out.printf("Merged dex #%d (%d defs/%.1fKiB)%n",
+            context.out.printf("Merged dex #%d (%d defs/%.1fKiB)%n",
                 i + 1,
                 dexes[i].getTableOfContents().classDefs.size,
                 dexes[i].getLength() / 1024f);
         }
-        System.out.printf("Result is %d defs/%.1fKiB. Took %.1fs%n",
+        context.out.printf("Result is %d defs/%.1fKiB. Took %.1fs%n",
                 result.getTableOfContents().classDefs.size,
                 result.getLength() / 1024f,
                 elapsed / 1000000000f);
@@ -351,6 +354,7 @@ public final class DexMerger {
                 this.offset = offset;
             }
 
+            @Override
             public int compareTo(UnsortedValue unsortedValue) {
                 return value.compareTo(unsortedValue.value);
             }
@@ -1117,7 +1121,7 @@ public final class DexMerger {
         for (int i = 1; i < args.length; i++) {
             dexes[i - 1] = new Dex(new File(args[i]));
         }
-        Dex merged = new DexMerger(dexes, CollisionPolicy.KEEP_FIRST).merge();
+        Dex merged = new DexMerger(dexes, CollisionPolicy.KEEP_FIRST, new DxContext()).merge();
         merged.writeTo(new File(args[0]));
     }
 
