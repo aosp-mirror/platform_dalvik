@@ -2834,13 +2834,9 @@ int dexSwapAndVerify(u1* addr, size_t len)
 
     if (okay) {
         u4 expectedLen = SWAP4(pHeader->fileSize);
-        if (len < expectedLen) {
+        if (len != expectedLen) {
             ALOGE("ERROR: Bad length: expected %u, got %zu", expectedLen, len);
             okay = false;
-        } else if (len != expectedLen) {
-            ALOGW("WARNING: Odd length: expected %u, got %zu", expectedLen,
-                  len);
-            // keep going
         }
     }
 
