@@ -113,10 +113,10 @@ set "exitStatus=0"
 call "%proguard%" -injars %params% -dontwarn -forceprocessing  -outjars "%tmpJar%" -libraryjars "%shrinkedAndroidJar%" -dontoptimize -dontobfuscate -dontpreverify -include "%baserules%" -include "%extrarules%" 1>nul
 
 if DEFINED output goto redirect
-call "%java_exe%" -Djava.ext.dirs="%frameworkdir%" com.android.multidex.MainDexListBuilder "%disableKeepAnnotated%" "%tmpJar%" "%params%"
+call "%java_exe%" -Djava.ext.dirs="%frameworkdir%" com.android.multidex.MainDexListBuilder %disableKeepAnnotated% "%tmpJar%" "%params%"
 goto afterClassReferenceListBuilder
 :redirect
-call "%java_exe%" -Djava.ext.dirs="%frameworkdir%" com.android.multidex.MainDexListBuilder "%disableKeepAnnotated%" "%tmpJar%" "%params%" 1>"%output%"
+call "%java_exe%" -Djava.ext.dirs="%frameworkdir%" com.android.multidex.MainDexListBuilder %disableKeepAnnotated% "%tmpJar%" "%params%" 1>"%output%"
 :afterClassReferenceListBuilder
 
 del %tmpJar%
