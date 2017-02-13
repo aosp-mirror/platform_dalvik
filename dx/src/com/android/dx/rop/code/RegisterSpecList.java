@@ -417,10 +417,12 @@ public final class RegisterSpecList
           if (!duplicateFirst) {
             base += expandedReg.getCategory();
           }
-          duplicateFirst = false;
         } else {
           expandedReg = registerToExpand;
         }
+
+        // Reset duplicateFirst when the first register has been dealt with.
+        duplicateFirst = false;
 
         result.set0(regIdx, expandedReg);
       }
