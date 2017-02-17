@@ -960,8 +960,7 @@ import java.util.ArrayList;
                  */
                 CstMethodRef ref = (CstMethodRef) cst;
                 if (ref.isInstanceInit() ||
-                    (ref.getDefiningClass().equals(method.getDefiningClass())) ||
-                    !method.getAccSuper()) {
+                    (ref.getDefiningClass().equals(method.getDefiningClass()))) {
                     return RegOps.INVOKE_DIRECT;
                 }
                 return RegOps.INVOKE_SUPER;
