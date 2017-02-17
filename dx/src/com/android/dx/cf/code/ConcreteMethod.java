@@ -46,12 +46,6 @@ public final class ConcreteMethod implements Method {
      */
     private final CstString sourceFile;
 
-    /**
-     * whether the class that this method is part of is defined with
-     * {@code ACC_SUPER}
-     */
-    private final boolean accSuper;
-
     /** {@code non-null;} the code attribute */
     private final AttCode attCode;
 
@@ -72,13 +66,12 @@ public final class ConcreteMethod implements Method {
      * information (if any)
      */
     public ConcreteMethod(Method method, ClassFile cf, boolean keepLines, boolean keepLocals) {
-        this(method, cf.getAccessFlags(), cf.getSourceFile(), keepLines, keepLocals);
+        this(method, cf.getSourceFile(), keepLines, keepLocals);
     }
 
-    public ConcreteMethod(Method method, int accessFlags, CstString sourceFile,
+    public ConcreteMethod(Method method, CstString sourceFile,
             boolean keepLines, boolean keepLocals) {
         this.method = method;
-        this.accSuper = (accessFlags & AccessFlags.ACC_SUPER) != 0;
         this.sourceFile = sourceFile;
 
         AttributeList attribs = method.getAttributes();
@@ -177,16 +170,6 @@ public final class ConcreteMethod implements Method {
     /** {@inheritDoc} */
     public Prototype getEffectiveDescriptor() {
         return method.getEffectiveDescriptor();
-    }
-
-    /**
-     * Gets whether the class that this method is part of is defined with
-     * {@code ACC_SUPER}.
-     *
-     * @return the {@code ACC_SUPER} value
-     */
-    public boolean getAccSuper() {
-        return accSuper;
     }
 
     /**
