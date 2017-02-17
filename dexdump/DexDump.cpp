@@ -1847,7 +1847,7 @@ void dumpRegisterMaps(DexFile* pDexFile)
 
 static const DexMapItem* findMapItem(const DexFile* pDexFile, u4 type)
 {
-    u4 offset = pDexFile->pHeader->mapOff;
+    const u4 offset = pDexFile->pHeader->mapOff;
     const DexMapList* list = (const DexMapList*)(pDexFile->baseAddr + offset);
     for (u4 i = 0; i < list->size; ++i) {
         if (list->list[i].type == type) {
@@ -1976,34 +1976,34 @@ static void dumpCallSites(DexFile* pDexFile)
                 }
                 case kDexAnnotationShort: {
                     printf(doXml ? "type=\"short\" value=\"%d\"/>" : "%d (short)",
-                           (int)readSignedLittleEndian(&data, valueArg + 1));
+                           (int) readSignedLittleEndian(&data, valueArg + 1));
                     break;
                 }
                 case kDexAnnotationChar: {
                     printf(doXml ? "type=\"short\" value=\"%u\"/>" : "%u (char)",
-                           (u2)readUnsignedLittleEndian(&data, valueArg + 1));
+                           (u2) readUnsignedLittleEndian(&data, valueArg + 1));
                     break;
                 }
                 case kDexAnnotationInt: {
                     printf(doXml ? "type=\"int\" value=\"%d\"/>" : "%d (int)",
-                           (int)readSignedLittleEndian(&data, valueArg + 1));
+                           (int) readSignedLittleEndian(&data, valueArg + 1));
                     break;
                 }
                 case kDexAnnotationLong: {
                     printf(doXml ? "type=\"long\" value=\"%" PRId64 "\"/>" : "%" PRId64 " (long)",
-                           (int64_t)readSignedLittleEndian(&data, valueArg + 1));
+                           (int64_t) readSignedLittleEndian(&data, valueArg + 1));
                     break;
                 }
                 case kDexAnnotationFloat: {
-                    u4 rawValue = (u4)(readUnsignedLittleEndian(&data, valueArg + 1, true) >> 32);
+                    u4 rawValue = (u4) (readUnsignedLittleEndian(&data, valueArg + 1, true) >> 32);
                     printf(doXml ? "type=\"float\" value=\"%g\"/>" : "%g (float)",
-                           *((float*)&rawValue));
+                           *((float*) &rawValue));
                     break;
                 }
                 case kDexAnnotationDouble: {
                     u8 rawValue = readUnsignedLittleEndian(&data, valueArg + 1, true);
                     printf(doXml ? "type=\"double\" value=\"%g\"/>" : "%g (double)",
-                           *((double*)&rawValue));
+                           *((double*) &rawValue));
                     break;
                 }
                 case kDexAnnotationMethodType: {
