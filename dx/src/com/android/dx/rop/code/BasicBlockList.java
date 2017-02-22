@@ -150,7 +150,7 @@ public final class BasicBlockList extends LabeledList {
     /**
      * Gets the first block in the list with the given label, if any.
      *
-     * @param label {@code >= 0;} the label to look for
+     * @param label {@code label >= 0;} the label to look for
      * @return {@code non-null;} the so-labelled block
      * @throws IllegalArgumentException thrown if the label isn't found
      */
@@ -357,6 +357,11 @@ public final class BasicBlockList extends LabeledList {
 
         /** {@inheritDoc} */
         public void visitFillArrayDataInsn(FillArrayDataInsn insn) {
+            visit(insn);
+        }
+
+        /** {@inheritDoc} */
+        public void visitInvokePolymorphicInsn(InvokePolymorphicInsn insn) {
             visit(insn);
         }
 
