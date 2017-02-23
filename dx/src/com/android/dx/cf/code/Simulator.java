@@ -654,30 +654,32 @@ public class Simulator {
                     machine.popArgs(frame, Type.OBJECT, fieldType);
                     break;
                 }
-                case ByteOps.INVOKEINTERFACE:
-                case ByteOps.INVOKEVIRTUAL:
-                case ByteOps.INVOKESPECIAL:
-                case ByteOps.INVOKESTATIC: {
+                case ByteOps.INVOKEINTERFACE: {
                     /*
                      * Convert the interface method ref into a normal
-                     * method ref if necessary.
+                     * method ref.
                      */
-                    if (cst instanceof CstInterfaceMethodRef) {
-                        if (opcode != ByteOps.INVOKEINTERFACE) {
-                            if (!dexOptions.canUseDefaultInterfaceMethods()) {
-                                throw new SimException(
-                                    "default or static interface method used without --min-sdk-version >= 24");
-                            }
-                        }
-                        cst = ((CstInterfaceMethodRef) cst).toMethodRef();
-                    }
+                    cst = ((CstInterfaceMethodRef) cst).toMethodRef();
+                    // and fall through...
+                }
+                case ByteOps.INVOKEVIRTUAL:
+                case ByteOps.INVOKESPECIAL: {
                     /*
-                     * Get the instance or static prototype, and use it to
-                     * direct the machine.
+                     * Get the instance prototype, and use it to direct
+                     * the machine.
                      */
-                    boolean staticMethod = (opcode == ByteOps.INVOKESTATIC);
                     Prototype prototype =
-                        ((CstMethodRef) cst).getPrototype(staticMethod);
+                        ((CstMethodRef) cst).getPrototype(false);
+                    machine.popArgs(frame, prototype);
+                    break;
+                }
+                case ByteOps.INVOKESTATIC: {
+                    /*
+                     * Get the static prototype, and use it to direct
+                     * the machine.
+                     */
+                    Prototype prototype =
+                        ((CstMethodRef) cst).getPrototype(true);
                     machine.popArgs(frame, prototype);
                     break;
                 }

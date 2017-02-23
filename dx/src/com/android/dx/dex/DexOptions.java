@@ -38,8 +38,8 @@ public class DexOptions {
     */
     public boolean ALIGN_64BIT_REGS_IN_OUTPUT_FINISHER = ALIGN_64BIT_REGS_SUPPORT;
 
-    /** minimum SDK version targeted */
-    public int minSdkVersion = DexFormat.API_NO_EXTENDED_OPCODES;
+    /** target API level */
+    public int targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
 
     /** force generation of jumbo opcodes */
     public boolean forceJumbo = false;
@@ -48,14 +48,6 @@ public class DexOptions {
      * Gets the dex file magic number corresponding to this instance.
      */
     public String getMagic() {
-        return DexFormat.apiToMagic(minSdkVersion);
-    }
-
-    /**
-     * Returns whether default and static interface methods are allowed.  This became allowed as of
-     * Nougat (SDK version 24).
-     */
-    public boolean canUseDefaultInterfaceMethods() {
-        return minSdkVersion >= DexFormat.API_DEFAULT_INTERFACE_METHODS;
+        return DexFormat.apiToMagic(targetApiLevel);
     }
 }
