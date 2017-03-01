@@ -335,7 +335,7 @@ public abstract class DalvInsn {
      *
      * @param prefix {@code non-null;} prefix before the address; each follow-on
      * line will be indented to match as well
-     * @param width {@code >= 0;} the width of the output or {@code 0} for
+     * @param width {@code width >= 0;} the width of the output or {@code 0} for
      * unlimited width
      * @param noteIndices whether to include an explicit notation of
      * constant pool indices
@@ -360,7 +360,7 @@ public abstract class DalvInsn {
     /**
      * Sets the output address.
      *
-     * @param address {@code >= 0;} the output address
+     * @param address {@code address >= 0;} the output address
      */
     public final void setAddress(int address) {
         if (address < 0) {
@@ -459,4 +459,30 @@ public abstract class DalvInsn {
      * @return {@code null-ok;} the listing string
      */
     protected abstract String listingString0(boolean noteIndices);
+
+    /**
+     * Helper which returns the string form of the associated constants
+     * for inclusion in a human oriented listing dump.
+     *
+     * This method is only implemented for instructions with one or more
+     * constants.
+     *
+     * @return the constant as a string.
+     */
+    public String cstString() {
+        throw new UnsupportedOperationException("Not supported.");
+    }
+
+    /**
+     * Helper which returns the comment form of the associated constants
+     * for inclusion in a human oriented listing dump.
+     *
+     * This method is only implemented for instructions with one or more
+     * constants.
+     *
+     * @return the comment as a string.
+     */
+    public String cstComment() {
+        throw new UnsupportedOperationException("Not supported.");
+    }
 }

@@ -184,6 +184,11 @@ public final class OutputFinisher {
         if (insn instanceof CstInsn) {
             Constant cst = ((CstInsn) insn).getConstant();
             result.add(cst);
+        } else if (insn instanceof MultiCstInsn) {
+            MultiCstInsn m = (MultiCstInsn) insn;
+            for (int i = 0; i < m.getNumberOfConstants(); i++) {
+                result.add(m.getConstant(i));
+            }
         } else if (insn instanceof LocalSnapshot) {
             RegisterSpecSet specs = ((LocalSnapshot) insn).getLocals();
             int size = specs.size();
@@ -240,7 +245,7 @@ public final class OutputFinisher {
     /**
      * Inserts an instruction in the output at the given offset.
      *
-     * @param at {@code >= 0;} what index to insert at
+     * @param at {@code at >= 0;} what index to insert at
      * @param insn {@code non-null;} the instruction to insert
      */
     public void insert(int at, DalvInsn insn) {
@@ -313,6 +318,8 @@ public final class OutputFinisher {
         for (DalvInsn insn : insns) {
             if (insn instanceof CstInsn) {
                 assignIndices((CstInsn) insn, callback);
+            } else if (insn instanceof MultiCstInsn) {
+                assignIndices((MultiCstInsn) insn, callback);
             }
         }
     }
@@ -337,7 +344,30 @@ public final class OutputFinisher {
             CstMemberRef member = (CstMemberRef) cst;
             CstType definer = member.getDefiningClass();
             index = callback.getIndex(definer);
+            // TODO(oth): what scenarios is this guard valid under? Is it not just an error?
             if (index >= 0) {
+                insn.setClassIndex(index);
+            }
+        }
+    }
+
+    /**
+     * Helper for {@link #assignIndices} which does assignment for one
+     * instruction.
+     *
+     * @param insn {@code non-null;} the instruction
+     * @param callback {@code non-null;} the callback
+     */
+    private static void assignIndices(MultiCstInsn insn, DalvCode.AssignIndicesCallback callback) {
+        for (int i = 0; i < insn.getNumberOfConstants(); ++i) {
+            Constant cst = insn.getConstant(i);
+            int index = callback.getIndex(cst);
+            insn.setIndex(i, index);
+
+            if (cst instanceof CstMemberRef) {
+                CstMemberRef member = (CstMemberRef) cst;
+                CstType definer = member.getDefiningClass();
+                index = callback.getIndex(definer);
                 insn.setClassIndex(index);
             }
         }
@@ -392,7 +422,8 @@ public final class OutputFinisher {
         Dop[] result = new Dop[size];
 
         for (int i = 0; i < size; i++) {
-            result[i] = insns.get(i).getOpcode();
+            DalvInsn insn = insns.get(i);
+            result[i] = insn.getOpcode();
         }
 
         return result;
