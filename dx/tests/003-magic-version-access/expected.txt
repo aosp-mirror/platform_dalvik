@@ -5,7 +5,7 @@ minor_version: 0000
 major_version: 0031
 
 trouble parsing:
-bad class file magic (deadbabe) or version (0031.0000)
+bad class file magic (deadbabe)
 ...while parsing class-bad-magic.txt
 reading class-version-44.0.txt...
 begin classfile
@@ -14,7 +14,7 @@ minor_version: 0000
 major_version: 002c
 
 trouble parsing:
-bad class file magic (cafebabe) or version (002c.0000)
+unsupported class file version 44.0
 ...while parsing class-version-44.0.txt
 reading class-version-44.65535.txt...
 begin classfile
@@ -23,7 +23,7 @@ minor_version: ffff
 major_version: 002c
 
 trouble parsing:
-bad class file magic (cafebabe) or version (002c.ffff)
+unsupported class file version 44.65535
 ...while parsing class-version-44.65535.txt
 reading class-version-45.0.txt...
 begin classfile
@@ -263,7 +263,7 @@ minor_version: 0001
 major_version: 0033
 
 trouble parsing:
-bad class file magic (cafebabe) or version (0033.0001)
+unsupported class file version 51.1
 ...while parsing class-version-51.1.txt
 reading class-version-51.65535.txt...
 begin classfile
@@ -272,7 +272,7 @@ minor_version: ffff
 major_version: 0033
 
 trouble parsing:
-bad class file magic (cafebabe) or version (0033.ffff)
+unsupported class file version 51.65535
 ...while parsing class-version-51.65535.txt
 reading class-version-52.0.txt...
 begin classfile
@@ -281,7 +281,7 @@ minor_version: 0000
 major_version: 0034
 
 trouble parsing:
-bad class file magic (cafebabe) or version (0034.0000)
+unsupported class file version 52.0
 ...while parsing class-version-52.0.txt
 reading small-class.txt...
 begin classfile
