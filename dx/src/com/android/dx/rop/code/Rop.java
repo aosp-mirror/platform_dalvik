@@ -107,7 +107,7 @@ public final class Rop {
         }
 
         if ((branchingness < BRANCH_MIN) || (branchingness > BRANCH_MAX)) {
-            throw new IllegalArgumentException("bogus branchingness");
+            throw new IllegalArgumentException("invalid branchingness: " + branchingness);
         }
 
         if ((exceptions.size() != 0) && (branchingness != BRANCH_THROW)) {
