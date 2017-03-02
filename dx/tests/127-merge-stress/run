@@ -14,10 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# NB This test is likely to be flakey. It attempts to merge random
+# DEX files from the Android build tree.
+
 # Find dx.jar from dx in the android dev tree
 prog=`which dx`
 progdir=`dirname "${prog}"`
 dxjar=$progdir/../framework/dx.jar
+
+for i in "$dxjar"; do
+    if [ ! -r $i ]; then
+        echo Missing dependency $i. Build dx/junit-tests.
+        exit 1
+    fi
+done
 
 # Find dex files in the tree
 dexes=`find $ANDROID_BUILD_TOP/out -name '*.dex' -printf '%p '`
@@ -27,11 +37,20 @@ dexesinapks=`find $ANDROID_BUILD_TOP/libcore $ANDROID_BUILD_TOP/out -name '*.apk
 # Select only the valid dex files
 validdexes=""
 for dex in $dexes $dexesinjars $dexesinapks; do
-  dexdump -c $dex &> /dev/null
+  if [[ "$dex" = *"core"* ]]; then
+    # Ignoring core files as hit limits of merging capability.
+    continue
+  fi
+  dexdump2 -c $dex >/dev/null
   if [ $? -eq 0 ]; then
     validdexes="$validdexes $dex"
   fi
 done
+
+if [ "$validdexes" = "" ]; then
+  echo No valid DEX files found.
+  exit 1
+fi
 
 # Compile and run java merging test
 $JAVAC -Xlint:-options -source 1.7 -target 1.7 -cp $dxjar -d . com/android/dx/merge/MergeTest.java
