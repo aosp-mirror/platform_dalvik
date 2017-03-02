@@ -33,25 +33,85 @@ cd "${progdir}"
 progdir=`pwd`
 prog="${progdir}"/`basename "${prog}"`
 
-passed=0
-failed=0
-failNames=""
+# Tests failing and require attention.
+knownBad=$(cat << 'END_BAD_LIST'
+    100-local-mismatch
+    115-merge
+    119-merge-conflict
+END_BAD_LIST
+)
 
+# Notes
+# 100 test cases seem to be optimized out by jasmin/dx. Exception type has changed.
+
+passed=0
+surprised=0
+surprisedNames=""
+ignored=0
+ignoredNames=""
+failed=0
+failedNames=""
 for i in *; do
     if [ -d "$i" -a -r "$i" ]; then
-        ./run-test "$i"
-        if [ "$?" = "0" ]; then
-            ((passed += 1))
+        if [[ "$knownBad" == *"$i"* ]]; then
+            expectFail=1
         else
-            ((failed += 1))
-            failNames="$failNames $i"
+            expectFail=0
+        fi
+
+        output=/tmp/$$/$i
+        ./run-test --output_dir "$output" "$i"
+        if [ $? = 0 ]; then
+            if [[ $expectFail = 0 ]]; then
+                ((passed++))
+            else
+                echo "Failing on unexpected success of $i"
+                ((surprised++))
+                surprisedNames="$surprisedNames $i"
+            fi
+        else
+            if [[ $expectFail = 0 ]]; then
+                ((failed++))
+                failedNames="$failedNames $i"
+            else
+                echo "Ignoring expected failure of $i"
+                ((ignored++))
+                ignoredNames="$ignoredNames $i"
+                # Clean up when we expect a test to fail.
+                # run-test only does this on success.
+                rm -rf "$output"
+            fi
         fi
     fi
 done
 
-echo "passed: $passed test(s)"
-echo "failed: $failed test(s)"
+printf    "\n\nTest Results\n"
+printf -- "----------------------------\n"
+printf    "Pass:                   % 3d\n" $passed
+printf    "Surprise pass:          % 3d\n" $surprised
+printf    "Known failures:         % 3d\n" $ignored
+printf    "Failures:               % 3d\n" $failed
+printf -- "----------------------------\n"
+printf    "Elapsed time(s):        % 3d\n" $SECONDS
 
-for i in $failNames; do
-    echo "failed: $i"
-done
+function listFiles {
+  title=$1
+  if [[ "$2" = "" ]]; then
+    names="NONE"
+  else
+    names=$2
+  fi
+
+  echo
+  echo "$title:"
+  for i in $names; do
+    echo "  $i"
+  done
+}
+
+listFiles "Unexpected successes" "$surprisedNames"
+listFiles "Known failures" "$ignoredNames"
+listFiles "Failures" "$failedNames"
+
+needingAttention=$((failed + surprised))
+exit $needingAttention
