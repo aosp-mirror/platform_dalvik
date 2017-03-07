@@ -33,17 +33,7 @@ cd "${progdir}"
 progdir=`pwd`
 prog="${progdir}"/`basename "${prog}"`
 
-# Tests failing and require attention.
-knownBad=$(cat << 'END_BAD_LIST'
-    100-local-mismatch
-    115-merge
-    119-merge-conflict
-END_BAD_LIST
-)
-
-# Notes
-# 100 test cases seem to be optimized out by jasmin/dx. Exception type has changed.
-
+# Globals for tracking numbers of successes and failures and their names.
 passed=0
 surprised=0
 surprisedNames=""
@@ -51,50 +41,29 @@ ignored=0
 ignoredNames=""
 failed=0
 failedNames=""
-for i in *; do
-    if [ -d "$i" -a -r "$i" ]; then
-        if [[ "$knownBad" == *"$i"* ]]; then
-            expectFail=1
-        else
-            expectFail=0
-        fi
 
-        output=/tmp/$$/$i
-        ./run-test --output_dir "$output" "$i"
-        if [ $? = 0 ]; then
-            if [[ $expectFail = 0 ]]; then
-                ((passed++))
-            else
-                echo "Failing on unexpected success of $i"
-                ((surprised++))
-                surprisedNames="$surprisedNames $i"
-            fi
-        else
-            if [[ $expectFail = 0 ]]; then
-                ((failed++))
-                failedNames="$failedNames $i"
-            else
-                echo "Ignoring expected failure of $i"
-                ((ignored++))
-                ignoredNames="$ignoredNames $i"
-                # Clean up when we expect a test to fail.
-                # run-test only does this on success.
-                rm -rf "$output"
-            fi
-        fi
-    fi
-done
+# Tests failing and require attention (e.g. 115-merge)
+knownBad="100-local-mismatch 115-merge 119-merge-conflict"
 
-printf    "\n\nTest Results\n"
-printf -- "----------------------------\n"
-printf    "Pass:                   % 3d\n" $passed
-printf    "Surprise pass:          % 3d\n" $surprised
-printf    "Known failures:         % 3d\n" $ignored
-printf    "Failures:               % 3d\n" $failed
-printf -- "----------------------------\n"
-printf    "Elapsed time(s):        % 3d\n" $SECONDS
+function display_results {
+  printf    "\n\nTest Results\n"
+  printf -- "----------------------------\n"
+  printf    "Pass:                   % 3d\n" $passed
+  printf    "Surprise pass:          % 3d\n" $surprised
+  printf    "Known failures:         % 3d\n" $ignored
+  printf    "Failures:               % 3d\n" $failed
+  printf -- "----------------------------\n"
+  printf    "Elapsed time(s):        % 3d\n" $SECONDS
 
-function listFiles {
+  list_files "Unexpected successes" "$surprisedNames"
+  list_files "Known failures" "$ignoredNames"
+  list_files "Failures" "$failedNames"
+
+  needingAttention=$((failed + surprised))
+  exit $needingAttention
+}
+
+function list_files {
   title=$1
   if [[ "$2" = "" ]]; then
     names="NONE"
@@ -109,9 +78,47 @@ function listFiles {
   done
 }
 
-listFiles "Unexpected successes" "$surprisedNames"
-listFiles "Known failures" "$ignoredNames"
-listFiles "Failures" "$failedNames"
+function run_tests {
+  for i in *; do
+    if [ -d "$i" -a -r "$i" ]; then
+      if [[ "$knownBad" == *"$i"* ]]; then
+          expectFail=1
+      else
+        expectFail=0
+      fi
 
-needingAttention=$((failed + surprised))
-exit $needingAttention
+      output=/tmp/$$/$i
+      ./run-test --output_dir "$output" "$i"
+      if [ $? = 0 ]; then
+        if [[ $expectFail = 0 ]]; then
+            ((passed++))
+        else
+          echo "Failing on unexpected success of $i"
+          ((surprised++))
+          surprisedNames="$surprisedNames $i"
+        fi
+      else
+        if [[ $expectFail = 0 ]]; then
+          ((failed++))
+          failedNames="$failedNames $i"
+        else
+          echo "Ignoring expected failure of $i"
+          ((ignored++))
+          ignoredNames="$ignoredNames $i"
+          # Clean up when we expect a test to fail.
+          # run-test only does this on success.
+          rm -rf "$output"
+        fi
+      fi
+    fi
+  done
+}
+
+function handle_interrupt {
+  trap INT
+  display_results
+}
+
+trap handle_interrupt INT
+run_tests
+display_results
