@@ -5,9 +5,7 @@ LOCAL_PATH := $(call my-dir)
 # This tool is prebuilt if we're doing an app-only build.
 ifeq ($(TARGET_BUILD_APPS)$(filter true,$(TARGET_BUILD_PDK)),)
 
-dx_src_files := \
-  $(call all-subdir-java-files) \
-  $(call all-java-files-under,../../../libcore/dex/src/main/java)
+dx_src_files := $(call all-subdir-java-files)
 
 # dx java library
 # ============================================================
