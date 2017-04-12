@@ -15,6 +15,7 @@ LOCAL_SRC_FILES := $(dx_src_files)
 LOCAL_JAR_MANIFEST := ../etc/manifest.txt
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE:= dx
+LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
