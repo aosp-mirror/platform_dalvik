@@ -260,6 +260,9 @@ public class Main {
         // empty the list, so that  tools that load dx and keep it around
         // for multiple runs don't reuse older buffers.
         libraryDexBuffers.clear();
+        dexOutputArrays.clear();
+        dexOutputFutures.clear();
+        addToDexFutures.clear();
 
         args = arguments;
         args.makeOptionsObjects();
