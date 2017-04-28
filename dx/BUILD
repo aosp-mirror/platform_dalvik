@@ -14,6 +14,7 @@ java_library(
     srcs = glob([
         "src/**/*.java",
     ]),
+    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
 )
 
 java_test(
