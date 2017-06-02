@@ -1,20 +1,13 @@
 # Bazel (https://bazel.io/) BUILD file for dex.
 licenses(["notice"])  # Apache License 2.0
 
-load("//tools/base/bazel:utils.bzl", "srcjar")
-
-srcjar(
-    name = "srcjar",
-    java_library = ":dx",
-    visibility = ["//tools/base/build-system/builder:__pkg__"],
-)
-
 java_library(
     name = "dx",
     srcs = glob([
         "src/**/*.java",
     ]),
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
+    visibility = ["//tools/base/build-system/builder:__pkg__"],
 )
 
 java_test(
