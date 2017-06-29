@@ -939,19 +939,19 @@ public final class Dops {
 
     public static final Dop INVOKE_POLYMORPHIC =
         new Dop(Opcodes.INVOKE_POLYMORPHIC, Opcodes.INVOKE_POLYMORPHIC,
-            Opcodes.INVOKE_POLYMORPHIC_RANGE, Form45cc.THE_ONE, true);
+            Opcodes.INVOKE_POLYMORPHIC_RANGE, Form45cc.THE_ONE, false);
 
     public static final Dop INVOKE_POLYMORPHIC_RANGE =
         new Dop(Opcodes.INVOKE_POLYMORPHIC_RANGE, Opcodes.INVOKE_POLYMORPHIC,
-            Opcodes.NO_NEXT, Form4rcc.THE_ONE, true);
+            Opcodes.NO_NEXT, Form4rcc.THE_ONE, false);
 
     public static final Dop INVOKE_CUSTOM =
         new Dop(Opcodes.INVOKE_CUSTOM, Opcodes.INVOKE_CUSTOM,
-            Opcodes.INVOKE_CUSTOM_RANGE, Form35c.THE_ONE, true);
+            Opcodes.INVOKE_CUSTOM_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_CUSTOM_RANGE =
         new Dop(Opcodes.INVOKE_CUSTOM_RANGE, Opcodes.INVOKE_CUSTOM,
-            Opcodes.NO_NEXT, Form3rc.THE_ONE, true);
+            Opcodes.NO_NEXT, Form3rc.THE_ONE, false);
 
     // END(dops)
 

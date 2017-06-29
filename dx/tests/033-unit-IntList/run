@@ -22,7 +22,7 @@ junitjar=$progdir/../framework/junit-host.jar
 
 for i in "$dxtestsjar" "$dxjar" "$junitjar"; do
     if [ ! -r $i ]; then
-        echo Missing dependency $i. Build dx/junit-tests.
+        echo Missing dependency $i. Build dx-tests.
         exit 1
     fi
 done

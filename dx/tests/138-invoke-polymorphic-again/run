@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2007 The Android Open Source Project
+# Copyright (C) 2017 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,23 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-prog=`which dx`
-progdir=`dirname "${prog}"`
-dxjar=$progdir/../framework/dx.jar
-dxtestsjar=$progdir/../framework/dx-tests.jar
-junitjar=$progdir/../framework/junit-host.jar
+SDK_VERSION=26
 
-for i in "$dxtestsjar" "$dxjar" "$junitjar"; do
-    if [ ! -r $i ]; then
-        echo Missing dependency $i. Build dx-tests.
-        exit 1
-    fi
-done
-
-java -cp $dxtestsjar:$dxjar:$junitjar junit.textui.TestRunner com.android.dx.util.BitsTest > unit-out.txt 2>&1
-
-if [ "$?" = "0" ]; then
-    echo "Yay!"
-else
-    cat unit-out.txt
-fi
+JAVAC_FLAGS="-g -Xlint:-options -source 1.8 -target 1.8 -implicit:none"
+$JAVAC $JAVAC_FLAGS -d . Main.java
+dx --debug --dex --min-sdk-version=${SDK_VERSION} --output="classes.dex" \
+   --dump-method=Main.\$opt\$BasicTest* --dump-width=1000 --dump-to=- Main.class 2>&1
