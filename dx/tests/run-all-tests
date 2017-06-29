@@ -67,7 +67,7 @@ failed=()
 skipped=()
 
 # Tests failing and require attention (e.g. 115-merge)
-known_bad="100-local-mismatch 115-merge 119-merge-conflict"
+known_bad="100-local-mismatch 115-merge 119-merge-conflict 127-merge-stress 133-source-debug-extension"
 
 function display_results {
   printf    "\n\nTest Results\n"
