@@ -36,6 +36,8 @@ import java.io.Writer;
 import java.security.DigestException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.Adler32;
 
 /**
@@ -217,7 +219,7 @@ public final class DexFile {
     public void writeTo(OutputStream out, Writer humanOut, boolean verbose)
         throws IOException {
         boolean annotate = (humanOut != null);
-        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose);
+        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose, null);
 
         if (out != null) {
             out.write(result.getArray());
@@ -227,6 +229,41 @@ public final class DexFile {
             result.writeAnnotationsTo(humanOut);
         }
     }
+
+
+    /**
+     * Writes the contents of this instance as either a binary or a
+     * human-readable form, or both.
+     *
+     * @param out {@code null-ok;} where to write to
+     * @param storage temporary storage for storing dexing.
+     * @param humanOut {@code null-ok;} where to write human-oriented output to
+     * @param verbose whether to be verbose when writing human-oriented output
+     */
+    public void writeTo(OutputStream out, Storage storage, Writer humanOut, boolean verbose)
+            throws IOException {
+        boolean annotate = (humanOut != null);
+        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose, storage);
+
+        if (out != null) {
+            out.write(result.getArray());
+        }
+
+        if (annotate) {
+            result.writeAnnotationsTo(humanOut);
+        }
+    }
+
+    /**
+     * Writes the contents of this instance as either a binary.
+     *
+     * @param storage temporary storage for storing dexing.
+     * @return the stored content.
+     */
+    public ByteArrayAnnotatedOutput writeTo(Storage storage) {
+        return toDex0(false, false, storage);
+    }
+
 
     /**
      * Returns the contents of this instance as a {@code .dex} file,
@@ -239,7 +276,7 @@ public final class DexFile {
     public byte[] toDex(Writer humanOut, boolean verbose)
         throws IOException {
         boolean annotate = (humanOut != null);
-        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose);
+        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose, null);
 
         if (annotate) {
             result.writeAnnotationsTo(humanOut);
@@ -540,6 +577,29 @@ public final class DexFile {
     }
 
     /**
+     * Holder for a byte[] that can grow on demand.
+     */
+    public static final class Storage {
+        byte[] storage;
+        public Storage(byte[] storage) {
+            this.storage = storage;
+        }
+
+        public byte[] getStorage(int requestedLength) {
+            if (storage.length < requestedLength) {
+                Logger.getAnonymousLogger().log(
+                        Level.FINER,
+                        "DexFile storage too small  "
+                                + storage.length
+                                + " vs "
+                                + requestedLength);
+                storage = new byte[requestedLength];
+            }
+            return storage;
+        }
+    }
+
+    /**
      * Returns the contents of this instance as a {@code .dex} file,
      * in a {@link ByteArrayAnnotatedOutput} instance.
      *
@@ -548,7 +608,8 @@ public final class DexFile {
      * @return {@code non-null;} a {@code .dex} file for this instance
      */
     private ByteArrayAnnotatedOutput toDex0(boolean annotate,
-            boolean verbose) {
+            boolean verbose,
+            Storage storage) {
         /*
          * The following is ordered so that the prepare() calls which
          * add items happen before the calls to the sections that get
@@ -621,7 +682,8 @@ public final class DexFile {
         // Write out all the sections.
 
         fileSize = offset;
-        byte[] barr = new byte[fileSize];
+        byte[] barr = storage == null ? new byte[fileSize] : storage.getStorage(fileSize);
+
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput(barr);
 
         if (annotate) {

@@ -27,6 +27,7 @@ import java.io.InputStream;
  * <b>Note:</b> Multibyte accessors all use big-endian order.
  */
 public final class ByteArray {
+
     /** {@code non-null;} underlying array */
     private final byte[] bytes;
 
@@ -95,7 +96,9 @@ public final class ByteArray {
      */
     public ByteArray slice(int start, int end) {
         checkOffsets(start, end);
-        return new ByteArray(bytes, start + this.start, end + this.start);
+        byte[] slicedOut = new byte[end - start];
+        System.arraycopy(bytes, start, slicedOut, 0, end - start);
+        return new ByteArray(slicedOut, 0, slicedOut.length);
     }
 
     /**
@@ -282,7 +285,7 @@ public final class ByteArray {
          *
          * @return {@code 0..size();} the cursor
          */
-        public int getCursor();
+        int getCursor();
     }
 
     /**
@@ -329,7 +332,6 @@ public final class ByteArray {
         public int available() {
             return size - cursor;
         }
-
         public void mark(int reserve) {
             mark = cursor;
         }
