@@ -736,8 +736,8 @@ public final class DexFile {
 
         // Perform final bookkeeping.
 
-        calcSignature(barr);
-        calcChecksum(barr);
+        calcSignature(barr, out.getCursor());
+        calcChecksum(barr, out.getCursor());
 
         if (annotate) {
             wordData.writeIndexAnnotation(out, ItemType.TYPE_CODE_ITEM,
@@ -769,8 +769,9 @@ public final class DexFile {
      * given array, and modify the array to contain it.
      *
      * @param bytes {@code non-null;} the bytes of the file
+     * @param len length of {@code .dex} file encoded in the array
      */
-    private static void calcSignature(byte[] bytes) {
+    private static void calcSignature(byte[] bytes, int len) {
         MessageDigest md;
 
         try {
@@ -779,13 +780,13 @@ public final class DexFile {
             throw new RuntimeException(ex);
         }
 
-        md.update(bytes, 32, bytes.length - 32);
+        md.update(bytes, 32, len - 32);
 
         try {
             int amt = md.digest(bytes, 12, 20);
             if (amt != 20) {
                 throw new RuntimeException("unexpected digest write: " + amt +
-                                           " bytes");
+                        " bytes");
             }
         } catch (DigestException ex) {
             throw new RuntimeException(ex);
@@ -797,11 +798,12 @@ public final class DexFile {
      * given array, and modify the array to contain it.
      *
      * @param bytes {@code non-null;} the bytes of the file
+     * @param len length of {@code .dex} file encoded in the array
      */
-    private static void calcChecksum(byte[] bytes) {
+    private static void calcChecksum(byte[] bytes, int len) {
         Adler32 a32 = new Adler32();
 
-        a32.update(bytes, 12, bytes.length - 12);
+        a32.update(bytes, 12, len - 12);
 
         int sum = (int) a32.getValue();
 
