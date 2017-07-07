@@ -1994,8 +1994,7 @@ static void dumpCallSites(DexFile* pDexFile)
     const DexCallSiteId* ids = (const DexCallSiteId*)(pDexFile->baseAddr + item->offset);
     for (u4 index = 0; index < item->size; ++index) {
         bool doXml = (gOptions.outputFormat == OUTPUT_XML);
-        printf(doXml ? "<call_site index=\"%u\" offset=\"%u\">\n" : "Call Site #%u // offset %u\n",
-               index, ids[index].callSiteOff);
+        printf(doXml ? "<call_site index=\"%u\">\n" : "Call Site #%u\n", index);
         const u1* data = pDexFile->baseAddr + ids[index].callSiteOff;
         u4 count = readUnsignedLeb128(&data);
         for (u4 i = 0; i < count; ++i) {
