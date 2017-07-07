@@ -778,7 +778,8 @@ public final class BytecodeArray {
                     int idx = bytes.getUnsignedShort(offset + 1);
                     // Skip to must-be-zero bytes at offsets 3 and 4
                     CstInvokeDynamic cstInvokeDynamic = (CstInvokeDynamic) pool.get(idx);
-                    visitor.visitConstant(opcode, offset, 5, cstInvokeDynamic, 0);
+                    CstCallSiteRef ref = cstInvokeDynamic.addReference();
+                    visitor.visitConstant(opcode, offset, 5, ref, 0);
                     return 5;
                 }
                 case ByteOps.NEWARRAY: {
