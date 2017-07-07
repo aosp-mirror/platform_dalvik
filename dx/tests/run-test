@@ -124,15 +124,8 @@ if [ "$dev_mode" = "yes" ]; then
     echo "exit status: $?" 1>&2
     good="yes"
 elif [ "$update_mode" = "yes" ]; then
-    "./$run" >"$output" 2>&1
-    if [[ $? == 0 ]]; then
-        good="yes"
-        mv "$output" "${progdir}/${td_expected}"
-    else
-        echo "Test failed during update."
-        good="no"
-    fi
-
+    "./$run" >"${progdir}/$td_expected" 2>&1
+    good="yes"
 else
     "./$run" >"$output" 2>&1
     cmp -s "$expected" "$output"
