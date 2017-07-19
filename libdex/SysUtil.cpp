@@ -30,7 +30,7 @@
 #include <limits.h>
 #include <errno.h>
 
-#include <JNIHelp.h>        // TEMP_FAILURE_RETRY may or may not be in unistd
+#include <nativehelper/JNIHelp.h>        // TEMP_FAILURE_RETRY may or may not be in unistd
 
 
 /*
