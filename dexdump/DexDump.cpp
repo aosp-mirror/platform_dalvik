@@ -738,7 +738,8 @@ bool getProtoInfo(DexFile* pDexFile, u4 protoIdx, ProtoInfo* pProtoInfo)
             return false;
         }
         const char* param = dexStringByTypeIdx(pDexFile, paramTypes->list[i].typeIdx);
-        size_t newUsed = bufUsed + strlen(param);
+        size_t paramLen = strlen(param);
+        size_t newUsed = bufUsed + paramLen;
         if (newUsed > bufSize) {
             char* newBuf = (char*)realloc(buf, newUsed);
             if (newBuf == NULL) {
@@ -748,7 +749,7 @@ bool getProtoInfo(DexFile* pDexFile, u4 protoIdx, ProtoInfo* pProtoInfo)
             buf = newBuf;
             bufSize = newUsed;
         }
-        strncat(buf + bufUsed - 1, param, bufSize - (bufUsed - 1));
+        memcpy(buf + bufUsed - 1, param, paramLen + 1);
         bufUsed = newUsed;
     }
 
