@@ -74,7 +74,7 @@ public class MergeTest {
         // On the first pass only do 2-way merges, then do from 3 to 10 way merges
         // but not more to avoid dex index overflow.
         int numDex = pass == 0 ? 2 : random.nextInt(8) + 3;
-
+        numDex = Math.min(numDex, args.length);
         String[] fileNames = new String[numDex];
         for (int j = 0; j < numDex; ++j) {
           int fileIndex = random.nextInt(args.length);
