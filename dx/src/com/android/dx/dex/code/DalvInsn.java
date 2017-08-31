@@ -23,7 +23,6 @@ import com.android.dx.ssa.RegisterMapper;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 import com.android.dx.util.TwoColumnOutput;
-
 import java.util.BitSet;
 
 /**
@@ -115,7 +114,7 @@ public abstract class DalvInsn {
     /** {@inheritDoc} */
     @Override
     public final String toString() {
-        StringBuffer sb = new StringBuffer(100);
+        StringBuilder sb = new StringBuilder(100);
 
         sb.append(identifierString());
         sb.append(' ');

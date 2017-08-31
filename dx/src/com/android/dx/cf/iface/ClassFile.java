@@ -111,6 +111,7 @@ public interface ClassFile extends HasAttribute {
      *
      * @return {@code non-null;} the list of attributes
      */
+    @Override
     public AttributeList getAttributes();
 
     /**
