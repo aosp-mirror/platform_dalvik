@@ -117,6 +117,7 @@ public abstract class BaseDumper
     }
 
     /** {@inheritDoc} */
+    @Override
     public void changeIndent(int indentDelta) {
         indent += indentDelta;
 
@@ -127,6 +128,7 @@ public abstract class BaseDumper
     }
 
     /** {@inheritDoc} */
+    @Override
     public void parsed(ByteArray bytes, int offset, int len, String human) {
         offset = bytes.underlyingOffset(offset, getBytes());
 
@@ -147,12 +149,14 @@ public abstract class BaseDumper
     }
 
     /** {@inheritDoc} */
+    @Override
     public void startParsingMember(ByteArray bytes, int offset, String name,
                                    String descriptor) {
         // This space intentionally left blank.
     }
 
     /** {@inheritDoc} */
+    @Override
     public void endParsingMember(ByteArray bytes, int offset, String name,
                                  String descriptor, Member member) {
         // This space intentionally left blank.

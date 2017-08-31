@@ -17,7 +17,6 @@
 package com.android.dx.dex;
 
 import com.android.dex.DexFormat;
-
 import com.android.dx.dex.code.DalvInsnList;
 
 /**

@@ -49,31 +49,37 @@ public final class FourRegisterDecodedInstruction extends DecodedInstruction {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getRegisterCount() {
         return 4;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getA() {
         return a;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getB() {
         return b;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getC() {
         return c;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getD() {
         return d;
     }
 
     /** {@inheritDoc} */
+    @Override
     public DecodedInstruction withIndex(int newIndex) {
         return new FourRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),

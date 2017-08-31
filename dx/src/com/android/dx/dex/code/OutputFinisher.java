@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dex.DexException;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.LocalItem;
@@ -29,8 +30,6 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Type;
 import com.android.dx.ssa.BasicRegisterMapper;
-
-import com.android.dex.DexException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;

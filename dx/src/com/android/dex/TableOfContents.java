@@ -230,6 +230,7 @@ public final class TableOfContents {
             return size > 0;
         }
 
+        @Override
         public int compareTo(Section section) {
             if (off != section.off) {
                 return off < section.off ? -1 : 1;
@@ -237,7 +238,8 @@ public final class TableOfContents {
             return 0;
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return String.format("Section[type=%#x,off=%#x,size=%#x]", type, off, size);
         }
     }

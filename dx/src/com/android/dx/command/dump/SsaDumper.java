@@ -113,7 +113,7 @@ public class SsaDumper extends BlockDumper {
                     rmeth, paramWidth, isStatic,true, advice);
         }
 
-        StringBuffer sb = new StringBuffer(2000);
+        StringBuilder sb = new StringBuilder(2000);
 
         sb.append("first ");
         sb.append(Hex.u2(

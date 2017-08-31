@@ -20,7 +20,6 @@ import com.android.dex.DexFormat;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.rop.code.LocalItem;
 import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.CstCallSiteRef;
 import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.cst.CstInterfaceMethodRef;
@@ -238,11 +237,13 @@ public class Simulator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitInvalid(int opcode, int offset, int length) {
             throw new SimException("invalid opcode " + Hex.u1(opcode));
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitNoArgs(int opcode, int offset, int length,
                 Type type) {
             switch (opcode) {
@@ -564,6 +565,7 @@ public class Simulator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitLocal(int opcode, int offset, int length,
                 int idx, Type type, int value) {
             /*
@@ -634,6 +636,7 @@ public class Simulator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitConstant(int opcode, int offset, int length,
                 Constant cst, int value) {
             switch (opcode) {
@@ -747,6 +750,7 @@ public class Simulator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitBranch(int opcode, int offset, int length,
                 int target) {
             switch (opcode) {
@@ -796,6 +800,7 @@ public class Simulator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitSwitch(int opcode, int offset, int length,
                 SwitchList cases, int padding) {
             machine.popArgs(frame, Type.INT);
@@ -805,6 +810,7 @@ public class Simulator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitNewarray(int offset, int length, CstType type,
                 ArrayList<Constant> initValues) {
             machine.popArgs(frame, Type.INT);
@@ -814,11 +820,13 @@ public class Simulator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void setPreviousOffset(int offset) {
             previousOffset = offset;
         }
 
         /** {@inheritDoc} */
+        @Override
         public int getPreviousOffset() {
             return previousOffset;
         }

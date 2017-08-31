@@ -53,36 +53,43 @@ public final class FiveRegisterDecodedInstruction extends DecodedInstruction {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getRegisterCount() {
         return 5;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getA() {
         return a;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getB() {
         return b;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getC() {
         return c;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getD() {
         return d;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getE() {
         return e;
     }
 
     /** {@inheritDoc} */
+    @Override
     public DecodedInstruction withIndex(int newIndex) {
         return new FiveRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),

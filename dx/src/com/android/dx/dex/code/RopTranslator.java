@@ -84,7 +84,7 @@ public final class RopTranslator {
      * true if the parameters to this method happen to be in proper order
      * at the end of the frame (as the optimizer emits them)
      */
-    private boolean paramsAreInOrder;
+    private final boolean paramsAreInOrder;
 
     /**
      * Translates a {@link RopMethod}. This may modify the given
@@ -527,6 +527,7 @@ public final class RopTranslator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitPlainInsn(PlainInsn insn) {
             Rop rop = insn.getOpcode();
             if (rop.getOpcode() == RegOps.MARK_LOCAL) {
@@ -794,6 +795,7 @@ public final class RopTranslator {
         }
 
         /** {@inheritDoc} */
+        @Override
         public void visitFillArrayDataInsn(FillArrayDataInsn insn) {
             SourcePosition pos = insn.getPosition();
             Constant cst = insn.getConstant();
@@ -845,7 +847,7 @@ public final class RopTranslator {
     private class LocalVariableAwareTranslationVisitor
             extends TranslationVisitor {
         /** {@code non-null;} local variable info */
-        private LocalVariableInfo locals;
+        private final LocalVariableInfo locals;
 
         /**
          * Constructs an instance.

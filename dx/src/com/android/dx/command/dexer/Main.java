@@ -46,7 +46,6 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.Type;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -1957,7 +1956,7 @@ public class Main {
     /** Callable helper class to convert dex files in worker threads */
     private class DexWriter implements Callable<byte[]> {
 
-        private DexFile dexFile;
+        private final DexFile dexFile;
 
         private DexWriter(DexFile dexFile) {
             this.dexFile = dexFile;
