@@ -301,6 +301,7 @@ public final class ByteArray {
             mark = 0;
         }
 
+        @Override
         public int read() throws IOException {
             if (cursor >= size) {
                 return -1;
@@ -311,6 +312,7 @@ public final class ByteArray {
             return result;
         }
 
+        @Override
         public int read(byte[] arr, int offset, int length) {
             if ((offset + length) > arr.length) {
                 length = arr.length - offset;
@@ -326,18 +328,22 @@ public final class ByteArray {
             return length;
         }
 
+        @Override
         public int available() {
             return size - cursor;
         }
 
+        @Override
         public void mark(int reserve) {
             mark = cursor;
         }
 
+        @Override
         public void reset() {
             cursor = mark;
         }
 
+        @Override
         public boolean markSupported() {
             return true;
         }

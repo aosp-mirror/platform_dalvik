@@ -103,11 +103,13 @@ public final class RegisterSpecList
     }
 
     /** {@inheritDoc} */
+    @Override
     public Type getType(int n) {
         return get(n).getType().getType();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getWordCount() {
         int sz = size();
         int result = 0;
@@ -120,6 +122,7 @@ public final class RegisterSpecList
     }
 
     /** {@inheritDoc} */
+    @Override
     public TypeList withAddedType(Type type) {
         throw new UnsupportedOperationException("unsupported");
     }
@@ -389,10 +392,10 @@ public final class RegisterSpecList
     }
 
     private static class Expander {
-      private BitSet compatRegs;
-      private RegisterSpecList regSpecList;
+      private final BitSet compatRegs;
+      private final RegisterSpecList regSpecList;
       private int base;
-      private RegisterSpecList result;
+      private final RegisterSpecList result;
       private boolean duplicateFirst;
 
       private Expander(RegisterSpecList regSpecList, BitSet compatRegs, int base,
