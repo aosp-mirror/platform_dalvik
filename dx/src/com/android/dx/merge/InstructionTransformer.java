@@ -63,12 +63,14 @@ final class InstructionTransformer {
     }
 
     private class GenericVisitor implements CodeReader.Visitor {
+        @Override
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             mappedInstructions[mappedAt++] = one;
         }
     }
 
     private class StringVisitor implements CodeReader.Visitor {
+        @Override
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int stringId = one.getIndex();
             int mappedId = indexMap.adjustString(stringId);
@@ -79,6 +81,7 @@ final class InstructionTransformer {
     }
 
     private class FieldVisitor implements CodeReader.Visitor {
+        @Override
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int fieldId = one.getIndex();
             int mappedId = indexMap.adjustField(fieldId);
@@ -89,6 +92,7 @@ final class InstructionTransformer {
     }
 
     private class TypeVisitor implements CodeReader.Visitor {
+        @Override
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int typeId = one.getIndex();
             int mappedId = indexMap.adjustType(typeId);
@@ -99,6 +103,7 @@ final class InstructionTransformer {
     }
 
     private class MethodVisitor implements CodeReader.Visitor {
+        @Override
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int methodId = one.getIndex();
             int mappedId = indexMap.adjustMethod(methodId);

@@ -251,66 +251,77 @@ public class DirectClassFile implements ClassFile {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMagic() {
         parseToInterfacesIfNecessary();
         return getMagic0();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMinorVersion() {
         parseToInterfacesIfNecessary();
         return getMinorVersion0();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMajorVersion() {
         parseToInterfacesIfNecessary();
         return getMajorVersion0();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getAccessFlags() {
         parseToInterfacesIfNecessary();
         return accessFlags;
     }
 
     /** {@inheritDoc} */
+    @Override
     public CstType getThisClass() {
         parseToInterfacesIfNecessary();
         return thisClass;
     }
 
     /** {@inheritDoc} */
+    @Override
     public CstType getSuperclass() {
         parseToInterfacesIfNecessary();
         return superClass;
     }
 
     /** {@inheritDoc} */
+    @Override
     public ConstantPool getConstantPool() {
         parseToInterfacesIfNecessary();
         return pool;
     }
 
     /** {@inheritDoc} */
+    @Override
     public TypeList getInterfaces() {
         parseToInterfacesIfNecessary();
         return interfaces;
     }
 
     /** {@inheritDoc} */
+    @Override
     public FieldList getFields() {
         parseToEndIfNecessary();
         return fields;
     }
 
     /** {@inheritDoc} */
+    @Override
     public MethodList getMethods() {
         parseToEndIfNecessary();
         return methods;
     }
 
     /** {@inheritDoc} */
+    @Override
     public AttributeList getAttributes() {
         parseToEndIfNecessary();
         return attributes;
@@ -329,6 +340,7 @@ public class DirectClassFile implements ClassFile {
     }
 
     /** {@inheritDoc} */
+    @Override
     public CstString getSourceFile() {
         AttributeList attribs = getAttributes();
         Attribute attSf = attribs.findFirst(AttSourceFile.ATTRIBUTE_NAME);
@@ -642,28 +654,33 @@ public class DirectClassFile implements ClassFile {
         }
 
         /** {@inheritDoc} */
+        @Override
         public boolean isMutable() {
             return false;
         }
 
         /** {@inheritDoc} */
+        @Override
         public int size() {
             return size;
         }
 
         /** {@inheritDoc} */
+        @Override
         public int getWordCount() {
             // It is the same as size because all elements are classes.
             return size;
         }
 
         /** {@inheritDoc} */
+        @Override
         public Type getType(int n) {
             int idx = bytes.getUnsignedShort(n * 2);
             return ((CstType) pool.get(idx)).getClassType();
         }
 
         /** {@inheritDoc} */
+        @Override
         public TypeList withAddedType(Type type) {
             throw new UnsupportedOperationException("unsupported");
         }

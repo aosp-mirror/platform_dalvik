@@ -35,17 +35,20 @@ public abstract class BaseCodeCursor implements CodeCursor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public final int cursor() {
         return cursor;
     }
 
     /** {@inheritDoc} */
+    @Override
     public final int baseAddressForCursor() {
         int mapped = baseAddressMap.get(cursor);
         return (mapped >= 0) ? mapped : cursor;
     }
 
     /** {@inheritDoc} */
+    @Override
     public final void setBaseAddress(int targetAddress, int baseAddress) {
         baseAddressMap.put(targetAddress, baseAddress);
     }

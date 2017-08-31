@@ -23,7 +23,6 @@ import com.android.dx.cf.attrib.AttLocalVariableTypeTable;
 import com.android.dx.cf.iface.AttributeList;
 import com.android.dx.cf.iface.ClassFile;
 import com.android.dx.cf.iface.Method;
-import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
@@ -138,36 +137,43 @@ public final class ConcreteMethod implements Method {
     }
 
     /** {@inheritDoc} */
+    @Override
     public CstNat getNat() {
         return method.getNat();
     }
 
     /** {@inheritDoc} */
+    @Override
     public CstString getName() {
         return method.getName();
     }
 
     /** {@inheritDoc} */
+    @Override
     public CstString getDescriptor() {
         return method.getDescriptor();
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getAccessFlags() {
         return method.getAccessFlags();
     }
 
     /** {@inheritDoc} */
+    @Override
     public AttributeList getAttributes() {
         return method.getAttributes();
     }
 
     /** {@inheritDoc} */
+    @Override
     public CstType getDefiningClass() {
         return method.getDefiningClass();
     }
 
     /** {@inheritDoc} */
+    @Override
     public Prototype getEffectiveDescriptor() {
         return method.getEffectiveDescriptor();
     }

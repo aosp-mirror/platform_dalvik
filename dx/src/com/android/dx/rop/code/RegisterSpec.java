@@ -16,7 +16,6 @@
 
 package com.android.dx.rop.code;
 
-import com.android.dx.command.dexer.Main;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
@@ -580,7 +579,7 @@ public final class RegisterSpec
      * @return {@code non-null;} the string form
      */
     private String toString0(boolean human) {
-        StringBuffer sb = new StringBuffer(40);
+        StringBuilder sb = new StringBuilder(40);
 
         sb.append(regString());
         sb.append(":");
