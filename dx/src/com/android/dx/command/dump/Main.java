@@ -19,7 +19,6 @@ package com.android.dx.command.dump;
 import com.android.dex.util.FileUtils;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.util.HexParser;
-
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -27,7 +26,7 @@ import java.io.UnsupportedEncodingException;
  */
 public class Main {
 
-    private Args parsedArgs = new Args();
+    private final Args parsedArgs = new Args();
 
     /**
      * This class is uninstantiable.

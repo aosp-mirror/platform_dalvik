@@ -35,6 +35,7 @@ public class ListIntSet implements IntSet {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void add(int value) {
         int index = ints.binarysearch(value);
 
@@ -44,6 +45,7 @@ public class ListIntSet implements IntSet {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void remove(int value) {
         int index = ints.indexOf(value);
 
@@ -53,11 +55,13 @@ public class ListIntSet implements IntSet {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean has(int value) {
         return ints.indexOf(value) >= 0;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void merge(IntSet other) {
         if (other instanceof ListIntSet) {
             ListIntSet o = (ListIntSet) other;
@@ -100,21 +104,25 @@ public class ListIntSet implements IntSet {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int elements() {
         return ints.size();
     }
 
     /** {@inheritDoc} */
+    @Override
     public IntIterator iterator() {
         return new IntIterator() {
             private int idx = 0;
 
             /** {@inheritDoc} */
+            @Override
             public boolean hasNext() {
                 return idx < ints.size();
             }
 
             /** {@inheritDoc} */
+            @Override
             public int next() {
                 if (!hasNext()) {
                     throw new NoSuchElementException();
@@ -126,6 +134,7 @@ public class ListIntSet implements IntSet {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String toString() {
         return ints.toString();
     }

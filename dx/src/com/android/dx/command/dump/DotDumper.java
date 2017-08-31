@@ -89,20 +89,24 @@ public class DotDumper implements ParseObserver {
         return args.method == null || args.method.equals(name);
     }
 
+    @Override
     public void changeIndent(int indentDelta) {
         // This space intentionally left blank.
     }
 
+    @Override
     public void parsed(ByteArray bytes, int offset, int len, String human) {
         // This space intentionally left blank.
     }
 
     /** {@inheritDoc} */
+    @Override
     public void startParsingMember(ByteArray bytes, int offset, String name,
                                    String descriptor) {
         // This space intentionally left blank.
     }
 
+    @Override
     public void endParsingMember(ByteArray bytes, int offset, String name,
                                  String descriptor, Member member) {
         if (!(member instanceof Method)) {

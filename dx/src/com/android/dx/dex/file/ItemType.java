@@ -93,6 +93,7 @@ public enum ItemType implements ToHuman {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String toHuman() {
         return humanName;
     }

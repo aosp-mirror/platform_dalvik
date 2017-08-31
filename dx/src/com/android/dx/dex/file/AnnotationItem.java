@@ -23,7 +23,6 @@ import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
-
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -67,6 +66,7 @@ public final class AnnotationItem extends OffsettedItem {
      */
     private static class TypeIdSorter implements Comparator<AnnotationItem> {
         /** {@inheritDoc} */
+        @Override
         public int compare(AnnotationItem item1, AnnotationItem item2) {
             int index1 = item1.type.getIndex();
             int index2 = item2.type.getIndex();
@@ -142,6 +142,7 @@ public final class AnnotationItem extends OffsettedItem {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void addContents(DexFile file) {
         type = file.getTypeIds().intern(annotation.getType());
         ValueEncoder.addContents(file, annotation);

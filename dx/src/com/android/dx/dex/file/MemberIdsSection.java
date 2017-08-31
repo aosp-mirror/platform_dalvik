@@ -18,7 +18,6 @@ package com.android.dx.dex.file;
 
 import com.android.dex.DexFormat;
 import com.android.dex.DexIndexOverflowException;
-
 import java.util.Formatter;
 import java.util.Map;
 import java.util.TreeMap;

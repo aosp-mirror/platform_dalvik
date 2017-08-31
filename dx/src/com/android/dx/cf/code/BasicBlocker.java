@@ -120,11 +120,13 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      */
 
     /** {@inheritDoc} */
+    @Override
     public void visitInvalid(int opcode, int offset, int length) {
         visitCommon(offset, length, true);
     }
 
     /** {@inheritDoc} */
+    @Override
     public void visitNoArgs(int opcode, int offset, int length, Type type) {
         switch (opcode) {
             case ByteOps.IRETURN:
@@ -185,6 +187,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void visitLocal(int opcode, int offset, int length,
             int idx, Type type, int value) {
         if (opcode == ByteOps.RET) {
@@ -196,6 +199,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void visitConstant(int opcode, int offset, int length,
             Constant cst, int value) {
         visitCommon(offset, length, true);
@@ -213,6 +217,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void visitBranch(int opcode, int offset, int length,
             int target) {
         switch (opcode) {
@@ -244,6 +249,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void visitSwitch(int opcode, int offset, int length,
             SwitchList cases, int padding) {
         visitCommon(offset, length, false);
@@ -258,6 +264,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void visitNewarray(int offset, int length, CstType type,
             ArrayList<Constant> intVals) {
         visitCommon(offset, length, true);
@@ -440,6 +447,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setPreviousOffset(int offset) {
         previousOffset = offset;
     }
@@ -447,6 +455,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getPreviousOffset() {
         return previousOffset;
     }

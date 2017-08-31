@@ -139,6 +139,7 @@ public class SsaToRop {
         final ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
 
         ssaMeth.forEachBlockDepthFirst(false, new SsaBasicBlock.Visitor() {
+            @Override
             public void visitBlock(SsaBasicBlock b, SsaBasicBlock parent) {
                 ArrayList<SsaInsn> insns = b.getInsns();
 
@@ -193,6 +194,7 @@ public class SsaToRop {
             this.blocks = blocks;
         }
 
+        @Override
         public void visitPhiInsn(PhiInsn insn) {
             RegisterSpecList sources = insn.getSources();
             RegisterSpec result = insn.getResult();
@@ -362,6 +364,7 @@ public class SsaToRop {
         }
 
         Arrays.sort(ret, new Comparator<Integer>() {
+            @Override
             public int compare(Integer o1, Integer o2) {
                 return ssaMeth.getUseListForRegister(o2).size()
                         - ssaMeth.getUseListForRegister(o1).size();
