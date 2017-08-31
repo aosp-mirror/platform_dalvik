@@ -102,6 +102,7 @@ public abstract class Insn implements ToHuman {
      *
      * @return {@code non-null;} the human string form
      */
+    @Override
     public String toHuman() {
         return toHumanWithInline(getInlineString());
     }
@@ -303,7 +304,7 @@ public abstract class Insn implements ToHuman {
      * @return {@code non-null;} the string form
      */
     protected final String toStringWithInline(String extra) {
-        StringBuffer sb = new StringBuffer(80);
+        StringBuilder sb = new StringBuilder(80);
 
         sb.append("Insn{");
         sb.append(position);
@@ -336,7 +337,7 @@ public abstract class Insn implements ToHuman {
      * @return {@code non-null;} the human string form
      */
     protected final String toHumanWithInline(String extra) {
-        StringBuffer sb = new StringBuffer(80);
+        StringBuilder sb = new StringBuilder(80);
 
         sb.append(position);
         sb.append(": ");

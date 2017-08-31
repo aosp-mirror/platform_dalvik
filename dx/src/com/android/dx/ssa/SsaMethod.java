@@ -417,12 +417,15 @@ public final class SsaMethod {
         definitionList = new SsaInsn[getRegCount()];
 
         forEachInsn(new SsaInsn.Visitor() {
+            @Override
             public void visitMoveInsn (NormalSsaInsn insn) {
                 definitionList[insn.getResult().getReg()] = insn;
             }
+            @Override
             public void visitPhiInsn (PhiInsn phi) {
                 definitionList[phi.getResult().getReg()] = phi;
             }
+            @Override
             public void visitNonMoveInsn (NormalSsaInsn insn) {
                 RegisterSpec result = insn.getResult();
                 if (result != null) {
@@ -450,14 +453,17 @@ public final class SsaMethod {
 
         forEachInsn(new SsaInsn.Visitor() {
             /** {@inheritDoc} */
+            @Override
             public void visitMoveInsn (NormalSsaInsn insn) {
                 addToUses(insn);
             }
             /** {@inheritDoc} */
+            @Override
             public void visitPhiInsn (PhiInsn phi) {
                 addToUses(phi);
             }
             /** {@inheritDoc} */
+            @Override
             public void visitNonMoveInsn (NormalSsaInsn insn) {
                 addToUses(insn);
             }

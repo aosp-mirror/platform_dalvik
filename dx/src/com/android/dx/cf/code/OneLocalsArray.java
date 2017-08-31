@@ -46,6 +46,7 @@ public class OneLocalsArray extends LocalsArray {
     }
 
     /** {@inheritDoc} */
+    @Override
     public OneLocalsArray copy() {
         OneLocalsArray result = new OneLocalsArray(locals.length);
 
@@ -55,6 +56,7 @@ public class OneLocalsArray extends LocalsArray {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void annotate(ExceptionWithContext ex) {
         for (int i = 0; i < locals.length; i++) {
             TypeBearer type = locals[i];
@@ -64,6 +66,7 @@ public class OneLocalsArray extends LocalsArray {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String toHuman() {
         StringBuilder sb = new StringBuilder();
 
@@ -77,6 +80,7 @@ public class OneLocalsArray extends LocalsArray {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void makeInitialized(Type type) {
         int len = locals.length;
 
@@ -97,11 +101,13 @@ public class OneLocalsArray extends LocalsArray {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getMaxLocals() {
         return locals.length;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void set(int idx, TypeBearer type) {
         throwIfImmutable();
 
@@ -132,22 +138,26 @@ public class OneLocalsArray extends LocalsArray {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void set(RegisterSpec spec) {
         set(spec.getReg(), spec);
     }
 
     /** {@inheritDoc} */
+    @Override
     public void invalidate(int idx) {
         throwIfImmutable();
         locals[idx] = null;
     }
 
     /** {@inheritDoc} */
+    @Override
     public TypeBearer getOrNull(int idx) {
         return locals[idx];
     }
 
     /** {@inheritDoc} */
+    @Override
     public TypeBearer get(int idx) {
         TypeBearer result = locals[idx];
 
@@ -159,6 +169,7 @@ public class OneLocalsArray extends LocalsArray {
     }
 
     /** {@inheritDoc} */
+    @Override
     public TypeBearer getCategory1(int idx) {
         TypeBearer result = get(idx);
         Type type = result.getType();
@@ -175,6 +186,7 @@ public class OneLocalsArray extends LocalsArray {
     }
 
     /** {@inheritDoc} */
+    @Override
     public TypeBearer getCategory2(int idx) {
         TypeBearer result = get(idx);
 

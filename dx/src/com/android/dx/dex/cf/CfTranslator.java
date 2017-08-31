@@ -426,6 +426,7 @@ public class CfTranslator {
 
         DalvCode.AssignIndicesCallback callback =
             new DalvCode.AssignIndicesCallback() {
+                @Override
                 public int getIndex(Constant cst) {
                     // Everything is at index 0!
                     return 0;

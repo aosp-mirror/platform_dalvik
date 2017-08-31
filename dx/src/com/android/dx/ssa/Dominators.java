@@ -255,6 +255,7 @@ public final class Dominators {
     private class DfsWalker implements SsaBasicBlock.Visitor {
         private int dfsNum = 0;
 
+        @Override
         public void visitBlock(SsaBasicBlock v, SsaBasicBlock parent) {
             DFSInfo bbInfo = new DFSInfo();
             bbInfo.semidom = ++dfsNum;

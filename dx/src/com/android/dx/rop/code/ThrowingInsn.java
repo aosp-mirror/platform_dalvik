@@ -38,7 +38,7 @@ public final class ThrowingInsn
      * @return {@code non-null;} the string form
      */
     public static String toCatchString(TypeList catches) {
-        StringBuffer sb = new StringBuffer(100);
+        StringBuilder sb = new StringBuilder(100);
 
         sb.append("catch");
 
