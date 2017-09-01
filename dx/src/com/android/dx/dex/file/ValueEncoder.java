@@ -24,7 +24,6 @@ import com.android.dx.rop.cst.CstAnnotation;
 import com.android.dx.rop.cst.CstArray;
 import com.android.dx.rop.cst.CstBoolean;
 import com.android.dx.rop.cst.CstByte;
-import com.android.dx.rop.cst.CstCallSite;
 import com.android.dx.rop.cst.CstChar;
 import com.android.dx.rop.cst.CstDouble;
 import com.android.dx.rop.cst.CstEnumRef;

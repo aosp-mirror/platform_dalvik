@@ -18,7 +18,6 @@ package com.android.dx.rop.cst;
 
 import com.android.dx.command.dexer.Main;
 import com.android.dx.rop.type.Type;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 

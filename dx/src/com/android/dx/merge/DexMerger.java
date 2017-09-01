@@ -32,7 +32,6 @@ import com.android.dex.SizeOf;
 import com.android.dex.TableOfContents;
 import com.android.dex.TypeList;
 import com.android.dx.command.dexer.DxContext;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
