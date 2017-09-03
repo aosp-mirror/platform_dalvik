@@ -57,14 +57,17 @@ public class InvokePolymorphicDecodedInstruction extends DecodedInstruction {
                 getFormat(), getOpcode(), newIndex, getIndexType(), newProtoIndex, registers);
     }
 
+    @Override
     public int getC() {
         return registers.length > 0 ? registers[0] : 0;
     }
 
+    @Override
     public int getD() {
         return registers.length > 1 ? registers[1] : 0;
     }
 
+    @Override
     public int getE() {
         return registers.length > 2 ? registers[2] : 0;
     }

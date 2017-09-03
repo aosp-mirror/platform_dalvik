@@ -113,6 +113,7 @@ public abstract class CstBaseMethodRef
      *
      * @return {@code non-null;} the method's return type
      */
+    @Override
     public final Type getType() {
         return prototype.getReturnType();
     }

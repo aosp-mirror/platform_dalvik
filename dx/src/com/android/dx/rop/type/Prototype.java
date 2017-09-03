@@ -219,7 +219,7 @@ public final class Prototype implements Comparable<Prototype> {
     public static Prototype internInts(Type returnType, int count) {
         // Make the descriptor...
 
-        StringBuffer sb = new StringBuffer(100);
+        StringBuilder sb = new StringBuilder(100);
 
         sb.append('(');
 

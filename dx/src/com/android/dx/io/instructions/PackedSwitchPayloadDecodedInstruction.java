@@ -43,6 +43,7 @@ public final class PackedSwitchPayloadDecodedInstruction
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getRegisterCount() {
         return 0;
     }
@@ -56,6 +57,7 @@ public final class PackedSwitchPayloadDecodedInstruction
     }
 
     /** {@inheritDoc} */
+    @Override
     public DecodedInstruction withIndex(int newIndex) {
         throw new UnsupportedOperationException("no index in instruction");
     }

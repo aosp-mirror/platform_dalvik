@@ -2,7 +2,6 @@ package com.android.dx.command.dexer;
 
 import com.android.dx.dex.cf.CodeStatistics;
 import com.android.dx.dex.cf.OptimizerOptions;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;

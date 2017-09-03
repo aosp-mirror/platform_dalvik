@@ -31,11 +31,13 @@ public final class ZeroRegisterDecodedInstruction extends DecodedInstruction {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getRegisterCount() {
         return 0;
     }
 
     /** {@inheritDoc} */
+    @Override
     public DecodedInstruction withIndex(int newIndex) {
         return new ZeroRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
