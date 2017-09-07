@@ -246,24 +246,26 @@ public class SsaToRop {
         // Exit block may be null.
         SsaBasicBlock exitBlock = ssaMeth.getExitBlock();
 
-        ssaMeth.computeReachability();
-        int ropBlockCount = ssaMeth.getCountReachableBlocks();
+        BitSet reachable = ssaMeth.computeReachability();
+        int ropBlockCount = reachable.cardinality();
 
         // Don't count the exit block, if it exists and is reachable.
-        ropBlockCount -= (exitBlock != null && exitBlock.isReachable()) ? 1 : 0;
+        if (exitBlock != null && reachable.get(exitBlock.getIndex())) {
+            ropBlockCount -= 1;
+        }
 
         BasicBlockList result = new BasicBlockList(ropBlockCount);
 
         // Convert all the reachable blocks except the exit block.
         int ropBlockIndex = 0;
         for (SsaBasicBlock b : blocks) {
-            if (b.isReachable() && b != exitBlock) {
+            if (reachable.get(b.getIndex()) && b != exitBlock) {
                 result.set(ropBlockIndex++, convertBasicBlock(b));
             }
         }
 
         // The exit block, which is discarded, must do nothing.
-        if (exitBlock != null && exitBlock.getInsns().size() != 0) {
+        if (exitBlock != null && !exitBlock.getInsns().isEmpty()) {
             throw new RuntimeException(
                     "Exit block must have no insns when leaving SSA form");
         }
