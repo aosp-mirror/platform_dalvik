@@ -125,10 +125,13 @@ public class DeadCodeRemover {
     private void pruneDeadInstructions() {
         HashSet<SsaInsn> deletedInsns = new HashSet<SsaInsn>();
 
-        ssaMeth.computeReachability();
+        BitSet reachable = ssaMeth.computeReachability();
+        ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
+        int blockIndex = 0;
 
-        for (SsaBasicBlock block : ssaMeth.getBlocks()) {
-            if (block.isReachable()) continue;
+        while ((blockIndex = reachable.nextClearBit(blockIndex)) < blocks.size()) {
+            SsaBasicBlock block = blocks.get(blockIndex);
+            blockIndex++;
 
             // Prune instructions from unreachable blocks
             for (int i = 0; i < block.getInsns().size(); i++) {
