@@ -93,12 +93,6 @@ public final class SsaBasicBlock {
     private int movesFromPhisAtBeginning = 0;
 
     /**
-     * contains last computed value of reachability of this block, or -1
-     * if reachability hasn't been calculated yet
-     */
-    private int reachable = -1;
-
-    /**
      * {@code null-ok;} indexed by reg: the regs that are live-in at
      * this block
      */
@@ -840,28 +834,6 @@ public final class SsaBasicBlock {
      */
     public boolean isExitBlock() {
         return index == parent.getExitBlockIndex();
-    }
-
-    /**
-     * Returns true if this block was last calculated to be reachable.
-     * Recalculates reachability if value has never been computed.
-     *
-     * @return {@code true} if reachable
-     */
-    public boolean isReachable() {
-        if (reachable == -1) {
-            parent.computeReachability();
-        }
-        return (reachable == 1);
-    }
-
-    /**
-     * Sets reachability of block to specified value
-     *
-     * @param reach new value of reachability for block
-     */
-    public void setReachable(int reach) {
-        reachable = reach;
     }
 
     /**
