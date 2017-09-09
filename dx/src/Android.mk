@@ -7,22 +7,6 @@ ifeq ($(TARGET_BUILD_APPS)$(filter true,$(TARGET_BUILD_PDK)),)
 
 dx_src_files := $(call all-subdir-java-files)
 
-# dx java library
-# ============================================================
-include $(CLEAR_VARS)
-
-LOCAL_SRC_FILES := $(dx_src_files)
-LOCAL_JAR_MANIFEST := ../etc/manifest.txt
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE:= dx
-LOCAL_JAVA_LANGUAGE_VERSION := 1.7
-
-include $(BUILD_HOST_JAVA_LIBRARY)
-
-INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
-
-endif # No TARGET_BUILD_APPS or TARGET_BUILD_PDK
-
 # the documentation
 # ============================================================
 include $(CLEAR_VARS)
@@ -37,3 +21,5 @@ LOCAL_IS_HOST_MODULE := true
 include $(BUILD_DROIDDOC)
 
 dx_src_files :=
+
+endif # No TARGET_BUILD_APPS or TARGET_BUILD_PDK
