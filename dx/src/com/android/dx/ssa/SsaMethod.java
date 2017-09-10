@@ -339,30 +339,11 @@ public final class SsaMethod {
     }
 
     /**
-     * Returns the count of reachable blocks in this method: blocks that have
-     * predecessors (or are the start block)
+     * Computes reachability for all blocks in the method.
      *
-     * @return {@code >= 0;} number of reachable basic blocks
+     * @return a BitSet of reachable blocks.
      */
-    public int getCountReachableBlocks() {
-        int ret = 0;
-
-        for (SsaBasicBlock b : blocks) {
-            // Blocks that have been disconnected don't count.
-            if (b.isReachable()) {
-                ret++;
-            }
-        }
-
-        return ret;
-    }
-
-    /**
-     * Computes reachability for all blocks in the method. First clears old
-     * values from all blocks, then starts with the entry block and walks down
-     * the control flow graph, marking all blocks it finds as reachable.
-     */
-    public void computeReachability() {
+    public BitSet computeReachability() {
         final int size = blocks.size();
         BitSet reachableUnvisited = new BitSet(size);
         BitSet reachableVisited = new BitSet(size);
@@ -376,9 +357,7 @@ public final class SsaMethod {
             reachableUnvisited.andNot(reachableVisited);
         }
 
-        for (index = 0; index < size; ++index) {
-            blocks.get(index).setReachable(reachableVisited.get(index) ? 1 : 0);
-        }
+        return reachableVisited;
     }
 
     /**
@@ -824,15 +803,17 @@ public final class SsaMethod {
      * @param deletedInsns {@code non-null;} insns to delete
      */
     public void deleteInsns(Set<SsaInsn> deletedInsns) {
-        for (SsaBasicBlock block : getBlocks()) {
+        for (SsaInsn deletedInsn : deletedInsns) {
+            SsaBasicBlock block = deletedInsn.getBlock();
             ArrayList<SsaInsn> insns = block.getInsns();
 
             for (int i = insns.size() - 1; i >= 0; i--) {
                 SsaInsn insn = insns.get(i);
 
-                if (deletedInsns.contains(insn)) {
+                if (deletedInsn == insn) {
                     onInsnRemoved(insn);
                     insns.remove(i);
+                    break;
                 }
             }
 
