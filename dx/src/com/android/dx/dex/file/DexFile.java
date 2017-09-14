@@ -36,8 +36,6 @@ import java.io.Writer;
 import java.security.DigestException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.Adler32;
 
 /**
@@ -218,23 +216,8 @@ public final class DexFile {
      */
     public void writeTo(OutputStream out, Writer humanOut, boolean verbose)
         throws IOException {
-        writeTo(out, null /* storage */, humanOut, verbose);
-    }
-
-
-    /**
-     * Writes the contents of this instance as either a binary or a
-     * human-readable form, or both.
-     *
-     * @param out {@code null-ok;} where to write to
-     * @param storage temporary storage for storing dexing.
-     * @param humanOut {@code null-ok;} where to write human-oriented output to
-     * @param verbose whether to be verbose when writing human-oriented output
-     */
-    public void writeTo(OutputStream out, Storage storage, Writer humanOut, boolean verbose)
-            throws IOException {
         boolean annotate = (humanOut != null);
-        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose, storage);
+        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose);
 
         if (out != null) {
             out.write(result.getArray());
@@ -244,17 +227,6 @@ public final class DexFile {
             result.writeAnnotationsTo(humanOut);
         }
     }
-
-    /**
-     * Writes the contents of this instance as a binary.
-     *
-     * @param storage temporary storage for storing dexing.
-     * @return the stored content.
-     */
-    public ByteArrayAnnotatedOutput writeTo(Storage storage) {
-        return toDex0(false, false, storage);
-    }
-
 
     /**
      * Returns the contents of this instance as a {@code .dex} file,
@@ -267,7 +239,7 @@ public final class DexFile {
     public byte[] toDex(Writer humanOut, boolean verbose)
         throws IOException {
         boolean annotate = (humanOut != null);
-        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose, null);
+        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose);
 
         if (annotate) {
             result.writeAnnotationsTo(humanOut);
@@ -576,29 +548,6 @@ public final class DexFile {
     }
 
     /**
-     * Holder for a byte[] that can grow on demand.
-     */
-    public static final class Storage {
-        byte[] storage;
-        public Storage(byte[] storage) {
-            this.storage = storage;
-        }
-
-        public byte[] getStorage(int requestedLength) {
-            if (storage.length < requestedLength) {
-                Logger.getAnonymousLogger().log(
-                        Level.FINER,
-                        "DexFile storage too small  "
-                                + storage.length
-                                + " vs "
-                                + requestedLength);
-                storage = new byte[requestedLength];
-            }
-            return storage;
-        }
-    }
-
-    /**
      * Returns the contents of this instance as a {@code .dex} file,
      * in a {@link ByteArrayAnnotatedOutput} instance.
      *
@@ -607,8 +556,7 @@ public final class DexFile {
      * @return {@code non-null;} a {@code .dex} file for this instance
      */
     private ByteArrayAnnotatedOutput toDex0(boolean annotate,
-            boolean verbose,
-            Storage storage) {
+            boolean verbose) {
         /*
          * The following is ordered so that the prepare() calls which
          * add items happen before the calls to the sections that get
@@ -686,8 +634,7 @@ public final class DexFile {
         // Write out all the sections.
 
         fileSize = offset;
-        byte[] barr = storage == null ? new byte[fileSize] : storage.getStorage(fileSize);
-
+        byte[] barr = new byte[fileSize];
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput(barr);
 
         if (annotate) {
@@ -725,8 +672,8 @@ public final class DexFile {
 
         // Perform final bookkeeping.
 
-        calcSignature(barr, out.getCursor());
-        calcChecksum(barr, out.getCursor());
+        calcSignature(barr);
+        calcChecksum(barr);
 
         if (annotate) {
             wordData.writeIndexAnnotation(out, ItemType.TYPE_CODE_ITEM,
@@ -758,9 +705,8 @@ public final class DexFile {
      * given array, and modify the array to contain it.
      *
      * @param bytes {@code non-null;} the bytes of the file
-     * @param len length of {@code .dex} file encoded in the array
      */
-    private static void calcSignature(byte[] bytes, int len) {
+    private static void calcSignature(byte[] bytes) {
         MessageDigest md;
 
         try {
@@ -769,13 +715,13 @@ public final class DexFile {
             throw new RuntimeException(ex);
         }
 
-        md.update(bytes, 32, len - 32);
+        md.update(bytes, 32, bytes.length - 32);
 
         try {
             int amt = md.digest(bytes, 12, 20);
             if (amt != 20) {
                 throw new RuntimeException("unexpected digest write: " + amt +
-                        " bytes");
+                                           " bytes");
             }
         } catch (DigestException ex) {
             throw new RuntimeException(ex);
@@ -787,12 +733,11 @@ public final class DexFile {
      * given array, and modify the array to contain it.
      *
      * @param bytes {@code non-null;} the bytes of the file
-     * @param len length of {@code .dex} file encoded in the array
      */
-    private static void calcChecksum(byte[] bytes, int len) {
+    private static void calcChecksum(byte[] bytes) {
         Adler32 a32 = new Adler32();
 
-        a32.update(bytes, 12, len - 12);
+        a32.update(bytes, 12, bytes.length - 12);
 
         int sum = (int) a32.getValue();
 
