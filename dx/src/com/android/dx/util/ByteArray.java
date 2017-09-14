@@ -19,6 +19,7 @@ package com.android.dx.util;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 /**
  * Wrapper for a {@code byte[]}, which provides read-only access and
@@ -27,7 +28,6 @@ import java.io.InputStream;
  * <b>Note:</b> Multibyte accessors all use big-endian order.
  */
 public final class ByteArray {
-
     /** {@code non-null;} underlying array */
     private final byte[] bytes;
 
@@ -96,9 +96,8 @@ public final class ByteArray {
      */
     public ByteArray slice(int start, int end) {
         checkOffsets(start, end);
-        byte[] slicedOut = new byte[end - start];
-        System.arraycopy(bytes, start, slicedOut, 0, end - start);
-        return new ByteArray(slicedOut, 0, slicedOut.length);
+        byte[] slicedOut = Arrays.copyOfRange(bytes, start, end);
+        return new ByteArray(slicedOut);
     }
 
     /**

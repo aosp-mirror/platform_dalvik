@@ -218,16 +218,7 @@ public final class DexFile {
      */
     public void writeTo(OutputStream out, Writer humanOut, boolean verbose)
         throws IOException {
-        boolean annotate = (humanOut != null);
-        ByteArrayAnnotatedOutput result = toDex0(annotate, verbose, null);
-
-        if (out != null) {
-            out.write(result.getArray());
-        }
-
-        if (annotate) {
-            result.writeAnnotationsTo(humanOut);
-        }
+        writeTo(out, null /* storage */, humanOut, verbose);
     }
 
 
@@ -255,7 +246,7 @@ public final class DexFile {
     }
 
     /**
-     * Writes the contents of this instance as either a binary.
+     * Writes the contents of this instance as a binary.
      *
      * @param storage temporary storage for storing dexing.
      * @return the stored content.
