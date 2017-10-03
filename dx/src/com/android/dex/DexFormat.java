@@ -23,8 +23,11 @@ package com.android.dex;
 public final class DexFormat {
     private DexFormat() {}
 
-    /** API level to target in order to generate invoke-polymorphic */
-    public static final int API_INVOKE_POLYMORPHIC = 26;
+    /** API level to target in order to generate const-method-handle and const-method-type */
+    public static final int API_CONST_METHOD_HANDLE = 27;
+
+    /** API level to target in order to generate invoke-polymorphic and invoke-custom */
+    public static final int API_METHOD_HANDLES = 26;
 
     /** API level to target in order to pass through default and static interface methods */
     public static final int API_DEFAULT_INTERFACE_METHODS = 24;
@@ -36,7 +39,10 @@ public final class DexFormat {
      * API level to target in order to produce the most modern file
      * format
      */
-    public static final int API_CURRENT = API_INVOKE_POLYMORPHIC;
+    public static final int API_CURRENT = API_CONST_METHOD_HANDLE;
+
+    /** dex file version number for API level 27 and earlier */
+    public static final String VERSION_FOR_API_27 = "039";
 
     /** dex file version number for API level 26 and earlier */
     public static final String VERSION_FOR_API_26 = "038";
@@ -54,7 +60,7 @@ public final class DexFormat {
      * completed and is not considered a valid dex file format.
      * </p>
      */
-    public static final String VERSION_CURRENT = VERSION_FOR_API_26;
+    public static final String VERSION_CURRENT = VERSION_FOR_API_27;
 
     /**
      * file name of the primary {@code .dex} file inside an
@@ -90,6 +96,9 @@ public final class DexFormat {
      * Returns the API level corresponding to the given magic number,
      * or {@code -1} if the given array is not a well-formed dex file
      * magic number.
+     *
+     * @param magic array of bytes containing DEX file magic string
+     * @return API level corresponding to magic string if valid, -1 otherwise.
      */
     public static int magicToApi(byte[] magic) {
         if (magic.length != 8) {
@@ -108,7 +117,9 @@ public final class DexFormat {
         } else if (version.equals(VERSION_FOR_API_24)) {
             return API_DEFAULT_INTERFACE_METHODS;
         } else if (version.equals(VERSION_FOR_API_26)) {
-            return API_INVOKE_POLYMORPHIC;
+            return API_METHOD_HANDLES;
+        } else if (version.equals(VERSION_FOR_API_27)) {
+            return API_CONST_METHOD_HANDLE;
         } else if (version.equals(VERSION_CURRENT)) {
             return API_CURRENT;
         }
@@ -118,13 +129,18 @@ public final class DexFormat {
 
     /**
      * Returns the magic number corresponding to the given target API level.
+     *
+     * @param targetApiLevel level of API (minimum supported value 13).
+     * @return Magic string corresponding to API level supplied.
      */
     public static String apiToMagic(int targetApiLevel) {
         String version;
 
         if (targetApiLevel >= API_CURRENT) {
             version = VERSION_CURRENT;
-        } else if (targetApiLevel >= API_INVOKE_POLYMORPHIC) {
+        } else if (targetApiLevel >= API_CONST_METHOD_HANDLE) {
+            version = VERSION_FOR_API_27;
+        } else if (targetApiLevel >= API_METHOD_HANDLES) {
             version = VERSION_FOR_API_26;
         } else if (targetApiLevel >= API_DEFAULT_INTERFACE_METHODS) {
             version = VERSION_FOR_API_24;
@@ -135,6 +151,11 @@ public final class DexFormat {
         return MAGIC_PREFIX + version + MAGIC_SUFFIX;
     }
 
+    /**
+     * Checks whether a DEX file magic string is supported.
+     * @param magic string from DEX file
+     * @return
+     */
     public static boolean isSupportedDexMagic(byte[] magic) {
         int api = magicToApi(magic);
         return api > 0;
