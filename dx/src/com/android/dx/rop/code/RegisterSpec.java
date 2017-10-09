@@ -223,7 +223,8 @@ public final class RegisterSpec
     }
 
     /**
-     * Helper for {@link #equals} and {@link #ForComparison.equals},
+     * Helper for {@link #equals} and
+     * {@link com.android.dx.rop.code.RegisterSpec.ForComparison#equals},
      * which actually does the test.
      *
      * @param reg value of the instance variable, for another instance
@@ -278,7 +279,8 @@ public final class RegisterSpec
     }
 
     /**
-     * Helper for {@link #hashCode} and {@link #ForComparison.hashCode},
+     * Helper for {@link #hashCode} and
+     * {@link com.android.dx.rop.code.RegisterSpec.ForComparison#hashCode},
      * which actually does the calculation.
      *
      * @param reg value of the instance variable

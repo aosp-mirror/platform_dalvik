@@ -72,7 +72,7 @@ public class SsaToRop {
     /**
      * Constructs an instance.
      *
-     * @param ssaMeth {@code non-null;} method to process
+     * @param ssaMethod {@code non-null;} method to process
      * @param minimizeRegisters {@code true} if the converter should
      * attempt to minimize the rop-form register count
      */
