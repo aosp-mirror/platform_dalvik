@@ -32,14 +32,14 @@ public final class MultiCstInsn extends FixedSizeInsn {
     private final Constant[] constants;
 
     /**
-     * {@code >= NOT_SET;} the constant pool indicies for {@link #constant}, or
+     * {@code >= NOT_SET;} the constant pool indicies for {@link #constants}, or
      * {@code NOT_SET} if not yet set
      */
     private final int[] index;
 
     /**
      * {@code >= NOT_SET;} the constant pool index for the class reference in
-     * {@link #constant} if any, or {@code NOT_SET} if not yet set
+     * {@link #constants} if any, or {@code NOT_SET} if not yet set
      */
     private int classIndex;
 

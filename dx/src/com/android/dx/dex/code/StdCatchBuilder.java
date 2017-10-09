@@ -265,7 +265,7 @@ public final class StdCatchBuilder implements CatchBuilder {
     }
 
     /**
-     * Makes a {@link CatchTable#Entry} for the given block range and
+     * Makes a {@link CatchTable.Entry} for the given block range and
      * handlers.
      *
      * @param start {@code non-null;} the start block for the range (inclusive)
