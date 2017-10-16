@@ -41,8 +41,8 @@ public final class DexFormat {
      */
     public static final int API_CURRENT = API_CONST_METHOD_HANDLE;
 
-    /** dex file version number for API level 27 and earlier */
-    public static final String VERSION_FOR_API_27 = "039";
+    /** dex file version number for API level 28 and earlier */
+    public static final String VERSION_FOR_API_28 = "039";
 
     /** dex file version number for API level 26 and earlier */
     public static final String VERSION_FOR_API_26 = "038";
@@ -60,7 +60,7 @@ public final class DexFormat {
      * completed and is not considered a valid dex file format.
      * </p>
      */
-    public static final String VERSION_CURRENT = VERSION_FOR_API_27;
+    public static final String VERSION_CURRENT = VERSION_FOR_API_28;
 
     /**
      * file name of the primary {@code .dex} file inside an
@@ -118,7 +118,7 @@ public final class DexFormat {
             return API_DEFAULT_INTERFACE_METHODS;
         } else if (version.equals(VERSION_FOR_API_26)) {
             return API_METHOD_HANDLES;
-        } else if (version.equals(VERSION_FOR_API_27)) {
+        } else if (version.equals(VERSION_FOR_API_28)) {
             return API_CONST_METHOD_HANDLE;
         } else if (version.equals(VERSION_CURRENT)) {
             return API_CURRENT;
@@ -139,7 +139,7 @@ public final class DexFormat {
         if (targetApiLevel >= API_CURRENT) {
             version = VERSION_CURRENT;
         } else if (targetApiLevel >= API_CONST_METHOD_HANDLE) {
-            version = VERSION_FOR_API_27;
+            version = VERSION_FOR_API_28;
         } else if (targetApiLevel >= API_METHOD_HANDLES) {
             version = VERSION_FOR_API_26;
         } else if (targetApiLevel >= API_DEFAULT_INTERFACE_METHODS) {

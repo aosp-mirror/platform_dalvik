@@ -85,19 +85,18 @@ public final class ConcreteMethod implements Method {
          * as I know, this situation rarely occurs "in the
          * wild," so there's not much point in optimizing for it.
          */
-        LineNumberList lineNumbers = LineNumberList.EMPTY;
+        LineNumberList lnl = LineNumberList.EMPTY;
         if (keepLines) {
             for (AttLineNumberTable lnt = (AttLineNumberTable)
                      codeAttribs.findFirst(AttLineNumberTable.ATTRIBUTE_NAME);
                  lnt != null;
                  lnt = (AttLineNumberTable) codeAttribs.findNext(lnt)) {
-                lineNumbers = LineNumberList.concat(lineNumbers,
-                        lnt.getLineNumbers());
+                lnl = LineNumberList.concat(lnl, lnt.getLineNumbers());
             }
         }
-        this.lineNumbers = lineNumbers;
+        this.lineNumbers = lnl;
 
-        LocalVariableList localVariables = LocalVariableList.EMPTY;
+        LocalVariableList lvl = LocalVariableList.EMPTY;
         if (keepLocals) {
             /*
              * Do likewise (and with the same caveat) for
@@ -110,9 +109,7 @@ public final class ConcreteMethod implements Method {
                              AttLocalVariableTable.ATTRIBUTE_NAME);
                  lvt != null;
                  lvt = (AttLocalVariableTable) codeAttribs.findNext(lvt)) {
-                localVariables =
-                    LocalVariableList.concat(localVariables,
-                            lvt.getLocalVariables());
+                lvl = LocalVariableList.concat(lvl, lvt.getLocalVariables());
             }
 
             LocalVariableList typeList = LocalVariableList.EMPTY;
@@ -120,20 +117,15 @@ public final class ConcreteMethod implements Method {
                      codeAttribs.findFirst(
                              AttLocalVariableTypeTable.ATTRIBUTE_NAME);
                  lvtt != null;
-                 lvtt =
-                     (AttLocalVariableTypeTable) codeAttribs.findNext(lvtt)) {
-                typeList =
-                    LocalVariableList.concat(typeList,
-                            lvtt.getLocalVariables());
+                 lvtt = (AttLocalVariableTypeTable) codeAttribs.findNext(lvtt)) {
+                typeList = LocalVariableList.concat(typeList, lvtt.getLocalVariables());
             }
 
             if (typeList.size() != 0) {
-                localVariables =
-                    LocalVariableList.mergeDescriptorsAndSignatures(
-                            localVariables, typeList);
+                lvl = LocalVariableList.mergeDescriptorsAndSignatures(lvl, typeList);
             }
         }
-        this.localVariables = localVariables;
+        this.localVariables = lvl;
     }
 
     /** {@inheritDoc} */
