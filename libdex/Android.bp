@@ -46,9 +46,6 @@ cc_library_static {
     cflags: [
         "-Wall",
         "-Werror",
-        "-Wno-conversion-null",
-        "-Wno-unused-function",
-        "-Wno-unused-variable",
     ],
     target: {
         android: {

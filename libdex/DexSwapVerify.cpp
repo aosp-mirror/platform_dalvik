@@ -140,7 +140,7 @@ static inline bool checkPtrRange(const CheckState* state,
 #define CHECK_LIST_SIZE(_ptr, _count, _elemSize) {                          \
         const u1* _start = (const u1*) (_ptr);                              \
         const u1* _end = _start + ((_count) * (_elemSize));                 \
-        if (!safe_mul(NULL, (_count), (_elemSize)) ||                       \
+        if (!safe_mul(nullptr, (_count), (_elemSize)) ||                    \
             !checkPtrRange(state, _start, _end, #_ptr)) {                   \
             return 0;                                                       \
         }                                                                   \
@@ -2463,19 +2463,6 @@ static void* intraVerifyAnnotationItem(const CheckState* state, void* ptr) {
 
     return (void*) verifyEncodedAnnotation(state, data, false);
 }
-
-/* Perform cross-item verification on annotation_item. */
-static void* crossVerifyAnnotationItem(const CheckState* state, void* ptr) {
-    const u1* data = (const u1*) ptr;
-
-    // Skip the visibility byte.
-    data++;
-
-    return (void*) verifyEncodedAnnotation(state, data, true);
-}
-
-
-
 
 /*
  * Function to visit an individual top-level item type.
