@@ -26,8 +26,6 @@ cc_binary {
     cflags: [
         "-Wall",
         "-Werror",
-        "-Wno-unused-function",
-        "-Wno-unused-variable",
     ],
     target: {
         android: {

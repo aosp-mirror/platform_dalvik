@@ -1664,15 +1664,6 @@ bail:
 
 
 /*
- * Advance "ptr" to ensure 32-bit alignment.
- */
-static inline const u1* align32(const u1* ptr)
-{
-    return (u1*) (((uintptr_t) ptr + 3) & ~0x03);
-}
-
-
-/*
  * Dump a map in the "differential" format.
  *
  * TODO: show a hex dump of the compressed data.  (We can show the
@@ -1997,7 +1988,6 @@ static u8 readUnsignedLittleEndian(const u1** pData, u4 size, bool fillOnRight =
         result = (result >> 8) | (((u8)*data++) << 56);
     }
 
-    u8 oldResult = result;
     if (!fillOnRight) {
         result >>= (8u - size) * 8;
     }
