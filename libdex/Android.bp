@@ -43,6 +43,10 @@ cc_library_static {
     static_libs: ["liblog"],
     whole_static_libs: ["libziparchive"],
 
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
     target: {
         android: {
             shared_libs: ["libutils"],

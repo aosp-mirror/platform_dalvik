@@ -23,6 +23,10 @@ cc_binary {
     srcs: ["DexDump.cpp"],
     include_dirs: ["dalvik"],
 
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
     target: {
         android: {
             static_libs: [

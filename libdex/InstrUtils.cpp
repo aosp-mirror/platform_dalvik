@@ -591,7 +591,7 @@ void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
              * method constant (or equivalent) is always in vB.
              */
             u2 regList;
-            int i, count;
+            int count;
 
             pDec->vA = INST_B(inst); // This is labeled A in the spec.
             pDec->vB = FETCH(1);
