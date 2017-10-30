@@ -7105,15 +7105,15 @@ Method handle #1:
   type        : invoke-static
   target      : Linvokecustom/InvokeCustom; bsmLookupStaticWithExtraArgs
   target_type : (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;IJFD)Ljava/lang/invoke/CallSite;
-Call site #0: // offset 57124
+Call site #0: // offset 57196
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest1 (String)
   link_argument[2] : ()V (MethodType)
-Call site #1: // offset 57131
+Call site #1: // offset 57203
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest2 (String)
   link_argument[2] : (ZBCSIFJDLjava/lang/String;)V (MethodType)
-Call site #2: // offset 57138
+Call site #2: // offset 57210
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest3 (String)
   link_argument[2] : ()V (MethodType)
@@ -7121,27 +7121,27 @@ Call site #2: // offset 57138
   link_argument[4] : 123456789 (long)
   link_argument[5] : 123.456 (float)
   link_argument[6] : 123457 (double)
-Call site #3: // offset 57166
+Call site #3: // offset 57238
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest5 (String)
   link_argument[2] : (III)I (MethodType)
-Call site #4: // offset 57173
+Call site #4: // offset 57245
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest6 (String)
   link_argument[2] : (JJJ)J (MethodType)
-Call site #5: // offset 57180
+Call site #5: // offset 57252
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest7 (String)
   link_argument[2] : (FFD)D (MethodType)
-Call site #6: // offset 57187
+Call site #6: // offset 57259
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest8 (String)
   link_argument[2] : (Ljava/lang/String;)V (MethodType)
-Call site #7: // offset 57187
+Call site #7: // offset 57259
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest8 (String)
   link_argument[2] : (Ljava/lang/String;)V (MethodType)
-Call site #8: // offset 57187
+Call site #8: // offset 57259
   link_argument[0] : 0 (MethodHandle)
   link_argument[1] : targetMethodTest8 (String)
   link_argument[2] : (Ljava/lang/String;)V (MethodType)
