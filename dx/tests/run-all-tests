@@ -33,8 +33,9 @@ cd "${progdir}"
 progdir=`pwd`
 prog="${progdir}"/`basename "${prog}"`
 
-# Command-line options
 skip_tests=""
+
+# Command-line options
 sequential="no"
 usage="no"
 while [[ "$1" == "-"* ]]; do
