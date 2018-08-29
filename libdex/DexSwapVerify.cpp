@@ -25,7 +25,6 @@
 #include "DexUtf.h"
 #include "Leb128.h"
 
-#include <safe_iop.h>
 #include <zlib.h>
 
 #include <stdlib.h>
@@ -140,7 +139,8 @@ static inline bool checkPtrRange(const CheckState* state,
 #define CHECK_LIST_SIZE(_ptr, _count, _elemSize) {                          \
         const u1* _start = (const u1*) (_ptr);                              \
         const u1* _end = _start + ((_count) * (_elemSize));                 \
-        if (!safe_mul(nullptr, (_count), (_elemSize)) ||                    \
+        u4 _dummy;                                                          \
+        if (__builtin_mul_overflow((_count), (_elemSize), &_dummy) ||       \
             !checkPtrRange(state, _start, _end, #_ptr)) {                   \
             return 0;                                                       \
         }                                                                   \
