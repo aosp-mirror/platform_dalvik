@@ -12,10 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+droidstubs {
+    name: "dexdeps-doc-stubs",
+    srcs: [
+        "com/**/*.java",
+    ],
+    create_doc_stubs: true,
+}
+
 droiddoc {
     name: "dexdeps-docs",
     srcs: [
-        "com/**/*.java",
+        ":dexdeps-doc-stubs",
     ],
     custom_template: "droiddoc-templates-sdk",
     create_stubs: false,
