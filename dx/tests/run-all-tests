@@ -33,7 +33,7 @@ cd "${progdir}"
 progdir=`pwd`
 prog="${progdir}"/`basename "${prog}"`
 
-skip_tests="127-merge-stress"
+skip_tests=""
 
 # Command-line options
 sequential="no"
