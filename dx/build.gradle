@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-apply from: "$rootDir/buildSrc/base/baseJava.gradle"
+apply plugin: 'com.android.tools.java-library'
 
 sourceSets {
     main {
@@ -30,17 +30,4 @@ sourceSets {
 
 dependencies {
     testCompile libs.junit
-}
-
-configurations {
-    sourcesOnly
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    sourcesOnly sourcesJar
 }
