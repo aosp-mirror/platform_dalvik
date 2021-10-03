@@ -37,19 +37,3 @@ droidstubs_host {
         },
     },
 }
-
-droiddoc_host {
-    name: "dx-docs",
-    srcs: [
-        ":dx-doc-stubs",
-    ],
-    custom_template: "droiddoc-templates-sdk",
-    product_variables: {
-        pdk: {
-            enabled: false,
-        },
-        unbundled_build: {
-            enabled: false,
-        },
-    },
-}
