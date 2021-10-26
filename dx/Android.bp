@@ -47,3 +47,8 @@ java_import_host {
   name: "jasmin-jar",
   jars: ["etc/jasmin.jar"],
 }
+
+filegroup {
+    name: "mainDexClassesRules",
+    srcs: ["etc/mainDexClasses*.rules"],
+}
