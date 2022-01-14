@@ -14,6 +14,7 @@ java_test_host {
     srcs: ["**/*.java"],
     // Avoid anything depending on this target
     visibility: ["//visibility:private"],
+    java_version: "1.9",
     static_libs: [
         "dx",
     ],
