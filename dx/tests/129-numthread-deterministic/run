@@ -39,7 +39,7 @@ function writeClass(name) {
 
 
 mkdir classes
-${JAVAC} -d classes `find src -name '*.java'`
+${JAVAC} -source 1.8 -target 1.8 -d classes `find src -name '*.java'`
 
 mkdir out
 dx -JXmx4g -JXms4g --dex --no-optimize --output=out classes

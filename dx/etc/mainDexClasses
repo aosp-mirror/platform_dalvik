@@ -177,4 +177,4 @@ trap cleanTmp 0
   -libraryjars "${shrinkedAndroidJar}" -dontoptimize -dontobfuscate -dontpreverify \
   -include "${baserules}" -include "${extrarules}" 1>/dev/null || exit 10
 
-java -cp "$jarpath" com.android.multidex.MainDexListBuilder ${disableKeepAnnotated} "${tmpOut}" ${@} ||  exit 11
+${JAVA} -cp "$jarpath" com.android.multidex.MainDexListBuilder ${disableKeepAnnotated} "${tmpOut}" ${@} ||  exit 11
