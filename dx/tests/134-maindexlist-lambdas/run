@@ -28,4 +28,4 @@ cp classes/lambda/A.class traceOut/lambda/
 
 jar cf classes.jar -C classes .
 jar cf traceOut.jar -C traceOut .
-java -classpath $dxjar com.android.multidex.MainDexListBuilder traceOut.jar classes.jar | sort
+${JAVA} -classpath $dxjar com.android.multidex.MainDexListBuilder traceOut.jar classes.jar | sort
