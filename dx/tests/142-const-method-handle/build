@@ -34,5 +34,5 @@ if [[ ! -d "${BUILD_PATH}" ]]; then
 fi
 
 (cd "${SRC_PATH}" && javac -cp "${ASM_CLASSPATH}" -d "${BUILD_PATH}" Main.java constmethodhandle/*.java) || fail "javac error"
-(cd "${SCRIPT_PATH}" && ${JAVA} -cp "${ASM_CLASSPATH}:${BUILD_PATH}" constmethodhandle.TestGenerator "${BUILD_PATH}") || fail "generator failure"
+(cd "${SCRIPT_PATH}" && java -cp "${ASM_CLASSPATH}:${BUILD_PATH}" constmethodhandle.TestGenerator "${BUILD_PATH}") || fail "generator failure"
 (cd "${BUILD_PATH}" && jar cf "${JAR_FILE}" Main.class constmethodhandle/ConstTest.class) || fail "jar creation error"
