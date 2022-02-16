@@ -35,7 +35,7 @@ prog="${progdir}"/`basename "${prog}"`
 
 if [[ -z "${JAVA_HOME}" ]]; then
     unix=$(uname | tr '[A-Z]' '[a-z]')
-    JAVA_HOME="${progdir}/../../../prebuilts/jdk/jdk11/${unix}-x86"
+    JAVA_HOME="${progdir}/../../../prebuilts/jdk/jdk8/${unix}-x86"
 fi
 
 if [[ ! -d "${JAVA_HOME}" ]]; then
@@ -46,12 +46,6 @@ fi
 export JAVAC="${JAVA_HOME}/bin/javac"
 if [ "!" -e "$JAVAC" ]; then
     echo "Missing JAVAC executable: ${JAVAC}" 1>&2
-    exit 1
-fi
-
-export JAVA="${JAVA_HOME}/bin/java"
-if [ "!" -e "$JAVA" ]; then
-    echo "Missing JAVA executable: ${JAVA}" 1>&2
     exit 1
 fi
 

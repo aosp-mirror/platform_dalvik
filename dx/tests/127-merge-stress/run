@@ -69,4 +69,4 @@ if [ ${#validdexes[@]} -eq 0 ]; then
   exit 1
 fi
 
-${JAVA} -cp .:$dxjar -ea -esa com.android.dx.merge.MergeTest "${validdexes[@]}" > /dev/null
+java -cp .:$dxjar -ea -esa com.android.dx.merge.MergeTest "${validdexes[@]}" > /dev/null

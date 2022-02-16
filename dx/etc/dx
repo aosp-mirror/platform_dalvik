@@ -86,4 +86,4 @@ else
     jarpath="$libdir/$jarfile"
 fi
 
-exec ${JAVA:-java} $javaOpts -jar "$jarpath" "$@"
+exec java $javaOpts -jar "$jarpath" "$@"
