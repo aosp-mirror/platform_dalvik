@@ -36,4 +36,4 @@ cd "${oldwd}"
 
 libdir=`dirname $progdir`/framework
 
-exec ${JAVA:-java} -jar $libdir/jasmin.jar "$@"
+exec java -jar $libdir/jasmin.jar "$@"
