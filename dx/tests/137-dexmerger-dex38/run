@@ -21,6 +21,6 @@ jar xf invokecustom.jar
     dx --min-sdk-version=26 --dex --output="${CLASS/%.class/.dex}" "${CLASS}" 2>&1
   done
 )
-${JAVA} -cp $(dirname $(which dx))/../framework/dx.jar com.android.dx.merge.DexMerger \
+java -cp $(dirname $(which dx))/../framework/dx.jar com.android.dx.merge.DexMerger \
   out.dex invokecustom/*.dex >& /dev/null
 dexdump -d out.dex
