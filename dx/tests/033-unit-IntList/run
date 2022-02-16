@@ -27,7 +27,7 @@ for i in "$dxtestsjar" "$dxjar" "$junitjar"; do
     fi
 done
 
-${JAVA} -cp $dxtestsjar:$dxjar:$junitjar junit.textui.TestRunner com.android.dx.util.IntListTest > unit-out.txt 2>&1
+java -cp $dxtestsjar:$dxjar:$junitjar junit.textui.TestRunner com.android.dx.util.IntListTest > unit-out.txt 2>&1
 
 if [ "$?" = "0" ]; then
     echo "Yay!"
