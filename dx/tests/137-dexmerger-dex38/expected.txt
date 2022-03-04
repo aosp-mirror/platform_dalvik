@@ -21,10 +21,10 @@ Class #0            -
 0040bc: 7010 b300 0000                         |0000: invoke-direct {v0}, Ljava/lang/Object;.<init>:()V // method@00b3
 0040c2: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=25
-      locals        : 
-        0x0000 - 0x0004 reg=0 this Linvokecustom/Super; 
+      locals        :
+        0x0000 - 0x0004 reg=0 this Linvokecustom/Super;
 
   Virtual methods   -
     #0              : (in Linvokecustom/Super;)
@@ -48,11 +48,11 @@ Class #0            -
 0040dc: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0040e2: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=27
         0x0007 line=28
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/Super; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/Super;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
@@ -87,9 +87,9 @@ Class #1            -
 0040f6: 6700 0f00                              |0001: sput v0, Linvokecustom/InvokeCustom;.staticFieldTest9:I // field@000f
 0040fa: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=98
-      locals        : 
+      locals        :
 
     #1              : (in Linvokecustom/InvokeCustom1;)
       name          : '<init>'
@@ -106,12 +106,12 @@ Class #1            -
 004114: 5910 0e00                              |0004: iput v0, v1, Linvokecustom/InvokeCustom;.fieldTest9:F // field@000e
 004118: 0e00                                   |0006: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=35
         0x0003 line=111
         0x0006 line=35
-      locals        : 
-        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom1; 
+      locals        :
+        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom1;
 
     #2              : (in Linvokecustom/InvokeCustom1;)
       name          : '<init>'
@@ -142,14 +142,14 @@ Class #1            -
 00416e: 6e20 b100 1000                         |0021: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004174: 0e00                                   |0024: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=36
         0x0003 line=111
         0x0006 line=37
         0x0024 line=38
-      locals        : 
-        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom1; 
-        0x0000 - 0x0025 reg=4 (null) I 
+      locals        :
+        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom1;
+        0x0000 - 0x0025 reg=4 (null) I
 
     #3              : (in Linvokecustom/InvokeCustom1;)
       name          : 'bsmCreateCallSite'
@@ -179,14 +179,14 @@ Class #1            -
 0041c8: 7020 bc00 6000                         |0020: invoke-direct {v0, v6}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0041ce: 1100                                   |0023: return-object v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=156
         0x001e line=157
-      locals        : 
-        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle;
 
     #4              : (in Linvokecustom/InvokeCustom1;)
       name          : 'bsmLookupStatic'
@@ -213,15 +213,15 @@ Class #1            -
 004212: 7020 bc00 0100                         |0019: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 004218: 1101                                   |001c: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=138
         0x0007 line=139
         0x000b line=140
         0x0013 line=141
-      locals        : 
-        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x001d reg=3 (null) Ljava/lang/String; 
-        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType; 
+      locals        :
+        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x001d reg=3 (null) Ljava/lang/String;
+        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType;
 
     #5              : (in Linvokecustom/InvokeCustom1;)
       name          : 'bsmLookupStaticWithExtraArgs'
@@ -274,19 +274,19 @@ Class #1            -
 0042c8: 7020 bc00 0100                         |004e: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0042ce: 1101                                   |0051: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=147
         0x003c line=148
         0x0040 line=149
         0x0048 line=150
-      locals        : 
-        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0052 reg=6 (null) I 
-        0x0000 - 0x0052 reg=7 (null) J 
-        0x0000 - 0x0052 reg=9 (null) F 
-        0x0000 - 0x0052 reg=10 (null) D 
+      locals        :
+        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0052 reg=6 (null) I
+        0x0000 - 0x0052 reg=7 (null) J
+        0x0000 - 0x0052 reg=9 (null) F
+        0x0000 - 0x0052 reg=10 (null) D
 
     #6              : (in Linvokecustom/InvokeCustom1;)
       name          : 'bsmLookupTest9'
@@ -361,7 +361,7 @@ Class #1            -
 0043e6: 7020 bc00 0100                         |0083: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0043ec: 1101                                   |0086: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=166
         0x003c line=168
         0x0058 line=171
@@ -373,17 +373,17 @@ Class #1            -
         0x0071 line=181
         0x0075 line=182
         0x007d line=183
-      locals        : 
-        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle;
 
     #7              : (in Linvokecustom/InvokeCustom1;)
       name          : 'checkFieldTest9'
@@ -434,7 +434,7 @@ Class #1            -
 00449e: 1a00 1000                              |004f: const-string v0, "ERROR" // string@0010
 0044a2: 28fa                                   |0051: goto 004b // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=116
         0x0008 line=117
         0x000c line=118
@@ -442,10 +442,10 @@ Class #1            -
         0x0043 line=121
         0x004e line=122
         0x004f line=121
-      locals        : 
-        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom1; 
-        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom1;
+        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle;
 
     #8              : (in Linvokecustom/InvokeCustom1;)
       name          : 'checkStaticFieldTest9'
@@ -495,7 +495,7 @@ Class #1            -
 00454e: 1a00 1000                              |004d: const-string v0, "ERROR" // string@0010
 004552: 28fa                                   |004f: goto 0049 // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=103
         0x0008 line=104
         0x000c line=105
@@ -503,9 +503,9 @@ Class #1            -
         0x0043 line=108
         0x004c line=109
         0x004d line=108
-      locals        : 
-        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle;
 
     #9              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest1'
@@ -522,10 +522,10 @@ Class #1            -
 00456c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004572: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=41
         0x0007 line=42
-      locals        : 
+      locals        :
 
     #10              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest2'
@@ -557,7 +557,7 @@ Class #1            -
 0045d8: 6e20 b100 c000                         |002a: invoke-virtual {v0, v12}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0045de: 0e00                                   |002d: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=46
         0x0005 line=47
         0x000a line=48
@@ -568,16 +568,16 @@ Class #1            -
         0x0023 line=53
         0x0028 line=54
         0x002d line=55
-      locals        : 
-        0x0000 - 0x002e reg=2 (null) Z 
-        0x0000 - 0x002e reg=3 (null) B 
-        0x0000 - 0x002e reg=4 (null) C 
-        0x0000 - 0x002e reg=5 (null) S 
-        0x0000 - 0x002e reg=6 (null) I 
-        0x0000 - 0x002e reg=7 (null) F 
-        0x0000 - 0x002e reg=8 (null) J 
-        0x0000 - 0x002e reg=10 (null) D 
-        0x0000 - 0x002e reg=12 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x002e reg=2 (null) Z
+        0x0000 - 0x002e reg=3 (null) B
+        0x0000 - 0x002e reg=4 (null) C
+        0x0000 - 0x002e reg=5 (null) S
+        0x0000 - 0x002e reg=6 (null) I
+        0x0000 - 0x002e reg=7 (null) F
+        0x0000 - 0x002e reg=8 (null) J
+        0x0000 - 0x002e reg=10 (null) D
+        0x0000 - 0x002e reg=12 (null) Ljava/lang/String;
 
     #11              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest3'
@@ -594,10 +594,10 @@ Class #1            -
 0045f8: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0045fe: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=58
         0x0007 line=59
-      locals        : 
+      locals        :
 
     #12              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest5'
@@ -650,16 +650,16 @@ Class #1            -
 0046ae: 6e20 b100 2100                         |004f: invoke-virtual {v1, v2}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0046b4: 0f00                                   |0052: return v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=68
         0x0002 line=69
         0x002e line=70
         0x0030 line=71
         0x0052 line=73
-      locals        : 
-        0x0000 - 0x0053 reg=4 (null) I 
-        0x0000 - 0x0053 reg=5 (null) I 
-        0x0000 - 0x0053 reg=6 (null) I 
+      locals        :
+        0x0000 - 0x0053 reg=4 (null) I
+        0x0000 - 0x0053 reg=5 (null) I
+        0x0000 - 0x0053 reg=6 (null) I
 
     #13              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest6'
@@ -713,16 +713,16 @@ Class #1            -
 00476a: 6e20 b100 3200                         |0051: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004770: 1000                                   |0054: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=77
         0x0002 line=78
         0x002e line=79
         0x0032 line=80
         0x0054 line=82
-      locals        : 
-        0x0000 - 0x0055 reg=6 (null) J 
-        0x0000 - 0x0055 reg=8 (null) J 
-        0x0000 - 0x0055 reg=10 (null) J 
+      locals        :
+        0x0000 - 0x0055 reg=6 (null) J
+        0x0000 - 0x0055 reg=8 (null) J
+        0x0000 - 0x0055 reg=10 (null) J
 
     #14              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest7'
@@ -777,16 +777,16 @@ Class #1            -
 004828: 6e20 b100 3200                         |0052: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00482e: 1000                                   |0055: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=86
         0x0003 line=87
         0x002f line=88
         0x0033 line=89
         0x0055 line=91
-      locals        : 
-        0x0000 - 0x0056 reg=6 (null) F 
-        0x0000 - 0x0056 reg=7 (null) F 
-        0x0000 - 0x0056 reg=8 (null) D 
+      locals        :
+        0x0000 - 0x0056 reg=6 (null) F
+        0x0000 - 0x0056 reg=7 (null) F
+        0x0000 - 0x0056 reg=8 (null) D
 
     #15              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest8'
@@ -811,11 +811,11 @@ Class #1            -
 00486a: 6e20 b100 1000                         |0015: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004870: 0e00                                   |0018: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=95
         0x0018 line=96
-      locals        : 
-        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String;
 
     #16              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest9'
@@ -832,10 +832,10 @@ Class #1            -
 00488c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004892: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=129
         0x0007 line=130
-      locals        : 
+      locals        :
 
     #17              : (in Linvokecustom/InvokeCustom1;)
       name          : 'test1'
@@ -850,8 +850,8 @@ Class #1            -
 0048a4: fc00 0000 0000                         |0000: invoke-custom {}, call_site@0000
 0048aa: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
-      locals        : 
+      positions     :
+      locals        :
 
   Virtual methods   -
     #0              : (in Linvokecustom/InvokeCustom1;)
@@ -878,11 +878,11 @@ Class #1            -
 0048ea: 6e20 b100 1000                         |0017: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0048f0: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=125
         0x001a line=126
-      locals        : 
-        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom1; 
+      locals        :
+        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom1;
 
     #1              : (in Linvokecustom/InvokeCustom1;)
       name          : 'run'
@@ -899,11 +899,11 @@ Class #1            -
 00490c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004912: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=133
         0x0007 line=134
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom1; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom1;
 
     #2              : (in Linvokecustom/InvokeCustom1;)
       name          : 'targetMethodTest4'
@@ -920,11 +920,11 @@ Class #1            -
 00492c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004932: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=64
         0x0007 line=65
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom1; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom1;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
@@ -959,9 +959,9 @@ Class #2            -
 004946: 6700 0f00                              |0001: sput v0, Linvokecustom/InvokeCustom;.staticFieldTest9:I // field@000f
 00494a: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=98
-      locals        : 
+      locals        :
 
     #1              : (in Linvokecustom/InvokeCustom2;)
       name          : '<init>'
@@ -978,12 +978,12 @@ Class #2            -
 004964: 5910 0e00                              |0004: iput v0, v1, Linvokecustom/InvokeCustom;.fieldTest9:F // field@000e
 004968: 0e00                                   |0006: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=35
         0x0003 line=111
         0x0006 line=35
-      locals        : 
-        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom2; 
+      locals        :
+        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom2;
 
     #2              : (in Linvokecustom/InvokeCustom2;)
       name          : '<init>'
@@ -1014,14 +1014,14 @@ Class #2            -
 0049be: 6e20 b100 1000                         |0021: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0049c4: 0e00                                   |0024: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=36
         0x0003 line=111
         0x0006 line=37
         0x0024 line=38
-      locals        : 
-        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom2; 
-        0x0000 - 0x0025 reg=4 (null) I 
+      locals        :
+        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom2;
+        0x0000 - 0x0025 reg=4 (null) I
 
     #3              : (in Linvokecustom/InvokeCustom2;)
       name          : 'bsmCreateCallSite'
@@ -1051,14 +1051,14 @@ Class #2            -
 004a18: 7020 bc00 6000                         |0020: invoke-direct {v0, v6}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 004a1e: 1100                                   |0023: return-object v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=156
         0x001e line=157
-      locals        : 
-        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle;
 
     #4              : (in Linvokecustom/InvokeCustom2;)
       name          : 'bsmLookupStatic'
@@ -1085,15 +1085,15 @@ Class #2            -
 004a62: 7020 bc00 0100                         |0019: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 004a68: 1101                                   |001c: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=138
         0x0007 line=139
         0x000b line=140
         0x0013 line=141
-      locals        : 
-        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x001d reg=3 (null) Ljava/lang/String; 
-        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType; 
+      locals        :
+        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x001d reg=3 (null) Ljava/lang/String;
+        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType;
 
     #5              : (in Linvokecustom/InvokeCustom2;)
       name          : 'bsmLookupStaticWithExtraArgs'
@@ -1146,19 +1146,19 @@ Class #2            -
 004b18: 7020 bc00 0100                         |004e: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 004b1e: 1101                                   |0051: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=147
         0x003c line=148
         0x0040 line=149
         0x0048 line=150
-      locals        : 
-        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0052 reg=6 (null) I 
-        0x0000 - 0x0052 reg=7 (null) J 
-        0x0000 - 0x0052 reg=9 (null) F 
-        0x0000 - 0x0052 reg=10 (null) D 
+      locals        :
+        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0052 reg=6 (null) I
+        0x0000 - 0x0052 reg=7 (null) J
+        0x0000 - 0x0052 reg=9 (null) F
+        0x0000 - 0x0052 reg=10 (null) D
 
     #6              : (in Linvokecustom/InvokeCustom2;)
       name          : 'bsmLookupTest9'
@@ -1233,7 +1233,7 @@ Class #2            -
 004c36: 7020 bc00 0100                         |0083: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 004c3c: 1101                                   |0086: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=166
         0x003c line=168
         0x0058 line=171
@@ -1245,17 +1245,17 @@ Class #2            -
         0x0071 line=181
         0x0075 line=182
         0x007d line=183
-      locals        : 
-        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle;
 
     #7              : (in Linvokecustom/InvokeCustom2;)
       name          : 'checkFieldTest9'
@@ -1306,7 +1306,7 @@ Class #2            -
 004cee: 1a00 1000                              |004f: const-string v0, "ERROR" // string@0010
 004cf2: 28fa                                   |0051: goto 004b // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=116
         0x0008 line=117
         0x000c line=118
@@ -1314,10 +1314,10 @@ Class #2            -
         0x0043 line=121
         0x004e line=122
         0x004f line=121
-      locals        : 
-        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom2; 
-        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom2;
+        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle;
 
     #8              : (in Linvokecustom/InvokeCustom2;)
       name          : 'checkStaticFieldTest9'
@@ -1367,7 +1367,7 @@ Class #2            -
 004d9e: 1a00 1000                              |004d: const-string v0, "ERROR" // string@0010
 004da2: 28fa                                   |004f: goto 0049 // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=103
         0x0008 line=104
         0x000c line=105
@@ -1375,9 +1375,9 @@ Class #2            -
         0x0043 line=108
         0x004c line=109
         0x004d line=108
-      locals        : 
-        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle;
 
     #9              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest1'
@@ -1394,10 +1394,10 @@ Class #2            -
 004dbc: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004dc2: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=41
         0x0007 line=42
-      locals        : 
+      locals        :
 
     #10              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest2'
@@ -1429,7 +1429,7 @@ Class #2            -
 004e28: 6e20 b100 c000                         |002a: invoke-virtual {v0, v12}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004e2e: 0e00                                   |002d: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=46
         0x0005 line=47
         0x000a line=48
@@ -1440,16 +1440,16 @@ Class #2            -
         0x0023 line=53
         0x0028 line=54
         0x002d line=55
-      locals        : 
-        0x0000 - 0x002e reg=2 (null) Z 
-        0x0000 - 0x002e reg=3 (null) B 
-        0x0000 - 0x002e reg=4 (null) C 
-        0x0000 - 0x002e reg=5 (null) S 
-        0x0000 - 0x002e reg=6 (null) I 
-        0x0000 - 0x002e reg=7 (null) F 
-        0x0000 - 0x002e reg=8 (null) J 
-        0x0000 - 0x002e reg=10 (null) D 
-        0x0000 - 0x002e reg=12 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x002e reg=2 (null) Z
+        0x0000 - 0x002e reg=3 (null) B
+        0x0000 - 0x002e reg=4 (null) C
+        0x0000 - 0x002e reg=5 (null) S
+        0x0000 - 0x002e reg=6 (null) I
+        0x0000 - 0x002e reg=7 (null) F
+        0x0000 - 0x002e reg=8 (null) J
+        0x0000 - 0x002e reg=10 (null) D
+        0x0000 - 0x002e reg=12 (null) Ljava/lang/String;
 
     #11              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest3'
@@ -1466,10 +1466,10 @@ Class #2            -
 004e48: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004e4e: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=58
         0x0007 line=59
-      locals        : 
+      locals        :
 
     #12              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest5'
@@ -1522,16 +1522,16 @@ Class #2            -
 004efe: 6e20 b100 2100                         |004f: invoke-virtual {v1, v2}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004f04: 0f00                                   |0052: return v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=68
         0x0002 line=69
         0x002e line=70
         0x0030 line=71
         0x0052 line=73
-      locals        : 
-        0x0000 - 0x0053 reg=4 (null) I 
-        0x0000 - 0x0053 reg=5 (null) I 
-        0x0000 - 0x0053 reg=6 (null) I 
+      locals        :
+        0x0000 - 0x0053 reg=4 (null) I
+        0x0000 - 0x0053 reg=5 (null) I
+        0x0000 - 0x0053 reg=6 (null) I
 
     #13              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest6'
@@ -1585,16 +1585,16 @@ Class #2            -
 004fba: 6e20 b100 3200                         |0051: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 004fc0: 1000                                   |0054: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=77
         0x0002 line=78
         0x002e line=79
         0x0032 line=80
         0x0054 line=82
-      locals        : 
-        0x0000 - 0x0055 reg=6 (null) J 
-        0x0000 - 0x0055 reg=8 (null) J 
-        0x0000 - 0x0055 reg=10 (null) J 
+      locals        :
+        0x0000 - 0x0055 reg=6 (null) J
+        0x0000 - 0x0055 reg=8 (null) J
+        0x0000 - 0x0055 reg=10 (null) J
 
     #14              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest7'
@@ -1649,16 +1649,16 @@ Class #2            -
 005078: 6e20 b100 3200                         |0052: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00507e: 1000                                   |0055: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=86
         0x0003 line=87
         0x002f line=88
         0x0033 line=89
         0x0055 line=91
-      locals        : 
-        0x0000 - 0x0056 reg=6 (null) F 
-        0x0000 - 0x0056 reg=7 (null) F 
-        0x0000 - 0x0056 reg=8 (null) D 
+      locals        :
+        0x0000 - 0x0056 reg=6 (null) F
+        0x0000 - 0x0056 reg=7 (null) F
+        0x0000 - 0x0056 reg=8 (null) D
 
     #15              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest8'
@@ -1683,11 +1683,11 @@ Class #2            -
 0050ba: 6e20 b100 1000                         |0015: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0050c0: 0e00                                   |0018: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=95
         0x0018 line=96
-      locals        : 
-        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String;
 
     #16              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest9'
@@ -1704,10 +1704,10 @@ Class #2            -
 0050dc: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0050e2: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=129
         0x0007 line=130
-      locals        : 
+      locals        :
 
     #17              : (in Linvokecustom/InvokeCustom2;)
       name          : 'test2'
@@ -1731,8 +1731,8 @@ Class #2            -
 005122: fd0b 0100 0000                         |0017: invoke-custom/range {v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10}, call_site@0001
 005128: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
-      locals        : 
+      positions     :
+      locals        :
 
   Virtual methods   -
     #0              : (in Linvokecustom/InvokeCustom2;)
@@ -1759,11 +1759,11 @@ Class #2            -
 00516a: 6e20 b100 1000                         |0017: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005170: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=125
         0x001a line=126
-      locals        : 
-        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom2; 
+      locals        :
+        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom2;
 
     #1              : (in Linvokecustom/InvokeCustom2;)
       name          : 'run'
@@ -1780,11 +1780,11 @@ Class #2            -
 00518c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005192: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=133
         0x0007 line=134
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom2; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom2;
 
     #2              : (in Linvokecustom/InvokeCustom2;)
       name          : 'targetMethodTest4'
@@ -1801,11 +1801,11 @@ Class #2            -
 0051ac: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0051b2: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=64
         0x0007 line=65
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom2; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom2;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
@@ -1840,9 +1840,9 @@ Class #3            -
 0051c6: 6700 0f00                              |0001: sput v0, Linvokecustom/InvokeCustom;.staticFieldTest9:I // field@000f
 0051ca: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=98
-      locals        : 
+      locals        :
 
     #1              : (in Linvokecustom/InvokeCustom3;)
       name          : '<init>'
@@ -1859,12 +1859,12 @@ Class #3            -
 0051e4: 5910 0e00                              |0004: iput v0, v1, Linvokecustom/InvokeCustom;.fieldTest9:F // field@000e
 0051e8: 0e00                                   |0006: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=35
         0x0003 line=111
         0x0006 line=35
-      locals        : 
-        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom3; 
+      locals        :
+        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom3;
 
     #2              : (in Linvokecustom/InvokeCustom3;)
       name          : '<init>'
@@ -1895,14 +1895,14 @@ Class #3            -
 00523e: 6e20 b100 1000                         |0021: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005244: 0e00                                   |0024: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=36
         0x0003 line=111
         0x0006 line=37
         0x0024 line=38
-      locals        : 
-        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom3; 
-        0x0000 - 0x0025 reg=4 (null) I 
+      locals        :
+        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom3;
+        0x0000 - 0x0025 reg=4 (null) I
 
     #3              : (in Linvokecustom/InvokeCustom3;)
       name          : 'bsmCreateCallSite'
@@ -1932,14 +1932,14 @@ Class #3            -
 005298: 7020 bc00 6000                         |0020: invoke-direct {v0, v6}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 00529e: 1100                                   |0023: return-object v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=156
         0x001e line=157
-      locals        : 
-        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle;
 
     #4              : (in Linvokecustom/InvokeCustom3;)
       name          : 'bsmLookupStatic'
@@ -1966,15 +1966,15 @@ Class #3            -
 0052e2: 7020 bc00 0100                         |0019: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0052e8: 1101                                   |001c: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=138
         0x0007 line=139
         0x000b line=140
         0x0013 line=141
-      locals        : 
-        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x001d reg=3 (null) Ljava/lang/String; 
-        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType; 
+      locals        :
+        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x001d reg=3 (null) Ljava/lang/String;
+        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType;
 
     #5              : (in Linvokecustom/InvokeCustom3;)
       name          : 'bsmLookupStaticWithExtraArgs'
@@ -2027,19 +2027,19 @@ Class #3            -
 005398: 7020 bc00 0100                         |004e: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 00539e: 1101                                   |0051: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=147
         0x003c line=148
         0x0040 line=149
         0x0048 line=150
-      locals        : 
-        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0052 reg=6 (null) I 
-        0x0000 - 0x0052 reg=7 (null) J 
-        0x0000 - 0x0052 reg=9 (null) F 
-        0x0000 - 0x0052 reg=10 (null) D 
+      locals        :
+        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0052 reg=6 (null) I
+        0x0000 - 0x0052 reg=7 (null) J
+        0x0000 - 0x0052 reg=9 (null) F
+        0x0000 - 0x0052 reg=10 (null) D
 
     #6              : (in Linvokecustom/InvokeCustom3;)
       name          : 'bsmLookupTest9'
@@ -2114,7 +2114,7 @@ Class #3            -
 0054b6: 7020 bc00 0100                         |0083: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0054bc: 1101                                   |0086: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=166
         0x003c line=168
         0x0058 line=171
@@ -2126,17 +2126,17 @@ Class #3            -
         0x0071 line=181
         0x0075 line=182
         0x007d line=183
-      locals        : 
-        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle;
 
     #7              : (in Linvokecustom/InvokeCustom3;)
       name          : 'checkFieldTest9'
@@ -2187,7 +2187,7 @@ Class #3            -
 00556e: 1a00 1000                              |004f: const-string v0, "ERROR" // string@0010
 005572: 28fa                                   |0051: goto 004b // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=116
         0x0008 line=117
         0x000c line=118
@@ -2195,10 +2195,10 @@ Class #3            -
         0x0043 line=121
         0x004e line=122
         0x004f line=121
-      locals        : 
-        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom3; 
-        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom3;
+        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle;
 
     #8              : (in Linvokecustom/InvokeCustom3;)
       name          : 'checkStaticFieldTest9'
@@ -2248,7 +2248,7 @@ Class #3            -
 00561e: 1a00 1000                              |004d: const-string v0, "ERROR" // string@0010
 005622: 28fa                                   |004f: goto 0049 // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=103
         0x0008 line=104
         0x000c line=105
@@ -2256,9 +2256,9 @@ Class #3            -
         0x0043 line=108
         0x004c line=109
         0x004d line=108
-      locals        : 
-        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle;
 
     #9              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest1'
@@ -2275,10 +2275,10 @@ Class #3            -
 00563c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005642: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=41
         0x0007 line=42
-      locals        : 
+      locals        :
 
     #10              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest2'
@@ -2310,7 +2310,7 @@ Class #3            -
 0056a8: 6e20 b100 c000                         |002a: invoke-virtual {v0, v12}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0056ae: 0e00                                   |002d: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=46
         0x0005 line=47
         0x000a line=48
@@ -2321,16 +2321,16 @@ Class #3            -
         0x0023 line=53
         0x0028 line=54
         0x002d line=55
-      locals        : 
-        0x0000 - 0x002e reg=2 (null) Z 
-        0x0000 - 0x002e reg=3 (null) B 
-        0x0000 - 0x002e reg=4 (null) C 
-        0x0000 - 0x002e reg=5 (null) S 
-        0x0000 - 0x002e reg=6 (null) I 
-        0x0000 - 0x002e reg=7 (null) F 
-        0x0000 - 0x002e reg=8 (null) J 
-        0x0000 - 0x002e reg=10 (null) D 
-        0x0000 - 0x002e reg=12 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x002e reg=2 (null) Z
+        0x0000 - 0x002e reg=3 (null) B
+        0x0000 - 0x002e reg=4 (null) C
+        0x0000 - 0x002e reg=5 (null) S
+        0x0000 - 0x002e reg=6 (null) I
+        0x0000 - 0x002e reg=7 (null) F
+        0x0000 - 0x002e reg=8 (null) J
+        0x0000 - 0x002e reg=10 (null) D
+        0x0000 - 0x002e reg=12 (null) Ljava/lang/String;
 
     #11              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest3'
@@ -2347,10 +2347,10 @@ Class #3            -
 0056c8: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0056ce: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=58
         0x0007 line=59
-      locals        : 
+      locals        :
 
     #12              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest5'
@@ -2403,16 +2403,16 @@ Class #3            -
 00577e: 6e20 b100 2100                         |004f: invoke-virtual {v1, v2}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005784: 0f00                                   |0052: return v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=68
         0x0002 line=69
         0x002e line=70
         0x0030 line=71
         0x0052 line=73
-      locals        : 
-        0x0000 - 0x0053 reg=4 (null) I 
-        0x0000 - 0x0053 reg=5 (null) I 
-        0x0000 - 0x0053 reg=6 (null) I 
+      locals        :
+        0x0000 - 0x0053 reg=4 (null) I
+        0x0000 - 0x0053 reg=5 (null) I
+        0x0000 - 0x0053 reg=6 (null) I
 
     #13              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest6'
@@ -2466,16 +2466,16 @@ Class #3            -
 00583a: 6e20 b100 3200                         |0051: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005840: 1000                                   |0054: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=77
         0x0002 line=78
         0x002e line=79
         0x0032 line=80
         0x0054 line=82
-      locals        : 
-        0x0000 - 0x0055 reg=6 (null) J 
-        0x0000 - 0x0055 reg=8 (null) J 
-        0x0000 - 0x0055 reg=10 (null) J 
+      locals        :
+        0x0000 - 0x0055 reg=6 (null) J
+        0x0000 - 0x0055 reg=8 (null) J
+        0x0000 - 0x0055 reg=10 (null) J
 
     #14              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest7'
@@ -2530,16 +2530,16 @@ Class #3            -
 0058f8: 6e20 b100 3200                         |0052: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0058fe: 1000                                   |0055: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=86
         0x0003 line=87
         0x002f line=88
         0x0033 line=89
         0x0055 line=91
-      locals        : 
-        0x0000 - 0x0056 reg=6 (null) F 
-        0x0000 - 0x0056 reg=7 (null) F 
-        0x0000 - 0x0056 reg=8 (null) D 
+      locals        :
+        0x0000 - 0x0056 reg=6 (null) F
+        0x0000 - 0x0056 reg=7 (null) F
+        0x0000 - 0x0056 reg=8 (null) D
 
     #15              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest8'
@@ -2564,11 +2564,11 @@ Class #3            -
 00593a: 6e20 b100 1000                         |0015: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005940: 0e00                                   |0018: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=95
         0x0018 line=96
-      locals        : 
-        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String;
 
     #16              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest9'
@@ -2585,10 +2585,10 @@ Class #3            -
 00595c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005962: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=129
         0x0007 line=130
-      locals        : 
+      locals        :
 
     #17              : (in Linvokecustom/InvokeCustom3;)
       name          : 'test3'
@@ -2603,8 +2603,8 @@ Class #3            -
 005974: fc00 0200 0000                         |0000: invoke-custom {}, call_site@0002
 00597a: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
-      locals        : 
+      positions     :
+      locals        :
 
   Virtual methods   -
     #0              : (in Linvokecustom/InvokeCustom3;)
@@ -2631,11 +2631,11 @@ Class #3            -
 0059ba: 6e20 b100 1000                         |0017: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0059c0: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=125
         0x001a line=126
-      locals        : 
-        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom3; 
+      locals        :
+        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom3;
 
     #1              : (in Linvokecustom/InvokeCustom3;)
       name          : 'run'
@@ -2652,11 +2652,11 @@ Class #3            -
 0059dc: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0059e2: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=133
         0x0007 line=134
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom3; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom3;
 
     #2              : (in Linvokecustom/InvokeCustom3;)
       name          : 'targetMethodTest4'
@@ -2673,11 +2673,11 @@ Class #3            -
 0059fc: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005a02: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=64
         0x0007 line=65
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom3; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom3;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
@@ -2712,9 +2712,9 @@ Class #4            -
 005a16: 6700 0f00                              |0001: sput v0, Linvokecustom/InvokeCustom;.staticFieldTest9:I // field@000f
 005a1a: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=98
-      locals        : 
+      locals        :
 
     #1              : (in Linvokecustom/InvokeCustom5;)
       name          : '<init>'
@@ -2731,12 +2731,12 @@ Class #4            -
 005a34: 5910 0e00                              |0004: iput v0, v1, Linvokecustom/InvokeCustom;.fieldTest9:F // field@000e
 005a38: 0e00                                   |0006: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=35
         0x0003 line=111
         0x0006 line=35
-      locals        : 
-        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom5; 
+      locals        :
+        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom5;
 
     #2              : (in Linvokecustom/InvokeCustom5;)
       name          : '<init>'
@@ -2767,14 +2767,14 @@ Class #4            -
 005a8e: 6e20 b100 1000                         |0021: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005a94: 0e00                                   |0024: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=36
         0x0003 line=111
         0x0006 line=37
         0x0024 line=38
-      locals        : 
-        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom5; 
-        0x0000 - 0x0025 reg=4 (null) I 
+      locals        :
+        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom5;
+        0x0000 - 0x0025 reg=4 (null) I
 
     #3              : (in Linvokecustom/InvokeCustom5;)
       name          : 'bsmCreateCallSite'
@@ -2804,14 +2804,14 @@ Class #4            -
 005ae8: 7020 bc00 6000                         |0020: invoke-direct {v0, v6}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 005aee: 1100                                   |0023: return-object v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=156
         0x001e line=157
-      locals        : 
-        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle;
 
     #4              : (in Linvokecustom/InvokeCustom5;)
       name          : 'bsmLookupStatic'
@@ -2838,15 +2838,15 @@ Class #4            -
 005b32: 7020 bc00 0100                         |0019: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 005b38: 1101                                   |001c: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=138
         0x0007 line=139
         0x000b line=140
         0x0013 line=141
-      locals        : 
-        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x001d reg=3 (null) Ljava/lang/String; 
-        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType; 
+      locals        :
+        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x001d reg=3 (null) Ljava/lang/String;
+        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType;
 
     #5              : (in Linvokecustom/InvokeCustom5;)
       name          : 'bsmLookupStaticWithExtraArgs'
@@ -2899,19 +2899,19 @@ Class #4            -
 005be8: 7020 bc00 0100                         |004e: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 005bee: 1101                                   |0051: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=147
         0x003c line=148
         0x0040 line=149
         0x0048 line=150
-      locals        : 
-        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0052 reg=6 (null) I 
-        0x0000 - 0x0052 reg=7 (null) J 
-        0x0000 - 0x0052 reg=9 (null) F 
-        0x0000 - 0x0052 reg=10 (null) D 
+      locals        :
+        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0052 reg=6 (null) I
+        0x0000 - 0x0052 reg=7 (null) J
+        0x0000 - 0x0052 reg=9 (null) F
+        0x0000 - 0x0052 reg=10 (null) D
 
     #6              : (in Linvokecustom/InvokeCustom5;)
       name          : 'bsmLookupTest9'
@@ -2986,7 +2986,7 @@ Class #4            -
 005d06: 7020 bc00 0100                         |0083: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 005d0c: 1101                                   |0086: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=166
         0x003c line=168
         0x0058 line=171
@@ -2998,17 +2998,17 @@ Class #4            -
         0x0071 line=181
         0x0075 line=182
         0x007d line=183
-      locals        : 
-        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle;
 
     #7              : (in Linvokecustom/InvokeCustom5;)
       name          : 'checkFieldTest9'
@@ -3059,7 +3059,7 @@ Class #4            -
 005dbe: 1a00 1000                              |004f: const-string v0, "ERROR" // string@0010
 005dc2: 28fa                                   |0051: goto 004b // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=116
         0x0008 line=117
         0x000c line=118
@@ -3067,10 +3067,10 @@ Class #4            -
         0x0043 line=121
         0x004e line=122
         0x004f line=121
-      locals        : 
-        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom5; 
-        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom5;
+        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle;
 
     #8              : (in Linvokecustom/InvokeCustom5;)
       name          : 'checkStaticFieldTest9'
@@ -3120,7 +3120,7 @@ Class #4            -
 005e6e: 1a00 1000                              |004d: const-string v0, "ERROR" // string@0010
 005e72: 28fa                                   |004f: goto 0049 // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=103
         0x0008 line=104
         0x000c line=105
@@ -3128,9 +3128,9 @@ Class #4            -
         0x0043 line=108
         0x004c line=109
         0x004d line=108
-      locals        : 
-        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle;
 
     #9              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest1'
@@ -3147,10 +3147,10 @@ Class #4            -
 005e8c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005e92: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=41
         0x0007 line=42
-      locals        : 
+      locals        :
 
     #10              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest2'
@@ -3182,7 +3182,7 @@ Class #4            -
 005ef8: 6e20 b100 c000                         |002a: invoke-virtual {v0, v12}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005efe: 0e00                                   |002d: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=46
         0x0005 line=47
         0x000a line=48
@@ -3193,16 +3193,16 @@ Class #4            -
         0x0023 line=53
         0x0028 line=54
         0x002d line=55
-      locals        : 
-        0x0000 - 0x002e reg=2 (null) Z 
-        0x0000 - 0x002e reg=3 (null) B 
-        0x0000 - 0x002e reg=4 (null) C 
-        0x0000 - 0x002e reg=5 (null) S 
-        0x0000 - 0x002e reg=6 (null) I 
-        0x0000 - 0x002e reg=7 (null) F 
-        0x0000 - 0x002e reg=8 (null) J 
-        0x0000 - 0x002e reg=10 (null) D 
-        0x0000 - 0x002e reg=12 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x002e reg=2 (null) Z
+        0x0000 - 0x002e reg=3 (null) B
+        0x0000 - 0x002e reg=4 (null) C
+        0x0000 - 0x002e reg=5 (null) S
+        0x0000 - 0x002e reg=6 (null) I
+        0x0000 - 0x002e reg=7 (null) F
+        0x0000 - 0x002e reg=8 (null) J
+        0x0000 - 0x002e reg=10 (null) D
+        0x0000 - 0x002e reg=12 (null) Ljava/lang/String;
 
     #11              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest3'
@@ -3219,10 +3219,10 @@ Class #4            -
 005f18: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005f1e: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=58
         0x0007 line=59
-      locals        : 
+      locals        :
 
     #12              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest5'
@@ -3275,16 +3275,16 @@ Class #4            -
 005fce: 6e20 b100 2100                         |004f: invoke-virtual {v1, v2}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 005fd4: 0f00                                   |0052: return v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=68
         0x0002 line=69
         0x002e line=70
         0x0030 line=71
         0x0052 line=73
-      locals        : 
-        0x0000 - 0x0053 reg=4 (null) I 
-        0x0000 - 0x0053 reg=5 (null) I 
-        0x0000 - 0x0053 reg=6 (null) I 
+      locals        :
+        0x0000 - 0x0053 reg=4 (null) I
+        0x0000 - 0x0053 reg=5 (null) I
+        0x0000 - 0x0053 reg=6 (null) I
 
     #13              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest6'
@@ -3338,16 +3338,16 @@ Class #4            -
 00608a: 6e20 b100 3200                         |0051: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006090: 1000                                   |0054: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=77
         0x0002 line=78
         0x002e line=79
         0x0032 line=80
         0x0054 line=82
-      locals        : 
-        0x0000 - 0x0055 reg=6 (null) J 
-        0x0000 - 0x0055 reg=8 (null) J 
-        0x0000 - 0x0055 reg=10 (null) J 
+      locals        :
+        0x0000 - 0x0055 reg=6 (null) J
+        0x0000 - 0x0055 reg=8 (null) J
+        0x0000 - 0x0055 reg=10 (null) J
 
     #14              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest7'
@@ -3402,16 +3402,16 @@ Class #4            -
 006148: 6e20 b100 3200                         |0052: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00614e: 1000                                   |0055: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=86
         0x0003 line=87
         0x002f line=88
         0x0033 line=89
         0x0055 line=91
-      locals        : 
-        0x0000 - 0x0056 reg=6 (null) F 
-        0x0000 - 0x0056 reg=7 (null) F 
-        0x0000 - 0x0056 reg=8 (null) D 
+      locals        :
+        0x0000 - 0x0056 reg=6 (null) F
+        0x0000 - 0x0056 reg=7 (null) F
+        0x0000 - 0x0056 reg=8 (null) D
 
     #15              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest8'
@@ -3436,11 +3436,11 @@ Class #4            -
 00618a: 6e20 b100 1000                         |0015: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006190: 0e00                                   |0018: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=95
         0x0018 line=96
-      locals        : 
-        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String;
 
     #16              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest9'
@@ -3457,10 +3457,10 @@ Class #4            -
 0061ac: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0061b2: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=129
         0x0007 line=130
-      locals        : 
+      locals        :
 
     #17              : (in Linvokecustom/InvokeCustom5;)
       name          : 'test5'
@@ -3490,8 +3490,8 @@ Class #4            -
 006202: 6e20 b100 0100                         |001f: invoke-virtual {v1, v0}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006208: 0e00                                   |0022: return-void
       catches       : (none)
-      positions     : 
-      locals        : 
+      positions     :
+      locals        :
 
   Virtual methods   -
     #0              : (in Linvokecustom/InvokeCustom5;)
@@ -3518,11 +3518,11 @@ Class #4            -
 00624a: 6e20 b100 1000                         |0017: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006250: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=125
         0x001a line=126
-      locals        : 
-        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom5; 
+      locals        :
+        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom5;
 
     #1              : (in Linvokecustom/InvokeCustom5;)
       name          : 'run'
@@ -3539,11 +3539,11 @@ Class #4            -
 00626c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006272: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=133
         0x0007 line=134
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom5; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom5;
 
     #2              : (in Linvokecustom/InvokeCustom5;)
       name          : 'targetMethodTest4'
@@ -3560,11 +3560,11 @@ Class #4            -
 00628c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006292: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=64
         0x0007 line=65
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom5; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom5;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
@@ -3599,9 +3599,9 @@ Class #5            -
 0062a6: 6700 0f00                              |0001: sput v0, Linvokecustom/InvokeCustom;.staticFieldTest9:I // field@000f
 0062aa: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=98
-      locals        : 
+      locals        :
 
     #1              : (in Linvokecustom/InvokeCustom6;)
       name          : '<init>'
@@ -3618,12 +3618,12 @@ Class #5            -
 0062c4: 5910 0e00                              |0004: iput v0, v1, Linvokecustom/InvokeCustom;.fieldTest9:F // field@000e
 0062c8: 0e00                                   |0006: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=35
         0x0003 line=111
         0x0006 line=35
-      locals        : 
-        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom6; 
+      locals        :
+        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom6;
 
     #2              : (in Linvokecustom/InvokeCustom6;)
       name          : '<init>'
@@ -3654,14 +3654,14 @@ Class #5            -
 00631e: 6e20 b100 1000                         |0021: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006324: 0e00                                   |0024: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=36
         0x0003 line=111
         0x0006 line=37
         0x0024 line=38
-      locals        : 
-        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom6; 
-        0x0000 - 0x0025 reg=4 (null) I 
+      locals        :
+        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom6;
+        0x0000 - 0x0025 reg=4 (null) I
 
     #3              : (in Linvokecustom/InvokeCustom6;)
       name          : 'bsmCreateCallSite'
@@ -3691,14 +3691,14 @@ Class #5            -
 006378: 7020 bc00 6000                         |0020: invoke-direct {v0, v6}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 00637e: 1100                                   |0023: return-object v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=156
         0x001e line=157
-      locals        : 
-        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle;
 
     #4              : (in Linvokecustom/InvokeCustom6;)
       name          : 'bsmLookupStatic'
@@ -3725,15 +3725,15 @@ Class #5            -
 0063c2: 7020 bc00 0100                         |0019: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0063c8: 1101                                   |001c: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=138
         0x0007 line=139
         0x000b line=140
         0x0013 line=141
-      locals        : 
-        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x001d reg=3 (null) Ljava/lang/String; 
-        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType; 
+      locals        :
+        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x001d reg=3 (null) Ljava/lang/String;
+        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType;
 
     #5              : (in Linvokecustom/InvokeCustom6;)
       name          : 'bsmLookupStaticWithExtraArgs'
@@ -3786,19 +3786,19 @@ Class #5            -
 006478: 7020 bc00 0100                         |004e: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 00647e: 1101                                   |0051: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=147
         0x003c line=148
         0x0040 line=149
         0x0048 line=150
-      locals        : 
-        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0052 reg=6 (null) I 
-        0x0000 - 0x0052 reg=7 (null) J 
-        0x0000 - 0x0052 reg=9 (null) F 
-        0x0000 - 0x0052 reg=10 (null) D 
+      locals        :
+        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0052 reg=6 (null) I
+        0x0000 - 0x0052 reg=7 (null) J
+        0x0000 - 0x0052 reg=9 (null) F
+        0x0000 - 0x0052 reg=10 (null) D
 
     #6              : (in Linvokecustom/InvokeCustom6;)
       name          : 'bsmLookupTest9'
@@ -3873,7 +3873,7 @@ Class #5            -
 006596: 7020 bc00 0100                         |0083: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 00659c: 1101                                   |0086: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=166
         0x003c line=168
         0x0058 line=171
@@ -3885,17 +3885,17 @@ Class #5            -
         0x0071 line=181
         0x0075 line=182
         0x007d line=183
-      locals        : 
-        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle;
 
     #7              : (in Linvokecustom/InvokeCustom6;)
       name          : 'checkFieldTest9'
@@ -3946,7 +3946,7 @@ Class #5            -
 00664e: 1a00 1000                              |004f: const-string v0, "ERROR" // string@0010
 006652: 28fa                                   |0051: goto 004b // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=116
         0x0008 line=117
         0x000c line=118
@@ -3954,10 +3954,10 @@ Class #5            -
         0x0043 line=121
         0x004e line=122
         0x004f line=121
-      locals        : 
-        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom6; 
-        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom6;
+        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle;
 
     #8              : (in Linvokecustom/InvokeCustom6;)
       name          : 'checkStaticFieldTest9'
@@ -4007,7 +4007,7 @@ Class #5            -
 0066fe: 1a00 1000                              |004d: const-string v0, "ERROR" // string@0010
 006702: 28fa                                   |004f: goto 0049 // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=103
         0x0008 line=104
         0x000c line=105
@@ -4015,9 +4015,9 @@ Class #5            -
         0x0043 line=108
         0x004c line=109
         0x004d line=108
-      locals        : 
-        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle;
 
     #9              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest1'
@@ -4034,10 +4034,10 @@ Class #5            -
 00671c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006722: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=41
         0x0007 line=42
-      locals        : 
+      locals        :
 
     #10              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest2'
@@ -4069,7 +4069,7 @@ Class #5            -
 006788: 6e20 b100 c000                         |002a: invoke-virtual {v0, v12}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00678e: 0e00                                   |002d: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=46
         0x0005 line=47
         0x000a line=48
@@ -4080,16 +4080,16 @@ Class #5            -
         0x0023 line=53
         0x0028 line=54
         0x002d line=55
-      locals        : 
-        0x0000 - 0x002e reg=2 (null) Z 
-        0x0000 - 0x002e reg=3 (null) B 
-        0x0000 - 0x002e reg=4 (null) C 
-        0x0000 - 0x002e reg=5 (null) S 
-        0x0000 - 0x002e reg=6 (null) I 
-        0x0000 - 0x002e reg=7 (null) F 
-        0x0000 - 0x002e reg=8 (null) J 
-        0x0000 - 0x002e reg=10 (null) D 
-        0x0000 - 0x002e reg=12 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x002e reg=2 (null) Z
+        0x0000 - 0x002e reg=3 (null) B
+        0x0000 - 0x002e reg=4 (null) C
+        0x0000 - 0x002e reg=5 (null) S
+        0x0000 - 0x002e reg=6 (null) I
+        0x0000 - 0x002e reg=7 (null) F
+        0x0000 - 0x002e reg=8 (null) J
+        0x0000 - 0x002e reg=10 (null) D
+        0x0000 - 0x002e reg=12 (null) Ljava/lang/String;
 
     #11              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest3'
@@ -4106,10 +4106,10 @@ Class #5            -
 0067a8: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0067ae: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=58
         0x0007 line=59
-      locals        : 
+      locals        :
 
     #12              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest5'
@@ -4162,16 +4162,16 @@ Class #5            -
 00685e: 6e20 b100 2100                         |004f: invoke-virtual {v1, v2}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006864: 0f00                                   |0052: return v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=68
         0x0002 line=69
         0x002e line=70
         0x0030 line=71
         0x0052 line=73
-      locals        : 
-        0x0000 - 0x0053 reg=4 (null) I 
-        0x0000 - 0x0053 reg=5 (null) I 
-        0x0000 - 0x0053 reg=6 (null) I 
+      locals        :
+        0x0000 - 0x0053 reg=4 (null) I
+        0x0000 - 0x0053 reg=5 (null) I
+        0x0000 - 0x0053 reg=6 (null) I
 
     #13              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest6'
@@ -4225,16 +4225,16 @@ Class #5            -
 00691a: 6e20 b100 3200                         |0051: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006920: 1000                                   |0054: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=77
         0x0002 line=78
         0x002e line=79
         0x0032 line=80
         0x0054 line=82
-      locals        : 
-        0x0000 - 0x0055 reg=6 (null) J 
-        0x0000 - 0x0055 reg=8 (null) J 
-        0x0000 - 0x0055 reg=10 (null) J 
+      locals        :
+        0x0000 - 0x0055 reg=6 (null) J
+        0x0000 - 0x0055 reg=8 (null) J
+        0x0000 - 0x0055 reg=10 (null) J
 
     #14              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest7'
@@ -4289,16 +4289,16 @@ Class #5            -
 0069d8: 6e20 b100 3200                         |0052: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0069de: 1000                                   |0055: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=86
         0x0003 line=87
         0x002f line=88
         0x0033 line=89
         0x0055 line=91
-      locals        : 
-        0x0000 - 0x0056 reg=6 (null) F 
-        0x0000 - 0x0056 reg=7 (null) F 
-        0x0000 - 0x0056 reg=8 (null) D 
+      locals        :
+        0x0000 - 0x0056 reg=6 (null) F
+        0x0000 - 0x0056 reg=7 (null) F
+        0x0000 - 0x0056 reg=8 (null) D
 
     #15              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest8'
@@ -4323,11 +4323,11 @@ Class #5            -
 006a1a: 6e20 b100 1000                         |0015: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006a20: 0e00                                   |0018: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=95
         0x0018 line=96
-      locals        : 
-        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String;
 
     #16              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest9'
@@ -4344,10 +4344,10 @@ Class #5            -
 006a3c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006a42: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=129
         0x0007 line=130
-      locals        : 
+      locals        :
 
     #17              : (in Linvokecustom/InvokeCustom6;)
       name          : 'test6'
@@ -4377,8 +4377,8 @@ Class #5            -
 006aa4: 6e20 b100 0200                         |0028: invoke-virtual {v2, v0}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006aaa: 0e00                                   |002b: return-void
       catches       : (none)
-      positions     : 
-      locals        : 
+      positions     :
+      locals        :
 
   Virtual methods   -
     #0              : (in Linvokecustom/InvokeCustom6;)
@@ -4405,11 +4405,11 @@ Class #5            -
 006aea: 6e20 b100 1000                         |0017: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006af0: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=125
         0x001a line=126
-      locals        : 
-        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom6; 
+      locals        :
+        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom6;
 
     #1              : (in Linvokecustom/InvokeCustom6;)
       name          : 'run'
@@ -4426,11 +4426,11 @@ Class #5            -
 006b0c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006b12: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=133
         0x0007 line=134
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom6; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom6;
 
     #2              : (in Linvokecustom/InvokeCustom6;)
       name          : 'targetMethodTest4'
@@ -4447,11 +4447,11 @@ Class #5            -
 006b2c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006b32: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=64
         0x0007 line=65
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom6; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom6;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
@@ -4486,9 +4486,9 @@ Class #6            -
 006b46: 6700 0f00                              |0001: sput v0, Linvokecustom/InvokeCustom;.staticFieldTest9:I // field@000f
 006b4a: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=98
-      locals        : 
+      locals        :
 
     #1              : (in Linvokecustom/InvokeCustom7;)
       name          : '<init>'
@@ -4505,12 +4505,12 @@ Class #6            -
 006b64: 5910 0e00                              |0004: iput v0, v1, Linvokecustom/InvokeCustom;.fieldTest9:F // field@000e
 006b68: 0e00                                   |0006: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=35
         0x0003 line=111
         0x0006 line=35
-      locals        : 
-        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom7; 
+      locals        :
+        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom7;
 
     #2              : (in Linvokecustom/InvokeCustom7;)
       name          : '<init>'
@@ -4541,14 +4541,14 @@ Class #6            -
 006bbe: 6e20 b100 1000                         |0021: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006bc4: 0e00                                   |0024: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=36
         0x0003 line=111
         0x0006 line=37
         0x0024 line=38
-      locals        : 
-        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom7; 
-        0x0000 - 0x0025 reg=4 (null) I 
+      locals        :
+        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom7;
+        0x0000 - 0x0025 reg=4 (null) I
 
     #3              : (in Linvokecustom/InvokeCustom7;)
       name          : 'bsmCreateCallSite'
@@ -4578,14 +4578,14 @@ Class #6            -
 006c18: 7020 bc00 6000                         |0020: invoke-direct {v0, v6}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 006c1e: 1100                                   |0023: return-object v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=156
         0x001e line=157
-      locals        : 
-        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle;
 
     #4              : (in Linvokecustom/InvokeCustom7;)
       name          : 'bsmLookupStatic'
@@ -4612,15 +4612,15 @@ Class #6            -
 006c62: 7020 bc00 0100                         |0019: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 006c68: 1101                                   |001c: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=138
         0x0007 line=139
         0x000b line=140
         0x0013 line=141
-      locals        : 
-        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x001d reg=3 (null) Ljava/lang/String; 
-        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType; 
+      locals        :
+        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x001d reg=3 (null) Ljava/lang/String;
+        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType;
 
     #5              : (in Linvokecustom/InvokeCustom7;)
       name          : 'bsmLookupStaticWithExtraArgs'
@@ -4673,19 +4673,19 @@ Class #6            -
 006d18: 7020 bc00 0100                         |004e: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 006d1e: 1101                                   |0051: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=147
         0x003c line=148
         0x0040 line=149
         0x0048 line=150
-      locals        : 
-        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0052 reg=6 (null) I 
-        0x0000 - 0x0052 reg=7 (null) J 
-        0x0000 - 0x0052 reg=9 (null) F 
-        0x0000 - 0x0052 reg=10 (null) D 
+      locals        :
+        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0052 reg=6 (null) I
+        0x0000 - 0x0052 reg=7 (null) J
+        0x0000 - 0x0052 reg=9 (null) F
+        0x0000 - 0x0052 reg=10 (null) D
 
     #6              : (in Linvokecustom/InvokeCustom7;)
       name          : 'bsmLookupTest9'
@@ -4760,7 +4760,7 @@ Class #6            -
 006e36: 7020 bc00 0100                         |0083: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 006e3c: 1101                                   |0086: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=166
         0x003c line=168
         0x0058 line=171
@@ -4772,17 +4772,17 @@ Class #6            -
         0x0071 line=181
         0x0075 line=182
         0x007d line=183
-      locals        : 
-        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle;
 
     #7              : (in Linvokecustom/InvokeCustom7;)
       name          : 'checkFieldTest9'
@@ -4833,7 +4833,7 @@ Class #6            -
 006eee: 1a00 1000                              |004f: const-string v0, "ERROR" // string@0010
 006ef2: 28fa                                   |0051: goto 004b // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=116
         0x0008 line=117
         0x000c line=118
@@ -4841,10 +4841,10 @@ Class #6            -
         0x0043 line=121
         0x004e line=122
         0x004f line=121
-      locals        : 
-        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom7; 
-        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom7;
+        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle;
 
     #8              : (in Linvokecustom/InvokeCustom7;)
       name          : 'checkStaticFieldTest9'
@@ -4894,7 +4894,7 @@ Class #6            -
 006f9e: 1a00 1000                              |004d: const-string v0, "ERROR" // string@0010
 006fa2: 28fa                                   |004f: goto 0049 // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=103
         0x0008 line=104
         0x000c line=105
@@ -4902,9 +4902,9 @@ Class #6            -
         0x0043 line=108
         0x004c line=109
         0x004d line=108
-      locals        : 
-        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle;
 
     #9              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest1'
@@ -4921,10 +4921,10 @@ Class #6            -
 006fbc: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 006fc2: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=41
         0x0007 line=42
-      locals        : 
+      locals        :
 
     #10              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest2'
@@ -4956,7 +4956,7 @@ Class #6            -
 007028: 6e20 b100 c000                         |002a: invoke-virtual {v0, v12}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00702e: 0e00                                   |002d: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=46
         0x0005 line=47
         0x000a line=48
@@ -4967,16 +4967,16 @@ Class #6            -
         0x0023 line=53
         0x0028 line=54
         0x002d line=55
-      locals        : 
-        0x0000 - 0x002e reg=2 (null) Z 
-        0x0000 - 0x002e reg=3 (null) B 
-        0x0000 - 0x002e reg=4 (null) C 
-        0x0000 - 0x002e reg=5 (null) S 
-        0x0000 - 0x002e reg=6 (null) I 
-        0x0000 - 0x002e reg=7 (null) F 
-        0x0000 - 0x002e reg=8 (null) J 
-        0x0000 - 0x002e reg=10 (null) D 
-        0x0000 - 0x002e reg=12 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x002e reg=2 (null) Z
+        0x0000 - 0x002e reg=3 (null) B
+        0x0000 - 0x002e reg=4 (null) C
+        0x0000 - 0x002e reg=5 (null) S
+        0x0000 - 0x002e reg=6 (null) I
+        0x0000 - 0x002e reg=7 (null) F
+        0x0000 - 0x002e reg=8 (null) J
+        0x0000 - 0x002e reg=10 (null) D
+        0x0000 - 0x002e reg=12 (null) Ljava/lang/String;
 
     #11              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest3'
@@ -4993,10 +4993,10 @@ Class #6            -
 007048: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00704e: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=58
         0x0007 line=59
-      locals        : 
+      locals        :
 
     #12              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest5'
@@ -5049,16 +5049,16 @@ Class #6            -
 0070fe: 6e20 b100 2100                         |004f: invoke-virtual {v1, v2}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007104: 0f00                                   |0052: return v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=68
         0x0002 line=69
         0x002e line=70
         0x0030 line=71
         0x0052 line=73
-      locals        : 
-        0x0000 - 0x0053 reg=4 (null) I 
-        0x0000 - 0x0053 reg=5 (null) I 
-        0x0000 - 0x0053 reg=6 (null) I 
+      locals        :
+        0x0000 - 0x0053 reg=4 (null) I
+        0x0000 - 0x0053 reg=5 (null) I
+        0x0000 - 0x0053 reg=6 (null) I
 
     #13              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest6'
@@ -5112,16 +5112,16 @@ Class #6            -
 0071ba: 6e20 b100 3200                         |0051: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0071c0: 1000                                   |0054: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=77
         0x0002 line=78
         0x002e line=79
         0x0032 line=80
         0x0054 line=82
-      locals        : 
-        0x0000 - 0x0055 reg=6 (null) J 
-        0x0000 - 0x0055 reg=8 (null) J 
-        0x0000 - 0x0055 reg=10 (null) J 
+      locals        :
+        0x0000 - 0x0055 reg=6 (null) J
+        0x0000 - 0x0055 reg=8 (null) J
+        0x0000 - 0x0055 reg=10 (null) J
 
     #14              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest7'
@@ -5176,16 +5176,16 @@ Class #6            -
 007278: 6e20 b100 3200                         |0052: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00727e: 1000                                   |0055: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=86
         0x0003 line=87
         0x002f line=88
         0x0033 line=89
         0x0055 line=91
-      locals        : 
-        0x0000 - 0x0056 reg=6 (null) F 
-        0x0000 - 0x0056 reg=7 (null) F 
-        0x0000 - 0x0056 reg=8 (null) D 
+      locals        :
+        0x0000 - 0x0056 reg=6 (null) F
+        0x0000 - 0x0056 reg=7 (null) F
+        0x0000 - 0x0056 reg=8 (null) D
 
     #15              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest8'
@@ -5210,11 +5210,11 @@ Class #6            -
 0072ba: 6e20 b100 1000                         |0015: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0072c0: 0e00                                   |0018: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=95
         0x0018 line=96
-      locals        : 
-        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String;
 
     #16              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest9'
@@ -5231,10 +5231,10 @@ Class #6            -
 0072dc: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0072e2: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=129
         0x0007 line=130
-      locals        : 
+      locals        :
 
     #17              : (in Linvokecustom/InvokeCustom7;)
       name          : 'test7'
@@ -5264,8 +5264,8 @@ Class #6            -
 00733c: 6e20 b100 0200                         |0024: invoke-virtual {v2, v0}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007342: 0e00                                   |0027: return-void
       catches       : (none)
-      positions     : 
-      locals        : 
+      positions     :
+      locals        :
 
   Virtual methods   -
     #0              : (in Linvokecustom/InvokeCustom7;)
@@ -5292,11 +5292,11 @@ Class #6            -
 007382: 6e20 b100 1000                         |0017: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007388: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=125
         0x001a line=126
-      locals        : 
-        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom7; 
+      locals        :
+        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom7;
 
     #1              : (in Linvokecustom/InvokeCustom7;)
       name          : 'run'
@@ -5313,11 +5313,11 @@ Class #6            -
 0073a4: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0073aa: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=133
         0x0007 line=134
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom7; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom7;
 
     #2              : (in Linvokecustom/InvokeCustom7;)
       name          : 'targetMethodTest4'
@@ -5334,11 +5334,11 @@ Class #6            -
 0073c4: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0073ca: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=64
         0x0007 line=65
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom7; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom7;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
@@ -5373,9 +5373,9 @@ Class #7            -
 0073de: 6700 0f00                              |0001: sput v0, Linvokecustom/InvokeCustom;.staticFieldTest9:I // field@000f
 0073e2: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=98
-      locals        : 
+      locals        :
 
     #1              : (in Linvokecustom/InvokeCustom8;)
       name          : '<init>'
@@ -5392,12 +5392,12 @@ Class #7            -
 0073fc: 5910 0e00                              |0004: iput v0, v1, Linvokecustom/InvokeCustom;.fieldTest9:F // field@000e
 007400: 0e00                                   |0006: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=35
         0x0003 line=111
         0x0006 line=35
-      locals        : 
-        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom8; 
+      locals        :
+        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom8;
 
     #2              : (in Linvokecustom/InvokeCustom8;)
       name          : '<init>'
@@ -5428,14 +5428,14 @@ Class #7            -
 007456: 6e20 b100 1000                         |0021: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00745c: 0e00                                   |0024: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=36
         0x0003 line=111
         0x0006 line=37
         0x0024 line=38
-      locals        : 
-        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom8; 
-        0x0000 - 0x0025 reg=4 (null) I 
+      locals        :
+        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom8;
+        0x0000 - 0x0025 reg=4 (null) I
 
     #3              : (in Linvokecustom/InvokeCustom8;)
       name          : 'bsmCreateCallSite'
@@ -5465,14 +5465,14 @@ Class #7            -
 0074b0: 7020 bc00 6000                         |0020: invoke-direct {v0, v6}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0074b6: 1100                                   |0023: return-object v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=156
         0x001e line=157
-      locals        : 
-        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle;
 
     #4              : (in Linvokecustom/InvokeCustom8;)
       name          : 'bsmLookupStatic'
@@ -5499,15 +5499,15 @@ Class #7            -
 0074fa: 7020 bc00 0100                         |0019: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 007500: 1101                                   |001c: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=138
         0x0007 line=139
         0x000b line=140
         0x0013 line=141
-      locals        : 
-        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x001d reg=3 (null) Ljava/lang/String; 
-        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType; 
+      locals        :
+        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x001d reg=3 (null) Ljava/lang/String;
+        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType;
 
     #5              : (in Linvokecustom/InvokeCustom8;)
       name          : 'bsmLookupStaticWithExtraArgs'
@@ -5560,19 +5560,19 @@ Class #7            -
 0075b0: 7020 bc00 0100                         |004e: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0075b6: 1101                                   |0051: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=147
         0x003c line=148
         0x0040 line=149
         0x0048 line=150
-      locals        : 
-        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0052 reg=6 (null) I 
-        0x0000 - 0x0052 reg=7 (null) J 
-        0x0000 - 0x0052 reg=9 (null) F 
-        0x0000 - 0x0052 reg=10 (null) D 
+      locals        :
+        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0052 reg=6 (null) I
+        0x0000 - 0x0052 reg=7 (null) J
+        0x0000 - 0x0052 reg=9 (null) F
+        0x0000 - 0x0052 reg=10 (null) D
 
     #6              : (in Linvokecustom/InvokeCustom8;)
       name          : 'bsmLookupTest9'
@@ -5647,7 +5647,7 @@ Class #7            -
 0076ce: 7020 bc00 0100                         |0083: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 0076d4: 1101                                   |0086: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=166
         0x003c line=168
         0x0058 line=171
@@ -5659,17 +5659,17 @@ Class #7            -
         0x0071 line=181
         0x0075 line=182
         0x007d line=183
-      locals        : 
-        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle;
 
     #7              : (in Linvokecustom/InvokeCustom8;)
       name          : 'checkFieldTest9'
@@ -5720,7 +5720,7 @@ Class #7            -
 007786: 1a00 1000                              |004f: const-string v0, "ERROR" // string@0010
 00778a: 28fa                                   |0051: goto 004b // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=116
         0x0008 line=117
         0x000c line=118
@@ -5728,10 +5728,10 @@ Class #7            -
         0x0043 line=121
         0x004e line=122
         0x004f line=121
-      locals        : 
-        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom8; 
-        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom8;
+        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle;
 
     #8              : (in Linvokecustom/InvokeCustom8;)
       name          : 'checkStaticFieldTest9'
@@ -5781,7 +5781,7 @@ Class #7            -
 007836: 1a00 1000                              |004d: const-string v0, "ERROR" // string@0010
 00783a: 28fa                                   |004f: goto 0049 // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=103
         0x0008 line=104
         0x000c line=105
@@ -5789,9 +5789,9 @@ Class #7            -
         0x0043 line=108
         0x004c line=109
         0x004d line=108
-      locals        : 
-        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle;
 
     #9              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest1'
@@ -5808,10 +5808,10 @@ Class #7            -
 007854: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00785a: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=41
         0x0007 line=42
-      locals        : 
+      locals        :
 
     #10              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest2'
@@ -5843,7 +5843,7 @@ Class #7            -
 0078c0: 6e20 b100 c000                         |002a: invoke-virtual {v0, v12}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0078c6: 0e00                                   |002d: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=46
         0x0005 line=47
         0x000a line=48
@@ -5854,16 +5854,16 @@ Class #7            -
         0x0023 line=53
         0x0028 line=54
         0x002d line=55
-      locals        : 
-        0x0000 - 0x002e reg=2 (null) Z 
-        0x0000 - 0x002e reg=3 (null) B 
-        0x0000 - 0x002e reg=4 (null) C 
-        0x0000 - 0x002e reg=5 (null) S 
-        0x0000 - 0x002e reg=6 (null) I 
-        0x0000 - 0x002e reg=7 (null) F 
-        0x0000 - 0x002e reg=8 (null) J 
-        0x0000 - 0x002e reg=10 (null) D 
-        0x0000 - 0x002e reg=12 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x002e reg=2 (null) Z
+        0x0000 - 0x002e reg=3 (null) B
+        0x0000 - 0x002e reg=4 (null) C
+        0x0000 - 0x002e reg=5 (null) S
+        0x0000 - 0x002e reg=6 (null) I
+        0x0000 - 0x002e reg=7 (null) F
+        0x0000 - 0x002e reg=8 (null) J
+        0x0000 - 0x002e reg=10 (null) D
+        0x0000 - 0x002e reg=12 (null) Ljava/lang/String;
 
     #11              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest3'
@@ -5880,10 +5880,10 @@ Class #7            -
 0078e0: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0078e6: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=58
         0x0007 line=59
-      locals        : 
+      locals        :
 
     #12              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest5'
@@ -5936,16 +5936,16 @@ Class #7            -
 007996: 6e20 b100 2100                         |004f: invoke-virtual {v1, v2}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00799c: 0f00                                   |0052: return v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=68
         0x0002 line=69
         0x002e line=70
         0x0030 line=71
         0x0052 line=73
-      locals        : 
-        0x0000 - 0x0053 reg=4 (null) I 
-        0x0000 - 0x0053 reg=5 (null) I 
-        0x0000 - 0x0053 reg=6 (null) I 
+      locals        :
+        0x0000 - 0x0053 reg=4 (null) I
+        0x0000 - 0x0053 reg=5 (null) I
+        0x0000 - 0x0053 reg=6 (null) I
 
     #13              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest6'
@@ -5999,16 +5999,16 @@ Class #7            -
 007a52: 6e20 b100 3200                         |0051: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007a58: 1000                                   |0054: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=77
         0x0002 line=78
         0x002e line=79
         0x0032 line=80
         0x0054 line=82
-      locals        : 
-        0x0000 - 0x0055 reg=6 (null) J 
-        0x0000 - 0x0055 reg=8 (null) J 
-        0x0000 - 0x0055 reg=10 (null) J 
+      locals        :
+        0x0000 - 0x0055 reg=6 (null) J
+        0x0000 - 0x0055 reg=8 (null) J
+        0x0000 - 0x0055 reg=10 (null) J
 
     #14              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest7'
@@ -6063,16 +6063,16 @@ Class #7            -
 007b10: 6e20 b100 3200                         |0052: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007b16: 1000                                   |0055: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=86
         0x0003 line=87
         0x002f line=88
         0x0033 line=89
         0x0055 line=91
-      locals        : 
-        0x0000 - 0x0056 reg=6 (null) F 
-        0x0000 - 0x0056 reg=7 (null) F 
-        0x0000 - 0x0056 reg=8 (null) D 
+      locals        :
+        0x0000 - 0x0056 reg=6 (null) F
+        0x0000 - 0x0056 reg=7 (null) F
+        0x0000 - 0x0056 reg=8 (null) D
 
     #15              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest8'
@@ -6097,11 +6097,11 @@ Class #7            -
 007b52: 6e20 b100 1000                         |0015: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007b58: 0e00                                   |0018: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=95
         0x0018 line=96
-      locals        : 
-        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String;
 
     #16              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest9'
@@ -6118,10 +6118,10 @@ Class #7            -
 007b74: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007b7a: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=129
         0x0007 line=130
-      locals        : 
+      locals        :
 
     #17              : (in Linvokecustom/InvokeCustom8;)
       name          : 'test8'
@@ -6141,8 +6141,8 @@ Class #7            -
 007ba4: fc10 0800 0000                         |000c: invoke-custom {v0}, call_site@0008
 007baa: 0e00                                   |000f: return-void
       catches       : (none)
-      positions     : 
-      locals        : 
+      positions     :
+      locals        :
 
   Virtual methods   -
     #0              : (in Linvokecustom/InvokeCustom8;)
@@ -6169,11 +6169,11 @@ Class #7            -
 007bea: 6e20 b100 1000                         |0017: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007bf0: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=125
         0x001a line=126
-      locals        : 
-        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom8; 
+      locals        :
+        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom8;
 
     #1              : (in Linvokecustom/InvokeCustom8;)
       name          : 'run'
@@ -6190,11 +6190,11 @@ Class #7            -
 007c0c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007c12: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=133
         0x0007 line=134
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom8; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom8;
 
     #2              : (in Linvokecustom/InvokeCustom8;)
       name          : 'targetMethodTest4'
@@ -6211,11 +6211,11 @@ Class #7            -
 007c2c: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007c32: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=64
         0x0007 line=65
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom8; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom8;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
@@ -6250,9 +6250,9 @@ Class #8            -
 007c46: 6700 0f00                              |0001: sput v0, Linvokecustom/InvokeCustom;.staticFieldTest9:I // field@000f
 007c4a: 0e00                                   |0003: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=98
-      locals        : 
+      locals        :
 
     #1              : (in Linvokecustom/InvokeCustom;)
       name          : '<init>'
@@ -6269,12 +6269,12 @@ Class #8            -
 007c64: 5910 0e00                              |0004: iput v0, v1, Linvokecustom/InvokeCustom;.fieldTest9:F // field@000e
 007c68: 0e00                                   |0006: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=35
         0x0003 line=111
         0x0006 line=35
-      locals        : 
-        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom; 
+      locals        :
+        0x0000 - 0x0007 reg=1 this Linvokecustom/InvokeCustom;
 
     #2              : (in Linvokecustom/InvokeCustom;)
       name          : '<init>'
@@ -6305,14 +6305,14 @@ Class #8            -
 007cbe: 6e20 b100 1000                         |0021: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 007cc4: 0e00                                   |0024: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=36
         0x0003 line=111
         0x0006 line=37
         0x0024 line=38
-      locals        : 
-        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom; 
-        0x0000 - 0x0025 reg=4 (null) I 
+      locals        :
+        0x0000 - 0x0025 reg=3 this Linvokecustom/InvokeCustom;
+        0x0000 - 0x0025 reg=4 (null) I
 
     #3              : (in Linvokecustom/InvokeCustom;)
       name          : 'bsmCreateCallSite'
@@ -6342,14 +6342,14 @@ Class #8            -
 007d18: 7020 bc00 6000                         |0020: invoke-direct {v0, v6}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 007d1e: 1100                                   |0023: return-object v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=156
         0x001e line=157
-      locals        : 
-        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0024 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0024 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0024 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0024 reg=6 (null) Ljava/lang/invoke/MethodHandle;
 
     #4              : (in Linvokecustom/InvokeCustom;)
       name          : 'bsmLookupStatic'
@@ -6376,15 +6376,15 @@ Class #8            -
 007d62: 7020 bc00 0100                         |0019: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 007d68: 1101                                   |001c: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=138
         0x0007 line=139
         0x000b line=140
         0x0013 line=141
-      locals        : 
-        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x001d reg=3 (null) Ljava/lang/String; 
-        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType; 
+      locals        :
+        0x0000 - 0x001d reg=2 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x001d reg=3 (null) Ljava/lang/String;
+        0x0000 - 0x001d reg=4 (null) Ljava/lang/invoke/MethodType;
 
     #5              : (in Linvokecustom/InvokeCustom;)
       name          : 'bsmLookupStaticWithExtraArgs'
@@ -6437,19 +6437,19 @@ Class #8            -
 007e18: 7020 bc00 0100                         |004e: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 007e1e: 1101                                   |0051: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=147
         0x003c line=148
         0x0040 line=149
         0x0048 line=150
-      locals        : 
-        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0052 reg=6 (null) I 
-        0x0000 - 0x0052 reg=7 (null) J 
-        0x0000 - 0x0052 reg=9 (null) F 
-        0x0000 - 0x0052 reg=10 (null) D 
+      locals        :
+        0x0000 - 0x0052 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0052 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0052 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0052 reg=6 (null) I
+        0x0000 - 0x0052 reg=7 (null) J
+        0x0000 - 0x0052 reg=9 (null) F
+        0x0000 - 0x0052 reg=10 (null) D
 
     #6              : (in Linvokecustom/InvokeCustom;)
       name          : 'bsmLookupTest9'
@@ -6524,7 +6524,7 @@ Class #8            -
 007f36: 7020 bc00 0100                         |0083: invoke-direct {v1, v0}, Ljava/lang/invoke/ConstantCallSite;.<init>:(Ljava/lang/invoke/MethodHandle;)V // method@00bc
 007f3c: 1101                                   |0086: return-object v1
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=166
         0x003c line=168
         0x0058 line=171
@@ -6536,17 +6536,17 @@ Class #8            -
         0x0071 line=181
         0x0075 line=182
         0x007d line=183
-      locals        : 
-        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup; 
-        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String; 
-        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType; 
-        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0087 reg=3 (null) Ljava/lang/invoke/MethodHandles$Lookup;
+        0x0000 - 0x0087 reg=4 (null) Ljava/lang/String;
+        0x0000 - 0x0087 reg=5 (null) Ljava/lang/invoke/MethodType;
+        0x0000 - 0x0087 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=8 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=9 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=10 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=11 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0087 reg=12 (null) Ljava/lang/invoke/MethodHandle;
 
     #7              : (in Linvokecustom/InvokeCustom;)
       name          : 'checkFieldTest9'
@@ -6597,7 +6597,7 @@ Class #8            -
 007fee: 1a00 1000                              |004f: const-string v0, "ERROR" // string@0010
 007ff2: 28fa                                   |0051: goto 004b // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=116
         0x0008 line=117
         0x000c line=118
@@ -6605,10 +6605,10 @@ Class #8            -
         0x0043 line=121
         0x004e line=122
         0x004f line=121
-      locals        : 
-        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom; 
-        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0052 reg=6 this Linvokecustom/InvokeCustom;
+        0x0000 - 0x0052 reg=7 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0052 reg=8 (null) Ljava/lang/invoke/MethodHandle;
 
     #8              : (in Linvokecustom/InvokeCustom;)
       name          : 'checkStaticFieldTest9'
@@ -6658,7 +6658,7 @@ Class #8            -
 00809e: 1a00 1000                              |004d: const-string v0, "ERROR" // string@0010
 0080a2: 28fa                                   |004f: goto 0049 // -0006
       catches       : (none)
-      positions     : 
+      positions     :
         0x0003 line=103
         0x0008 line=104
         0x000c line=105
@@ -6666,9 +6666,9 @@ Class #8            -
         0x0043 line=108
         0x004c line=109
         0x004d line=108
-      locals        : 
-        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle; 
-        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle; 
+      locals        :
+        0x0000 - 0x0050 reg=6 (null) Ljava/lang/invoke/MethodHandle;
+        0x0000 - 0x0050 reg=7 (null) Ljava/lang/invoke/MethodHandle;
 
     #9              : (in Linvokecustom/InvokeCustom;)
       name          : 'main'
@@ -6689,8 +6689,8 @@ Class #8            -
 0080d8: 7100 9200 0000                         |0012: invoke-static {}, Linvokecustom/InvokeCustom8;.test8:()V // method@0092
 0080de: 0e00                                   |0015: return-void
       catches       : (none)
-      positions     : 
-      locals        : 
+      positions     :
+      locals        :
 
     #10              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest1'
@@ -6707,10 +6707,10 @@ Class #8            -
 0080f8: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0080fe: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=41
         0x0007 line=42
-      locals        : 
+      locals        :
 
     #11              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest2'
@@ -6742,7 +6742,7 @@ Class #8            -
 008164: 6e20 b100 c000                         |002a: invoke-virtual {v0, v12}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00816a: 0e00                                   |002d: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=46
         0x0005 line=47
         0x000a line=48
@@ -6753,16 +6753,16 @@ Class #8            -
         0x0023 line=53
         0x0028 line=54
         0x002d line=55
-      locals        : 
-        0x0000 - 0x002e reg=2 (null) Z 
-        0x0000 - 0x002e reg=3 (null) B 
-        0x0000 - 0x002e reg=4 (null) C 
-        0x0000 - 0x002e reg=5 (null) S 
-        0x0000 - 0x002e reg=6 (null) I 
-        0x0000 - 0x002e reg=7 (null) F 
-        0x0000 - 0x002e reg=8 (null) J 
-        0x0000 - 0x002e reg=10 (null) D 
-        0x0000 - 0x002e reg=12 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x002e reg=2 (null) Z
+        0x0000 - 0x002e reg=3 (null) B
+        0x0000 - 0x002e reg=4 (null) C
+        0x0000 - 0x002e reg=5 (null) S
+        0x0000 - 0x002e reg=6 (null) I
+        0x0000 - 0x002e reg=7 (null) F
+        0x0000 - 0x002e reg=8 (null) J
+        0x0000 - 0x002e reg=10 (null) D
+        0x0000 - 0x002e reg=12 (null) Ljava/lang/String;
 
     #12              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest3'
@@ -6779,10 +6779,10 @@ Class #8            -
 008184: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00818a: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=58
         0x0007 line=59
-      locals        : 
+      locals        :
 
     #13              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest5'
@@ -6835,16 +6835,16 @@ Class #8            -
 00823a: 6e20 b100 2100                         |004f: invoke-virtual {v1, v2}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 008240: 0f00                                   |0052: return v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=68
         0x0002 line=69
         0x002e line=70
         0x0030 line=71
         0x0052 line=73
-      locals        : 
-        0x0000 - 0x0053 reg=4 (null) I 
-        0x0000 - 0x0053 reg=5 (null) I 
-        0x0000 - 0x0053 reg=6 (null) I 
+      locals        :
+        0x0000 - 0x0053 reg=4 (null) I
+        0x0000 - 0x0053 reg=5 (null) I
+        0x0000 - 0x0053 reg=6 (null) I
 
     #14              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest6'
@@ -6898,16 +6898,16 @@ Class #8            -
 0082f6: 6e20 b100 3200                         |0051: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0082fc: 1000                                   |0054: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=77
         0x0002 line=78
         0x002e line=79
         0x0032 line=80
         0x0054 line=82
-      locals        : 
-        0x0000 - 0x0055 reg=6 (null) J 
-        0x0000 - 0x0055 reg=8 (null) J 
-        0x0000 - 0x0055 reg=10 (null) J 
+      locals        :
+        0x0000 - 0x0055 reg=6 (null) J
+        0x0000 - 0x0055 reg=8 (null) J
+        0x0000 - 0x0055 reg=10 (null) J
 
     #15              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest7'
@@ -6962,16 +6962,16 @@ Class #8            -
 0083b4: 6e20 b100 3200                         |0052: invoke-virtual {v2, v3}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0083ba: 1000                                   |0055: return-wide v0
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=86
         0x0003 line=87
         0x002f line=88
         0x0033 line=89
         0x0055 line=91
-      locals        : 
-        0x0000 - 0x0056 reg=6 (null) F 
-        0x0000 - 0x0056 reg=7 (null) F 
-        0x0000 - 0x0056 reg=8 (null) D 
+      locals        :
+        0x0000 - 0x0056 reg=6 (null) F
+        0x0000 - 0x0056 reg=7 (null) F
+        0x0000 - 0x0056 reg=8 (null) D
 
     #16              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest8'
@@ -6996,11 +6996,11 @@ Class #8            -
 0083f6: 6e20 b100 1000                         |0015: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0083fc: 0e00                                   |0018: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=95
         0x0018 line=96
-      locals        : 
-        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String; 
+      locals        :
+        0x0000 - 0x0019 reg=3 (null) Ljava/lang/String;
 
     #17              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest9'
@@ -7017,10 +7017,10 @@ Class #8            -
 008418: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 00841e: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=129
         0x0007 line=130
-      locals        : 
+      locals        :
 
   Virtual methods   -
     #0              : (in Linvokecustom/InvokeCustom;)
@@ -7047,11 +7047,11 @@ Class #8            -
 00845e: 6e20 b100 1000                         |0017: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 008464: 0e00                                   |001a: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=125
         0x001a line=126
-      locals        : 
-        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom; 
+      locals        :
+        0x0000 - 0x001b reg=3 this Linvokecustom/InvokeCustom;
 
     #1              : (in Linvokecustom/InvokeCustom;)
       name          : 'run'
@@ -7068,11 +7068,11 @@ Class #8            -
 008480: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 008486: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=133
         0x0007 line=134
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom;
 
     #2              : (in Linvokecustom/InvokeCustom;)
       name          : 'targetMethodTest4'
@@ -7089,11 +7089,11 @@ Class #8            -
 0084a0: 6e20 b100 1000                         |0004: invoke-virtual {v0, v1}, Ljava/io/PrintStream;.println:(Ljava/lang/String;)V // method@00b1
 0084a6: 0e00                                   |0007: return-void
       catches       : (none)
-      positions     : 
+      positions     :
         0x0000 line=64
         0x0007 line=65
-      locals        : 
-        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom; 
+      locals        :
+        0x0000 - 0x0008 reg=2 this Linvokecustom/InvokeCustom;
 
   source_file_idx   : 25 (InvokeCustom.java)
 
