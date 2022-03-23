@@ -68,7 +68,7 @@ while [ $TEST_SIZE -le $LIMIT ]; do
   mkdir out
 
   sleep 2
-  ${JAVA} -classpath . ClassGen $first $TEST_SIZE $FIELDS $METHODS || exit 1
+  java -classpath . ClassGen $first $TEST_SIZE $FIELDS $METHODS || exit 1
   first=`expr $TEST_SIZE + 1`
 
   ${JAVAC} ${JAVAC_OPTIONS} -d classes `find src -name '*.java'` || exit 1
