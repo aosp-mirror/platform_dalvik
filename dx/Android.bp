@@ -36,19 +36,3 @@ java_binary_host {
         },
     },
 }
-
-java_binary_host {
-  name: "jasmin",
-  wrapper: "etc/jasmin",
-  static_libs: [ "jasmin-jar" ],
-}
-
-java_import_host {
-  name: "jasmin-jar",
-  jars: ["etc/jasmin.jar"],
-}
-
-filegroup {
-    name: "mainDexClassesRules",
-    srcs: ["etc/mainDexClasses*.rules"],
-}
