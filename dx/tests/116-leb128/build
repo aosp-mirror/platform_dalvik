@@ -27,4 +27,4 @@ for i in "$dxjar" "$junitjar"; do
     fi
 done
 
-${JAVAC} -cp $dxjar:$junitjar `find . -name "*.java"`
+${JAVAC} -cp $dxjar:$junitjar -source 1.7 -target 1.7 `find . -name "*.java"`
