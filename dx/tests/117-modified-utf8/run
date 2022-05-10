@@ -27,7 +27,7 @@ for i in "$dxjar" "$junitjar"; do
     fi
 done
 
-java -classpath $dxjar:$junitjar:. junit.textui.TestRunner com.android.dx.util.Mutf8Test > unit-out.txt 2>&1
+${JAVA} -classpath $dxjar:$junitjar:. junit.textui.TestRunner com.android.dx.util.Mutf8Test > unit-out.txt 2>&1
 
 if [ "$?" = "0" ]; then
     echo "Yay!"
