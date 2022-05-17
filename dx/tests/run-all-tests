@@ -33,7 +33,7 @@ cd "${progdir}"
 progdir=`pwd`
 prog="${progdir}"/`basename "${prog}"`
 
-skip_tests="127-merge-stress"
+skip_tests="115-merge 127-merge-stress 129-numthread-deterministic 130-numthread-multidex-deterministic 143-interface-methods"
 
 # Command-line options
 sequential="no"
