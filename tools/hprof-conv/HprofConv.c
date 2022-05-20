@@ -663,7 +663,8 @@ static int filterData(FILE* in, FILE* out, int flags)
 
         unsigned char* buf = ebGetBuffer(pBuf);
         unsigned char type;
-        unsigned int timestamp, length;
+        unsigned int timestamp ATTRIBUTE_UNUSED;
+        unsigned int length;
 
         type = buf[0];
         timestamp = get4BE(buf + 1);
