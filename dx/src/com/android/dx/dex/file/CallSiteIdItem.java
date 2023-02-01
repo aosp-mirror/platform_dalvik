@@ -23,7 +23,7 @@ import com.android.dx.util.Hex;
 /**
  * Representation of a call site reference in a DEX file.
  */
-public final class CallSiteIdItem extends IndexedItem implements Comparable {
+public final class CallSiteIdItem extends IndexedItem implements Comparable<CallSiteIdItem> {
 
     /** The item size when placed in a DEX file. */
     private static final int ITEM_SIZE = 4;
@@ -83,8 +83,7 @@ public final class CallSiteIdItem extends IndexedItem implements Comparable {
 
     /** {@inheritDoc} */
     @Override
-    public int compareTo(Object o) {
-        CallSiteIdItem other = (CallSiteIdItem) o;
+    public int compareTo(CallSiteIdItem other) {
         return invokeDynamicRef.compareTo(other.invokeDynamicRef);
     }
 }
