@@ -182,7 +182,7 @@ static int ebEnsureCapacity(ExpandBuf* pBuf, int size)
         unsigned char* newStorage = realloc(pBuf->storage, newSize);
         if (newStorage == NULL) {
             fprintf(stderr, "ERROR: realloc failed on size=%d\n", newSize);
-            return -1;
+            exit(1);
         }
 
         pBuf->storage = newStorage;
