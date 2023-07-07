@@ -25,7 +25,7 @@ import com.android.dx.util.Hex;
  * Representation of a string inside a Dalvik file.
  */
 public final class StringIdItem
-        extends IndexedItem implements Comparable {
+        extends IndexedItem implements Comparable<StringIdItem> {
     /** {@code non-null;} the string value */
     private final CstString value;
 
@@ -65,9 +65,8 @@ public final class StringIdItem
 
     /** {@inheritDoc} */
     @Override
-    public int compareTo(Object other) {
-        StringIdItem otherString = (StringIdItem) other;
-        return value.compareTo(otherString.value);
+    public int compareTo(StringIdItem other) {
+        return value.compareTo(other.value);
     }
 
     /** {@inheritDoc} */
