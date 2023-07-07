@@ -182,7 +182,7 @@ static int ebEnsureCapacity(ExpandBuf* pBuf, int size)
         unsigned char* newStorage = realloc(pBuf->storage, newSize);
         if (newStorage == NULL) {
             fprintf(stderr, "ERROR: realloc failed on size=%d\n", newSize);
-            return -1;
+            exit(1);
         }
 
         pBuf->storage = newStorage;
@@ -663,7 +663,8 @@ static int filterData(FILE* in, FILE* out, int flags)
 
         unsigned char* buf = ebGetBuffer(pBuf);
         unsigned char type;
-        unsigned int timestamp, length;
+        unsigned int timestamp ATTRIBUTE_UNUSED;
+        unsigned int length;
 
         type = buf[0];
         timestamp = get4BE(buf + 1);
