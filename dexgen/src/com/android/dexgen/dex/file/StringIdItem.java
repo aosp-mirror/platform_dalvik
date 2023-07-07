@@ -24,7 +24,7 @@ import com.android.dexgen.util.Hex;
  * Representation of a string inside a Dalvik file.
  */
 public final class StringIdItem
-        extends IndexedItem implements Comparable {
+        extends IndexedItem implements Comparable<StringIdItem> {
     /** size of instances when written out to a file, in bytes */
     public static final int WRITE_SIZE = 4;
 
@@ -66,9 +66,8 @@ public final class StringIdItem
     }
 
     /** {@inheritDoc} */
-    public int compareTo(Object other) {
-        StringIdItem otherString = (StringIdItem) other;
-        return value.compareTo(otherString.value);
+    public int compareTo(StringIdItem other) {
+        return value.compareTo(other.value);
     }
 
     /** {@inheritDoc} */
